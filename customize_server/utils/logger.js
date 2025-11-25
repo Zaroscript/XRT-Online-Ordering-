@@ -1,13 +1,44 @@
 import winston from 'winston';
-import { existsSync, mkdirSync } from 'fs';
-import path from 'path';
 
 const { combine, timestamp, printf, colorize, align } = winston.format;
 
-// Create logs directory if it doesn't exist
-const logsDir = path.join(process.cwd(), 'logs');
-if (!existsSync(logsDir)) {
-  mkdirSync(logsDir);
+// Create transports based on environment
+const transports = [
+  new winston.transports.Console({
+    format: combine(
+      colorize({ all: true }),
+      timestamp({
+        format: 'YYYY-MM-DD hh:mm:ss.SSS A',
+      }),
+      printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
+    ),
+  })
+];
+
+// Only add file transports in development/local environment
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  const { existsSync, mkdirSync } = require('fs');
+  const path = require('path');
+  
+  // Create logs directory if it doesn't exist
+  const logsDir = path.join(process.cwd(), 'logs');
+  if (!existsSync(logsDir)) {
+    mkdirSync(logsDir);
+  }
+
+  transports.push(
+    new winston.transports.File({ 
+      filename: 'logs/error.log', 
+      level: 'error',
+      maxsize: 10485760, // 10MB
+      maxFiles: 5,
+    }),
+    new winston.transports.File({ 
+      filename: 'logs/combined.log',
+      maxsize: 10485760, // 10MB
+      maxFiles: 5,
+    })
+  );
 }
 
 const logger = winston.createLogger({
@@ -19,25 +50,7 @@ const logger = winston.createLogger({
     align(),
     printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
   ),
-  transports: [
-    new winston.transports.Console({
-      format: combine(
-        colorize({ all: true }),
-        printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
-      ),
-    }),
-    new winston.transports.File({ 
-      filename: 'logs/error.log', 
-      level: 'error',
-      maxsize: 10485760, // 10MB
-      maxFiles: 5,
-    }),
-    new winston.transports.File({ 
-      filename: 'logs/combined.log',
-      maxsize: 10485760, // 10MB
-      maxFiles: 5,
-    }),
-  ],
+  transports,
 });
 
 export default logger;
