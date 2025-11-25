@@ -129,6 +129,16 @@ app.get('/api-info', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  
+  // Handle Swagger-related errors specifically
+  if (req.path.startsWith('/api-docs') || req.path.startsWith('/swagger')) {
+    return res.status(500).json({
+      status: 'error',
+      message: 'Swagger documentation error',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Documentation temporarily unavailable'
+    });
+  }
+  
   res.status(500).json({ 
     status: 'error',
     message: 'Something went wrong!',
