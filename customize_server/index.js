@@ -70,16 +70,37 @@ app.get('/api-docs', (req, res) => {
   }
 });
 
+// Test endpoint to check Swagger specs
+app.get('/swagger-test', (req, res) => {
+  try {
+    res.json({
+      status: 'success',
+      message: 'Swagger specs loaded successfully',
+      hasSpecs: !!specs,
+      specKeys: specs ? Object.keys(specs) : null
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to test swagger specs',
+      error: error.message
+    });
+  }
+});
+
 // Swagger JSON specification endpoint
 app.get('/api-docs.json', (req, res) => {
   try {
+    console.log('Generating Swagger JSON...');
     res.setHeader('Content-Type', 'application/json');
     res.send(specs);
   } catch (error) {
     console.error('Error generating Swagger JSON:', error);
+    console.error('Error details:', error.stack);
     res.status(500).json({
       status: 'error',
-      message: 'Failed to generate API documentation'
+      message: 'Failed to generate API documentation',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
