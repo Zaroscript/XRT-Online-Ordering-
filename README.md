@@ -70,7 +70,7 @@ This monorepo contains two main applications:
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone <[repository-url](https://github.com/thomasibrahim10/XRT-Online-Ordering-.git)>
 cd XRT-Online-Ordering-
 ```
 
