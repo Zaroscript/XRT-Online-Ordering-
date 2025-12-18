@@ -17,6 +17,7 @@ import {
   customerUpdateValidationSchema,
   customerValidationSchema,
 } from './user-validation-schema';
+import { Routes } from '@/config/routes';
 
 type FormValues = {
   name: string;
@@ -103,7 +104,9 @@ const UserForm = ({ initialValues }: UserFormProps) => {
     };
 
     if (isNew) {
-      registerUser(input, {
+      registerUser(
+        { ...input, password: password as string },
+        {
         onError: (error: any) => {
           Object.keys(error?.response?.data).forEach((field: any) => {
             setError(field, {
