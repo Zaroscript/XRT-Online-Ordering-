@@ -119,9 +119,6 @@ const SidebarItem = ({
 
   // Check if user has permission to view this menu item
   // console.log(`SidebarItem: ${label}, Role: ${currentUserRole}, Permission: ${JSON.stringify(permission)}, Access: ${permission ? hasAccess(permission, currentUserRole) : 'N/A'}`);
-  if (permission && !hasAccess(permission, currentUserRole)) {
-    return null;
-  }
 
   const {
     query: { shop },
@@ -168,6 +165,11 @@ const SidebarItem = ({
       toggleCollapse();
     }
   }, [isOpen]);
+
+  // Check if user has permission to view this menu item
+  if (permission && !hasAccess(permission, currentUserRole)) {
+    return null;
+  }
 
   return childMenu && childMenu?.length ? (
     miniSidebar && width >= RESPONSIVE_WIDTH ? (

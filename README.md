@@ -7,12 +7,14 @@ Enterprise-grade online ordering platform with comprehensive business management
 This monorepo contains two main applications:
 
 ### 📊 Admin Dashboard (`/admin`)
+
 - **Technology**: Next.js 13+, TypeScript, TailwindCSS
 - **Port**: 3002
 - **Purpose**: Administrative interface for business management
 - **Features**: User management, business oversight, analytics, role-based UI
 
 ### 🚀 Backend Server (`/customize_server`)
+
 - **Technology**: Node.js, Express, MongoDB, JWT Authentication
 - **Port**: 3001
 - **Purpose**: RESTful API with comprehensive business logic
@@ -21,6 +23,7 @@ This monorepo contains two main applications:
 ## ✨ Key Features
 
 ### 🔐 Authentication & Security
+
 - JWT-based authentication with access/refresh tokens
 - Role-based access control (RBAC)
 - Permission-based endpoint protection
@@ -29,19 +32,26 @@ This monorepo contains two main applications:
 - User banning/unbanning capabilities
 
 ### 👥 User Management
+
 - Multi-role user system (super_admin, admin, manager, client, user)
 - Custom role creation with granular permissions
 - User profile management
 - Permission assignment and management
 
 ### 🏢 Business Management
+
+### 🏢 Business Management
+
 - Business registration and verification
 - Owner assignment and transfer
 - Business activation/deactivation
+- **Unified Business Settings**: Manage operating hours, delivery fees, and tax settings
+- **Extended Business Profile**: Social media, location coordinates, and custom messages
 - Contact information management
 - Business metadata and branding
 
 ### 📍 Location Management
+
 - Multi-location support per business
 - Geolocation with coordinates
 - Operating hours management
@@ -49,6 +59,7 @@ This monorepo contains two main applications:
 - Online ordering configuration (pickup/delivery)
 
 ### 👤 Customer Management
+
 - Customer profiles with preferences
 - Rewards and loyalty system
 - Address management
@@ -57,6 +68,7 @@ This monorepo contains two main applications:
 - Customer segmentation by business/location
 
 ### 💳 Financial Management
+
 - Withdrawal management system
 - Transaction tracking
 - Business revenue analytics
@@ -64,11 +76,13 @@ This monorepo contains two main applications:
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - MongoDB 5.0+
 - npm or yarn
 
 ### 1. Clone the Repository
+
 ```bash
 git clone <[repository-url](https://github.com/thomasibrahim10/XRT-Online-Ordering-.git)>
 cd XRT-Online-Ordering-
@@ -150,6 +164,7 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 ## 📚 API Documentation
 
 ### Interactive Documentation
+
 - **Swagger UI**: `http://localhost:3001/api-docs`
 - **API Info**: `http://localhost:3001/api/v1/`
 - **OpenAPI Spec**: `http://localhost:3001/api-docs.json`
@@ -157,6 +172,7 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 ### API Endpoints Overview
 
 #### Authentication
+
 - `POST /auth/register` - User registration
 - `POST /auth/login` - User login
 - `POST /auth/refresh-token` - Token refresh
@@ -167,6 +183,7 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 - `POST /auth/logout` - User logout
 
 #### User Management (Admin)
+
 - `GET /auth/users` - List all users
 - `POST /auth/users` - Create user
 - `GET /auth/users/:id` - Get user details
@@ -179,6 +196,7 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 - `GET /auth/permissions` - List all permissions
 
 #### Role Management
+
 - `GET /roles` - List all roles
 - `POST /roles` - Create role
 - `GET /roles/:id` - Get role details
@@ -189,6 +207,16 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 - `GET /roles/users/:roleId` - Get users with role
 
 #### Business Management
+
+- `GET /businesses` - List all businesses
+- `POST /businesses` - Create business
+- `GET /businesses/:id` - Get business details
+- `PUT /businesses/:id` - Update business
+- `DELETE /businesses/:id` - Delete business
+- `PATCH /businesses/:id/activate` - Activate business
+
+#### Business Management
+
 - `GET /businesses` - List all businesses
 - `POST /businesses` - Create business
 - `GET /businesses/:id` - Get business details
@@ -198,8 +226,11 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 - `PATCH /businesses/:id/deactivate` - Deactivate business
 - `PATCH /businesses/:id/owner` - Update business owner
 - `GET /businesses/owner/:ownerId` - Get businesses by owner
+- `GET /business-settings` - Get business settings
+- `PATCH /business-settings` - Update business settings
 
 #### Location Management
+
 - `GET /locations` - List all locations
 - `POST /locations` - Create location
 - `GET /locations/:id` - Get location details
@@ -211,6 +242,7 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 - `GET /locations/business/:businessId` - Get locations by business
 
 #### Customer Management
+
 - `GET /customers` - List all customers
 - `POST /customers` - Create customer
 - `GET /customers/:id` - Get customer details
@@ -225,11 +257,13 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 - `POST /customers/export` - Export customers to CSV
 
 #### Withdraw Management
+
 - `GET /withdraws` - List all withdrawal requests
 
 ## 🎭 Role-Based Access Control
 
 ### Built-in Roles
+
 - **super_admin**: Full system access
 - **admin**: Administrative access
 - **manager**: Management access
@@ -237,6 +271,7 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 - **user**: Limited access
 
 ### Available Permissions
+
 - **users:read** - View user information
 - **users:create** - Create new users
 - **users:update** - Update user data
@@ -288,7 +323,8 @@ XRT-Online-Ordering-/
 │   ├── config/                   # Configuration files
 │   ├── utils/                    # Utility functions
 │   ├── scripts/                  # Database seeding scripts
-│   ├── test/                     # Test files
+│   ├── utils/                    # Utility functions
+│   ├── scripts/                  # Database seeding scripts
 │   ├── postman/                  # Postman collections
 │   └── package.json
 └── README.md                     # This file
@@ -297,15 +333,19 @@ XRT-Online-Ordering-/
 ### Available Scripts
 
 #### Backend (customize_server)
+
 ```bash
 npm run dev          # Start development server
 npm start           # Start production server
-npm test            # Run tests
+npm run dev          # Start development server
+npm start           # Start production server
+npm run lint        # Run ESLint
 npm run lint        # Run ESLint
 npm run format      # Format code with Prettier
 ```
 
 #### Frontend (admin)
+
 ```bash
 npm run dev          # Start development server
 npm run build        # Build for production
@@ -354,6 +394,7 @@ Import the provided Postman collection for easy API testing:
 ## 🌐 Production Deployment
 
 ### Environment Setup
+
 1. Set `NODE_ENV=production`
 2. Use strong JWT secrets (minimum 32 characters)
 3. Configure MongoDB with authentication
@@ -364,6 +405,7 @@ Import the provided Postman collection for easy API testing:
 ### Docker Deployment
 
 Backend Dockerfile:
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app
@@ -375,6 +417,7 @@ CMD ["npm", "start"]
 ```
 
 Frontend Dockerfile:
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app
@@ -389,11 +432,13 @@ CMD ["npm", "start"]
 ## 📊 Monitoring & Logging
 
 ### Development Mode
+
 - Detailed error messages
 - Request/response logging
 - Database query logging
 
 ### Production Mode
+
 - Error tracking only
 - Performance monitoring
 - Security event logging
@@ -413,6 +458,7 @@ This project is licensed under the MIT License.
 ## 📞 Support
 
 For support and questions:
+
 - Email: support@xrttech.com
 - Documentation: http://localhost:3001/api-docs
 - API Info: http://localhost:3001/api/v1/

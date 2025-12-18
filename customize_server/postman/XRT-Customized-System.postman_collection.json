@@ -2089,6 +2089,169 @@
       "description": "Business management endpoints for CRUD operations, status management, and filtering"
     },
     {
+      "name": "🏢 Business Management",
+      "item": [
+        {
+          "name": "Get User Businesses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/businesses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "businesses"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Business",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('businessId', response.data.business._id);",
+                  "}",
+                  "",
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My New Restaurant\",\n  \"legal_name\": \"My Restaurant LLC\",\n  \"primary_content_name\": \"John Doe\",\n  \"primary_content_email\": \"john@example.com\",\n  \"primary_content_phone\": \"+1234567890\",\n  \"address\": {\n    \"street\": \"123 Food St\",\n    \"city\": \"Foodville\",\n    \"state\": \"CA\",\n    \"zipCode\": \"90210\",\n    \"country\": \"USA\"\n  },\n  \"location\": {\n    \"type\": \"Point\",\n    \"coordinates\": [-118.2437, 34.0522]\n  },\n  \"timezone\": \"America/Los_Angeles\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/businesses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "businesses"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Business By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/businesses/{{businessId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "businesses", "{{businessId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Business",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Restaurant Name\",\n  \"social_media\": {\n    \"instagram\": \"@updated_handle\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/businesses/{{businessId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "businesses", "{{businessId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Business Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-business-id",
+                "value": "{{businessId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/business-settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "business-settings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Business Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-business-id",
+                "value": "{{businessId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operating_hours\": {\n    \"auto_close\": true,\n    \"schedule\": [\n      {\n        \"day\": \"Monday\",\n        \"open_time\": \"09:00\",\n        \"close_time\": \"22:00\"\n      }\n    ]\n  },\n  \"delivery\": {\n    \"enabled\": true,\n    \"radius\": 10,\n    \"fee\": 5,\n    \"min_order\": 20\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/business-settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "business-settings"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "📍 Locations",
       "item": [
         {

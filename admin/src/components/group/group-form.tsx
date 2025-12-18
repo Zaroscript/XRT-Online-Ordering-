@@ -239,7 +239,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
   const { mutate: createType, isLoading: creating } = useCreateTypeMutation();
   const { mutate: updateType, isLoading: updating } = useUpdateTypeMutation();
   const slugAutoSuggest = formatSlug(watch('name'));
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: any) => {
     const input = {
       language: router.locale,
       name: values.name!,
@@ -316,7 +316,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
           id,
         }),
       ),
-      banners: values?.banners?.map((banner) => ({
+      banners: values?.banners?.map((banner: any) => ({
         ...banner,
         image: {
           id: banner?.image?.id,

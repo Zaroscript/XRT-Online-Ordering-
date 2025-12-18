@@ -121,7 +121,7 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
 
   const isTranslateCoupon = router.locale !== Config.defaultLanguage;
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const input = {
       language: router.locale,
       type: values.type,
@@ -178,7 +178,7 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
         />
 
         <Card className="w-full sm:w-8/12 md:w-2/3">
-          <FileInput name="image" control={control} multiple={false} />
+          <FileInput name="image" control={control as any} multiple={false} />
         </Card>
       </div>
 
@@ -271,7 +271,7 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
 
           <div className="mb-5">
             <div className="flex items-center gap-x-4">
-              <SwitchInput name="target" control={control} />
+              <SwitchInput name="target" control={control as any} />
               <Label className="!mb-0.5">
                 {t('form:input-label-verified-customer')}
               </Label>
@@ -281,7 +281,7 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
           <div className="flex flex-col sm:flex-row">
             <div className="w-full p-0 mb-5 sm:mb-0 sm:w-1/2 sm:pe-2">
               <DatePicker
-                control={control}
+                control={control as any}
                 name="active_from"
                 dateFormat="dd/MM/yyyy"
                 minDate={new Date()}
@@ -299,7 +299,7 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
               <DatePicker
                 name="expire_at"
                 dateFormat="dd/MM/yyyy"
-                control={control}
+                control={control as any}
                 startDate={new Date(active_from)}
                 endDate={new Date(expire_at)}
                 minDate={new Date(active_from)}

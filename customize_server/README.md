@@ -6,6 +6,8 @@ Enterprise-grade authentication and user management system with role-based acces
 
 - 🔐 **JWT Authentication** - Secure token-based authentication
 - 👥 **User Management** - Complete user lifecycle management
+- 🏢 **Multi-Business Support** - Manage multiple restaurant businesses
+- ⚙️ **Business Settings** - Configure operating hours, delivery, fees, and taxes
 - 🎭 **Role-Based Access Control** - Flexible permission system
 - 📚 **API Documentation** - Interactive Swagger documentation
 - 🔧 **Admin Dashboard** - Comprehensive admin tools
@@ -22,22 +24,26 @@ Enterprise-grade authentication and user management system with role-based acces
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd customize_server
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    node setup-env.js
    ```
 
 4. **Start the server**
+
    ```bash
    npm run dev
    ```
@@ -50,35 +56,47 @@ Enterprise-grade authentication and user management system with role-based acces
 
 ### Authentication Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/register` | Create new user account |
-| POST | `/auth/login` | User authentication |
-| POST | `/auth/refresh-token` | Refresh access token |
-| POST | `/auth/forgot-password` | Password recovery |
+| Method | Endpoint                | Description             |
+| ------ | ----------------------- | ----------------------- |
+| POST   | `/auth/register`        | Create new user account |
+| POST   | `/auth/login`           | User authentication     |
+| POST   | `/auth/refresh-token`   | Refresh access token    |
+| POST   | `/auth/forgot-password` | Password recovery       |
 
 ### User Management Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/auth/users` | List all users | ✅ |
-| PATCH | `/auth/users/:id/approve` | Approve user account | ✅ |
-| PATCH | `/auth/users/:id/ban` | Ban/unban user | ✅ |
-| PATCH | `/auth/users/:id/permissions` | Update permissions | ✅ |
+| Method | Endpoint                      | Description          | Auth Required |
+| ------ | ----------------------------- | -------------------- | ------------- |
+| GET    | `/auth/users`                 | List all users       | ✅            |
+| PATCH  | `/auth/users/:id/approve`     | Approve user account | ✅            |
+| PATCH  | `/auth/users/:id/ban`         | Ban/unban user       | ✅            |
+| PATCH  | `/auth/users/:id/permissions` | Update permissions   | ✅            |
 
 ### Role Management Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/roles` | List all roles | ✅ |
-| POST | `/roles` | Create new role | ✅ |
-| PATCH | `/roles/:id` | Update role | ✅ |
-| DELETE | `/roles/:id` | Delete role | ✅ |
-| PATCH | `/roles/users/:id/assign` | Assign role to user | ✅ |
+| Method | Endpoint                  | Description         | Auth Required |
+| ------ | ------------------------- | ------------------- | ------------- |
+| GET    | `/roles`                  | List all roles      | ✅            |
+| POST   | `/roles`                  | Create new role     | ✅            |
+| PATCH  | `/roles/:id`              | Update role         | ✅            |
+| DELETE | `/roles/:id`              | Delete role         | ✅            |
+| PATCH  | `/roles/users/:id/assign` | Assign role to user | ✅            |
+
+### Business Management Endpoints
+
+| Method | Endpoint             | Description              | Auth Required |
+| ------ | -------------------- | ------------------------ | ------------- |
+| GET    | `/businesses`        | List user's businesses   | ✅            |
+| POST   | `/businesses`        | Create new business      | ✅            |
+| GET    | `/businesses/:id`    | Get business details     | ✅            |
+| PATCH  | `/businesses/:id`    | Update business          | ✅            |
+| GET    | `/business-settings` | Get business settings    | ✅            |
+| PATCH  | `/business-settings` | Update business settings | ✅            |
 
 ## 🔐 Authentication Flow
 
 ### 1. Create Super Admin
+
 ```bash
 curl -X POST http://localhost:3001/api/v1/auth/register \
   -H "Content-Type: application/json" \
@@ -91,6 +109,7 @@ curl -X POST http://localhost:3001/api/v1/auth/register \
 ```
 
 ### 2. Login
+
 ```bash
 curl -X POST http://localhost:3001/api/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -101,6 +120,7 @@ curl -X POST http://localhost:3001/api/v1/auth/login \
 ```
 
 ### 3. Use Token
+
 ```bash
 curl -X GET http://localhost:3001/api/v1/auth/users \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
@@ -125,11 +145,7 @@ Create custom roles with specific permissions:
   "name": "content-manager",
   "displayName": "Content Manager",
   "description": "Can manage content but not users",
-  "permissions": [
-    "content:read",
-    "content:create",
-    "content:update"
-  ]
+  "permissions": ["content:read", "content:create", "content:update"]
 }
 ```
 
@@ -206,6 +222,8 @@ customize_server/
 │   └── User.js          # User and role schemas
 ├── routes/
 │   ├── auth.js          # Authentication routes
+│   ├── businesses.js    # Business routes
+│   ├── businessSettings.js # Business settings routes
 │   └── roles.js         # Role management routes
 ├── utils/
 │   ├── catchAsync.js    # Async error handler
@@ -278,11 +296,13 @@ CMD ["npm", "start"]
 ## 📊 Monitoring & Logging
 
 ### Development Mode
+
 - Detailed error messages
 - Request/response logging
 - Database query logging
 
 ### Production Mode
+
 - Error tracking only
 - Performance monitoring
 - Security event logging
@@ -302,6 +322,7 @@ This project is licensed under the MIT License.
 ## 📞 Support
 
 For support and questions:
+
 - Email: dev@xrt.com
 - Documentation: http://localhost:3001/api-docs
 - API Info: http://localhost:3001/api-info

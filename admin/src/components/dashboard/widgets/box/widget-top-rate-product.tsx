@@ -65,7 +65,7 @@ function SoldProductCard({ product }: { product: any }) {
           <div
             className={cn(
               'relative w-52 sm:w-80 md:w-96 lg:w-48 xl:w-72 2xl:w-80',
-              data?.settings?.productCard === 'radon'
+              (data as any)?.settings?.productCard === 'radon'
                 ? 'aspect-[2.5/3.6]'
                 : 'aspect-square',
             )}

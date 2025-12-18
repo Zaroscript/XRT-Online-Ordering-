@@ -159,7 +159,7 @@ export default function CreateOrUpdateStoreNoticeForm({
 
   const [effective_from, expired_at] = watch(['effective_from', 'expired_at']);
   const isTranslateStoreNotice = router.locale !== Config.defaultLanguage;
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const inputValues = {
       priority: values.priority.value,
       notice: values.notice,

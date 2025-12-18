@@ -20,7 +20,7 @@ export default function TypeFilter({ onTypeFilter, className }: Props) {
     <div className={cn('flex w-full', className)}>
       <div className="w-full">
         <Select
-          options={types}
+          options={types as any}
           isLoading={loading}
           getOptionLabel={(option: any) => option.name}
           getOptionValue={(option: any) => option.slug}

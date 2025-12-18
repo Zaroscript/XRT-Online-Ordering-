@@ -20,62 +20,71 @@ export interface Props extends InputHTMLAttributes<HTMLInputElement> {
   control: any;
 }
 
-const PhoneNumberInput = React.forwardRef<any, Props>(({
-  label,
-  required,
-  showLabel = true,
-  error,
-  className,
-  inputClassName,
-  toolTipText,
-  disabled,
-  note,
-  name,
-  control,
-  ...rest
-}, ref) => {
-  return (
-    <div className={twMerge(cn('mb-5', className))}>
-      <Controller
-        render={({ field: { onChange, value } }) => (
-          <>
-            {showLabel ? (
-              <TooltipLabel
-                htmlFor={name}
-                toolTipText={toolTipText}
-                label={label}
-                required={required}
-              />
-            ) : (
-              ''
-            )}
-            <PhoneInput
-              value={value}
-              onChange={onChange}
-              inputClass={twMerge(
-                cn(
-                  '!p-0 !pe-4 !ps-14 !flex !items-center !w-full !appearance-none !transition !duration-300 !ease-in-out !text-heading !text-sm focus:!outline-none focus:!ring-0 !border !border-border-base !rounded focus:!border-accent !h-12',
-                  disabled
-                    ? `cursor-not-allowed !border-[#D4D8DD] !bg-[#EEF1F4] select-none`
-                    : '',
-                  inputClassName,
-                ),
+const PhoneNumberInput = React.forwardRef<any, Props>(
+  (
+    {
+      label,
+      required,
+      showLabel = true,
+      error,
+      className,
+      inputClassName,
+      toolTipText,
+      disabled,
+      note,
+      name,
+      control,
+      ...rest
+    },
+    ref,
+  ) => {
+    return (
+      <div className={twMerge(cn('mb-5', className))}>
+        <Controller
+          render={({ field: { onChange, value } }) => (
+            <>
+              {showLabel ? (
+                <TooltipLabel
+                  htmlFor={name}
+                  toolTipText={toolTipText}
+                  label={label}
+                  required={required}
+                />
+              ) : (
+                ''
               )}
-              dropdownClass="focus:!ring-0 !border !border-border-base !shadow-350"
-              aria-invalid={error ? 'true' : 'false'}
-              disabled={disabled}
-            />
-          </>
+              <PhoneInput
+                value={value}
+                onChange={onChange}
+                inputClass={twMerge(
+                  cn(
+                    '!p-0 !pe-4 !ps-14 !flex !items-center !w-full !appearance-none !transition !duration-300 !ease-in-out !text-heading !text-sm focus:!outline-none focus:!ring-0 !border !border-border-base !rounded focus:!border-accent !h-12',
+                    disabled
+                      ? `cursor-not-allowed !border-[#D4D8DD] !bg-[#EEF1F4] select-none`
+                      : '',
+                    inputClassName,
+                  ),
+                )}
+                dropdownClass="focus:!ring-0 !border !border-border-base !shadow-350"
+                aria-invalid={error ? 'true' : 'false'}
+                disabled={disabled}
+              />
+            </>
+          )}
+          id={name}
+          name={name}
+          control={control}
+          {...rest}
+        />
+        {note && <p className="mt-2 text-xs text-body">{note}</p>}
+        {error && (
+          <p className="my-2 text-xs text-red-500 text-start">{error}</p>
         )}
-        id={name}
-        name={name}
-        control={control}
-        {...rest}
-      />
-      {note && <p className="mt-2 text-xs text-body">{note}</p>}
-      {error && <p className="my-2 text-xs text-red-500 text-start">{error}</p>}
-    </div>
-  );
-});
+      </div>
+    );
+  },
+);
+
+PhoneNumberInput.displayName = 'PhoneNumberInput';
 
 export default PhoneNumberInput;

@@ -70,7 +70,7 @@ export default function CreateOrUpdateTermsAndConditionsForm({
   } = useForm<FormValues>({
     // @ts-ignore
     defaultValues: initialValues,
-     //@ts-ignore
+    //@ts-ignore
     resolver: yupResolver(termsAndConditionsValidationSchema),
   });
 
@@ -99,7 +99,7 @@ export default function CreateOrUpdateTermsAndConditionsForm({
   const isTranslateTermsAndConditions =
     router.locale !== Config.defaultLanguage;
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const inputValues = {
       language: router.locale,
       title: values.title,

@@ -106,7 +106,7 @@ export default function CreateOrUpdateVendorProductsRequestFlashSaleForm({
   const { mutate: updateFlashSaleRequest, isLoading: updating } =
     useUpdateFlashSaleRequestMutation();
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const inputValues = {
       language: locale,
       title: values?.flashSale?.title,

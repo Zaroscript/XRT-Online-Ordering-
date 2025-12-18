@@ -110,7 +110,7 @@ export default function GeneralSettingsForm({
 
   // const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: any) {
     updateSettingsMutation({
       language: locale,
       // @ts-ignore // // FIXME
@@ -363,7 +363,7 @@ export default function GeneralSettingsForm({
           <SwitchInput
             name="isMultiCommissionRate"
             control={control}
-            label='Enable Multi Commission Rate'
+            label="Enable Multi Commission Rate"
             // disabled={isNotDefaultSettingsPage}
           />
         </Card>

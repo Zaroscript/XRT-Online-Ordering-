@@ -121,7 +121,7 @@ export default function CreateOrUpdateRefundPolicyForm({
   const { mutate: updateRefundPolicy, isLoading: updating } =
     useUpdateRefundPolicyMutation();
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const input = {
       ...values,
       language: router.locale!,

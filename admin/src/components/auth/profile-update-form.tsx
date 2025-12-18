@@ -59,7 +59,7 @@ export default function ProfileUpdate({ me }: any) {
     },
   });
 
-  async function onSubmit(values: FormValues) {
+  const onSubmit = async (values: any) => {
     const { name, profile } = values;
     const { notifications } = profile;
     const input = {
@@ -82,7 +82,7 @@ export default function ProfileUpdate({ me }: any) {
       },
     };
     updateUser({ ...input });
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

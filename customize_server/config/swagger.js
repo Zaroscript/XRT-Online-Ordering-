@@ -4,11 +4,12 @@ export const specs = {
   info: {
     title: 'XRT Customized System API',
     version: '1.0.0',
-    description: 'Enterprise-grade API for authentication, user management, and role-based access control',
+    description:
+      'Enterprise-grade API for authentication, user management, and role-based access control',
     contact: {
       name: 'API Support',
-      email: 'support@xrt.com'
-    }
+      email: 'support@xrt.com',
+    },
   },
   servers: [
     {
@@ -18,7 +19,7 @@ export const specs = {
     {
       url: 'http://localhost:3001/api/v1',
       description: 'Development',
-    }
+    },
   ],
   components: {
     securitySchemes: {
@@ -26,8 +27,8 @@ export const specs = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: 'JWT access token obtained from login endpoint'
-      }
+        description: 'JWT access token obtained from login endpoint',
+      },
     },
     schemas: {
       User: {
@@ -36,23 +37,23 @@ export const specs = {
           _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
           name: { type: 'string', example: 'John Doe' },
           email: { type: 'string', format: 'email', example: 'john@example.com' },
-          role: { 
-            type: 'string', 
+          role: {
+            type: 'string',
             enum: ['super_admin', 'admin', 'manager', 'client', 'user'],
-            example: 'client'
+            example: 'client',
           },
           permissions: {
             type: 'array',
             items: { type: 'string' },
-            example: ['users:read', 'content:create']
+            example: ['users:read', 'content:create'],
           },
           isApproved: { type: 'boolean', example: true },
           isBanned: { type: 'boolean', example: false },
           banReason: { type: 'string', example: null },
           customRole: { type: 'string', example: null },
           createdAt: { type: 'string', format: 'date-time' },
-          updatedAt: { type: 'string', format: 'date-time' }
-        }
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
       },
       Role: {
         type: 'object',
@@ -64,13 +65,13 @@ export const specs = {
           permissions: {
             type: 'array',
             items: { type: 'string' },
-            example: ['content:read', 'content:create', 'content:update']
+            example: ['content:read', 'content:create', 'content:update'],
           },
           isSystem: { type: 'boolean', example: false },
           createdBy: { type: 'string', example: '507f1f77bcf86cd799439011' },
           createdAt: { type: 'string', format: 'date-time' },
-          updatedAt: { type: 'string', format: 'date-time' }
-        }
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
       },
       AuthResponse: {
         type: 'object',
@@ -81,17 +82,17 @@ export const specs = {
           data: {
             type: 'object',
             properties: {
-              user: { $ref: '#/components/schemas/User' }
-            }
-          }
-        }
+              user: { $ref: '#/components/schemas/User' },
+            },
+          },
+        },
       },
       ErrorResponse: {
         type: 'object',
         properties: {
           status: { type: 'string', example: 'error' },
-          message: { type: 'string', example: 'Validation failed' }
-        }
+          message: { type: 'string', example: 'Validation failed' },
+        },
       },
       Customer: {
         type: 'object',
@@ -112,20 +113,20 @@ export const specs = {
               dietary: {
                 type: 'array',
                 items: { type: 'string' },
-                example: ['vegetarian']
+                example: ['vegetarian'],
               },
               allergies: {
                 type: 'array',
                 items: { type: 'string' },
-                example: ['nuts']
+                example: ['nuts'],
               },
               favoriteItems: {
                 type: 'array',
                 items: { type: 'string' },
-                example: ['Pizza', 'Burger']
+                example: ['Pizza', 'Burger'],
               },
-              specialInstructions: { type: 'string', example: 'No onions please' }
-            }
+              specialInstructions: { type: 'string', example: 'No onions please' },
+            },
           },
           addresses: {
             type: 'array',
@@ -138,38 +139,87 @@ export const specs = {
                 state: { type: 'string', example: 'NY' },
                 zipCode: { type: 'string', example: '10001' },
                 country: { type: 'string', example: 'USA' },
-                isDefault: { type: 'boolean', example: true }
-              }
-            }
+                isDefault: { type: 'boolean', example: true },
+              },
+            },
           },
           loyaltyTier: {
             type: 'string',
             enum: ['bronze', 'silver', 'gold', 'platinum'],
-            example: 'silver'
+            example: 'silver',
           },
           totalOrders: { type: 'number', example: 25 },
-          totalSpent: { type: 'number', example: 1250.50 },
+          totalSpent: { type: 'number', example: 1250.5 },
           notes: { type: 'string', example: 'VIP customer, prefers delivery' },
           createdAt: { type: 'string', format: 'date-time' },
-          updatedAt: { type: 'string', format: 'date-time' }
-        }
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
       },
       Business: {
         type: 'object',
-        required: ['id', 'owner', 'name', 'legal_name', 'primary_content_name', 'primary_content_email', 'primary_content_phone'],
+        required: [
+          'id',
+          'owner',
+          'name',
+          'legal_name',
+          'primary_content_name',
+          'primary_content_email',
+          'primary_content_phone',
+        ],
         properties: {
           _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-          id: { type: 'string', example: 'biz-123456789', description: 'Business unique identifier' },
-          owner: { type: 'string', example: '507f1f77bcf86cd799439011', description: 'Reference to user who owns the business' },
-          name: { type: 'string', example: "Joe's Pizza Place", description: 'Business display name' },
-          legal_name: { type: 'string', example: "Joe's Pizza LLC", description: 'Legal business registration name' },
-          primary_content_name: { type: 'string', example: 'Joe Smith', description: 'Primary contact person name' },
-          primary_content_email: { type: 'string', format: 'email', example: 'joe@joespizza.com', description: 'Primary contact email' },
-          primary_content_phone: { type: 'string', example: '+1234567890', description: 'Primary contact phone number' },
+          id: {
+            type: 'string',
+            example: 'biz-123456789',
+            description: 'Business unique identifier',
+          },
+          owner: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439011',
+            description: 'Reference to user who owns the business',
+          },
+          name: {
+            type: 'string',
+            example: "Joe's Pizza Place",
+            description: 'Business display name',
+          },
+          legal_name: {
+            type: 'string',
+            example: "Joe's Pizza LLC",
+            description: 'Legal business registration name',
+          },
+          primary_content_name: {
+            type: 'string',
+            example: 'Joe Smith',
+            description: 'Primary contact person name',
+          },
+          primary_content_email: {
+            type: 'string',
+            format: 'email',
+            example: 'joe@joespizza.com',
+            description: 'Primary contact email',
+          },
+          primary_content_phone: {
+            type: 'string',
+            example: '+1234567890',
+            description: 'Primary contact phone number',
+          },
           isActive: { type: 'boolean', example: true, description: 'Business active status' },
-          created_at: { type: 'string', format: 'date-time', description: 'Business creation timestamp' },
-          description: { type: 'string', example: 'Best pizza in town!', description: 'Business description' },
-          website: { type: 'string', example: 'https://joespizza.com', description: 'Business website URL' },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Business creation timestamp',
+          },
+          description: {
+            type: 'string',
+            example: 'Best pizza in town!',
+            description: 'Business description',
+          },
+          website: {
+            type: 'string',
+            example: 'https://joespizza.com',
+            description: 'Business website URL',
+          },
           address: {
             type: 'object',
             properties: {
@@ -177,26 +227,101 @@ export const specs = {
               city: { type: 'string', example: 'New York' },
               state: { type: 'string', example: 'NY' },
               zipCode: { type: 'string', example: '10001' },
-              country: { type: 'string', example: 'USA' }
-            }
+              country: { type: 'string', example: 'USA' },
+            },
           },
-          logo: { type: 'string', example: 'https://joespizza.com/logo.png', description: 'Business logo URL' },
+          logo: {
+            type: 'string',
+            example: 'https://joespizza.com/logo.png',
+            description: 'Business logo URL',
+          },
+          location: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', example: 'Point' },
+              coordinates: {
+                type: 'array',
+                items: { type: 'number' },
+                example: [-73.935242, 40.73061],
+              },
+            },
+          },
+          google_maps_verification: { type: 'boolean', example: false },
+          social_media: {
+            type: 'object',
+            properties: {
+              facebook: { type: 'string' },
+              instagram: { type: 'string' },
+              whatsapp: { type: 'string' },
+              tiktok: { type: 'string' },
+            },
+          },
+          header_info: { type: 'string' },
+          footer_text: { type: 'string' },
+          messages: {
+            type: 'object',
+            properties: {
+              closed_message: { type: 'string' },
+              not_accepting_orders_message: { type: 'string' },
+            },
+          },
+          timezone: { type: 'string', example: 'America/New_York' },
           createdAt: { type: 'string', format: 'date-time' },
-          updatedAt: { type: 'string', format: 'date-time' }
-        }
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
       },
       CreateBusinessRequest: {
         type: 'object',
-        required: ['owner', 'name', 'legal_name', 'primary_content_name', 'primary_content_email', 'primary_content_phone'],
+        required: [
+          'owner',
+          'name',
+          'legal_name',
+          'primary_content_name',
+          'primary_content_email',
+          'primary_content_phone',
+        ],
         properties: {
-          owner: { type: 'string', example: '507f1f77bcf86cd799439011', description: 'User ID of the business owner' },
-          name: { type: 'string', example: "Joe's Pizza Place", description: 'Business display name' },
-          legal_name: { type: 'string', example: "Joe's Pizza LLC", description: 'Legal business name' },
-          primary_content_name: { type: 'string', example: 'Joe Smith', description: 'Primary contact name' },
-          primary_content_email: { type: 'string', format: 'email', example: 'joe@joespizza.com', description: 'Primary contact email' },
-          primary_content_phone: { type: 'string', example: '+1234567890', description: 'Primary contact phone' },
-          description: { type: 'string', example: 'Best pizza in town!', description: 'Business description' },
-          website: { type: 'string', example: 'https://joespizza.com', description: 'Business website' },
+          owner: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439011',
+            description: 'User ID of the business owner',
+          },
+          name: {
+            type: 'string',
+            example: "Joe's Pizza Place",
+            description: 'Business display name',
+          },
+          legal_name: {
+            type: 'string',
+            example: "Joe's Pizza LLC",
+            description: 'Legal business name',
+          },
+          primary_content_name: {
+            type: 'string',
+            example: 'Joe Smith',
+            description: 'Primary contact name',
+          },
+          primary_content_email: {
+            type: 'string',
+            format: 'email',
+            example: 'joe@joespizza.com',
+            description: 'Primary contact email',
+          },
+          primary_content_phone: {
+            type: 'string',
+            example: '+1234567890',
+            description: 'Primary contact phone',
+          },
+          description: {
+            type: 'string',
+            example: 'Best pizza in town!',
+            description: 'Business description',
+          },
+          website: {
+            type: 'string',
+            example: 'https://joespizza.com',
+            description: 'Business website',
+          },
           address: {
             type: 'object',
             properties: {
@@ -204,11 +329,42 @@ export const specs = {
               city: { type: 'string' },
               state: { type: 'string' },
               zipCode: { type: 'string' },
-              country: { type: 'string' }
-            }
+              country: { type: 'string' },
+            },
           },
-          logo: { type: 'string', description: 'Business logo URL' }
-        }
+          logo: { type: 'string', description: 'Business logo URL' },
+          location: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', example: 'Point' },
+              coordinates: {
+                type: 'array',
+                items: { type: 'number' },
+                example: [-73.935242, 40.73061],
+              },
+            },
+          },
+          google_maps_verification: { type: 'boolean', example: false },
+          social_media: {
+            type: 'object',
+            properties: {
+              facebook: { type: 'string' },
+              instagram: { type: 'string' },
+              whatsapp: { type: 'string' },
+              tiktok: { type: 'string' },
+            },
+          },
+          header_info: { type: 'string' },
+          footer_text: { type: 'string' },
+          messages: {
+            type: 'object',
+            properties: {
+              closed_message: { type: 'string' },
+              not_accepting_orders_message: { type: 'string' },
+            },
+          },
+          timezone: { type: 'string', example: 'America/New_York' },
+        },
       },
       UpdateBusinessRequest: {
         type: 'object',
@@ -216,7 +372,11 @@ export const specs = {
           name: { type: 'string', description: 'Business display name' },
           legal_name: { type: 'string', description: 'Legal business name' },
           primary_content_name: { type: 'string', description: 'Primary contact name' },
-          primary_content_email: { type: 'string', format: 'email', description: 'Primary contact email' },
+          primary_content_email: {
+            type: 'string',
+            format: 'email',
+            description: 'Primary contact email',
+          },
           primary_content_phone: { type: 'string', description: 'Primary contact phone' },
           description: { type: 'string', description: 'Business description' },
           website: { type: 'string', description: 'Business website' },
@@ -227,28 +387,188 @@ export const specs = {
               city: { type: 'string' },
               state: { type: 'string' },
               zipCode: { type: 'string' },
-              country: { type: 'string' }
-            }
+              country: { type: 'string' },
+            },
           },
           logo: { type: 'string', description: 'Business logo URL' },
-          isActive: { type: 'boolean', description: 'Business active status' }
-        }
+          location: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', example: 'Point' },
+              coordinates: {
+                type: 'array',
+                items: { type: 'number' },
+                example: [-73.935242, 40.73061],
+              },
+            },
+          },
+          google_maps_verification: { type: 'boolean', example: false },
+          social_media: {
+            type: 'object',
+            properties: {
+              facebook: { type: 'string' },
+              instagram: { type: 'string' },
+              whatsapp: { type: 'string' },
+              tiktok: { type: 'string' },
+            },
+          },
+          header_info: { type: 'string' },
+          footer_text: { type: 'string' },
+          messages: {
+            type: 'object',
+            properties: {
+              closed_message: { type: 'string' },
+              not_accepting_orders_message: { type: 'string' },
+            },
+          },
+          timezone: { type: 'string', example: 'America/New_York' },
+          isActive: { type: 'boolean', description: 'Business active status' },
+        },
       },
       UpdateBusinessOwnerRequest: {
         type: 'object',
         required: ['ownerId'],
         properties: {
-          ownerId: { type: 'string', example: '507f1f77bcf86cd799439011', description: 'New owner user ID' }
-        }
+          ownerId: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439011',
+            description: 'New owner user ID',
+          },
+        },
+      },
+      BusinessSettings: {
+        type: 'object',
+        properties: {
+          business: { type: 'string', description: 'Business ID' },
+          operating_hours: {
+            type: 'object',
+            properties: {
+              auto_close: { type: 'boolean' },
+              schedule: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    day: { type: 'string' },
+                    open_time: { type: 'string' },
+                    close_time: { type: 'string' },
+                    is_closed: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          delivery: {
+            type: 'object',
+            properties: {
+              enabled: { type: 'boolean' },
+              radius: { type: 'number' },
+              fee: { type: 'number' },
+              min_order: { type: 'number' },
+            },
+          },
+          fees: {
+            type: 'object',
+            properties: {
+              service_fee: { type: 'number' },
+            },
+          },
+          taxes: {
+            type: 'object',
+            properties: {
+              sales_tax: { type: 'number' },
+              meals_tax: { type: 'number' },
+            },
+          },
+          orders: {
+            type: 'object',
+            properties: {
+              accept_orders: { type: 'boolean' },
+            },
+          },
+        },
+      },
+      UpdateBusinessSettingsRequest: {
+        type: 'object',
+        properties: {
+          operating_hours: {
+            type: 'object',
+            properties: {
+              auto_close: { type: 'boolean' },
+              schedule: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    day: { type: 'string' },
+                    open_time: { type: 'string' },
+                    close_time: { type: 'string' },
+                    is_closed: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          delivery: {
+            type: 'object',
+            properties: {
+              enabled: { type: 'boolean' },
+              radius: { type: 'number' },
+              fee: { type: 'number' },
+              min_order: { type: 'number' },
+            },
+          },
+          fees: {
+            type: 'object',
+            properties: {
+              service_fee: { type: 'number' },
+            },
+          },
+          taxes: {
+            type: 'object',
+            properties: {
+              sales_tax: { type: 'number' },
+              meals_tax: { type: 'number' },
+            },
+          },
+          orders: {
+            type: 'object',
+            properties: {
+              accept_orders: { type: 'boolean' },
+            },
+          },
+        },
       },
       Location: {
         type: 'object',
-        required: ['id', 'business_id', 'branch_name', 'address', 'contact', 'longitude', 'latitude', 'timeZone', 'opening'],
+        required: [
+          'id',
+          'business_id',
+          'branch_name',
+          'address',
+          'contact',
+          'longitude',
+          'latitude',
+          'timeZone',
+          'opening',
+        ],
         properties: {
           _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-          id: { type: 'string', example: 'loc-123456789', description: 'Location unique identifier' },
-          business_id: { type: 'string', example: '507f1f77bcf86cd799439011', description: 'Reference to business model' },
-          branch_name: { type: 'string', example: 'Downtown Branch', description: 'Branch display name' },
+          id: {
+            type: 'string',
+            example: 'loc-123456789',
+            description: 'Location unique identifier',
+          },
+          business_id: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439011',
+            description: 'Reference to business model',
+          },
+          branch_name: {
+            type: 'string',
+            example: 'Downtown Branch',
+            description: 'Branch display name',
+          },
           address: {
             type: 'object',
             properties: {
@@ -259,50 +579,90 @@ export const specs = {
               country: { type: 'string', example: 'USA' },
               building: { type: 'string', example: 'Tower A' },
               floor: { type: 'string', example: '5th Floor' },
-              landmark: { type: 'string', example: 'Near Central Park' }
-            }
+              landmark: { type: 'string', example: 'Near Central Park' },
+            },
           },
           contact: {
             type: 'object',
             properties: {
               phone: { type: 'string', example: '+1234567890' },
               email: { type: 'string', format: 'email', example: 'downtown@business.com' },
-              website: { type: 'string', example: 'https://business.com/downtown' }
-            }
+              website: { type: 'string', example: 'https://business.com/downtown' },
+            },
           },
-          longitude: { type: 'number', example: -74.0060, description: 'Location longitude coordinate' },
-          latitude: { type: 'number', example: 40.7128, description: 'Location latitude coordinate' },
-          timeZone: { type: 'string', example: 'America/New_York', description: 'Location timezone' },
+          longitude: {
+            type: 'number',
+            example: -74.006,
+            description: 'Location longitude coordinate',
+          },
+          latitude: {
+            type: 'number',
+            example: 40.7128,
+            description: 'Location latitude coordinate',
+          },
+          timeZone: {
+            type: 'string',
+            example: 'America/New_York',
+            description: 'Location timezone',
+          },
           online_ordering: {
             type: 'object',
             properties: {
               pickup: { type: 'boolean', example: true },
-              delivery: { type: 'boolean', example: true }
-            }
+              delivery: { type: 'boolean', example: true },
+            },
           },
           opening: {
             type: 'array',
             items: {
               type: 'object',
               properties: {
-                day_of_week: { type: 'string', enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] },
+                day_of_week: {
+                  type: 'string',
+                  enum: [
+                    'monday',
+                    'tuesday',
+                    'wednesday',
+                    'thursday',
+                    'friday',
+                    'saturday',
+                    'sunday',
+                  ],
+                },
                 open_time: { type: 'string', example: '09:00' },
                 close_time: { type: 'string', example: '22:00' },
-                is_closed: { type: 'boolean', example: false }
-              }
-            }
+                is_closed: { type: 'boolean', example: false },
+              },
+            },
           },
           isActive: { type: 'boolean', example: true, description: 'Location active status' },
-          created_at: { type: 'string', format: 'date-time', description: 'Location creation timestamp' },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Location creation timestamp',
+          },
           createdAt: { type: 'string', format: 'date-time' },
-          updatedAt: { type: 'string', format: 'date-time' }
-        }
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
       },
       CreateLocationRequest: {
         type: 'object',
-        required: ['business_id', 'branch_name', 'address', 'contact', 'longitude', 'latitude', 'timeZone', 'opening'],
+        required: [
+          'business_id',
+          'branch_name',
+          'address',
+          'contact',
+          'longitude',
+          'latitude',
+          'timeZone',
+          'opening',
+        ],
         properties: {
-          business_id: { type: 'string', example: '507f1f77bcf86cd799439011', description: 'Business ID' },
+          business_id: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439011',
+            description: 'Business ID',
+          },
           branch_name: { type: 'string', example: 'Downtown Branch', description: 'Branch name' },
           address: {
             type: 'object',
@@ -314,16 +674,16 @@ export const specs = {
               country: { type: 'string' },
               building: { type: 'string' },
               floor: { type: 'string' },
-              landmark: { type: 'string' }
-            }
+              landmark: { type: 'string' },
+            },
           },
           contact: {
             type: 'object',
             properties: {
               phone: { type: 'string' },
               email: { type: 'string' },
-              website: { type: 'string' }
-            }
+              website: { type: 'string' },
+            },
           },
           longitude: { type: 'number' },
           latitude: { type: 'number' },
@@ -332,8 +692,8 @@ export const specs = {
             type: 'object',
             properties: {
               pickup: { type: 'boolean' },
-              delivery: { type: 'boolean' }
-            }
+              delivery: { type: 'boolean' },
+            },
           },
           opening: {
             type: 'array',
@@ -343,11 +703,11 @@ export const specs = {
                 day_of_week: { type: 'string' },
                 open_time: { type: 'string' },
                 close_time: { type: 'string' },
-                is_closed: { type: 'boolean' }
-              }
-            }
-          }
-        }
+                is_closed: { type: 'boolean' },
+              },
+            },
+          },
+        },
       },
       UpdateLocationRequest: {
         type: 'object',
@@ -363,16 +723,16 @@ export const specs = {
               country: { type: 'string' },
               building: { type: 'string' },
               floor: { type: 'string' },
-              landmark: { type: 'string' }
-            }
+              landmark: { type: 'string' },
+            },
           },
           contact: {
             type: 'object',
             properties: {
               phone: { type: 'string' },
               email: { type: 'string' },
-              website: { type: 'string' }
-            }
+              website: { type: 'string' },
+            },
           },
           longitude: { type: 'number' },
           latitude: { type: 'number' },
@@ -381,8 +741,8 @@ export const specs = {
             type: 'object',
             properties: {
               pickup: { type: 'boolean' },
-              delivery: { type: 'boolean' }
-            }
+              delivery: { type: 'boolean' },
+            },
           },
           opening: {
             type: 'array',
@@ -392,12 +752,12 @@ export const specs = {
                 day_of_week: { type: 'string' },
                 open_time: { type: 'string' },
                 close_time: { type: 'string' },
-                is_closed: { type: 'boolean' }
-              }
-            }
+                is_closed: { type: 'boolean' },
+              },
+            },
           },
-          isActive: { type: 'boolean' }
-        }
+          isActive: { type: 'boolean' },
+        },
       },
       RegisterRequest: {
         type: 'object',
@@ -406,43 +766,43 @@ export const specs = {
           name: { type: 'string', example: 'John Doe' },
           email: { type: 'string', format: 'email', example: 'john@example.com' },
           password: { type: 'string', minLength: 8, example: 'password123' },
-          role: { 
-            type: 'string', 
+          role: {
+            type: 'string',
             enum: ['super_admin', 'admin', 'manager', 'client', 'user'],
             default: 'client',
-            example: 'client'
-          }
-        }
+            example: 'client',
+          },
+        },
       },
       LoginRequest: {
         type: 'object',
         required: ['email', 'password'],
         properties: {
           email: { type: 'string', format: 'email', example: 'john@example.com' },
-          password: { type: 'string', example: 'password123' }
-        }
+          password: { type: 'string', example: 'password123' },
+        },
       },
       RefreshTokenRequest: {
         type: 'object',
         required: ['refreshToken'],
         properties: {
-          refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
-        }
+          refreshToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+        },
       },
       ForgotPasswordRequest: {
         type: 'object',
         required: ['email'],
         properties: {
-          email: { type: 'string', format: 'email', example: 'john@example.com' }
-        }
+          email: { type: 'string', format: 'email', example: 'john@example.com' },
+        },
       },
       ResetPasswordRequest: {
         type: 'object',
         required: ['password'],
         properties: {
           password: { type: 'string', minLength: 8, example: 'newpassword123' },
-          confirmPassword: { type: 'string', example: 'newpassword123' }
-        }
+          confirmPassword: { type: 'string', example: 'newpassword123' },
+        },
       },
       UpdatePasswordRequest: {
         type: 'object',
@@ -450,8 +810,8 @@ export const specs = {
         properties: {
           currentPassword: { type: 'string', example: 'oldpassword123' },
           newPassword: { type: 'string', minLength: 8, example: 'newpassword123' },
-          confirmPassword: { type: 'string', example: 'newpassword123' }
-        }
+          confirmPassword: { type: 'string', example: 'newpassword123' },
+        },
       },
       CreateRoleRequest: {
         type: 'object',
@@ -463,9 +823,9 @@ export const specs = {
           permissions: {
             type: 'array',
             items: { type: 'string' },
-            example: ['content:read', 'content:create', 'content:update']
-          }
-        }
+            example: ['content:read', 'content:create', 'content:update'],
+          },
+        },
       },
       UpdateRoleRequest: {
         type: 'object',
@@ -475,23 +835,23 @@ export const specs = {
           permissions: {
             type: 'array',
             items: { type: 'string' },
-            example: ['content:read', 'content:create', 'content:update', 'content:delete']
-          }
-        }
+            example: ['content:read', 'content:create', 'content:update', 'content:delete'],
+          },
+        },
       },
       AssignRoleRequest: {
         type: 'object',
         required: ['roleId'],
         properties: {
-          roleId: { type: 'string', example: '507f1f77bcf86cd799439011' }
-        }
+          roleId: { type: 'string', example: '507f1f77bcf86cd799439011' },
+        },
       },
       BanUserRequest: {
         type: 'object',
         properties: {
           isBanned: { type: 'boolean', example: true },
-          banReason: { type: 'string', example: 'Violation of terms of service' }
-        }
+          banReason: { type: 'string', example: 'Violation of terms of service' },
+        },
       },
       UpdatePermissionsRequest: {
         type: 'object',
@@ -500,13 +860,232 @@ export const specs = {
           permissions: {
             type: 'array',
             items: { type: 'string' },
-            example: ['users:read', 'content:create']
-          }
-        }
-      }
-    }
+            example: ['users:read', 'content:create'],
+          },
+        },
+      },
+    },
   },
   paths: {
+    '/api/v1/businesses': {
+      get: {
+        summary: 'Get all businesses owned by user',
+        tags: ['Business'],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'List of businesses',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        businesses: {
+                          type: 'array',
+                          items: { $ref: '#/components/schemas/Business' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        summary: 'Create a new business',
+        tags: ['Business'],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CreateBusinessRequest' },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Business created',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        business: { $ref: '#/components/schemas/Business' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/businesses/{id}': {
+      get: {
+        summary: 'Get business by ID',
+        tags: ['Business'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'id',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Business details information',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        business: { $ref: '#/components/schemas/Business' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      patch: {
+        summary: 'Update business',
+        tags: ['Business'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'id',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/UpdateBusinessRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Business details updated',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        business: { $ref: '#/components/schemas/Business' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/business-settings': {
+      get: {
+        summary: 'Get business settings',
+        tags: ['Business Settings'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: 'header',
+            name: 'x-business-id',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Business settings details',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        settings: { $ref: '#/components/schemas/BusinessSettings' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      patch: {
+        summary: 'Update business settings',
+        tags: ['Business Settings'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: 'header',
+            name: 'x-business-id',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/UpdateBusinessSettingsRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Settings updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        settings: { $ref: '#/components/schemas/BusinessSettings' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     '/api/v1/auth/register': {
       post: {
         summary: 'Register a new user',
@@ -515,29 +1094,29 @@ export const specs = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/RegisterRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/RegisterRequest' },
+            },
+          },
         },
         responses: {
           201: {
             description: 'User registered successfully',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/AuthResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/AuthResponse' },
+              },
+            },
           },
           400: {
             description: 'Bad request - validation error or duplicate email',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/login': {
       post: {
@@ -547,37 +1126,37 @@ export const specs = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/LoginRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/LoginRequest' },
+            },
+          },
         },
         responses: {
           200: {
             description: 'Login successful',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/AuthResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/AuthResponse' },
+              },
+            },
           },
           401: {
             description: 'Invalid credentials',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           403: {
             description: 'Account not approved or banned',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/refresh-token': {
       post: {
@@ -587,9 +1166,9 @@ export const specs = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/RefreshTokenRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/RefreshTokenRequest' },
+            },
+          },
         },
         responses: {
           200: {
@@ -600,22 +1179,22 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    accessToken: { type: 'string' }
-                  }
-                }
-              }
-            }
+                    accessToken: { type: 'string' },
+                  },
+                },
+              },
+            },
           },
           401: {
             description: 'Invalid or expired refresh token',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/forgot-password': {
       post: {
@@ -625,9 +1204,9 @@ export const specs = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/ForgotPasswordRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/ForgotPasswordRequest' },
+            },
+          },
         },
         responses: {
           200: {
@@ -638,22 +1217,22 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    message: { type: 'string', example: 'Password reset email sent' }
-                  }
-                }
-              }
-            }
+                    message: { type: 'string', example: 'Password reset email sent' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'User not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/reset-password/{token}': {
       patch: {
@@ -665,36 +1244,36 @@ export const specs = {
             name: 'token',
             required: true,
             schema: { type: 'string' },
-            description: 'Password reset token'
-          }
+            description: 'Password reset token',
+          },
         ],
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/ResetPasswordRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/ResetPasswordRequest' },
+            },
+          },
         },
         responses: {
           200: {
             description: 'Password reset successful',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/AuthResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/AuthResponse' },
+              },
+            },
           },
           400: {
             description: 'Invalid or expired token',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/me': {
       get: {
@@ -713,24 +1292,24 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        user: { $ref: '#/components/schemas/User' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        user: { $ref: '#/components/schemas/User' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           401: {
             description: 'Authentication required',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/update-password': {
       patch: {
@@ -741,29 +1320,29 @@ export const specs = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/UpdatePasswordRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/UpdatePasswordRequest' },
+            },
+          },
         },
         responses: {
           200: {
             description: 'Password updated successfully',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/AuthResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/AuthResponse' },
+              },
+            },
           },
           401: {
             description: 'Authentication required or invalid current password',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/logout': {
       post: {
@@ -778,14 +1357,14 @@ export const specs = {
                 schema: {
                   type: 'object',
                   properties: {
-                    status: { type: 'string', example: 'success' }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                    status: { type: 'string', example: 'success' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/users': {
       get: {
@@ -807,33 +1386,33 @@ export const specs = {
                       properties: {
                         users: {
                           type: 'array',
-                          items: { $ref: '#/components/schemas/User' }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                          items: { $ref: '#/components/schemas/User' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           401: {
             description: 'Authentication required',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           403: {
             description: 'Insufficient permissions',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/users/{id}/approve': {
       patch: {
@@ -846,8 +1425,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'User ID'
-          }
+            description: 'User ID',
+          },
         ],
         responses: {
           200: {
@@ -861,24 +1440,24 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        user: { $ref: '#/components/schemas/User' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        user: { $ref: '#/components/schemas/User' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'User not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/users/{id}/ban': {
       patch: {
@@ -891,16 +1470,16 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'User ID'
-          }
+            description: 'User ID',
+          },
         ],
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/BanUserRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/BanUserRequest' },
+            },
+          },
         },
         responses: {
           200: {
@@ -914,24 +1493,24 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        user: { $ref: '#/components/schemas/User' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        user: { $ref: '#/components/schemas/User' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'User not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/users/{id}': {
       delete: {
@@ -944,23 +1523,23 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'User ID'
-          }
+            description: 'User ID',
+          },
         ],
         responses: {
           204: {
-            description: 'User deleted successfully'
+            description: 'User deleted successfully',
           },
           404: {
             description: 'User not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/users/{id}/permissions': {
       patch: {
@@ -973,16 +1552,16 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'User ID'
-          }
+            description: 'User ID',
+          },
         ],
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/UpdatePermissionsRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/UpdatePermissionsRequest' },
+            },
+          },
         },
         responses: {
           200: {
@@ -996,24 +1575,24 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        user: { $ref: '#/components/schemas/User' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        user: { $ref: '#/components/schemas/User' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'User not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/users/{id}/permissions-get': {
       get: {
@@ -1026,8 +1605,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'User ID'
-          }
+            description: 'User ID',
+          },
         ],
         responses: {
           200: {
@@ -1043,26 +1622,26 @@ export const specs = {
                       properties: {
                         permissions: {
                           type: 'array',
-                          items: { type: 'string' }
+                          items: { type: 'string' },
                         },
-                        role: { type: 'string' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        role: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'User not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/auth/permissions': {
       get: {
@@ -1084,17 +1663,17 @@ export const specs = {
                         permissions: {
                           type: 'array',
                           items: { type: 'string' },
-                          description: 'Array of all available permissions'
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          description: 'Array of all available permissions',
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/roles': {
       post: {
@@ -1105,9 +1684,9 @@ export const specs = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/CreateRoleRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/CreateRoleRequest' },
+            },
+          },
         },
         responses: {
           201: {
@@ -1121,39 +1700,39 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        role: { $ref: '#/components/schemas/Role' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        role: { $ref: '#/components/schemas/Role' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           400: {
             description: 'Validation error or duplicate role name',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           401: {
             description: 'Authentication required',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           403: {
             description: 'Insufficient permissions',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       get: {
         summary: 'Get all roles',
@@ -1173,17 +1752,17 @@ export const specs = {
                       properties: {
                         roles: {
                           type: 'array',
-                          items: { $ref: '#/components/schemas/Role' }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          items: { $ref: '#/components/schemas/Role' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/roles/{id}': {
       get: {
@@ -1196,8 +1775,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Role ID'
-          }
+            description: 'Role ID',
+          },
         ],
         responses: {
           200: {
@@ -1211,23 +1790,23 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        role: { $ref: '#/components/schemas/Role' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        role: { $ref: '#/components/schemas/Role' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Role not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       patch: {
         summary: 'Update role',
@@ -1239,16 +1818,16 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Role ID'
-          }
+            description: 'Role ID',
+          },
         ],
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/UpdateRoleRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/UpdateRoleRequest' },
+            },
+          },
         },
         responses: {
           200: {
@@ -1262,31 +1841,31 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        role: { $ref: '#/components/schemas/Role' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        role: { $ref: '#/components/schemas/Role' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Role not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           403: {
             description: 'Cannot modify system roles',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       delete: {
         summary: 'Delete role',
@@ -1298,31 +1877,31 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Role ID'
-          }
+            description: 'Role ID',
+          },
         ],
         responses: {
           204: {
-            description: 'Role deleted successfully'
+            description: 'Role deleted successfully',
           },
           404: {
             description: 'Role not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           400: {
             description: 'Cannot delete system role or role assigned to users',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/roles/users/{id}/assign': {
       patch: {
@@ -1335,16 +1914,16 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'User ID'
-          }
+            description: 'User ID',
+          },
         ],
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/AssignRoleRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/AssignRoleRequest' },
+            },
+          },
         },
         responses: {
           200: {
@@ -1358,24 +1937,24 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        user: { $ref: '#/components/schemas/User' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        user: { $ref: '#/components/schemas/User' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'User or role not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/roles/users/{id}/remove': {
       patch: {
@@ -1388,8 +1967,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'User ID'
-          }
+            description: 'User ID',
+          },
         ],
         responses: {
           200: {
@@ -1403,24 +1982,24 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        user: { $ref: '#/components/schemas/User' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        user: { $ref: '#/components/schemas/User' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'User not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/roles/users/{roleId}': {
       get: {
@@ -1433,8 +2012,8 @@ export const specs = {
             name: 'roleId',
             required: true,
             schema: { type: 'string' },
-            description: 'Role ID'
-          }
+            description: 'Role ID',
+          },
         ],
         responses: {
           200: {
@@ -1450,17 +2029,17 @@ export const specs = {
                       properties: {
                         users: {
                           type: 'array',
-                          items: { $ref: '#/components/schemas/User' }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          items: { $ref: '#/components/schemas/User' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/customers': {
       post: {
@@ -1482,11 +2061,11 @@ export const specs = {
                   location_id: { type: 'string', example: '507f1f77bcf86cd799439012' },
                   preferences: { type: 'object' },
                   addresses: { type: 'array' },
-                  notes: { type: 'string' }
-                }
-              }
-            }
-          }
+                  notes: { type: 'string' },
+                },
+              },
+            },
+          },
         },
         responses: {
           201: {
@@ -1500,31 +2079,31 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        customer: { $ref: '#/components/schemas/Customer' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        customer: { $ref: '#/components/schemas/Customer' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           400: {
             description: 'Bad request - validation error',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           404: {
             description: 'Business or Location not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       get: {
         summary: 'Get all customers (with optional filtering)',
@@ -1535,32 +2114,32 @@ export const specs = {
             in: 'query',
             name: 'business_id',
             schema: { type: 'string' },
-            description: 'Filter by business ID'
+            description: 'Filter by business ID',
           },
           {
             in: 'query',
             name: 'location_id',
             schema: { type: 'string' },
-            description: 'Filter by location ID'
+            description: 'Filter by location ID',
           },
           {
             in: 'query',
             name: 'page',
             schema: { type: 'integer', default: 1 },
-            description: 'Page number for pagination'
+            description: 'Page number for pagination',
           },
           {
             in: 'query',
             name: 'limit',
             schema: { type: 'integer', default: 10 },
-            description: 'Number of items per page'
+            description: 'Number of items per page',
           },
           {
             in: 'query',
             name: 'search',
             schema: { type: 'string' },
-            description: 'Search by name or email'
-          }
+            description: 'Search by name or email',
+          },
         ],
         responses: {
           200: {
@@ -1580,17 +2159,17 @@ export const specs = {
                       properties: {
                         customers: {
                           type: 'array',
-                          items: { $ref: '#/components/schemas/Customer' }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          items: { $ref: '#/components/schemas/Customer' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/customers/{id}': {
       get: {
@@ -1603,8 +2182,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Customer ID'
-          }
+            description: 'Customer ID',
+          },
         ],
         responses: {
           200: {
@@ -1618,23 +2197,23 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        customer: { $ref: '#/components/schemas/Customer' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        customer: { $ref: '#/components/schemas/Customer' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Customer not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       patch: {
         summary: 'Update a customer',
@@ -1646,8 +2225,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Customer ID'
-          }
+            description: 'Customer ID',
+          },
         ],
         requestBody: {
           required: true,
@@ -1664,11 +2243,11 @@ export const specs = {
                   rewards: { type: 'number' },
                   preferences: { type: 'object' },
                   addresses: { type: 'array' },
-                  notes: { type: 'string' }
-                }
-              }
-            }
-          }
+                  notes: { type: 'string' },
+                },
+              },
+            },
+          },
         },
         responses: {
           200: {
@@ -1682,23 +2261,23 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        customer: { $ref: '#/components/schemas/Customer' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        customer: { $ref: '#/components/schemas/Customer' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Customer not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       delete: {
         summary: 'Delete a customer (soft delete)',
@@ -1710,23 +2289,23 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Customer ID'
-          }
+            description: 'Customer ID',
+          },
         ],
         responses: {
           204: {
-            description: 'Customer deleted successfully'
+            description: 'Customer deleted successfully',
           },
           404: {
             description: 'Customer not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/customers/top-rewards': {
       get: {
@@ -1738,8 +2317,8 @@ export const specs = {
             in: 'query',
             name: 'limit',
             schema: { type: 'integer', default: 10 },
-            description: 'Number of top customers to return'
-          }
+            description: 'Number of top customers to return',
+          },
         ],
         responses: {
           200: {
@@ -1756,17 +2335,17 @@ export const specs = {
                       properties: {
                         customers: {
                           type: 'array',
-                          items: { $ref: '#/components/schemas/Customer' }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          items: { $ref: '#/components/schemas/Customer' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/customers/business/{businessId}': {
       get: {
@@ -1779,8 +2358,8 @@ export const specs = {
             name: 'businessId',
             required: true,
             schema: { type: 'string' },
-            description: 'Business ID'
-          }
+            description: 'Business ID',
+          },
         ],
         responses: {
           200: {
@@ -1797,17 +2376,17 @@ export const specs = {
                       properties: {
                         customers: {
                           type: 'array',
-                          items: { $ref: '#/components/schemas/Customer' }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          items: { $ref: '#/components/schemas/Customer' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/customers/location/{locationId}': {
       get: {
@@ -1820,8 +2399,8 @@ export const specs = {
             name: 'locationId',
             required: true,
             schema: { type: 'string' },
-            description: 'Location ID'
-          }
+            description: 'Location ID',
+          },
         ],
         responses: {
           200: {
@@ -1838,17 +2417,17 @@ export const specs = {
                       properties: {
                         customers: {
                           type: 'array',
-                          items: { $ref: '#/components/schemas/Customer' }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          items: { $ref: '#/components/schemas/Customer' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/customers/{id}/rewards/add': {
       patch: {
@@ -1861,8 +2440,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Customer ID'
-          }
+            description: 'Customer ID',
+          },
         ],
         requestBody: {
           required: true,
@@ -1872,11 +2451,11 @@ export const specs = {
                 type: 'object',
                 required: ['points'],
                 properties: {
-                  points: { type: 'number', minimum: 1, description: 'Number of points to add' }
-                }
-              }
-            }
-          }
+                  points: { type: 'number', minimum: 1, description: 'Number of points to add' },
+                },
+              },
+            },
+          },
         },
         responses: {
           200: {
@@ -1890,16 +2469,16 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        customer: { $ref: '#/components/schemas/Customer' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                        customer: { $ref: '#/components/schemas/Customer' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/customers/{id}/rewards/redeem': {
       patch: {
@@ -1912,8 +2491,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Customer ID'
-          }
+            description: 'Customer ID',
+          },
         ],
         requestBody: {
           required: true,
@@ -1923,11 +2502,11 @@ export const specs = {
                 type: 'object',
                 required: ['points'],
                 properties: {
-                  points: { type: 'number', minimum: 1, description: 'Number of points to redeem' }
-                }
-              }
-            }
-          }
+                  points: { type: 'number', minimum: 1, description: 'Number of points to redeem' },
+                },
+              },
+            },
+          },
         },
         responses: {
           200: {
@@ -1941,24 +2520,24 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        customer: { $ref: '#/components/schemas/Customer' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        customer: { $ref: '#/components/schemas/Customer' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           400: {
             description: 'Insufficient rewards points',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/businesses': {
       post: {
@@ -1969,9 +2548,9 @@ export const specs = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/CreateBusinessRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/CreateBusinessRequest' },
+            },
+          },
         },
         responses: {
           201: {
@@ -1985,31 +2564,31 @@ export const specs = {
                     data: {
                       type: 'object',
                       properties: {
-                        business: { $ref: '#/components/schemas/Business' }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                        business: { $ref: '#/components/schemas/Business' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           400: {
             description: 'Bad request - validation error',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           401: {
             description: 'Authentication required',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       get: {
         summary: 'Get all businesses',
@@ -2020,20 +2599,20 @@ export const specs = {
             in: 'query',
             name: 'page',
             schema: { type: 'integer', default: 1 },
-            description: 'Page number for pagination'
+            description: 'Page number for pagination',
           },
           {
             in: 'query',
             name: 'limit',
             schema: { type: 'integer', default: 10 },
-            description: 'Number of items per page'
+            description: 'Number of items per page',
           },
           {
             in: 'query',
             name: 'search',
             schema: { type: 'string' },
-            description: 'Search businesses by name or legal name'
-          }
+            description: 'Search businesses by name or legal name',
+          },
         ],
         responses: {
           200: {
@@ -2050,23 +2629,23 @@ export const specs = {
                     pages: { type: 'integer' },
                     data: {
                       type: 'array',
-                      items: { $ref: '#/components/schemas/Business' }
-                    }
-                  }
-                }
-              }
-            }
+                      items: { $ref: '#/components/schemas/Business' },
+                    },
+                  },
+                },
+              },
+            },
           },
           401: {
             description: 'Authentication required',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/businesses/{id}': {
       get: {
@@ -2079,8 +2658,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Business ID'
-          }
+            description: 'Business ID',
+          },
         ],
         responses: {
           200: {
@@ -2091,21 +2670,21 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Business' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Business' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Business not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       put: {
         summary: 'Update business by ID',
@@ -2117,16 +2696,16 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Business ID'
-          }
+            description: 'Business ID',
+          },
         ],
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/UpdateBusinessRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/UpdateBusinessRequest' },
+            },
+          },
         },
         responses: {
           200: {
@@ -2137,21 +2716,21 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Business' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Business' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Business not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       delete: {
         summary: 'Delete business by ID',
@@ -2163,23 +2742,23 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Business ID'
-          }
+            description: 'Business ID',
+          },
         ],
         responses: {
           204: {
-            description: 'Business deleted successfully'
+            description: 'Business deleted successfully',
           },
           404: {
             description: 'Business not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/businesses/{id}/activate': {
       patch: {
@@ -2192,8 +2771,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Business ID'
-          }
+            description: 'Business ID',
+          },
         ],
         responses: {
           200: {
@@ -2204,22 +2783,22 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Business' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Business' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Business not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/businesses/{id}/deactivate': {
       patch: {
@@ -2232,8 +2811,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Business ID'
-          }
+            description: 'Business ID',
+          },
         ],
         responses: {
           200: {
@@ -2244,22 +2823,22 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Business' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Business' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Business not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/businesses/owner/{ownerId}': {
       get: {
@@ -2272,8 +2851,8 @@ export const specs = {
             name: 'ownerId',
             required: true,
             schema: { type: 'string' },
-            description: 'Owner user ID'
-          }
+            description: 'Owner user ID',
+          },
         ],
         responses: {
           200: {
@@ -2287,15 +2866,15 @@ export const specs = {
                     results: { type: 'integer' },
                     data: {
                       type: 'array',
-                      items: { $ref: '#/components/schemas/Business' }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                      items: { $ref: '#/components/schemas/Business' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/businesses/{id}/owner': {
       patch: {
@@ -2308,16 +2887,16 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Business ID'
-          }
+            description: 'Business ID',
+          },
         ],
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/UpdateBusinessOwnerRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/UpdateBusinessOwnerRequest' },
+            },
+          },
         },
         responses: {
           200: {
@@ -2328,30 +2907,30 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Business' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Business' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Business not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           400: {
             description: 'Invalid owner ID',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/locations': {
       post: {
@@ -2362,9 +2941,9 @@ export const specs = {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/CreateLocationRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/CreateLocationRequest' },
+            },
+          },
         },
         responses: {
           201: {
@@ -2375,29 +2954,29 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Location' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Location' },
+                  },
+                },
+              },
+            },
           },
           400: {
             description: 'Bad request - validation error',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
           },
           404: {
             description: 'Business not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       get: {
         summary: 'Get all locations',
@@ -2408,26 +2987,26 @@ export const specs = {
             in: 'query',
             name: 'page',
             schema: { type: 'integer', default: 1 },
-            description: 'Page number for pagination'
+            description: 'Page number for pagination',
           },
           {
             in: 'query',
             name: 'limit',
             schema: { type: 'integer', default: 10 },
-            description: 'Number of items per page'
+            description: 'Number of items per page',
           },
           {
             in: 'query',
             name: 'business_id',
             schema: { type: 'string' },
-            description: 'Filter by business ID'
+            description: 'Filter by business ID',
           },
           {
             in: 'query',
             name: 'search',
             schema: { type: 'string' },
-            description: 'Search locations by branch name'
-          }
+            description: 'Search locations by branch name',
+          },
         ],
         responses: {
           200: {
@@ -2444,15 +3023,15 @@ export const specs = {
                     pages: { type: 'integer' },
                     data: {
                       type: 'array',
-                      items: { $ref: '#/components/schemas/Location' }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                      items: { $ref: '#/components/schemas/Location' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/locations/nearby': {
       get: {
@@ -2465,27 +3044,27 @@ export const specs = {
             name: 'longitude',
             required: true,
             schema: { type: 'number' },
-            description: 'User longitude'
+            description: 'User longitude',
           },
           {
             in: 'query',
             name: 'latitude',
             required: true,
             schema: { type: 'number' },
-            description: 'User latitude'
+            description: 'User latitude',
           },
           {
             in: 'query',
             name: 'radius',
             schema: { type: 'number', default: 10 },
-            description: 'Search radius in kilometers'
+            description: 'Search radius in kilometers',
           },
           {
             in: 'query',
             name: 'limit',
             schema: { type: 'integer', default: 10 },
-            description: 'Number of results to return'
-          }
+            description: 'Number of results to return',
+          },
         ],
         responses: {
           200: {
@@ -2499,23 +3078,23 @@ export const specs = {
                     results: { type: 'integer' },
                     data: {
                       type: 'array',
-                      items: { $ref: '#/components/schemas/Location' }
-                    }
-                  }
-                }
-              }
-            }
+                      items: { $ref: '#/components/schemas/Location' },
+                    },
+                  },
+                },
+              },
+            },
           },
           400: {
             description: 'Longitude and latitude are required',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/locations/business/{businessId}': {
       get: {
@@ -2528,8 +3107,8 @@ export const specs = {
             name: 'businessId',
             required: true,
             schema: { type: 'string' },
-            description: 'Business ID'
-          }
+            description: 'Business ID',
+          },
         ],
         responses: {
           200: {
@@ -2543,15 +3122,15 @@ export const specs = {
                     results: { type: 'integer' },
                     data: {
                       type: 'array',
-                      items: { $ref: '#/components/schemas/Location' }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                      items: { $ref: '#/components/schemas/Location' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/locations/{id}': {
       get: {
@@ -2564,8 +3143,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Location ID'
-          }
+            description: 'Location ID',
+          },
         ],
         responses: {
           200: {
@@ -2576,21 +3155,21 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Location' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Location' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Location not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       put: {
         summary: 'Update location by ID',
@@ -2602,16 +3181,16 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Location ID'
-          }
+            description: 'Location ID',
+          },
         ],
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: '#/components/schemas/UpdateLocationRequest' }
-            }
-          }
+              schema: { $ref: '#/components/schemas/UpdateLocationRequest' },
+            },
+          },
         },
         responses: {
           200: {
@@ -2622,21 +3201,21 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Location' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Location' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Location not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
       },
       delete: {
         summary: 'Delete location by ID',
@@ -2648,23 +3227,23 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Location ID'
-          }
+            description: 'Location ID',
+          },
         ],
         responses: {
           204: {
-            description: 'Location deleted successfully'
+            description: 'Location deleted successfully',
           },
           404: {
             description: 'Location not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/locations/{id}/activate': {
       patch: {
@@ -2677,8 +3256,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Location ID'
-          }
+            description: 'Location ID',
+          },
         ],
         responses: {
           200: {
@@ -2689,22 +3268,22 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Location' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Location' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Location not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
     },
     '/api/v1/locations/{id}/deactivate': {
       patch: {
@@ -2717,8 +3296,8 @@ export const specs = {
             name: 'id',
             required: true,
             schema: { type: 'string' },
-            description: 'Location ID'
-          }
+            description: 'Location ID',
+          },
         ],
         responses: {
           200: {
@@ -2729,24 +3308,24 @@ export const specs = {
                   type: 'object',
                   properties: {
                     status: { type: 'string', example: 'success' },
-                    data: { $ref: '#/components/schemas/Location' }
-                  }
-                }
-              }
-            }
+                    data: { $ref: '#/components/schemas/Location' },
+                  },
+                },
+              },
+            },
           },
           404: {
             description: 'Location not found',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/ErrorResponse' }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 };
 
 // Export empty swaggerUi since we're not using it

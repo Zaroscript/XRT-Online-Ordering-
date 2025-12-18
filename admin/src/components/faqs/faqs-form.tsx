@@ -86,7 +86,7 @@ export default function CreateOrUpdateFaqsForm({ initialValues }: IProps) {
 
   const isTranslateFaqs = router.locale !== Config.defaultLanguage;
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const inputValues = {
       language: router.locale,
       faq_title: values.faq_title,

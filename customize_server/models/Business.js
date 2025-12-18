@@ -94,12 +94,50 @@ const businessSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+    // New Fields
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number],
+        index: '2dsphere',
+      },
+    },
+    google_maps_verification: {
+      type: Boolean,
+      default: false,
+    },
+    social_media: {
+      facebook: { type: String, trim: true },
+      instagram: { type: String, trim: true },
+      whatsapp: { type: String, trim: true },
+      tiktok: { type: String, trim: true },
+    },
+    header_info: {
+      type: String,
+      trim: true,
+    },
+    footer_text: {
+      type: String,
+      trim: true,
+    },
+    messages: {
+      closed_message: { type: String, trim: true },
+      not_accepting_orders_message: { type: String, trim: true },
+    },
+    timezone: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );
 
 // Middleware to filter out inactive businesses by default
-businessSchema.pre(/^find/, function(next) {
+businessSchema.pre(/^find/, function (next) {
   this.find({ isActive: { $ne: false } });
   next();
 });

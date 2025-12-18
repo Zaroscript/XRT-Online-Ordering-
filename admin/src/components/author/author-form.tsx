@@ -183,7 +183,7 @@ export default function CreateOrUpdateAuthorForm({ initialValues }: IProps) {
     name: 'socials',
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const input = {
       ...values,
       language: router.locale,

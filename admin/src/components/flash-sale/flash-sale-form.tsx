@@ -204,7 +204,7 @@ export default function CreateOrUpdateFlashSaleForm({ initialValues }: IProps) {
 
   const isTranslateFlashSale = router.locale !== Config.defaultLanguage;
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const inputValues = {
       language: router.locale,
       title: values.title,

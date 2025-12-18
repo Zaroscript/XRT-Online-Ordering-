@@ -57,7 +57,7 @@ export default function CreateOrUpdateWithdrawForm({ initialValues }: IProps) {
   const { mutate: createWithdraw, isLoading: creating } =
     useCreateWithdrawMutation();
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: any) => {
     const input = {
       amount: +values.amount,
       shop_id: Number(shopId),

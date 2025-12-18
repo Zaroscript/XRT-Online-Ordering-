@@ -39,7 +39,7 @@ const ChangePasswordForm = () => {
     resolver: yupResolver(changePasswordSchema),
   });
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: any) {
     changePassword(
       {
         oldPassword: values.oldPassword,
@@ -65,7 +65,7 @@ const ChangePasswordForm = () => {
             reset();
           }
         },
-      }
+      },
     );
   }
 

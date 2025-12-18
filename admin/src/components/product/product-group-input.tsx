@@ -26,7 +26,7 @@ const ProductGroupInput = ({ control, error }: Props) => {
         control={control}
         getOptionLabel={(option: any) => option.name}
         getOptionValue={(option: any) => option.id}
-        options={types!}
+        options={types as any}
         isLoading={loading}
       />
       <ValidationError message={t(error!)} />

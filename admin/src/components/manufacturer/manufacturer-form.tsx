@@ -181,7 +181,7 @@ export default function CreateOrUpdateManufacturerForm({
     name: 'socials',
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const {
       name,
       slug,

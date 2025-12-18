@@ -305,7 +305,7 @@ export default function SettingsForm({
 
   // const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: any) {
     const contactDetails = {
       ...values?.contactDetails,
       location: { ...omit(values?.contactDetails?.location, '__typename') },

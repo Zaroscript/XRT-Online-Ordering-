@@ -82,7 +82,7 @@ export default function CreateOrUpdateRefundReasonForm({
   const { mutate: updateRefundReason, isLoading: updating } =
     useUpdateRefundReasonMutation();
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const input = {
       ...values,
       language: router.locale!,

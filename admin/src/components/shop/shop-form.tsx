@@ -187,7 +187,7 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
     (router?.query?.action === 'edit' || router?.pathname === '/[shop]/edit') &&
     router?.locale === Config.defaultLanguage;
 
-  function onSubmit(values: FormValues) {
+  function onSubmit(values: any) {
     const settings = {
       ...values?.settings,
       location: { ...omit(values?.settings?.location, '__typename') },

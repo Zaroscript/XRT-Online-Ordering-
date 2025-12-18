@@ -130,7 +130,7 @@ export default function CreateOrUpdateProductForm({
   const { mutate: updateProduct, isLoading: updating } =
     useUpdateProductMutation();
 
-  const onSubmit = async (values: ProductFormValues) => {
+  const onSubmit = async (values: any) => {
     const inputValues = {
       language: router.locale,
       ...getProductInputValues(values, initialValues),
@@ -308,7 +308,11 @@ export default function CreateOrUpdateProductForm({
             />
 
             <Card className="w-full sm:w-8/12 md:w-2/3">
-              <FileInput name="image" control={control} multiple={false} />
+              <FileInput
+                name="image"
+                control={control as any}
+                multiple={false}
+              />
               {/* {errors.image?.message && (
                 <p className="my-2 text-xs text-red-500">
                   {t(errors?.image?.message!)}
@@ -325,7 +329,7 @@ export default function CreateOrUpdateProductForm({
             />
 
             <Card className="w-full sm:w-8/12 md:w-2/3">
-              <FileInput name="gallery" control={control} />
+              <FileInput name="gallery" control={control as any} />
             </Card>
           </div>
 
@@ -393,13 +397,19 @@ export default function CreateOrUpdateProductForm({
 
             <Card className="w-full sm:w-8/12 md:w-2/3">
               <ProductGroupInput
-                control={control}
+                control={control as any}
                 error={t((errors?.type as any)?.message)}
               />
-              <ProductCategoryInput control={control} setValue={setValue} />
-              <ProductAuthorInput control={control} />
-              <ProductManufacturerInput control={control} setValue={setValue} />
-              <ProductTagInput control={control} setValue={setValue} />
+              <ProductCategoryInput
+                control={control as any}
+                setValue={setValue}
+              />
+              <ProductAuthorInput control={control as any} />
+              <ProductManufacturerInput
+                control={control as any}
+                setValue={setValue}
+              />
+              <ProductTagInput control={control as any} setValue={setValue} />
             </Card>
           </div>
 
@@ -467,7 +477,7 @@ export default function CreateOrUpdateProductForm({
                 )}
                 <RichTextEditor
                   title={t('form:input-label-description')}
-                  control={control}
+                  control={control as any}
                   name="description"
                   error={t(errors?.description?.message)}
                 />

@@ -92,7 +92,7 @@ const CustomerForm = ({ initialValues }: CustomerFormProps) => {
       value: location._id,
     })) || [];
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: any) {
     const input = {
       ...values,
       rewards: Number(values.rewards) || 0,

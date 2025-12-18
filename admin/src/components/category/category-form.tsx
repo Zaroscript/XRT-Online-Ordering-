@@ -70,10 +70,10 @@ function SelectTypes({
       <Label>{t('form:input-label-types')}</Label>
       <SelectInput
         name="type"
-        control={control}
+        control={control as any}
         getOptionLabel={(option: any) => option.name}
         getOptionValue={(option: any) => option.slug}
-        options={types!}
+        options={types as any}
         isLoading={loading}
       />
       <ValidationError message={t(errors.type?.message)} />
@@ -115,7 +115,7 @@ function SelectCategories({
       <Label>{t('form:input-label-parent-category')}</Label>
       <SelectInput
         name="parent"
-        control={control}
+        control={control as any}
         getOptionLabel={(option: any) => option.name}
         getOptionValue={(option: any) => option.id}
         options={categories}
@@ -219,7 +219,7 @@ export default function CreateOrUpdateCategoriesForm({
   const { mutate: updateCategory, isLoading: updating } =
     useUpdateCategoryMutation();
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const input = {
       language: router.locale,
       name: values.name,
@@ -260,7 +260,7 @@ export default function CreateOrUpdateCategoriesForm({
         />
 
         <Card className="w-full sm:w-8/12 md:w-2/3">
-          <FileInput name="image" control={control} multiple={false} />
+          <FileInput name="image" control={control as any} multiple={false} />
         </Card>
       </div>
 
@@ -332,14 +332,14 @@ export default function CreateOrUpdateCategoriesForm({
             <Label>{t('form:input-label-select-icon')}</Label>
             <SelectInput
               name="icon"
-              control={control}
+              control={control as any}
               options={updatedIcons}
               isClearable={true}
             />
           </div>
-          <SelectTypes control={control} errors={errors} />
+          <SelectTypes control={control as any} errors={errors as any} />
           <SelectCategories
-            control={control}
+            control={control as any}
             setValue={setValue}
             initialValue={initialValues}
           />

@@ -44,7 +44,7 @@ const TransferShopOwnershipForm = ({ shop, vendors }: Props) => {
     resolver: yupResolver(transferShopOwnershipValidationSchema),
   });
 
-  const onSubmit = useCallback((values: FormValues) => {
+  const onSubmit = useCallback((values: any) => {
     const input: TransferShopOwnershipInput = {
       shop_id: shop?.id!,
       vendor_id: values.vendor?.id!,

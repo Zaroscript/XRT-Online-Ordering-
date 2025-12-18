@@ -30,7 +30,11 @@ const roleValidationSchema: yup.ObjectSchema<FormValues> = yup.object().shape({
   name: yup.string().required('form:error-role-name-required'),
   displayName: yup.string().required('form:error-role-display-name-required'),
   description: yup.string().required(),
-  permissions: yup.array().of(yup.string().defined()).min(1, 'form:error-role-permissions-required').required(),
+  permissions: yup
+    .array()
+    .of(yup.string().defined())
+    .min(1, 'form:error-role-permissions-required')
+    .required(),
 });
 
 type IProps = {
@@ -48,27 +52,29 @@ export default function RoleForm({ initialValues }: IProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  
+
   // Success and error callbacks for mutations
   const onSuccess = () => {
-    toast.success(t(initialValues ? 'common:update-success' : 'common:create-success'));
+    toast.success(
+      t(initialValues ? 'common:update-success' : 'common:create-success'),
+    );
     queryClient.invalidateQueries('roles');
     router.push('/roles');
   };
 
   const onError = (error: any) => {
-    toast.error(error?.response?.data?.message || t('common:error-something-wrong'));
+    toast.error(
+      error?.response?.data?.message || t('common:error-something-wrong'),
+    );
   };
 
-  const { mutate: createRole, isLoading: creating } = useCreateRoleMutation({ onSuccess, onError });
-  const { mutate: updateRole, isLoading: updating } = useUpdateRoleMutation({ onSuccess, onError });
-  const { data: permissionsData, isLoading: loadingPermissions } = usePermissionsQuery();
+  const { mutate: createRole, isLoading: creating } = useCreateRoleMutation();
+  const { mutate: updateRole, isLoading: updating } = useUpdateRoleMutation();
+  const { data: permissionsData, isLoading: loadingPermissions } =
+    usePermissionsQuery();
 
   // Memoize permissions to prevent unnecessary re-renders
-  const permissions = useMemo(() => 
-    permissionsData || [], 
-    [permissionsData]
-  );
+  const permissions = useMemo(() => permissionsData || [], [permissionsData]);
 
   const {
     register,
@@ -86,7 +92,7 @@ export default function RoleForm({ initialValues }: IProps) {
     resolver: yupResolver<FormValues>(roleValidationSchema),
   });
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = (values: any) => {
     if (initialValues?.id) {
       updateRole({
         id: initialValues.id,
@@ -96,7 +102,7 @@ export default function RoleForm({ initialValues }: IProps) {
       createRole(values);
     }
   };
-  
+
   const isLoading = creating || updating || loadingPermissions;
 
   const currentPermissions = watch('permissions') || [];
@@ -105,7 +111,7 @@ export default function RoleForm({ initialValues }: IProps) {
     const newPermissions = currentPermissions.includes(permission)
       ? currentPermissions.filter((p) => p !== permission)
       : [...currentPermissions, permission];
-    
+
     setValue('permissions', newPermissions, { shouldValidate: true });
   };
 
@@ -203,7 +209,7 @@ export default function RoleForm({ initialValues }: IProps) {
           </Button>
         )}
 
-        <Button 
+        <Button
           type="submit"
           loading={isLoading}
           disabled={isLoading}

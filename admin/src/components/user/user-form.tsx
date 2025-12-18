@@ -1,7 +1,22 @@
 import Select from '@/components/ui/select/select';
+import Card from '@/components/common/card';
+import Description from '@/components/ui/description';
+import Button from '@/components/ui/button';
+import Input from '@/components/ui/input';
+import PasswordInput from '@/components/ui/password-input';
+import StickyFooterPanel from '@/components/ui/sticky-footer-panel';
 import Label from '@/components/ui/label';
 import { useRolesQuery } from '@/data/role';
-import { Controller } from 'react-hook-form';
+import { useRegisterMutation, useUpdateUserMutation } from '@/data/user';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { useRouter } from 'next/router';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { User } from '@/types';
+import {
+  customerUpdateValidationSchema,
+  customerValidationSchema,
+} from './user-validation-schema';
 
 type FormValues = {
   name: string;

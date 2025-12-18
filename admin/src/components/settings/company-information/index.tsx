@@ -110,7 +110,7 @@ export default function CompanyInfoForm({ settings }: IProps) {
     name: 'contactDetails.socials',
   });
 
-  async function onSubmit(values: CompanyInformationFormValues) {
+  async function onSubmit(values: any) {
     const contactDetails = {
       ...values?.contactDetails,
       location: isGoogleMapActive

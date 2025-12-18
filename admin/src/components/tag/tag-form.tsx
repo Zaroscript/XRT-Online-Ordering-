@@ -49,10 +49,10 @@ function SelectTypes({
       <Label>{t('form:input-label-types')}</Label>
       <SelectInput
         name="type"
-        control={control}
+        control={control as any}
         getOptionLabel={(option: any) => option.name}
         getOptionValue={(option: any) => option.slug}
-        options={types}
+        options={types as any}
         isLoading={loading}
       />
       <ValidationError message={t(errors.type?.message)} />
@@ -159,7 +159,7 @@ export default function CreateOrUpdateTagForm({ initialValues }: IProps) {
   const { mutate: createTag, isLoading: creating } = useCreateTagMutation();
   const { mutate: updateTag, isLoading: updating } = useUpdateTagMutation();
   const slugAutoSuggest = formatSlug(watch('name'));
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: any) => {
     const input = {
       language: router.locale,
       name: values.name,
@@ -204,7 +204,7 @@ export default function CreateOrUpdateTagForm({ initialValues }: IProps) {
         />
 
         <Card className="w-full sm:w-8/12 md:w-2/3">
-          <FileInput name="image" control={control} multiple={false} />
+          <FileInput name="image" control={control as any} multiple={false} />
         </Card>
       </div>
 
@@ -277,12 +277,12 @@ export default function CreateOrUpdateTagForm({ initialValues }: IProps) {
             <Label>{t('form:input-label-select-icon')}</Label>
             <SelectInput
               name="icon"
-              control={control}
+              control={control as any}
               options={updatedIcons}
               isClearable={true}
             />
           </div>
-          <SelectTypes control={control} errors={errors} />
+          <SelectTypes control={control as any} errors={errors as any} />
         </Card>
       </div>
       <StickyFooterPanel className="z-0">
