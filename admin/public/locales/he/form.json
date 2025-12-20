@@ -552,7 +552,6 @@
   "error-popup-expired-min": "נא להגדיר ערך מינימלי ליום אחד.",
   "error-popup-expired": "תוקף חלון קופץ פג ב- נדרש",
   "error-image": "אתה צריך לספק קובץ תמונה.",
-
   "input-label-subtitle": "כתוביות",
   "error-subtitle-required": "נדרשת כתובית",
   "upload-image-help-text": "העלה את התמונה שלך.",
@@ -614,5 +613,10 @@
   "error-minimum-balance-is-required": "נדרשת יתרה מינימלית",
   "error-maximum-balance-type": "מספר יתרה מרבי או טקסט 'מעל'",
   "error-maximum-balance-is-required": "נדרשת יתרה מקסימלית",
-  "text-save-seller-information": "שמור את פרטי המוכר"
+  "text-save-seller-information": "שמור את פרטי המוכר",
+  "form-title-printer-settings": "Printer Settings",
+  "printer-settings-help-text": "Configure your printer connection settings here.",
+  "input-label-printer-id": "Printer ID",
+  "input-label-public-key": "Public Key",
+  "input-label-private-key": "Private Key"
 }

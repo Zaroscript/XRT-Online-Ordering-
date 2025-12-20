@@ -1,6 +1,7 @@
 import AdminLayout from '@/components/layouts/admin';
 import PromoPopUpSettingsForm from '@/components/settings/promo-popup';
-import SettingsPageHeader from '@/components/settings/settings-page-header';
+import Card from '@/components/common/card';
+import PageHeading from '@/components/common/page-heading';
 import ErrorMessage from '@/components/ui/error-message';
 import Loader from '@/components/ui/loader/loader';
 import { useSettingsQuery } from '@/data/settings';
@@ -21,7 +22,11 @@ export default function PromotionPopup() {
 
   return (
     <>
-      <SettingsPageHeader pageTitle="form:text-popup-settings" />
+      <Card className="flex flex-col items-center mb-8 md:flex-row">
+        <div className="md:w-1/4">
+          <PageHeading title={t('form:text-popup-settings')} />
+        </div>
+      </Card>
       <PromoPopUpSettingsForm settings={settings} />
     </>
   );

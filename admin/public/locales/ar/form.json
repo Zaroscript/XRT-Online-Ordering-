@@ -552,7 +552,6 @@
   "error-popup-expired-min": "يرجى تعيين الحد الأدنى للقيمة 1 يوم.",
   "error-popup-expired": "النافذة المنبثقة منتهية الصلاحية مطلوبة",
   "error-image": "تحتاج إلى تقديم ملف الصورة.",
-
   "input-label-subtitle": "الترجمة",
   "error-subtitle-required": "الترجمة مطلوبة",
   "upload-image-help-text": "قم بتحميل صورتك.",
@@ -614,5 +613,10 @@
   "error-minimum-balance-is-required": "مطلوب الحد الأدنى للرصيد",
   "error-maximum-balance-type": "الحد الأقصى لرقم الرصيد أو عبر النص",
   "error-maximum-balance-is-required": "مطلوب الحد الأقصى للرصيد",
-  "text-save-seller-information": "حفظ معلومات البائع"
+  "text-save-seller-information": "حفظ معلومات البائع",
+  "form-title-printer-settings": "Printer Settings",
+  "printer-settings-help-text": "Configure your printer connection settings here.",
+  "input-label-printer-id": "Printer ID",
+  "input-label-public-key": "Public Key",
+  "input-label-private-key": "Private Key"
 }

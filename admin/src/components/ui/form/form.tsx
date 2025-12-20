@@ -4,7 +4,7 @@ import type {
   FieldValues,
   UseFormProps,
   Path,
-  UnpackNestedValue,
+  // UnpackNestedValue,
   DeepPartial,
 } from 'react-hook-form';
 import type { Schema } from 'yup';
@@ -26,7 +26,7 @@ type FormProps<TFormValues extends FieldValues> = {
 };
 
 export const Form = <
-  TFormValues extends Record<string, any> = Record<string, any>,
+  TFormValues extends FieldValues = FieldValues,
 >({
   onSubmit,
   children,
@@ -60,8 +60,8 @@ export const Form = <
     }
   }, [resetValues, methods]);
   return (
-    <form onSubmit={methods.handleSubmit(onSubmit)} noValidate {...props}>
-      {children(methods)}
+    <form onSubmit={methods.handleSubmit(onSubmit as any)} noValidate {...props}>
+      {children(methods as unknown as UseFormReturn<TFormValues>)}
     </form>
   );
 };

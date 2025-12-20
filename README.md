@@ -40,15 +40,15 @@ This monorepo contains two main applications:
 
 ### 🏢 Business Management
 
-### 🏢 Business Management
-
 - Business registration and verification
 - Owner assignment and transfer
 - Business activation/deactivation
 - **Unified Business Settings**: Manage operating hours, delivery fees, and tax settings
-- **Extended Business Profile**: Social media, location coordinates, and custom messages
+- **Dynamic Fee Structure**: Support for service fees and customizable tips (fixed or percentage-based)
+- **Dedicated Social Settings**: Manage social media profiles in a unified, dedicated section
 - Contact information management
 - Business metadata and branding
+- **Printer Settings Integration**: Ready-to-use printer configuration placeholders for future hardware support
 
 ### 📍 Location Management
 
@@ -307,7 +307,12 @@ XRT-Online-Ordering-/
 ├── admin/                          # Next.js Admin Dashboard
 │   ├── src/
 │   │   ├── components/              # React components
+│   │   │   ├── settings/           # Settings-related forms
+│   │   │   │   ├── social/         # Dedicated Social Media form [NEW]
+│   │   │   │   └── shop/           # Shop settings with Dynamic Tip logic
 │   │   ├── pages/                 # Next.js pages
+│   │   │   ├── settings/
+│   │   │   │   └── social.tsx      # Social Settings page [NEW]
 │   │   ├── contexts/              # React contexts
 │   │   ├── hooks/                 # Custom hooks
 │   │   ├── utils/                 # Utility functions

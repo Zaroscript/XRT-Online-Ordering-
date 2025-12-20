@@ -43,7 +43,9 @@ const AdminsList = ({
   // @ts-ignore
   const filteredAdmins = admins?.filter(
     (admin: any) => admin.role !== 'super_admin',
-  );
+  ) ?? [];
+
+
 
   const [sortingObj, setSortingObj] = useState<{
     sort: SortOrder;
@@ -70,6 +72,8 @@ const AdminsList = ({
       });
     },
   });
+
+  const { data: me } = useMeQuery();
 
   const columns = [
     {
@@ -128,10 +132,9 @@ const AdminsList = ({
       align: alignRight,
       width: 120,
       render: function Render(id: string, { is_active }: any) {
-        const { data } = useMeQuery();
         return (
           <>
-            {data?.id != id && (
+            {me?.id != id && (
               <ActionButtons
                 id={id}
                 userStatus={false}

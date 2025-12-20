@@ -27,39 +27,45 @@ const roleSchema = new mongoose.Schema({
     enum: [
       // User management permissions
       "users:read",
-      "users:create", 
+      "users:create",
       "users:update",
       "users:delete",
       "users:approve",
       "users:ban",
-      
+
       // Content management permissions
       "content:read",
       "content:create",
-      "content:update", 
+      "content:update",
       "content:delete",
       "content:publish",
-      
+
       // System permissions
       "system:read",
       "system:update",
       "system:backup",
       "system:logs",
-      
+
       // Profile permissions
       "profile:read",
       "profile:update",
-      
+
       // Admin permissions
       "admin:dashboard",
       "admin:settings",
       "admin:analytics",
-      
+
       // Role management permissions
       "roles:read",
       "roles:create",
       "roles:update",
-      "roles:delete"
+      "roles:delete",
+
+      // Withdraw permissions
+      "withdraws:read",
+      "withdraws:create",
+      "withdraws:update",
+      "withdraws:delete"
     ]
   },
   isSystem: {
@@ -79,12 +85,12 @@ const roleSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Static method to find only non-system roles
-roleSchema.statics.findNonSystemRoles = function() {
+roleSchema.statics.findNonSystemRoles = function () {
   return this.find({ isSystem: { $ne: true } });
 };
 
 // Static method to check if role name exists
-roleSchema.statics.isNameTaken = async function(name, excludeId = null) {
+roleSchema.statics.isNameTaken = async function (name, excludeId = null) {
   const query = { name };
   if (excludeId) {
     query._id = { $ne: excludeId };
@@ -94,12 +100,12 @@ roleSchema.statics.isNameTaken = async function(name, excludeId = null) {
 };
 
 // Instance method to check if role has specific permission
-roleSchema.methods.hasPermission = function(permission) {
+roleSchema.methods.hasPermission = function (permission) {
   return this.permissions.includes(permission);
 };
 
 // Instance method to add permission
-roleSchema.methods.addPermission = function(permission) {
+roleSchema.methods.addPermission = function (permission) {
   if (!this.permissions.includes(permission)) {
     this.permissions.push(permission);
   }
@@ -107,13 +113,13 @@ roleSchema.methods.addPermission = function(permission) {
 };
 
 // Instance method to remove permission
-roleSchema.methods.removePermission = function(permission) {
+roleSchema.methods.removePermission = function (permission) {
   this.permissions = this.permissions.filter(p => p !== permission);
   return this.save();
 };
 
 // Pre-remove middleware to check if role is assigned to any users
-roleSchema.pre('deleteOne', { document: true, query: false }, async function() {
+roleSchema.pre('deleteOne', { document: true, query: false }, async function () {
   const User = mongoose.model('User');
   const usersWithRole = await User.countDocuments({ customRole: this._id });
   if (usersWithRole > 0) {

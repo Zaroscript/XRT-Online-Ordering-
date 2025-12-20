@@ -8,7 +8,7 @@ import { Menu, Transition } from '@headlessui/react';
 import cn from 'classnames';
 import Link from '@/components/ui/link';
 import Image from 'next/image';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useState, useRef } from 'react';
 import { isEmpty } from 'lodash';
 import { SortOrder } from '@/types';
 import dayjs from 'dayjs';
@@ -26,7 +26,7 @@ type IProps = {
 const MessageBar = ({ user }: IProps) => {
   const { t } = useTranslation();
   const [notice, setNotice] = useState([]);
-  let allNotice: any = [];
+  const allNotice = useRef<any>([]);
   const router = useRouter();
   const [conversationsOpen, setConversationsOpen] = useState(false);
   const { permissions } = getAuthCredentials();
@@ -56,9 +56,9 @@ const MessageBar = ({ user }: IProps) => {
       const channel = PusherConfig.subscribe(channelName);
 
       channel.bind(`${process.env.NEXT_PUBLIC_MESSAGE_EVENT}`, (data: any) => {
-        allNotice.push(data);
+        allNotice.current.push(data);
         //@ts-ignore
-        setNotice(allNotice);
+        setNotice([...allNotice.current]);
         toast.success(data?.message, {
           toastId: 'messageSuccess',
         });
@@ -126,7 +126,7 @@ const MessageBar = ({ user }: IProps) => {
                 </div>
                 <div className="py-0">
                   {conversations?.length ? (
-                    conversations?.map((item: any) => {
+                    conversations?.map((item: any, index: number) => {
                       const routes = permission
                         ? Routes?.message?.details(item?.id)
                         : Routes?.shopMessage?.details(item?.id);
@@ -141,7 +141,7 @@ const MessageBar = ({ user }: IProps) => {
                       return (
                         <div
                           className="group cursor-pointer border-b border-dashed border-gray-200 last:border-b-0"
-                          key={item?.id}
+                          key={item?.id || index}
                         >
                           <div
                             className={cn(

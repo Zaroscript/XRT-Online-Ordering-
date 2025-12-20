@@ -72,24 +72,24 @@ export default function PaymentSettingsForm({ settings }: IProps) {
         : '',
       defaultPaymentGateway: options?.defaultPaymentGateway
         ? PAYMENT_GATEWAY.find(
-            (item) => item.name == options?.defaultPaymentGateway,
-          )
+          (item) => item.name == options?.defaultPaymentGateway,
+        )
         : PAYMENT_GATEWAY[0],
       currencyOptions: {
         ...options?.currencyOptions,
         // @ts-ignore
         formation: options?.currencyOptions?.formation
           ? COUNTRY_LOCALE.find(
-              (item) => item.code == options?.currencyOptions?.formation,
-            )
+            (item) => item.code == options?.currencyOptions?.formation,
+          )
           : COUNTRY_LOCALE[0],
       },
       // multi-select on payment gateway
       paymentGateway: options?.paymentGateway
         ? options?.paymentGateway?.map((gateway: any) => ({
-            name: gateway?.name,
-            title: gateway?.title,
-          }))
+          name: gateway?.name,
+          title: gateway?.title,
+        }))
         : [],
     },
   });
@@ -111,9 +111,9 @@ export default function PaymentSettingsForm({ settings }: IProps) {
         paymentGateway:
           values?.paymentGateway && values?.paymentGateway!.length
             ? values?.paymentGateway?.map((gateway: any) => ({
-                name: gateway.name,
-                title: gateway.title,
-              }))
+              name: gateway.name,
+              title: gateway.title,
+            }))
             : PAYMENT_GATEWAY.filter((value: any, index: number) => index < 2),
         useEnableGateway: values?.useEnableGateway,
         //@ts-ignore
@@ -138,7 +138,7 @@ export default function PaymentSettingsForm({ settings }: IProps) {
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
         <Description
           title={t('form:form-title-payment')}
@@ -152,7 +152,7 @@ export default function PaymentSettingsForm({ settings }: IProps) {
               control={control}
               label={t('form:input-label-cash-on-delivery')}
               toolTipText={t('form:input-tooltip-enable-cash-on-delivery')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
           <div className="mb-5">
@@ -164,7 +164,7 @@ export default function PaymentSettingsForm({ settings }: IProps) {
               options={CURRENCY}
               label={t('form:input-label-currency')}
               toolTipText={t('form:input-tooltip-currency')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
             <ValidationError message={t(errors.currency?.message)} />
           </div>
@@ -211,7 +211,7 @@ export default function PaymentSettingsForm({ settings }: IProps) {
                       getOptionValue={(option: any) => option.name}
                       options={paymentGateway ?? []}
                       label={t('text-select-default-payment-gateway')}
-                      // disabled={isNotDefaultSettingsPage}
+                    // disabled={isNotDefaultSettingsPage}
                     />
                   </div>
                   {isStripeActive && (
@@ -220,7 +220,7 @@ export default function PaymentSettingsForm({ settings }: IProps) {
                         name="StripeCardOnly"
                         control={control}
                         label={t('Enable Stripe Element')}
-                        // disabled={isNotDefaultSettingsPage}
+                      // disabled={isNotDefaultSettingsPage}
                       />
                     </div>
                   )}
@@ -256,7 +256,7 @@ export default function PaymentSettingsForm({ settings }: IProps) {
               required
               label={t('form:input-label-currency-formations')}
               toolTipText={t('form:input-tooltip-currency-formation')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
           <Input

@@ -230,6 +230,7 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
     throw new Error('Account is temporarily locked. Please try again later.');
   }
 
+  console.log('Comparing passwords for user:', this.email);
   const isMatch = await bcrypt.compare(enteredPassword, this.password);
 
   if (!isMatch) {

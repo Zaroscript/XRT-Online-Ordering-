@@ -112,25 +112,25 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
     shouldUnregister: true,
     ...(initialValues
       ? {
-          defaultValues: {
-            ...initialValues,
-            logo: getFormattedImage(initialValues?.logo as IImage),
-            cover_image: getFormattedImage(
-              initialValues?.cover_image as IImage,
-            ),
-            settings: {
-              ...initialValues?.settings,
-              socials: initialValues?.settings?.socials
-                ? initialValues?.settings?.socials.map((social: any) => ({
-                    icon: updatedIcons?.find(
-                      (icon) => icon?.value === social?.icon,
-                    ),
-                    url: social?.url,
-                  }))
-                : [],
-            },
+        defaultValues: {
+          ...initialValues,
+          logo: getFormattedImage(initialValues?.logo as IImage),
+          cover_image: getFormattedImage(
+            initialValues?.cover_image as IImage,
+          ),
+          settings: {
+            ...initialValues?.settings,
+            socials: initialValues?.settings?.socials
+              ? initialValues?.settings?.socials.map((social: any) => ({
+                icon: updatedIcons?.find(
+                  (icon) => icon?.value === social?.icon,
+                ),
+                url: social?.url,
+              }))
+              : [],
           },
-        }
+        },
+      }
       : {}),
     // @ts-ignore
     resolver: yupResolver(shopValidationSchema),
@@ -139,12 +139,11 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
 
   const { openModal } = useModalAction();
   const { locale } = router;
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+
+  const options = settings?.options;
 
   const generateName = watch('name');
   const shopDescriptionSuggestionLists = useMemo(() => {
@@ -193,9 +192,9 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
       location: { ...omit(values?.settings?.location, '__typename') },
       socials: values?.settings?.socials
         ? values?.settings?.socials?.map((social: any) => ({
-            icon: social?.icon?.value,
-            url: social?.url,
-          }))
+          icon: social?.icon?.value,
+          url: social?.url,
+        }))
         : [],
       shopMaintenance: values?.settings?.shopMaintenance,
     };
@@ -259,7 +258,7 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={handleSubmit(onSubmit as any)} noValidate>
         <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
           <Description
             title={t('form:input-label-logo')}
@@ -692,10 +691,10 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
         ) : (
           ''
         )}
-           {!permissions?.includes(SUPER_ADMIN) &&
-        !permissions?.includes(STAFF) &&
-        !Boolean(initialValues?.is_active) &&
-        Boolean(options?.isMultiCommissionRate) ? (
+        {!permissions?.includes(SUPER_ADMIN) &&
+          !permissions?.includes(STAFF) &&
+          !Boolean(initialValues?.is_active) &&
+          Boolean(options?.isMultiCommissionRate) ? (
           <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:my-8">
             <Description
               title="Ask for a quote?"

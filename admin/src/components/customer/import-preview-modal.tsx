@@ -90,8 +90,8 @@ const selectStyles = {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderWidth: '1px',
     borderStyle: 'solid',
-    boxShadow: state.isFocused 
-      ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(var(--color-accent), 0.1)' 
+    boxShadow: state.isFocused
+      ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 3px rgba(var(--color-accent), 0.1)'
       : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
     transition: 'all 0.3s ease',
     '&:hover': {
@@ -176,7 +176,7 @@ const ImportPreviewModal = ({
   }, [initialData, businesses, locations]);
 
   const getLocationsForBusiness = (businessId: string) => {
-    return locations.filter((loc) => {
+    return (Array.isArray(locations) ? locations : []).filter((loc) => {
       const bid =
         typeof loc.business_id === 'string'
           ? loc.business_id
@@ -226,10 +226,12 @@ const ImportPreviewModal = ({
     onConfirm(cleanData);
   };
 
-  const businessOptions = businesses.map((b) => ({
-    value: b._id,
-    label: b.name,
-  }));
+  const businessOptions = (Array.isArray(businesses) ? businesses : []).map(
+    (b) => ({
+      value: b._id,
+      label: b.name,
+    }),
+  );
 
   const columns = [
     {

@@ -13,7 +13,7 @@ import {
 } from '@/contexts/quick-cart/cart.utils';
 import { useCreateOrderMutation } from '@/data/order';
 import { PaymentGateway } from '@/types';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 export const PlaceOrderAction: React.FC<{
   children?: React.ReactNode;

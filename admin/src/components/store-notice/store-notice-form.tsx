@@ -81,7 +81,7 @@ export default function CreateOrUpdateStoreNoticeForm({
   const noticeReceived =
     initialValues?.shops || initialValues?.users
       ? //@ts-ignore
-        initialValues?.shops.concat(initialValues?.users)
+      initialValues?.shops.concat(initialValues?.users)
       : [];
 
   if (superAdmin) {
@@ -107,25 +107,25 @@ export default function CreateOrUpdateStoreNoticeForm({
     // @ts-ignore
     defaultValues: initialValues
       ? {
-          ...initialValues,
-          effective_from: new Date(initialValues.effective_from!),
-          expired_at: new Date(initialValues?.expired_at!),
-          priority: initialValues?.priority
-            ? priorityType?.find(
-                (priority) => priority.value === initialValues?.priority!,
-              )
-            : { name: '', value: '' },
-          type: initialValues?.type
-            ? noticeTypes &&
-              noticeTypes?.find(
-                (type: any) => type.value === initialValues.type!,
-              )
-            : { name: '', value: '' },
-          received_by: noticeReceived ? noticeReceived : [],
-        }
+        ...initialValues,
+        effective_from: new Date(initialValues.effective_from!),
+        expired_at: new Date(initialValues?.expired_at!),
+        priority: initialValues?.priority
+          ? priorityType?.find(
+            (priority) => priority.value === initialValues?.priority!,
+          )
+          : { name: '', value: '' },
+        type: initialValues?.type
+          ? noticeTypes &&
+          noticeTypes?.find(
+            (type: any) => type.value === initialValues.type!,
+          )
+          : { name: '', value: '' },
+        received_by: noticeReceived ? noticeReceived : [],
+      }
       : {
-          priority: priorityType[0],
-        },
+        priority: priorityType[0],
+      },
     //@ts-ignore
     resolver: yupResolver(storeNoticeValidationSchema),
   });
@@ -168,7 +168,7 @@ export default function CreateOrUpdateStoreNoticeForm({
       effective_from: new Date(effective_from).toISOString(),
       expired_at: new Date(expired_at).toISOString(),
       received_by: superAdmin
-        ? values.received_by?.map((r) => r.id)
+        ? values.received_by?.map((r: any) => r.id)
         : [shopIndexFind?.id],
     };
     try {
@@ -193,15 +193,14 @@ export default function CreateOrUpdateStoreNoticeForm({
     }
   };
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       <div className="flex flex-wrap my-5 sm:my-8">
         <Description
           title={t('form:input-label-description')}
-          details={`${
-            initialValues
+          details={`${initialValues
               ? t('form:item-description-edit')
               : t('form:item-description-add')
-          } ${t('form:store-notice-form-info-help-text')}`}
+            } ${t('form:store-notice-form-info-help-text')}`}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5 "
         />
 

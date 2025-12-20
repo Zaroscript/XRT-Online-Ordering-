@@ -43,28 +43,31 @@ const LoginForm = () => {
       e.stopPropagation();
     }
 
+    // Clear any previous error messages
+    setErrorMessage(null);
+
     login(
       {
         email: values.email,
         password: values.password,
       },
       {
-        onSuccess: (data) => {
+        onSuccess: (data: any) => {
           // Handle customize_server response format: { status: 'success', accessToken, refreshToken, data: { user } }
-          if (data?.accessToken || data?.token) {
-            const token = data?.accessToken || data?.token;
-            const refreshToken = data?.refreshToken;
-            const user = data?.data?.user || data;
-            const permissions = (user as any)?.permissions || [];
-            const role = (user as any)?.role || '';
+          if (data?.accessToken && data?.data?.user) {
+            const token = data.accessToken;
+            const refreshToken = data.refreshToken;
+            const user = data.data.user;
+            const permissions = user.permissions || [];
+            const role = user.role || '';
 
-            // Check if role is allowed (not permissions array)
+            // Check if role is allowed
             if (
               role === 'super_admin' ||
               role === 'admin' ||
               role === 'client'
             ) {
-              setAuthCredentials(token || '', permissions, role, refreshToken);
+              setAuthCredentials(token, permissions, role, refreshToken);
               Router.push(Routes.dashboard);
               return;
             }
@@ -72,21 +75,49 @@ const LoginForm = () => {
             setErrorMessage(errorMsg);
             toast.error(errorMsg);
           } else {
+            // Handle case where response format is unexpected
             const errorMsg = t('form:error-credential-wrong');
             setErrorMessage(errorMsg);
             toast.error(errorMsg);
           }
         },
         onError: (error: any) => {
+          console.error('Login error details:', {
+            message: error?.message,
+            response: error?.response?.data,
+            status: error?.response?.status,
+            code: error?.code,
+          });
+
           let errorMsg = t('common:login-failed');
 
-          // Handle different error types
+          // Handle network errors and timeouts
+          if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
+            errorMsg = 'Network error: Please check if the backend server is running on http://localhost:3001';
+            setErrorMessage(errorMsg);
+            toast.error(errorMsg);
+            return;
+          }
+
+          // Handle timeout errors
+          if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
+            errorMsg = `Request timeout: Backend server is not responding. Please check:
+1. Backend server is running on http://localhost:3001
+2. Restart the frontend dev server (npm run dev) to clear cache`;
+            setErrorMessage(errorMsg);
+            toast.error('Request timeout - check backend server');
+            return;
+          }
+
+          // Handle different HTTP error types
           if (error?.response?.status === 401) {
-            errorMsg = t('form:error-credential-wrong');
+            errorMsg = error?.response?.data?.message || t('form:error-credential-wrong');
           } else if (error?.response?.status === 403) {
-            errorMsg = t('form:error-enough-permission');
+            errorMsg = error?.response?.data?.message || t('form:error-enough-permission');
           } else if (error?.response?.status === 429) {
             errorMsg = t('form:error-too-many-attempts');
+          } else if (error?.response?.data?.message) {
+            errorMsg = error.response.data.message;
           } else if (error?.message) {
             errorMsg = error.message;
           }

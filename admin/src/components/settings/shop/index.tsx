@@ -23,6 +23,16 @@ import { useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import SelectInput from '@/components/ui/select-input';
 
+const DAYS = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
 type ShopFormValues = {
   isProductReview: boolean;
   enableTerms: boolean;
@@ -46,6 +56,35 @@ type ShopFormValues = {
     pageId: string;
   };
   reviewSystem: string;
+  orders: {
+    accept_orders: boolean;
+    allowScheduleOrder: boolean;
+    maxDays: number;
+    deliveredOrderTime: number;
+  };
+  delivery: {
+    enabled: boolean;
+    radius: number;
+    fee: number;
+    min_order: number;
+  };
+  fees: {
+    service_fee: number;
+    tip: number;
+    tip_type: string;
+  };
+  taxes: {
+    sales_tax: number;
+  };
+  operating_hours: {
+    auto_close: boolean;
+    schedule: {
+      day: string;
+      open_time: string;
+      close_time: string;
+      is_closed: boolean;
+    }[];
+  };
 };
 
 export const updatedIcons = socialIcon.map((item: any) => {
@@ -93,16 +132,54 @@ export default function SettingsForm({ settings }: IProps) {
         ...options?.contactDetails,
         socials: options?.contactDetails?.socials
           ? options?.contactDetails?.socials.map((social: any) => ({
-              icon: updatedIcons?.find((icon) => icon?.value === social?.icon),
-              url: social?.url,
-            }))
+            icon: updatedIcons?.find((icon) => icon?.value === social?.icon),
+            url: social?.url,
+          }))
           : [],
       },
       deliveryTime: options?.deliveryTime ? options?.deliveryTime : [],
       reviewSystem: options?.reviewSystem
         ? options?.reviewSystem
         : 'review_single_time',
+      orders: {
+        accept_orders: options?.orders?.accept_orders ?? true,
+        allowScheduleOrder: options?.orders?.allowScheduleOrder ?? false,
+        maxDays: options?.orders?.maxDays ?? 0,
+        deliveredOrderTime: options?.orders?.deliveredOrderTime ?? 0,
+      },
+      delivery: {
+        enabled: options?.delivery?.enabled ?? false,
+        radius: options?.delivery?.radius ?? options?.maxShopDistance ?? 0,
+        fee: options?.delivery?.fee ?? 0,
+        min_order: options?.delivery?.min_order ?? 0,
+      },
+      fees: {
+        service_fee: options?.fees?.service_fee ?? 0,
+        tip: options?.fees?.tip ?? 0,
+        tip_type: options?.fees?.tip_type ?? 'percentage',
+      },
+      taxes: {
+        sales_tax: options?.taxes?.sales_tax ?? 0,
+      },
+      operating_hours: {
+        auto_close: options?.operating_hours?.auto_close ?? false,
+        schedule: options?.operating_hours?.schedule?.length
+          ? options.operating_hours.schedule
+          : DAYS.map((day) => ({
+            day,
+            open_time: '09:00',
+            close_time: '18:00',
+            is_closed: false,
+          })),
+      },
     },
+  });
+
+  const {
+    fields: scheduleFields,
+  } = useFieldArray({
+    control,
+    name: 'operating_hours.schedule',
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -110,7 +187,9 @@ export default function SettingsForm({ settings }: IProps) {
     name: 'deliveryTime',
   });
 
+
   const useGoogleMap = watch('useGoogleMap');
+  const allowScheduleOrder = watch('orders.allowScheduleOrder');
 
   async function onSubmit(values: ShopFormValues) {
     updateSettingsMutation({
@@ -120,21 +199,45 @@ export default function SettingsForm({ settings }: IProps) {
         ...values,
         ...options,
         deliveryTime: values?.deliveryTime,
-        maxShopDistance: Number(values.maxShopDistance),
+        maxShopDistance: Number(values.maxShopDistance || values?.delivery?.radius),
         useGoogleMap: values?.useGoogleMap,
+        delivery: {
+          ...values?.delivery,
+          radius: Number(values?.delivery?.radius),
+          fee: Number(values?.delivery?.fee),
+          min_order: Number(values?.delivery?.min_order),
+        },
+        fees: {
+          ...values?.fees,
+          service_fee: Number(values?.fees?.service_fee),
+          tip: Number(values?.fees?.tip),
+          tip_type: values?.fees?.tip_type,
+        },
+        taxes: {
+          ...values?.taxes,
+          sales_tax: Number(values?.taxes?.sales_tax),
+        },
+        operating_hours: {
+          ...values?.operating_hours,
+        },
         enableTerms: values?.enableTerms,
         enableCoupons: values?.enableCoupons,
         isProductReview: values?.isProductReview,
         enableEmailForDigitalProduct: values?.enableEmailForDigitalProduct,
-        enableReviewPopup: values?.enableReviewPopup,
         reviewSystem: values?.reviewSystem,
+        orders: {
+          ...options?.orders,
+          ...values?.orders,
+          maxDays: Number(values?.orders?.maxDays),
+          deliveredOrderTime: Number(values?.orders?.deliveredOrderTime),
+        },
       },
     });
     reset(values, { keepValues: true });
   }
   useConfirmRedirectIfDirty({ isDirty });
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:my-8">
         <Description
           title={t('form:text-delivery-schedule')}
@@ -215,7 +318,7 @@ export default function SettingsForm({ settings }: IProps) {
               control={control}
               label={t('form:input-label-product-for-review')}
               toolTipText={t('form:input-tooltip-shop-product-review')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
           <div className="mt-6 mb-5">
@@ -224,7 +327,7 @@ export default function SettingsForm({ settings }: IProps) {
               control={control}
               label={t('form:input-label-use-google-map-service')}
               toolTipText={t('form:input-tooltip-shop-enable-google-map')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
           {useGoogleMap ? (
@@ -235,7 +338,7 @@ export default function SettingsForm({ settings }: IProps) {
               error={t(errors.maxShopDistance?.message!)}
               variant="outline"
               className="my-5"
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           ) : (
             ''
@@ -246,7 +349,7 @@ export default function SettingsForm({ settings }: IProps) {
               control={control}
               label={t('form:input-label-terms-conditions-vendors')}
               toolTipText={t('form:input-tooltip-shop-enable-terms')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
           <div className="mt-6 mb-5">
@@ -298,6 +401,196 @@ export default function SettingsForm({ settings }: IProps) {
               </Label>
             </div>
           </div>
+        </Card>
+      </div>
+
+      <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
+        <Description
+          title={t('Delivery Details')}
+          details={t('Configure delivery settings like radius, fee and minimum order')}
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <div className="mt-6 mb-5">
+            <SwitchInput
+              name="delivery.enabled"
+              control={control}
+              label={t('Enable Delivery')}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-5">
+            <Input
+              label={t('Radius (Miles)')}
+              {...register('delivery.radius')}
+              type="number"
+              variant="outline"
+              className="my-5"
+              error={t(errors.delivery?.radius?.message!)}
+            />
+            <Input
+              label={t('Delivery Fee')}
+              {...register('delivery.fee')}
+              type="number"
+              variant="outline"
+              className="my-5"
+              error={t(errors.delivery?.fee?.message!)}
+            />
+          </div>
+          <Input
+            label={t('Minimum Order Amount')}
+            {...register('delivery.min_order')}
+            type="number"
+            variant="outline"
+            className="mb-5"
+            error={t(errors.delivery?.min_order?.message!)}
+          />
+        </Card>
+      </div>
+
+      <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
+        <Description
+          title={t('Fees & Taxes')}
+          details={t('Configure service fees and tax rates')}
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <div className="grid grid-cols-2 gap-5 mb-5">
+            <Input
+              label={t('Service Fee')}
+              {...register('fees.service_fee')}
+              type="number"
+              variant="outline"
+              error={t(errors.fees?.service_fee?.message!)}
+            />
+            <SelectInput
+              name="fees.tip_type"
+              control={control}
+              getOptionLabel={(option: any) => option.name}
+              getOptionValue={(option: any) => option.value}
+              options={[
+                { name: t('Fixed'), value: 'fixed' },
+                { name: t('Percentage'), value: 'percentage' },
+              ]}
+              label={t('Tip Type')}
+              error={t(errors.fees?.tip_type?.message!)}
+            />
+          </div>
+          <Input
+            label={t('Default Tip')}
+            {...register('fees.tip')}
+            type="number"
+            variant="outline"
+            className="mb-5"
+            error={t(errors.fees?.tip?.message!)}
+          />
+          <Input
+            label={t('Sales Tax (%)')}
+            {...register('taxes.sales_tax')}
+            type="number"
+            variant="outline"
+            className="mb-5"
+            error={t(errors.taxes?.sales_tax?.message!)}
+          />
+        </Card>
+      </div>
+
+      <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
+        <Description
+          title={t('Operating Hours')}
+          details={t('Configure your shop operating hours and schedule')}
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <div className="mt-6 mb-8">
+            <SwitchInput
+              name="operating_hours.auto_close"
+              control={control}
+              label={t('Auto Close')}
+              toolTipText={t('Automatically close the shop based on schedule')}
+            />
+          </div>
+
+          <Label className="mb-5 underline decoration-dashed uppercase text-sm font-bold text-gray-400">{t('Weekly Schedule')}</Label>
+          <div className="space-y-4">
+            <div className="hidden md:grid grid-cols-4 gap-4 mb-2 text-xs font-bold text-gray-500 uppercase">
+              <div>Day</div>
+              <div>Open</div>
+              <div>Close</div>
+              <div className="text-center">Closed</div>
+            </div>
+            {scheduleFields.map((item: any, index: number) => (
+              <div
+                key={item.id}
+                className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-b border-gray-100 pb-4 last:border-0"
+              >
+                <div className="font-semibold text-sm text-heading lowercase capitalize">
+                  {t(item.day)}
+                  <input type="hidden" {...register(`operating_hours.schedule.${index}.day`)} />
+                </div>
+                <Input
+                  {...register(`operating_hours.schedule.${index}.open_time`)}
+                  type="time"
+                  variant="outline"
+                  disabled={watch(`operating_hours.schedule.${index}.is_closed`)}
+                />
+                <Input
+                  {...register(`operating_hours.schedule.${index}.close_time`)}
+                  type="time"
+                  variant="outline"
+                  disabled={watch(`operating_hours.schedule.${index}.is_closed`)}
+                />
+                <div className="flex justify-start md:justify-center">
+                  <SwitchInput
+                    name={`operating_hours.schedule.${index}.is_closed`}
+                    control={control}
+                    label={t('Closed')}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
+        <Description
+          title={t('Order Settings')}
+          details={t('Configure order related settings used in the shop')}
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <div className="mt-6 mb-5">
+            <SwitchInput
+              name="orders.allowScheduleOrder"
+              control={control}
+              label={t('Allow Schedule Order')}
+              toolTipText={t('Allow customers to schedule orders for later')}
+            />
+          </div>
+          {allowScheduleOrder && (
+            <div className="grid grid-cols-2 gap-5">
+              <Input
+                label={t('Max Days')}
+                {...register('orders.maxDays')}
+                type="number"
+                variant="outline"
+                className="my-5"
+                error={t(errors.orders?.maxDays?.message!)}
+              />
+              <Input
+                label={t('Delivered Order Time (Minutes)')}
+                {...register('orders.deliveredOrderTime')}
+                type="number"
+                variant="outline"
+                className="my-5"
+                error={t(errors.orders?.deliveredOrderTime?.message!)}
+              />
+            </div>
+          )}
         </Card>
       </div>
 

@@ -25,7 +25,7 @@ export const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 export const RATE_LIMIT_MAX = 100; // limit each IP to 100 requests per windowMs
 
 // CORS
-export const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : ['http://localhost:3000', 'http://localhost:3001'];
+export const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
 
 // Security
 export const SECURE_COOKIES = NODE_ENV === 'production';

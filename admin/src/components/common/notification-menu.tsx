@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell } from '@/components/icons/bell';
 import { Dot } from '@/components/icons/dot';
 import NotificationCard from '@/components/ui/notification-card';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 type ItemType = {
   source?: string;
@@ -77,7 +77,7 @@ const NotificationMenu: React.FC<MenuType> = ({ data }) => {
                   Clear all
                 </button>
               </div>
-              {!!data.length ? (
+              {!!data?.length ? (
                 data?.map((item: ItemType, index) => (
                   <NotificationCard
                     key={index}

@@ -37,4 +37,19 @@ export const settingsValidationSchema = yup.object().shape({
         title: yup.string().required('form:error-title-required'),
       })
     ),
+  promoPopup: yup.object().shape({
+    popupDelay: yup
+      .number()
+      .typeError('Delay must be a number')
+      .min(0, 'Delay cannot be negative'),
+    popupExpiredIn: yup
+      .number()
+      .typeError('Expiration days must be a number')
+      .min(0, 'Expiration days cannot be negative'),
+  }),
+  printer: yup.object().shape({
+    printer_id: yup.string(),
+    public_key: yup.string(),
+    private_key: yup.string(),
+  }),
 });

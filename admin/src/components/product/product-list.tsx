@@ -97,12 +97,10 @@ const ProductList = ({
       render: (name: string, { image, type }: { image: any; type: any }) => (
         <div className="flex items-center">
           <div className="relative aspect-square h-10 w-10 shrink-0 overflow-hidden rounded border border-border-200/80 bg-gray-100 me-2.5">
-            <Image
+            <img
               src={image?.thumbnail ?? siteSettings.product.placeholder}
               alt={name}
-              fill
-              priority={true}
-              sizes="(max-width: 768px) 100vw"
+              className="h-full w-full object-cover"
             />
           </div>
           <div className="flex flex-col">
@@ -136,12 +134,10 @@ const ProductList = ({
       render: (shop: Shop) => (
         <div className="flex items-center font-medium">
           <div className="relative aspect-square h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border-200/80 bg-gray-100 me-2">
-            <Image
+            <img
               src={shop?.logo?.thumbnail ?? siteSettings.product.placeholder}
               alt={shop?.name ?? 'Shop Name'}
-              fill
-              priority={true}
-              sizes="(max-width: 768px) 100vw"
+              className="h-full w-full object-cover rounded-full"
             />
           </div>
           <span className="truncate">{shop?.name}</span>
@@ -227,11 +223,10 @@ const ProductList = ({
       width: 200,
       render: (status: string, record: any) => (
         <div
-          className={`flex justify-start ${
-            record?.quantity > 0 && record?.quantity < 10
+          className={`flex justify-start ${record?.quantity > 0 && record?.quantity < 10
               ? 'flex-col items-baseline space-y-2 3xl:flex-row 3xl:space-x-2 3xl:space-y-0 rtl:3xl:space-x-reverse'
               : 'items-center space-x-2 rtl:space-x-reverse'
-          }`}
+            }`}
         >
           <Badge
             text={status}

@@ -16,16 +16,18 @@ import {
   checkIsMaintenanceModeStart,
 } from '@/utils/constants';
 
-const OwnerLayout: React.FC<{ children?: React.ReactNode }> = ({
-  children,
-}) => {
+const OwnerLayout: React.FC<{
+  children?: React.ReactNode;
+  userPermissions?: string[];
+  userRole?: string;
+}> = ({ children, userPermissions, userRole }) => {
   const [miniSidebar, _] = useAtom(miniSidebarInitialValue);
   const { locale } = useRouter();
   const router = useRouter();
   const dir = locale === 'ar' || locale === 'he' ? 'rtl' : 'ltr';
   const { width } = useWindowSize();
   const { permissions } = getAuthCredentials();
-  let permission = hasAccess(adminOnly, permissions);
+  let permission = hasAccess(adminOnly, userPermissions || permissions);
   const [underMaintenance] = useAtom(checkIsMaintenanceModeComing);
   const [underMaintenanceStart] = useAtom(checkIsMaintenanceModeStart);
 
@@ -37,7 +39,7 @@ const OwnerLayout: React.FC<{ children?: React.ReactNode }> = ({
       <Navbar />
       <MobileNavigation>
         <OwnerInformation />
-        {!permission ? <SideBarMenu /> : null}
+        {!permission ? <SideBarMenu userRole={userRole} /> : null}
       </MobileNavigation>
 
       <div className="flex flex-1">
@@ -64,7 +66,7 @@ const OwnerLayout: React.FC<{ children?: React.ReactNode }> = ({
               }}
             >
               <OwnerInformation />
-              {!permission ? <SideBarMenu /> : null}
+              {!permission ? <SideBarMenu userRole={userRole} /> : null}
             </Scrollbar>
           </div>
         </aside>

@@ -2,7 +2,7 @@ import { HomeIcon } from '@/components/icons/home-icon';
 import { Routes } from '@/config/routes';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 const VisitStore = () => {
   const { t } = useTranslation();

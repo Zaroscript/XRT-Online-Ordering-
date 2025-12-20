@@ -448,6 +448,12 @@ export const siteSettings = {
           //   label: 'Newsletter emails',
           //   icon: 'CouponsIcon',
           // },
+          {
+            href: Routes.promoPopup,
+            label: 'text-popup-settings',
+            icon: 'InformationIcon',
+            permissions: adminOwnerAndStaffOnly,
+          },
         ],
       },
 
@@ -495,8 +501,8 @@ export const siteSettings = {
                 icon: 'StoreNoticeIcon',
               },
               {
-                href: Routes.eventSettings,
-                label: 'text-events-settings',
+                href: Routes.printerSettings,
+                label: 'text-printer-settings',
                 icon: 'RefundsIcon',
               },
               {
@@ -515,15 +521,10 @@ export const siteSettings = {
                 icon: 'InformationIcon',
               },
               {
-                href: Routes?.promotionPopup,
-                label: 'text-popup-settings',
-                icon: 'InformationIcon',
+                href: Routes?.socialSettings,
+                label: 'Social Settings',
+                icon: 'RefundsIcon',
               },
-              // {
-              //   href: '',
-              //   label: 'Social settings',
-              //   icon: 'RefundsIcon',
-              // },
             ],
           },
           // {
@@ -1148,5 +1149,13 @@ export const socialIcon = [
   {
     value: 'YouTubeIcon',
     label: 'Youtube',
+  },
+  {
+    value: 'TikTokIcon',
+    label: 'TikTok',
+  },
+  {
+    value: 'LinkedInIcon',
+    label: 'LinkedIn',
   },
 ];

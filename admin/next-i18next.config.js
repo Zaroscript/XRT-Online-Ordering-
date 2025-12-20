@@ -31,4 +31,8 @@ module.exports = {
   },
   localePath: path.resolve('./public/locales'),
   reloadOnPrerender: false, // Disable to prevent infinite loading loops
+  // Suppress the initReactI18next warning - next-i18next handles initialization automatically
+  react: {
+    useSuspense: false, // Disable suspense to prevent warnings
+  },
 };

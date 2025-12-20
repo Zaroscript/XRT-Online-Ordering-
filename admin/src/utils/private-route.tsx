@@ -9,16 +9,26 @@ const PrivateRoute: React.FC<{
   authProps: any;
   children?: React.ReactNode;
 }> = ({ children, authProps }) => {
+  const [isMounted, setIsMounted] = React.useState(false);
   const router = useRouter();
   const { token, role } = getAuthCredentials();
   const isUser = !!token;
   const hasPermission =
     Array.isArray(authProps.permissions) &&
-    !!authProps.permissions.length &&
+    !!authProps.permissions?.length &&
     hasAccess(authProps.permissions, role);
+
   React.useEffect(() => {
-    if (!isUser) router.replace(Routes.login); // If not authenticated, force log in
-  }, [isUser]);
+    setIsMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (isMounted && !isUser) router.replace(Routes.login); // If not authenticated, force log in
+  }, [isUser, isMounted]);
+
+  if (!isMounted) {
+    return <Loader showText={false} />;
+  }
 
   if (isUser && hasPermission) {
     return <>{children}</>;
@@ -26,8 +36,6 @@ const PrivateRoute: React.FC<{
   if (isUser && !hasPermission) {
     return <AccessDeniedPage />;
   }
-  // Session is being fetched, or no user.
-  // If no user, useEffect() will redirect.
   return <Loader showText={false} />;
 };
 

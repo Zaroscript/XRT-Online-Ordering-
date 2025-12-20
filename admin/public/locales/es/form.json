@@ -552,7 +552,6 @@
   "error-popup-expired-min": "Por favor establezca un valor mínimo de 1 día.",
   "error-popup-expired": "Se requiere ventana emergente caducada",
   "error-image": "Debe proporcionar un archivo de imagen.",
-
   "input-label-subtitle": "Sin título",
   "error-subtitle-required": "Untertitel ist erforderlich",
   "upload-image-help-text": "Laden Sie Ihr Bild hoch.",
@@ -614,5 +613,10 @@
   "error-minimum-balance-is-required": "Se requiere saldo mínimo",
   "error-maximum-balance-type": "Número de saldo máximo o texto 'sobre'",
   "error-maximum-balance-is-required": "Se requiere saldo máximo",
-  "text-save-seller-information": "Guardar información del vendedor"
+  "text-save-seller-information": "Guardar información del vendedor",
+  "form-title-printer-settings": "Printer Settings",
+  "printer-settings-help-text": "Configure your printer connection settings here.",
+  "input-label-printer-id": "Printer ID",
+  "input-label-public-key": "Public Key",
+  "input-label-private-key": "Private Key"
 }

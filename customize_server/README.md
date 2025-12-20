@@ -7,7 +7,7 @@ Enterprise-grade authentication and user management system with role-based acces
 - 🔐 **JWT Authentication** - Secure token-based authentication
 - 👥 **User Management** - Complete user lifecycle management
 - 🏢 **Multi-Business Support** - Manage multiple restaurant businesses
-- ⚙️ **Business Settings** - Configure operating hours, delivery, fees, and taxes
+- ⚙️ **Business Settings** - Configure operating hours, delivery, and dynamic fee structure (Service Fee & Fixed/Percentage Tips)
 - 🎭 **Role-Based Access Control** - Flexible permission system
 - 📚 **API Documentation** - Interactive Swagger documentation
 - 🔧 **Admin Dashboard** - Comprehensive admin tools

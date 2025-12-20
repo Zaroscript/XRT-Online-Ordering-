@@ -66,6 +66,17 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
     }
   );
 
+  const { price: serviceFee } = usePrice({
+    amount: options?.fees?.service_fee ?? 0,
+  });
+
+  const { price: tipPrice } = usePrice({
+    amount:
+      options?.fees?.tip_type === 'fixed'
+        ? options?.fees?.tip
+        : (base_amount * (options?.fees?.tip ?? 0)) / 100,
+  });
+
   // Calculate Discount base on coupon type
   let calculateDiscount = 0;
 
@@ -92,13 +103,16 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
     options?.freeShipping && Number(options?.freeShippingAmount) <= base_amount;
   const totalPrice = verifiedResponse
     ? calculatePaidTotal(
-        {
-          totalAmount: base_amount,
-          tax: verifiedResponse?.total_tax,
-          shipping_charge: verifiedResponse?.shipping_charge,
-        },
-        Number(calculateDiscount)
-      )
+      {
+        totalAmount: base_amount,
+        tax: verifiedResponse?.total_tax,
+        shipping_charge: verifiedResponse?.shipping_charge,
+        service_fee: options?.fees?.service_fee,
+        tip: options?.fees?.tip,
+        tip_type: options?.fees?.tip_type,
+      },
+      Number(calculateDiscount)
+    )
     : 0;
   const { price: total } = usePrice(
     verifiedResponse && {
@@ -134,6 +148,12 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
       <div className="mt-4 space-y-2">
         <ItemInfoRow title={t('text-sub-total')} value={sub_total} />
         <ItemInfoRow title={t('text-tax')} value={tax} />
+        <ItemInfoRow title={t('form:input-label-service-fee')} value={serviceFee} />
+        <ItemInfoRow
+          title={`${t('form:input-label-tip')} (${options?.fees?.tip_type === 'fixed' ? t('Fixed') : '%'
+            })`}
+          value={tipPrice}
+        />
         <div className="flex justify-between">
           <p className="text-sm text-body">
             {t('text-shipping')}{' '}

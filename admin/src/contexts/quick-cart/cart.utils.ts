@@ -6,7 +6,7 @@ export interface Item {
   [key: string]: any;
 }
 
-export interface UpdateItemInput extends Partial<Omit<Item, 'id'>> {}
+export interface UpdateItemInput extends Partial<Omit<Item, 'id'>> { }
 
 export function addItemWithQuantity(
   items: Item[],
@@ -88,12 +88,25 @@ interface PriceValues {
   totalAmount: number;
   tax: number;
   shipping_charge: number;
+  service_fee?: number;
+  tip?: number;
+  tip_type?: string;
 }
 export const calculatePaidTotal = (
-  { totalAmount, tax, shipping_charge }: PriceValues,
+  {
+    totalAmount,
+    tax,
+    shipping_charge,
+    service_fee = 0,
+    tip = 0,
+    tip_type = 'percentage',
+  }: PriceValues,
   discount?: number
 ) => {
-  let paidTotal = totalAmount + tax + shipping_charge;
+  const calculatedTip =
+    tip_type === 'fixed' ? tip : (totalAmount * tip) / 100;
+
+  let paidTotal = totalAmount + tax + shipping_charge + service_fee + calculatedTip;
   if (discount) {
     paidTotal = paidTotal - discount;
   }

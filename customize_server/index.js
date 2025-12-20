@@ -3,8 +3,10 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import passport from 'passport';
+import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import businessRoutes from './routes/businesses.js';
+import businessSettingsRoutes from './routes/businessSettings.js';
 import locationRoutes from './routes/locations.js';
 import withdrawRoutes from './routes/withdraws.js';
 import roleRoutes from './routes/roles.js';
@@ -25,6 +27,7 @@ const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(passport.initialize());
 app.use(
@@ -62,6 +65,8 @@ connectDB()
 // Register routes
 app.use(`${API_BASE_URL}/auth`, authRoutes);
 app.use(`${API_BASE_URL}/businesses`, businessRoutes);
+app.use(`${API_BASE_URL}/business-settings`, businessSettingsRoutes);
+app.use(`${API_BASE_URL}/settings`, businessSettingsRoutes); // Alias for frontend compatibility
 app.use(`${API_BASE_URL}/locations`, locationRoutes);
 app.use(`${API_BASE_URL}/withdraws`, withdrawRoutes);
 app.use(`${API_BASE_URL}/roles`, roleRoutes);
@@ -120,6 +125,7 @@ app.get(`${API_BASE_URL}/`, (req, res) => {
     endpoints: {
       auth: `${API_BASE_URL}/auth`,
       businesses: `${API_BASE_URL}/businesses`,
+      settings: `${API_BASE_URL}/settings`,
       locations: `${API_BASE_URL}/locations`,
       roles: `${API_BASE_URL}/roles`,
       withdraws: `${API_BASE_URL}/withdraws`,
@@ -165,6 +171,16 @@ app.use((err, req, res, next) => {
 // Start server
 const server = app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
+  console.log(`📡 API available at http://localhost:${port}${API_BASE_URL}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${port} is already in use!`);
+    console.error(`💡 To fix this, run: ./kill-port.sh`);
+    console.error(`   Or manually kill the process: lsof -ti:${port} | xargs kill`);
+    process.exit(1);
+  } else {
+    throw err;
+  }
 });
 
 // Handle unhandled promise rejections

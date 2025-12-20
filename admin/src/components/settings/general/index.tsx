@@ -100,8 +100,8 @@ export default function GeneralSettingsForm({
       // @ts-ignore
       shippingClass: !!shippingClasses?.length
         ? shippingClasses?.find(
-            (shipping: Shipping) => shipping.id == options?.shippingClass,
-          )
+          (shipping: Shipping) => shipping.id == options?.shippingClass,
+        )
         : '',
     },
   });
@@ -166,7 +166,7 @@ export default function GeneralSettingsForm({
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
         <Description
           title={t('form:input-label-logo')}
@@ -224,7 +224,7 @@ export default function GeneralSettingsForm({
             error={t(errors.signupPoints?.message!)}
             variant="outline"
             className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
 
           <Input
@@ -235,7 +235,7 @@ export default function GeneralSettingsForm({
             error={t(errors.minimumOrderAmount?.message!)}
             variant="outline"
             className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
           <Input
             label={t('form:input-label-wallet-currency-ratio')}
@@ -245,7 +245,7 @@ export default function GeneralSettingsForm({
             error={t(errors.currencyToWalletRatio?.message!)}
             variant="outline"
             className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
 
           <Input
@@ -256,7 +256,7 @@ export default function GeneralSettingsForm({
             error={t(errors.maximumQuestionLimit?.message!)}
             variant="outline"
             className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
 
           <div className="mb-5">
@@ -268,7 +268,7 @@ export default function GeneralSettingsForm({
               options={taxClasses!}
               label={t('form:input-label-tax-class')}
               toolTipText={t('form:input-tooltip-tax-class')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
@@ -281,7 +281,7 @@ export default function GeneralSettingsForm({
               options={shippingClasses!}
               label={t('form:input-label-shipping-class')}
               toolTipText={t('form:input-tooltip-shipping-class')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
@@ -291,7 +291,7 @@ export default function GeneralSettingsForm({
               control={control}
               label={t('form:input-label-enable-otp')}
               toolTipText={t('form:input-tooltip-otp')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
@@ -301,7 +301,7 @@ export default function GeneralSettingsForm({
               control={control}
               label={t('form:input-label-use-must-verify-email')}
               toolTipText={t('form:input-tooltip-enable-verify-email')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
@@ -311,7 +311,7 @@ export default function GeneralSettingsForm({
               control={control}
               label={t('form:input-label-enable-guest-checkout')}
               toolTipText={t('form:input-tooltip-enable-guest-checkout')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
@@ -321,7 +321,7 @@ export default function GeneralSettingsForm({
             checked={enableFreeShipping}
             label={t('form:input-label-enable-free-shipping')}
             toolTipText={t('form:input-tooltip-enable-free-shipping')}
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
 
           {enableFreeShipping && (
@@ -332,7 +332,7 @@ export default function GeneralSettingsForm({
               variant="outline"
               type="number"
               className="mt-5"
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           )}
 
@@ -342,7 +342,7 @@ export default function GeneralSettingsForm({
               control={control}
               label={t('form:input-label-enable-open-ai')}
               toolTipText={t('form:input-tooltip-enable-ai')}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
           {useAi ? (
@@ -354,7 +354,7 @@ export default function GeneralSettingsForm({
                 getOptionLabel={(option: any) => option.name}
                 getOptionValue={(option: any) => option.value}
                 options={AI}
-                // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
               />
             </div>
           ) : (
@@ -364,7 +364,7 @@ export default function GeneralSettingsForm({
             name="isMultiCommissionRate"
             control={control}
             label="Enable Multi Commission Rate"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
         </Card>
       </div>

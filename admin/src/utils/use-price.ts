@@ -12,6 +12,7 @@ export function formatPrice({
   locale: string;
   fractions: number;
 }) {
+  if (!currencyCode) return `${amount}`;
   const formatCurrency = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currencyCode,
@@ -63,12 +64,12 @@ export default function usePrice(data?: PriceProps | null) {
 
     return baseAmount
       ? formatVariantPrice({
-          amount,
-          baseAmount,
-          currencyCode,
-          locale,
-          fractions,
-        })
+        amount,
+        baseAmount,
+        currencyCode,
+        locale,
+        fractions,
+      })
       : formatPrice({ amount, currencyCode, locale, fractions });
   }, [amount, baseAmount, currencyCode]);
 

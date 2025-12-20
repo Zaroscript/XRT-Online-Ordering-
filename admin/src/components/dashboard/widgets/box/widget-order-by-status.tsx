@@ -1,5 +1,5 @@
 import StickerCard from '@/components/widgets/sticker-card';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { TodayTotalOrderByStatus } from '@/types';
 import { Fragment, useEffect, useState } from 'react';
 import { OrderProcessedIcon } from '@/components/icons/summary/order-processed';
@@ -104,18 +104,18 @@ const WidgetOrderByStatus: React.FC<IProps> = ({
       <div className="mt-5 grid w-full grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {isMounted && tempContent && tempContent.length > 0
           ? tempContent.map((content) => {
-              return (
-                <div className="w-full" key={content?.key}>
-                  <StickerCard
-                    titleTransKey={content?.title}
-                    subtitleTransKey={content?.subtitle}
-                    icon={content?.icon}
-                    color={content?.color}
-                    price={content?.data}
-                  />
-                </div>
-              );
-            })
+            return (
+              <div className="w-full" key={content?.key}>
+                <StickerCard
+                  titleTransKey={content?.title}
+                  subtitleTransKey={content?.subtitle}
+                  icon={content?.icon}
+                  color={content?.color}
+                  price={content?.data}
+                />
+              </div>
+            );
+          })
           : ''}
       </div>
     </Fragment>

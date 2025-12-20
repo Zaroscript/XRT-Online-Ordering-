@@ -39,6 +39,7 @@ const BackToTopButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
           zIndex: 1,
         }}
       >
+        {/* @ts-ignore */}
         <Comp
           className={twMerge(
             classNames(

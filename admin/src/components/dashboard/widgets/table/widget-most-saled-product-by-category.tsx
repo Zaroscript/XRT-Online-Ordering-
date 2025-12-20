@@ -52,13 +52,14 @@ function SoldProductCard({ product }: { product: Product }) {
   return (
     <div className="">
       <div className="relative flex justify-center overflow-hidden border shrink-0 rounded-xl border-border-200/60">
-        <Image
+        <img
           alt={name}
           src={image?.original ?? siteSettings.product.placeholder}
-          width={type?.name !== 'Books' ? 435 : 295}
-          height={type?.name !== 'Books' ? 435 : 340}
-          priority={true}
-          sizes="(max-width: 768px) 100vw"
+          style={{
+            width: type?.name !== 'Books' ? 435 : 295,
+            height: type?.name !== 'Books' ? 435 : 340,
+            objectFit: 'cover'
+          }}
         />
       </div>
       <div className="flex items-start justify-between pt-4">

@@ -462,7 +462,7 @@ export const specs = {
             type: 'object',
             properties: {
               enabled: { type: 'boolean' },
-              radius: { type: 'number' },
+              radius: { type: 'number', description: 'Delivery radius in miles' },
               fee: { type: 'number' },
               min_order: { type: 'number' },
             },
@@ -471,19 +471,120 @@ export const specs = {
             type: 'object',
             properties: {
               service_fee: { type: 'number' },
+              tip: { type: 'number' },
+              tip_type: { type: 'string', enum: ['fixed', 'percentage'] },
             },
           },
           taxes: {
             type: 'object',
             properties: {
               sales_tax: { type: 'number' },
-              meals_tax: { type: 'number' },
             },
           },
           orders: {
-            type: 'object',
             properties: {
               accept_orders: { type: 'boolean' },
+              allowScheduleOrder: { type: 'boolean' },
+              maxDays: { type: 'number' },
+              deliveredOrderTime: { type: 'number' },
+            },
+          },
+          siteTitle: { type: 'string' },
+          siteSubtitle: { type: 'string' },
+          currency: { type: 'string' },
+          seo: {
+            type: 'object',
+            properties: {
+              metaTitle: { type: 'string' },
+              metaDescription: { type: 'string' },
+              ogTitle: { type: 'string' },
+              ogDescription: { type: 'string' },
+              ogImage: { type: 'object' },
+              twitterHandle: { type: 'string' },
+              twitterCardType: { type: 'string' },
+              metaTags: { type: 'string' },
+              canonicalUrl: { type: 'string' },
+            },
+          },
+          logo: { type: 'object' },
+          contactDetails: {
+            type: 'object',
+            properties: {
+              location: { type: 'object' },
+              contact: { type: 'string' },
+              contacts: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              website: { type: 'string' },
+              socials: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    icon: { type: 'string' },
+                    url: { type: 'string' }
+                  }
+                }
+              }
+            }
+          },
+          // header_info removed
+          footer_text: { type: 'string' },
+          messages: {
+            type: 'object',
+            properties: {
+              closed_message: { type: 'string' },
+              not_accepting_orders_message: { type: 'string' },
+            },
+          },
+          isUnderMaintenance: { type: 'boolean', default: false },
+          maintenance: {
+            type: 'object',
+            properties: {
+              image: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  original: { type: 'string' },
+                  thumbnail: { type: 'string' },
+                },
+              },
+              title: { type: 'string', default: '' },
+              description: { type: 'string', default: '' },
+              start: { type: 'string', format: 'date-time' },
+              until: { type: 'string', format: 'date-time' },
+              isOverlayColor: { type: 'boolean', default: false },
+              overlayColor: { type: 'string', default: '' },
+              overlayColorRange: { type: 'string', default: '' },
+              buttonTitleOne: { type: 'string', default: '' },
+              buttonTitleTwo: { type: 'string', default: '' },
+              newsLetterTitle: { type: 'string', default: '' },
+              newsLetterDescription: { type: 'string', default: '' },
+              aboutUsTitle: { type: 'string', default: '' },
+              aboutUsDescription: { type: 'string', default: '' },
+              contactUsTitle: { type: 'string', default: '' },
+            },
+          },
+          promoPopup: {
+            type: 'object',
+            properties: {
+              isEnable: { type: 'boolean', default: false },
+              image: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  original: { type: 'string' },
+                  thumbnail: { type: 'string' },
+                },
+              },
+              title: { type: 'string', default: '' },
+              description: { type: 'string', default: '' },
+              popupDelay: { type: 'number', default: 0 },
+              popupExpiredIn: { type: 'number', default: 0 },
+              isNotShowAgain: { type: 'boolean', default: false },
             },
           },
         },
@@ -513,7 +614,7 @@ export const specs = {
             type: 'object',
             properties: {
               enabled: { type: 'boolean' },
-              radius: { type: 'number' },
+              radius: { type: 'number', description: 'Delivery radius in miles' },
               fee: { type: 'number' },
               min_order: { type: 'number' },
             },
@@ -522,19 +623,120 @@ export const specs = {
             type: 'object',
             properties: {
               service_fee: { type: 'number' },
+              tip: { type: 'number' },
+              tip_type: { type: 'string', enum: ['fixed', 'percentage'] },
             },
           },
           taxes: {
             type: 'object',
             properties: {
               sales_tax: { type: 'number' },
-              meals_tax: { type: 'number' },
             },
           },
           orders: {
-            type: 'object',
             properties: {
               accept_orders: { type: 'boolean' },
+              allowScheduleOrder: { type: 'boolean' },
+              maxDays: { type: 'number' },
+              deliveredOrderTime: { type: 'number' },
+            },
+          },
+          siteTitle: { type: 'string' },
+          siteSubtitle: { type: 'string' },
+          currency: { type: 'string' },
+          seo: {
+            type: 'object',
+            properties: {
+              metaTitle: { type: 'string' },
+              metaDescription: { type: 'string' },
+              ogTitle: { type: 'string' },
+              ogDescription: { type: 'string' },
+              ogImage: { type: 'object' },
+              twitterHandle: { type: 'string' },
+              twitterCardType: { type: 'string' },
+              metaTags: { type: 'string' },
+              canonicalUrl: { type: 'string' },
+            },
+          },
+          logo: { type: 'object' },
+          contactDetails: {
+            type: 'object',
+            properties: {
+              location: { type: 'object' },
+              contact: { type: 'string' },
+              contacts: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              website: { type: 'string' },
+              socials: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    icon: { type: 'string' },
+                    url: { type: 'string' }
+                  }
+                }
+              }
+            }
+          },
+          // header_info removed
+          footer_text: { type: 'string' },
+          messages: {
+            type: 'object',
+            properties: {
+              closed_message: { type: 'string' },
+              not_accepting_orders_message: { type: 'string' },
+            },
+          },
+          isUnderMaintenance: { type: 'boolean' },
+          maintenance: {
+            type: 'object',
+            properties: {
+              image: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  original: { type: 'string' },
+                  thumbnail: { type: 'string' },
+                },
+              },
+              title: { type: 'string' },
+              description: { type: 'string' },
+              start: { type: 'string', format: 'date-time' },
+              until: { type: 'string', format: 'date-time' },
+              isOverlayColor: { type: 'boolean' },
+              overlayColor: { type: 'string' },
+              overlayColorRange: { type: 'string' },
+              buttonTitleOne: { type: 'string' },
+              buttonTitleTwo: { type: 'string' },
+              newsLetterTitle: { type: 'string' },
+              newsLetterDescription: { type: 'string' },
+              aboutUsTitle: { type: 'string' },
+              aboutUsDescription: { type: 'string' },
+              contactUsTitle: { type: 'string' },
+            },
+          },
+          promoPopup: {
+            type: 'object',
+            properties: {
+              isEnable: { type: 'boolean' },
+              image: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  original: { type: 'string' },
+                  thumbnail: { type: 'string' },
+                },
+              },
+              title: { type: 'string' },
+              description: { type: 'string' },
+              popupDelay: { type: 'number' },
+              popupExpiredIn: { type: 'number' },
+              isNotShowAgain: { type: 'boolean' },
             },
           },
         },
@@ -862,6 +1064,48 @@ export const specs = {
             items: { type: 'string' },
             example: ['users:read', 'content:create'],
           },
+        },
+      },
+      Withdraw: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
+          business: {
+            type: 'object',
+            properties: {
+              _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
+              name: { type: 'string', example: "Joe's Pizza" }
+            }
+          },
+          amount: { type: 'number', example: 500.00 },
+          status: { type: 'string', enum: ['pending', 'approved', 'rejected'], example: 'pending' },
+          notes: { type: 'string', example: 'Monthly withdrawal' },
+          requestedBy: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', example: 'John Doe' },
+              email: { type: 'string', example: 'john@example.com' }
+            }
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      CreateWithdrawRequest: {
+        type: 'object',
+        required: ['amount', 'businessId'],
+        properties: {
+          amount: { type: 'number', min: 1, example: 500.00 },
+          businessId: { type: 'string', example: '507f1f77bcf86cd799439011' },
+          notes: { type: 'string', example: 'Urgent request' },
+        },
+      },
+      UpdateWithdrawStatusRequest: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: { type: 'string', enum: ['approved', 'rejected'], example: 'approved' },
+          notes: { type: 'string', example: 'Processed successfully' },
         },
       },
     },
@@ -3319,6 +3563,138 @@ export const specs = {
             content: {
               'application/json': {
                 schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/withdraws': {
+      post: {
+        summary: 'Create a withdraw request',
+        tags: ['Withdraws'],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CreateWithdrawRequest' },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Created',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { $ref: '#/components/schemas/Withdraw' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      get: {
+        summary: 'Get all withdraws (Admin)',
+        tags: ['Withdraws'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: 'query',
+            name: 'page',
+            schema: { type: 'integer', default: 1 },
+          },
+          {
+            in: 'query',
+            name: 'limit',
+            schema: { type: 'integer', default: 10 },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'List of withdraws',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'array',
+                      items: { $ref: '#/components/schemas/Withdraw' }
+                    }
+                  }
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/withdraws/my-withdraws': {
+      get: {
+        summary: 'Get my withdraws',
+        tags: ['Withdraws'],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Success',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'array',
+                      items: { $ref: '#/components/schemas/Withdraw' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/api/v1/withdraws/{id}/status': {
+      patch: {
+        summary: 'Update withdraw status (Admin)',
+        tags: ['Withdraws'],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            in: 'path',
+            name: 'id',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/UpdateWithdrawStatusRequest' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Success',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { $ref: '#/components/schemas/Withdraw' },
+                  },
+                },
               },
             },
           },

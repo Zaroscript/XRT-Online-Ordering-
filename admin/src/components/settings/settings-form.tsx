@@ -2,11 +2,12 @@ import Card from '@/components/common/card';
 import GooglePlacesAutocomplete from '@/components/form/google-places-autocomplete';
 import * as socialIcons from '@/components/icons/social';
 import OpenAIButton from '@/components/openAI/openAI.button';
+import Color from '@/components/ui/color';
+import DatePicker from '@/components/ui/date-picker';
+import Range from '@/components/ui/range';
+import { addDays, addMinutes, isSameDay, isToday } from 'date-fns';
 import { AI } from '@/components/settings/ai';
-import {
-  EMAIL_GROUP_OPTION,
-  SMS_GROUP_OPTION,
-} from '@/components/settings/events/eventsOption';
+
 import {
   chatbotAutoSuggestion,
   chatbotAutoSuggestion1,
@@ -43,11 +44,9 @@ import {
   Shipping,
   ShopSocialInput,
   Tax,
+  PrinterSettings,
 } from '@/types';
-import {
-  formatEventAPIData,
-  formatEventOptions,
-} from '@/utils/format-event-options';
+
 import { getIcon } from '@/utils/get-icon';
 import { formatPrice } from '@/utils/use-price';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -109,9 +108,40 @@ type FormValues = {
     pageId: string;
   };
   guestCheckout: boolean;
-  smsEvent: any;
-  emailEvent: any;
+  printer: PrinterSettings;
+  messages: {
+    closed_message: string;
+    not_accepting_orders_message: string;
+  };
   server_info: ServerInfo;
+  promoPopup: {
+    isEnable: boolean;
+    image: AttachmentInput;
+    title: string;
+    description: string;
+    popupDelay: number;
+    popupExpiredIn: number;
+    isNotShowAgain: boolean;
+  };
+  isUnderMaintenance: boolean;
+  maintenance: {
+    image: AttachmentInput;
+    title: string;
+    description: string;
+    start: string;
+    until: string;
+    isOverlayColor: boolean;
+    overlayColor: string;
+    overlayColorRange: string;
+    buttonTitleOne: string;
+    buttonTitleTwo: string;
+    newsLetterTitle: string;
+    newsLetterDescription: string;
+    aboutUsTitle: string;
+    aboutUsDescription: string;
+    contactUsTitle: string;
+  };
+  footer_text: string;
 };
 
 type paymentGatewayOption = {
@@ -169,6 +199,7 @@ export default function SettingsForm({
   const { t } = useTranslation();
   const { locale } = useRouter();
   const [isCopied, setIsCopied] = useState(false);
+  const today = new Date();
   const { mutate: updateSettingsMutation, isLoading: loading } =
     useUpdateSettingsMutation();
   const { language, options } = settings ?? {};
@@ -191,11 +222,14 @@ export default function SettingsForm({
       server_info: serverInfo,
       contactDetails: {
         ...options?.contactDetails,
+        contacts: options?.contactDetails?.contacts
+          ? options.contactDetails.contacts.map((contact: string) => ({ value: contact }))
+          : [{ value: options?.contactDetails?.contact || '' }],
         socials: options?.contactDetails?.socials
           ? options?.contactDetails?.socials.map((social: any) => ({
-              icon: updatedIcons?.find((icon) => icon?.value === social?.icon),
-              url: social?.url,
-            }))
+            icon: updatedIcons?.find((icon) => icon?.value === social?.icon),
+            url: social?.url,
+          }))
           : [],
       },
       deliveryTime: options?.deliveryTime ? options?.deliveryTime : [],
@@ -216,24 +250,24 @@ export default function SettingsForm({
 
       defaultPaymentGateway: options?.defaultPaymentGateway
         ? PAYMENT_GATEWAY.find(
-            (item) => item.name == options?.defaultPaymentGateway,
-          )
+          (item) => item.name == options?.defaultPaymentGateway,
+        )
         : PAYMENT_GATEWAY[0],
 
       currencyOptions: {
         ...options?.currencyOptions,
         formation: options?.currencyOptions?.formation
           ? COUNTRY_LOCALE.find(
-              (item) => item.code == options?.currencyOptions?.formation,
-            )
+            (item) => item.code == options?.currencyOptions?.formation,
+          )
           : COUNTRY_LOCALE[0],
       },
       // multi-select on payment gateway
       paymentGateway: options?.paymentGateway
         ? options?.paymentGateway?.map((gateway: any) => ({
-            name: gateway?.name,
-            title: gateway?.title,
-          }))
+          name: gateway?.name,
+          title: gateway?.title,
+        }))
         : [],
 
       // @ts-ignore
@@ -243,15 +277,47 @@ export default function SettingsForm({
       // @ts-ignore
       shippingClass: !!shippingClasses?.length
         ? shippingClasses?.find(
-            (shipping: Shipping) => shipping.id == options?.shippingClass,
-          )
+          (shipping: Shipping) => shipping.id == options?.shippingClass,
+        )
         : '',
-      smsEvent: options?.smsEvent
-        ? formatEventAPIData(options?.smsEvent)
-        : null,
-      emailEvent: options?.emailEvent
-        ? formatEventAPIData(options?.emailEvent)
-        : null,
+      printer: options?.printer ?? {
+        printer_id: '',
+        public_key: '',
+        private_key: '',
+      },
+      footer_text: options?.footer_text ?? '',
+      messages: {
+        closed_message: options?.messages?.closed_message ?? '',
+        not_accepting_orders_message: options?.messages?.not_accepting_orders_message ?? '',
+      },
+      promoPopup: {
+        isEnable: options?.promoPopup?.isEnable ?? false,
+        image: options?.promoPopup?.image,
+        title: options?.promoPopup?.title ?? '',
+        description: options?.promoPopup?.description ?? '',
+        popupDelay: options?.promoPopup?.popupDelay ?? 0,
+        popupExpiredIn: options?.promoPopup?.popupExpiredIn ?? 0,
+        isNotShowAgain: options?.promoPopup?.isNotShowAgain ?? false,
+      },
+      isUnderMaintenance: options?.isUnderMaintenance ?? false,
+      maintenance: {
+        image: options?.maintenance?.image,
+        title: options?.maintenance?.title ?? '',
+        description: options?.maintenance?.description ?? '',
+        start: options?.maintenance?.start ?? today.toString(),
+        until: options?.maintenance?.until ?? today.toString(),
+        isOverlayColor: options?.maintenance?.isOverlayColor ?? false,
+        overlayColor: options?.maintenance?.overlayColor ?? '',
+        overlayColorRange: options?.maintenance?.overlayColorRange ?? '',
+        buttonTitleOne: options?.maintenance?.buttonTitleOne ?? '',
+        buttonTitleTwo: options?.maintenance?.buttonTitleTwo ?? '',
+        newsLetterTitle: options?.maintenance?.newsLetterTitle ?? '',
+        newsLetterDescription: options?.maintenance?.newsLetterDescription ?? '',
+        aboutUsTitle: options?.maintenance?.aboutUsTitle ?? '',
+        aboutUsDescription: options?.maintenance?.aboutUsDescription ?? '',
+        contactUsTitle: options?.maintenance?.contactUsTitle ?? '',
+      },
+      maximumQuestionLimit: options?.maximumQuestionLimit ?? 0,
     },
   });
   const { openModal } = useModalAction();
@@ -293,7 +359,14 @@ export default function SettingsForm({
     control,
     name: 'deliveryTime',
   });
-
+  const {
+    fields: contactFields,
+    append: contactAppend,
+    remove: contactRemove,
+  } = useFieldArray({
+    control,
+    name: 'contactDetails.contacts',
+  });
   const {
     fields: socialFields,
     append: socialAppend,
@@ -303,6 +376,44 @@ export default function SettingsForm({
     name: 'contactDetails.socials',
   });
 
+  const startDate = watch('maintenance.start');
+  const untilDate = watch('maintenance.until');
+  const isOverlayColor = watch('maintenance.isOverlayColor');
+  const isMaintenanceMode = watch('isUnderMaintenance');
+
+
+  let sameDay = useMemo(() => {
+    return isSameDay(new Date(untilDate), new Date(startDate));
+  }, [untilDate, startDate]);
+
+  const filterUntilTime = (date: Date) => {
+    if (sameDay) {
+      const isPastTime =
+        addMinutes(new Date(startDate), 15).getTime() > date.getTime();
+      return !isPastTime;
+    }
+
+    return true;
+  };
+
+  const filterStartTime = (date: Date) => {
+    let today = isToday(new Date(startDate));
+    if (today) {
+      const isPastTime = new Date(startDate).getTime() > date.getTime();
+      return !isPastTime;
+    }
+
+    return true;
+  };
+
+  const maintenanceImageInformation = (
+    <span>
+      {t('form:maintenance-cover-image-help-text')} <br />
+      {t('form:cover-image-dimension-help-text')} &nbsp;
+      <span className="font-bold">1170 x 435{t('common:text-px')}</span>
+    </span>
+  );
+
   // const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
 
   async function onSubmit(values: any) {
@@ -311,13 +422,11 @@ export default function SettingsForm({
       location: { ...omit(values?.contactDetails?.location, '__typename') },
       socials: values?.contactDetails?.socials
         ? values?.contactDetails?.socials?.map((social: any) => ({
-            icon: social?.icon?.value,
-            url: social?.url,
-          }))
+          icon: social?.icon?.value,
+          url: social?.url,
+        }))
         : [],
     };
-    const smsEvent = formatEventOptions(values.smsEvent);
-    const emailEvent = formatEventOptions(values.emailEvent);
     updateSettingsMutation({
       language: locale,
       options: {
@@ -335,17 +444,15 @@ export default function SettingsForm({
         paymentGateway:
           values?.paymentGateway && values?.paymentGateway!.length
             ? values?.paymentGateway?.map((gateway: any) => ({
-                name: gateway.name,
-                title: gateway.title,
-              }))
+              name: gateway.name,
+              title: gateway.title,
+            }))
             : PAYMENT_GATEWAY.filter((value: any, index: number) => index < 2),
         useEnableGateway: values?.useEnableGateway,
         guestCheckout: values?.guestCheckout,
         taxClass: values?.taxClass?.id,
         shippingClass: values?.shippingClass?.id,
         logo: values?.logo,
-        smsEvent,
-        emailEvent,
         contactDetails,
         //@ts-ignore
         seo: {
@@ -356,6 +463,23 @@ export default function SettingsForm({
           ...values.currencyOptions,
           formation: values?.currencyOptions?.formation?.code,
         },
+        footer_text: values.footer_text,
+        messages: {
+          closed_message: values.messages.closed_message,
+          not_accepting_orders_message: values.messages.not_accepting_orders_message,
+        },
+        promoPopup: {
+          ...values.promoPopup,
+          popupDelay: Number(values.promoPopup.popupDelay),
+          popupExpiredIn: Number(values.promoPopup.popupExpiredIn),
+        },
+        isUnderMaintenance: values.isUnderMaintenance,
+        maintenance: {
+          ...values.maintenance,
+          start: values.maintenance.start,
+          until: values.maintenance.until,
+        },
+        printer: values.printer,
       },
     });
   }
@@ -390,7 +514,7 @@ export default function SettingsForm({
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
         <Description
           title={t('form:input-label-logo')}
@@ -437,7 +561,7 @@ export default function SettingsForm({
             error={t(errors.minimumOrderAmount?.message!)}
             variant="outline"
             className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
           <Input
             label={`${t('form:input-label-wallet-currency-ratio')}`}
@@ -446,7 +570,7 @@ export default function SettingsForm({
             error={t(errors.currencyToWalletRatio?.message!)}
             variant="outline"
             className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
           <Input
             label={`${t('form:input-label-signup-points')}`}
@@ -455,8 +579,39 @@ export default function SettingsForm({
             error={t(errors.signupPoints?.message!)}
             variant="outline"
             className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
+
+
+          <div className="mb-5">
+            <Label>Footer Text</Label>
+            <TextArea
+              label="Footer Text"
+              {...register('footer_text')}
+              variant="outline"
+              className="mb-5"
+            />
+          </div>
+
+          <div className="mb-5">
+            <Label>Closed Message</Label>
+            <TextArea
+              label="Message to show when restaurant is closed"
+              {...register('messages.closed_message')}
+              variant="outline"
+              className="mb-5"
+            />
+          </div>
+
+          <div className="mb-5">
+            <Label>Not Accepting Orders Message</Label>
+            <TextArea
+              label="Message to show when not accepting orders"
+              {...register('messages.not_accepting_orders_message')}
+              variant="outline"
+              className="mb-5"
+            />
+          </div>
 
           <Input
             label={`${t('form:input-label-maximum-question-limit')}`}
@@ -465,7 +620,7 @@ export default function SettingsForm({
             error={t(errors.maximumQuestionLimit?.message!)}
             variant="outline"
             className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
 
           <div className="mb-5">
@@ -473,7 +628,7 @@ export default function SettingsForm({
               <SwitchInput
                 name="useOtp"
                 control={control}
-                // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
               />
               <Label className="mb-0">{t('form:input-label-enable-otp')}</Label>
             </div>
@@ -484,7 +639,7 @@ export default function SettingsForm({
               <SwitchInput
                 name="useMustVerifyEmail"
                 control={control}
-                // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
               />
               <Label className="mb-0">
                 {t('form:input-label-use-must-verify-email')}
@@ -497,7 +652,7 @@ export default function SettingsForm({
               <SwitchInput
                 name="useAi"
                 control={control}
-                // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
               />
               <Label className="mb-0">
                 {t('form:input-label-enable-open-ai')}
@@ -512,7 +667,7 @@ export default function SettingsForm({
               getOptionLabel={(option: any) => option.name}
               getOptionValue={(option: any) => option.value}
               options={AI}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
@@ -524,7 +679,7 @@ export default function SettingsForm({
               getOptionLabel={(option: any) => option.name}
               getOptionValue={(option: any) => option.id}
               options={taxClasses!}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
@@ -536,7 +691,7 @@ export default function SettingsForm({
               getOptionLabel={(option: any) => option.name}
               getOptionValue={(option: any) => option.id}
               options={shippingClasses!}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
           <div className="mb-5">
@@ -544,7 +699,7 @@ export default function SettingsForm({
               <SwitchInput
                 name="guestCheckout"
                 control={control}
-                // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
               />
               <Label className="mb-0">
                 {t('form:input-label-enable-guest-checkout')}
@@ -557,7 +712,7 @@ export default function SettingsForm({
               name="freeShipping"
               control={control}
               checked={enableFreeShipping}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
             <Label className="mb-0">
               {t('form:input-label-enable-free-shipping')}
@@ -572,7 +727,7 @@ export default function SettingsForm({
               variant="outline"
               type="number"
               className="mt-5"
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           )}
         </Card>
@@ -590,7 +745,7 @@ export default function SettingsForm({
               <SwitchInput
                 name="useCashOnDelivery"
                 control={control}
-                // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
               />
               <Label className="mb-0">{t('Enable Cash On Delivery')}</Label>
             </div>
@@ -603,7 +758,7 @@ export default function SettingsForm({
               getOptionLabel={(option: any) => option.name}
               getOptionValue={(option: any) => option.code}
               options={CURRENCY}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
             <ValidationError message={t(errors.currency?.message)} />
           </div>
@@ -651,7 +806,7 @@ export default function SettingsForm({
                       getOptionLabel={(option: any) => option.title}
                       getOptionValue={(option: any) => option.name}
                       options={paymentGateway ?? []}
-                      // disabled={isNotDefaultSettingsPage}
+                    // disabled={isNotDefaultSettingsPage}
                     />
                   </div>
                   {isStripeActive && (
@@ -661,7 +816,7 @@ export default function SettingsForm({
                           <SwitchInput
                             name="StripeCardOnly"
                             control={control}
-                            // disabled={isNotDefaultSettingsPage}
+                          // disabled={isNotDefaultSettingsPage}
                           />
                           <Label className="!mb-0">
                             {t('Enable Stripe Element')}
@@ -700,7 +855,7 @@ export default function SettingsForm({
               getOptionLabel={(option: any) => option.name}
               getOptionValue={(option: any) => option.code}
               options={COUNTRY_LOCALE}
-              // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
             />
           </div>
           <Input
@@ -799,6 +954,103 @@ export default function SettingsForm({
             <Label>{t('form:input-label-og-image')}</Label>
             <FileInput name="seo.ogImage" control={control} multiple={false} />
           </div>
+        </Card>
+      </div>
+
+      {/* Promo Popup Section */}
+      <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
+        <Description
+          title="Promo Popup"
+          details="Configure the promotional popup that appears on the storefront."
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <div className="flex items-center gap-x-4 mb-5">
+            <SwitchInput name="promoPopup.isEnable" control={control} />
+            <Label className="mb-0">Enable Promo Popup</Label>
+          </div>
+
+          <div className="mb-5">
+            <Label>Promo Image</Label>
+            <FileInput name="promoPopup.image" control={control} multiple={false} />
+          </div>
+
+          <Input
+            label="Popup Title"
+            {...register('promoPopup.title')}
+            variant="outline"
+            className="mb-5"
+          />
+
+          <TextArea
+            label="Popup Description"
+            {...register('promoPopup.description')}
+            variant="outline"
+            className="mb-5"
+          />
+
+          <div className="flex flex-col sm:flex-row gap-5 mb-5">
+            <Input
+              label="Popup Delay (ms)"
+              {...register('promoPopup.popupDelay')}
+              type="number"
+              variant="outline"
+              className="w-full sm:w-1/2"
+              placeholder="e.g. 3000"
+            />
+            <Input
+              label="Expired In (days)"
+              {...register('promoPopup.popupExpiredIn')}
+              type="number"
+              variant="outline"
+              className="w-full sm:w-1/2"
+              placeholder="e.g. 7"
+            />
+          </div>
+
+          <div className="flex items-center gap-x-4">
+            <SwitchInput name="promoPopup.isNotShowAgain" control={control} />
+            <Label className="mb-0">Show &quot;Do not show again&quot; Option</Label>
+          </div>
+        </Card>
+      </div>
+
+      <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
+        <Description
+          title={t('form:form-title-seo-settings')}
+          details={t('form:seo-settings-help-text')}
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <Input
+            label={t('form:input-label-meta-title')}
+            {...register('seo.metaTitle')}
+            variant="outline"
+            className="mb-5"
+          />
+          <TextArea
+            label={t('form:input-label-meta-description')}
+            {...register('seo.metaDescription')}
+            variant="outline"
+            className="mb-5"
+          />
+          <Input
+            label={t('form:input-label-og-title')}
+            {...register('seo.ogTitle')}
+            variant="outline"
+            className="mb-5"
+          />
+          <TextArea
+            label={t('form:input-label-og-description')}
+            {...register('seo.ogDescription')}
+            variant="outline"
+            className="mb-5"
+          />
+          <div className="mb-5">
+            <Label>{t('form:input-label-og-image')}</Label>
+            <FileInput name="seo.ogImage" control={control} multiple={false} />
+          </div>
           <Input
             label={t('form:input-label-twitter-handle')}
             {...register('seo.twitterHandle')}
@@ -814,74 +1066,34 @@ export default function SettingsForm({
             placeholder="one of summary, summary_large_image, app, or player"
           />
         </Card>
-      </div>
+      </div >
       <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
         <Description
-          title={t('form:title-sms-event-settings')}
-          details={t('form:description-sms-event-settings')}
+          title="Printer Settings"
+          details="Configure your printer settings here."
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
-
         <Card className="w-full sm:w-8/12 md:w-2/3">
-          <div className="mb-5">
-            <Label>{t('form:input-label-sms-options')}</Label>
-            <SelectInput
-              name="smsEvent"
-              control={control}
-              getOptionLabel={(option: any) => {
-                let optionUser = split(option.value, '-');
-                switch (optionUser[0].toLowerCase()) {
-                  case 'customer':
-                    return `Customer: ${option.label}`;
-                  case 'vendor':
-                    return `Owner: ${option.label}`;
-                  default:
-                    return `Admin: ${option.label}`;
-                }
-              }}
-              isCloseMenuOnSelect={false}
-              options={SMS_GROUP_OPTION}
-              isMulti
-              // disabled={isNotDefaultSettingsPage}
-            />
-            <ValidationError message={t(errors.currency?.message)} />
-          </div>
+          <Input
+            label="Printer ID"
+            {...register('printer.printer_id')}
+            variant="outline"
+            className="mb-5"
+          />
+          <Input
+            label="Public Key"
+            {...register('printer.public_key')}
+            variant="outline"
+            className="mb-5"
+          />
+          <Input
+            label="Private Key"
+            {...register('printer.private_key')}
+            variant="outline"
+            className="mb-5"
+          />
         </Card>
-      </div>
-
-      <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
-        <Description
-          title={t('form:title-email-event-settings')}
-          details={t('form:description-email-event-settings')}
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
-        />
-
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <div className="mb-5">
-            <Label>{t('form:input-label-email-options')}</Label>
-            <SelectInput
-              name="emailEvent"
-              control={control}
-              getOptionLabel={(option: any) => {
-                let optionUser = split(option.value, '-');
-                switch (optionUser[0].toLowerCase()) {
-                  case 'customer':
-                    return `Customer: ${option.label}`;
-                  case 'vendor':
-                    return `Owner: ${option.label}`;
-                  default:
-                    return `Admin: ${option.label}`;
-                }
-              }}
-              isCloseMenuOnSelect={false}
-              options={EMAIL_GROUP_OPTION}
-              isMulti
-              // disabled={isNotDefaultSettingsPage}
-            />
-            <ValidationError message={t(errors.currency?.message)} />
-          </div>
-        </Card>
-      </div>
+      </div >
 
       <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:my-8">
         <Description
@@ -969,26 +1181,45 @@ export default function SettingsForm({
                 <GooglePlacesAutocomplete
                   onChange={onChange}
                   data={getValues('contactDetails.location')!}
-                  // disabled={isNotDefaultSettingsPage}
+                // disabled={isNotDefaultSettingsPage}
                 />
               )}
             />
           </div>
-          <Input
-            label={t('form:input-label-contact')}
-            {...register('contactDetails.contact')}
-            variant="outline"
-            className="mb-5"
-            error={t(errors.contactDetails?.contact?.message!)}
-            // disabled={isNotDefaultSettingsPage}
-          />
+          <div>
+            {contactFields.map((item: any, index: number) => (
+              <div className="flex items-center gap-x-4 mb-5" key={item.id}>
+                <Input
+                  className="w-full"
+                  label={index === 0 ? t('form:input-label-contact') : ''}
+                  {...register(`contactDetails.contacts.${index}.value` as const)}
+                  variant="outline"
+                // error={t(errors.contactDetails?.contacts?.[index]?.value?.message!)}
+                />
+                <button
+                  onClick={() => contactRemove(index)}
+                  type="button"
+                  className={`text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none ${index === 0 ? 'mt-8' : ''}`}
+                >
+                  {t('form:button-label-remove')}
+                </button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              onClick={() => contactAppend({ value: '' })}
+              className="w-full sm:w-auto mb-5"
+            >
+              Add Phone
+            </Button>
+          </div>
           <Input
             label={t('form:input-label-website')}
             {...register('contactDetails.website')}
             variant="outline"
             className="mb-5"
             error={t(errors.contactDetails?.website?.message!)}
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
 
           <div className="mt-6">
@@ -996,7 +1227,7 @@ export default function SettingsForm({
               <SwitchInput
                 name="useGoogleMap"
                 control={control}
-                // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
               />
               <Label className="mb-0">
                 {t('form:input-label-use-google-map-service')}
@@ -1005,13 +1236,13 @@ export default function SettingsForm({
           </div>
 
           <Input
-            label={`${t('Maximum Search Location Distance(km)')}`}
+            label={`${t('Maximum Search Location Distance(miles)')}`}
             {...register('maxShopDistance')}
             type="number"
             error={t(errors.maxShopDistance?.message!)}
             variant="outline"
             className="my-5"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           />
 
           <div className="mt-6">
@@ -1019,7 +1250,7 @@ export default function SettingsForm({
               <SwitchInput
                 name="isProductReview"
                 control={control}
-                // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
               />
               <Label className="mb-0">
                 {t('form:input-label-product-for-review')}
@@ -1046,7 +1277,7 @@ export default function SettingsForm({
                         options={updatedIcons}
                         isClearable={true}
                         defaultValue={item?.icon!}
-                        // disabled={isNotDefaultSettingsPage}
+                      // disabled={isNotDefaultSettingsPage}
                       />
                     </div>
                     <Input
@@ -1057,7 +1288,7 @@ export default function SettingsForm({
                         `contactDetails.socials.${index}.url` as const,
                       )}
                       defaultValue={item.url!} // make sure to set up defaultValue
-                      // disabled={isNotDefaultSettingsPage}
+                    // disabled={isNotDefaultSettingsPage}
                     />
                     {/* {!isNotDefaultSettingsPage && ( */}
                     <button
@@ -1066,7 +1297,7 @@ export default function SettingsForm({
                       }}
                       type="button"
                       className="text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none sm:col-span-1 sm:mt-4"
-                      // disabled={isNotDefaultSettingsPage}
+                    // disabled={isNotDefaultSettingsPage}
                     >
                       {t('form:button-label-remove')}
                     </button>
@@ -1082,11 +1313,116 @@ export default function SettingsForm({
             type="button"
             onClick={() => socialAppend({ icon: '', url: '' })}
             className="w-full sm:w-auto"
-            // disabled={isNotDefaultSettingsPage}
+          // disabled={isNotDefaultSettingsPage}
           >
             {t('form:button-label-add-social')}
           </Button>
           {/* )} */}
+        </Card>
+      </div>
+
+      {/* Maintenance Mode Section */}
+      <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
+        <Description
+          title={t('form:form-title-information')}
+          details={t('form:site-maintenance-info-help-text')}
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <div className="my-5">
+            <SwitchInput
+              name="isUnderMaintenance"
+              label={t('form:input-label-enable-maintenance-mode')}
+              toolTipText={t('form:input-tooltip-enable-maintenance-mode')}
+              control={control}
+            />
+          </div>
+        </Card>
+      </div>
+
+      <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
+        <Description
+          title={t('form:input-label-maintenance-cover-image')}
+          details={maintenanceImageInformation}
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full logo-field-area sm:w-8/12 md:w-2/3">
+          <FileInput
+            name="maintenance.image"
+            control={control}
+            multiple={false}
+            disabled={!isMaintenanceMode}
+          />
+        </Card>
+      </div>
+
+      <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
+        <Description
+          title={t('form:form-title-maintenance-information')}
+          details={t('form:site-maintenance-info-help-text')}
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <Input
+            label={t('form:input-label-title')}
+            toolTipText={t('form:input-tooltip-maintenance-title')}
+            {...register('maintenance.title')}
+            // error={t(errors.maintenance?.title?.message!)}
+            variant="outline"
+            className="mb-5"
+            disabled={!isMaintenanceMode}
+          />
+          <TextArea
+            label={t('form:input-label-description')}
+            toolTipText={t('form:input-tooltip-maintenance-description')}
+            {...register('maintenance.description')}
+            // error={t(errors.maintenance?.description?.message!)}
+            variant="outline"
+            className="mb-5"
+            disabled={!isMaintenanceMode}
+          />
+          <div className="mb-5">
+            <DatePicker
+              control={control}
+              name="maintenance.start"
+              minDate={today}
+              startDate={new Date(startDate)}
+              locale={locale}
+              placeholder="Start Date"
+              disabled={!isMaintenanceMode}
+              label={t('form:maintenance-start-time')}
+              toolTipText={t('form:input-tooltip-maintenance-start-time')}
+              // error={t(errors.maintenance?.start?.message!)}
+              showTimeSelect
+              timeFormat="h:mm aa"
+              timeIntervals={15}
+              timeCaption="time"
+              dateFormat="MMMM d, yyyy h:mm aa"
+              filterTime={filterStartTime}
+            />
+          </div>
+          <div className="w-full">
+            <DatePicker
+              control={control}
+              name="maintenance.until"
+              disabled={!startDate || !isMaintenanceMode}
+              minDate={addDays(new Date(startDate), 0)}
+              placeholder="End Date"
+              locale={locale}
+              toolTipText={t('form:input-tooltip-maintenance-end-time')}
+              label={t('form:maintenance-end-date')}
+              // error={t(errors.maintenance?.until?.message!)}
+              showTimeSelect
+              timeFormat="h:mm aa"
+              timeIntervals={15}
+              timeCaption="time"
+              dateFormat="MMMM d, yyyy h:mm aa"
+              filterTime={filterUntilTime}
+            />
+          </div>
         </Card>
       </div>
 
@@ -1099,6 +1435,6 @@ export default function SettingsForm({
           {t('form:button-label-save-settings')}
         </Button>
       </div>
-    </form>
+    </form >
   );
 }

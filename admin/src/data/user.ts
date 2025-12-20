@@ -27,63 +27,43 @@ import { type } from 'os';
 export const useMeQuery = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { token } = getAuthCredentials();
 
-  return useQuery<User, Error>([API_ENDPOINTS.ME], userClient.me, {
-    retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    staleTime: Infinity,
-    cacheTime: Infinity,
-    onSuccess: (data: any) => {
-      if (router.pathname === Routes.verifyLicense) {
-        router.replace(Routes.dashboard);
-      }
-      if (router.pathname === Routes.verifyEmail) {
-        setEmailVerified(true);
-        router.replace(Routes.dashboard);
-      }
-    },
-    onError: (err: any) => {
-      // Handle authentication errors - redirect to login if needed
-      if (err.response?.status === 401) {
-        router.replace(Routes.login);
-      }
-    },
-  });
+  return useQuery<User, Error>(
+    [API_ENDPOINTS.ME],
+    userClient.me,
+    {
+      retry: false,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+      enabled: !!token, // Only run query if token exists
+      onSuccess: (data: any) => {
+        if (router.pathname === Routes.verifyLicense) {
+          router.replace(Routes.dashboard);
+        }
+        if (router.pathname === Routes.verifyEmail) {
+          setEmailVerified(true);
+          router.replace(Routes.dashboard);
+        }
+      },
+      onError: (err: any) => {
+        // Handle authentication errors - redirect to login if needed
+        // Only redirect if not already on login page
+        if (err.response?.status === 401 && router.pathname !== Routes.login) {
+          router.replace(Routes.login);
+        }
+      },
+    }
+  );
 };
 
 export function useLogin() {
-  const router = useRouter();
-  const { t } = useTranslation();
-
-  return useMutation(userClient.login, {
-    onSuccess: (data: any) => {
-      // Set authentication credentials in cookies
-      if (data.accessToken && data.data?.user) {
-        const { token, permissions, role } = getAuthCredentials();
-        setAuthCredentials(
-          data.accessToken,
-          data.data.user.permissions || permissions || [],
-          data.data.user.role || role,
-          data.refreshToken,
-        );
-
-        // Redirect to dashboard or intended page
-        router.replace(Routes.dashboard);
-        toast.success(t('common:successfully-login'));
-      }
-    },
-    onError: (error: any) => {
-      console.error('Login error:', error);
-      const message =
-        error.response?.data?.message || error.message || 'Login failed';
-      toast.error(message);
-    },
-    onSettled: () => {
-      // Ensure we don't trigger any unwanted navigation
-    },
-  });
+  // Return mutation without default handlers - let the component handle success/error
+  // This allows components to have full control over the login flow
+  return useMutation(userClient.login);
 }
 
 export const useLogoutMutation = () => {

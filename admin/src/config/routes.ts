@@ -11,11 +11,12 @@ export const Routes = {
   settings: '/settings',
   paymentSettings: '/settings/payment',
   seoSettings: '/settings/seo',
-  eventSettings: '/settings/events',
+  printerSettings: '/settings/printer',
   shopSettings: '/settings/shop',
   companyInformation: '/settings/company-information',
+  socialSettings: '/settings/social',
   maintenance: '/settings/maintenance',
-  promotionPopup: '/settings/promotion-popup',
+  promoPopup: '/promo-popup',
   storeSettings: '/vendor/settings',
   storeKeepers: '/vendor/store_keepers',
   profileUpdate: '/profile-update',
@@ -162,7 +163,7 @@ export const Routes = {
     },
   },
   visitStore: (slug: string) =>
-    `${process.env.NEXT_PUBLIC_SHOP_URL?.replace(/\/$/, '')}/${slug}`,
+    `${process.env.NEXT_PUBLIC_SHOP_URL?.replace(/\/$/, '')}/${slug.replace(/^\//, '')}`,
   vendorRequestForFlashSale: {
     ...routesFactory('/flash-sale/vendor-request'),
   },

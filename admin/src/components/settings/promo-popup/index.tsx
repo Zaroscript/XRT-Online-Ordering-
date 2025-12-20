@@ -75,7 +75,7 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
   const isPopUpNotShow = watch('promoPopup.isPopUpNotShow');
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
         <Description
           title={t('form:form-title-information')}
@@ -208,8 +208,8 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
             className="mb-5"
             {...(isPromoPopUp &&
               isPopUpNotShow && {
-                required: true,
-              })}
+              required: true,
+            })}
             disabled={!isPromoPopUp || !isPopUpNotShow}
           />
           <Input
@@ -222,8 +222,8 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
             type="number"
             {...(isPromoPopUp &&
               isPopUpNotShow && {
-                required: true,
-              })}
+              required: true,
+            })}
             disabled={!isPromoPopUp || !isPopUpNotShow}
             min="1"
             note={t('form:title-popup-expired-in-info')}

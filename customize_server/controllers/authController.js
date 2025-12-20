@@ -208,7 +208,7 @@ export const register = async (req, res, next) => {
 export const createUser = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
-    
+
     console.log('Create user request body:', req.body);
     console.log('Extracted values:', { name, email, password: password ? '***' : undefined, role });
 
@@ -347,8 +347,22 @@ export const login = async (req, res, next) => {
 
     // 2) Check if user exists && password is correct
     const user = await User.findOne({ email }).select('+password');
+    console.log('Login attempt for email:', email);
 
-    if (!user || !(await user.comparePassword(password, user.password))) {
+    if (!user) {
+      console.log('User not found for email:', email);
+      return res.status(401).json({
+        status: 'error',
+        message: 'Incorrect email or password',
+      });
+    }
+
+    console.log('Found user:', { id: user._id, role: user.role, isApproved: user.isApproved });
+    const isMatch = await user.comparePassword(password, user.password);
+    console.log('Password match status:', isMatch);
+
+    if (!isMatch) {
+      console.log('Password mismatch for user:', email);
       return res.status(401).json({
         status: 'error',
         message: 'Incorrect email or password',

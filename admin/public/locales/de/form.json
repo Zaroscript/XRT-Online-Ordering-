@@ -552,7 +552,6 @@
   "error-popup-expired-min": "Bitte stellen Sie den Mindestwert 1 Tage ein.",
   "error-popup-expired": "Popup abgelaufen in ist erforderlich",
   "error-image": "Sie müssen eine Bilddatei bereitstellen.",
-
   "input-label-subtitle": "Untertitel",
   "error-subtitle-required": "Untertitel ist erforderlich",
   "upload-image-help-text": "Laden Sie Ihr Bild hoch.",
@@ -614,5 +613,10 @@
   "error-minimum-balance-is-required": "Mindestguthaben ist erforderlich",
   "error-maximum-balance-type": "Maximale Saldonummer oder ‚über‘-Text",
   "error-maximum-balance-is-required": "Maximales Guthaben ist erforderlich",
-  "text-save-seller-information": "Verkäuferinformationen speichern"
+  "text-save-seller-information": "Verkäuferinformationen speichern",
+  "form-title-printer-settings": "Printer Settings",
+  "printer-settings-help-text": "Configure your printer connection settings here.",
+  "input-label-printer-id": "Printer ID",
+  "input-label-public-key": "Public Key",
+  "input-label-private-key": "Private Key"
 }

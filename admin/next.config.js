@@ -10,7 +10,8 @@ const { i18n } = require('./next-i18next.config');
 // });
 
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
+  transpilePackages: ['rc-table', 'rc-util', '@react-google-maps/api'],
   i18n,
   images: {
     domains: [
@@ -26,6 +27,33 @@ const nextConfig = {
       'lh3.googleusercontent.com',
       '127.0.0.1:8000',
     ],
+  },
+  webpack: (config, { webpack }) => {
+    // Fix for react/jsx-runtime resolution in ESM modules like @react-google-maps/api
+    const jsxRuntimePath = require.resolve('react/jsx-runtime');
+    const jsxDevRuntimePath = require.resolve('react/jsx-dev-runtime');
+
+    // Configure aliases - this is the primary fix
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'react/jsx-runtime': jsxRuntimePath,
+      'react/jsx-dev-runtime': jsxDevRuntimePath,
+    };
+
+    // Use webpack's NormalModuleReplacementPlugin to handle react/jsx-runtime imports
+    // This ensures ESM modules can resolve the jsx-runtime correctly
+    config.plugins.push(
+      new webpack.NormalModuleReplacementPlugin(
+        /^react\/jsx-runtime$/,
+        jsxRuntimePath
+      ),
+      new webpack.NormalModuleReplacementPlugin(
+        /^react\/jsx-dev-runtime$/,
+        jsxDevRuntimePath
+      )
+    );
+
+    return config;
   },
   ...(process.env.APPLICATION_MODE === 'production' && {
     typescript: {

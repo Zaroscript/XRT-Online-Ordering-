@@ -256,7 +256,7 @@ const ShopList = ({
     <>
       <div className="mb-6 overflow-hidden rounded shadow">
         <Table
-          columns={columns}
+          columns={columns as any}
           emptyText={() => (
             <div className="flex flex-col items-center py-7">
               <NoDataFound className="w-52" />

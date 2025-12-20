@@ -13,7 +13,7 @@ invariant(
 );
 const Axios = axios.create({
   baseURL: process.env.NEXT_PUBLIC_REST_API_ENDPOINT,
-  timeout: 50000,
+  timeout: 10000, // Reduced to 10 seconds for faster feedback
   headers: {
     'Content-Type': 'application/json',
   },
@@ -22,11 +22,24 @@ const Axios = axios.create({
 // Change request data/error
 Axios.interceptors.request.use((config) => {
   const { token } = getAuthCredentials();
-  // @ts-ignore
-  config.headers = {
-    ...config.headers,
-    Authorization: `Bearer ${token}`,
-  };
+
+  // Don't add Authorization header for auth endpoints (login, register, etc.)
+  const isAuthEndpoint =
+    config.url?.includes('/auth/login') ||
+    config.url?.includes('/auth/register') ||
+    config.url?.includes('/auth/forgot-password') ||
+    config.url?.includes('/auth/reset-password') ||
+    config.url?.includes('/auth/refresh-token');
+
+  // Only add Authorization header if we have a token and it's not an auth endpoint
+  if (token && !isAuthEndpoint) {
+    // @ts-ignore
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+    };
+  }
+
   return config;
 });
 
@@ -48,7 +61,7 @@ Axios.interceptors.response.use(
         try {
           const { data } = await axios.post(
             process.env.NEXT_PUBLIC_REST_API_ENDPOINT +
-              API_ENDPOINTS.REFRESH_TOKEN,
+            API_ENDPOINTS.REFRESH_TOKEN,
             { refreshToken },
           );
 
@@ -75,8 +88,22 @@ Axios.interceptors.response.use(
       (error.response &&
         error.response.data.message === 'PICKBAZAR_ERROR.NOT_AUTHORIZED')
     ) {
-      Cookies.remove(AUTH_CRED);
-      Router.reload();
+      // Don't reload if we're already on the login page or other auth pages
+      const currentPath = Router.pathname || Router.asPath || '';
+      const isAuthPage =
+        currentPath === '/login' ||
+        currentPath.includes('/login') ||
+        currentPath === '/register' ||
+        currentPath.includes('/register') ||
+        currentPath === '/forgot-password' ||
+        currentPath.includes('/forgot-password') ||
+        currentPath === '/reset-password' ||
+        currentPath.includes('/reset-password');
+
+      if (!isAuthPage) {
+        Cookies.remove(AUTH_CRED);
+        Router.reload();
+      }
     }
     return Promise.reject(error);
   },
@@ -111,8 +138,8 @@ interface SearchParamOptions {
 }
 
 export class HttpClient {
-  static async get<T>(url: string, params?: unknown) {
-    const response = await Axios.get<T>(url, { params });
+  static async get<T>(url: string, params?: unknown, options?: any) {
+    const response = await Axios.get<T>(url, { params, ...options });
     return response.data;
   }
 
@@ -126,8 +153,8 @@ export class HttpClient {
     return response.data;
   }
 
-  static async patch<T>(url: string, data: unknown) {
-    const response = await Axios.patch<T>(url, data);
+  static async patch<T>(url: string, data: unknown, options?: any) {
+    const response = await Axios.patch<T>(url, data, options);
     return response.data;
   }
 

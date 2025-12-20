@@ -1,6 +1,5 @@
 import React from 'react';
 import cn from 'classnames';
-import Image from 'next/image';
 import { twMerge } from 'tailwind-merge';
 
 const classes = {
@@ -60,21 +59,27 @@ const Avatar: React.FC<AvatarProps> = ({
   const [isError, setError] = React.useState(false);
 
   // Separate props for div and image elements
-  const { divProps, imageProps } = React.useMemo(() => {
-    const restObj = rest as any;
+  const { divProps } = React.useMemo(() => {
+    // List of props that should never be passed to a DOM element
+    const domPropBlacklist = [
+      'fetchPriority',
+      'fetchpriority',
+      'loading',
+      'lazyBoundary',
+      'lazyRoot',
+      'onLoadingComplete',
+      'unoptimized',
+      'priority', // Already handled as a separate prop
+    ];
 
-    // Extract fetchPriority props for image
-    const { fetchPriority, fetchpriority, ...otherProps } = restObj;
+    const cleanDivProps: any = {};
+    Object.keys(rest).forEach((key) => {
+      if (!domPropBlacklist.includes(key)) {
+        cleanDivProps[key] = (rest as any)[key];
+      }
+    });
 
-    // Props for div element (excluding all image-specific props)
-    const cleanDivProps = { ...otherProps };
-
-    // Props for image element (only safe props)
-    // We explicitly DROP fetchPriority/fetchpriority to avoid React warnings on the underlying <img> tag
-    // until we are sure how next/image handles it in this version.
-    const cleanImageProps = {};
-
-    return { divProps: cleanDivProps, imageProps: cleanImageProps };
+    return { divProps: cleanDivProps };
   }, [rest]);
 
   // checking customSize value
@@ -106,14 +111,11 @@ const Avatar: React.FC<AvatarProps> = ({
         onClick={onClick}
         {...divProps}
       >
-        <Image
+        <img
           alt={name}
           src={src}
-          fill
-          sizes="(max-width: 768px) 100vw"
-          priority={false}
+          className="h-full w-full object-cover"
           onError={() => setError(() => true)}
-          {...imageProps}
         />
       </div>
     );

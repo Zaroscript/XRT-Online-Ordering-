@@ -17,7 +17,7 @@ import {
   FloatingPortal,
 } from '@floating-ui/react';
 import cn from 'classnames';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { twMerge } from 'tailwind-merge';
 
 const tooltipStyles = {

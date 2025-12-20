@@ -189,6 +189,7 @@ export const mockDashboardStats = {
 
 export const mockSettings = {
   options: {
+    siteTitle: 'PickBazar',
     isUnderMaintenance: false,
     maintenance: {
       start: null,
@@ -200,6 +201,12 @@ export const mockSettings = {
         message: true,
         storeNotice: false
       }
+    },
+    orders: {
+      accept_orders: true,
+      allowScheduleOrder: false,
+      maxDays: 7,
+      deliveredOrderTime: 120
     }
   }
 };

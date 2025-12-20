@@ -9,7 +9,7 @@ import { Product, ProductType } from '@/types';
 import { StarIcon } from '@/components/icons/star-icon';
 import { useTypeQuery } from '@/data/type';
 import { NoDataFound } from '@/components/icons/no-data-found';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { isEmpty } from 'lodash';
 
 // get rating calculation
@@ -70,12 +70,10 @@ function SoldProductCard({ product }: { product: any }) {
                 : 'aspect-square',
             )}
           >
-            <Image
+            <img
               alt={name || 'Product image'}
               src={image?.original ?? siteSettings.product.placeholder}
-              fill
-              priority={true}
-              sizes="(max-width: 768px) 100vw"
+              className="h-full w-full object-cover"
             />
           </div>
         </div>

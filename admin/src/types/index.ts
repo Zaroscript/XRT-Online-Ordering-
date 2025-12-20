@@ -1113,39 +1113,7 @@ export interface Tax {
   rate?: number;
 }
 
-export interface SettingsOptions {
-  siteTitle?: string;
-  siteSubtitle?: string;
-  currency?: string;
-  defaultAi?: string;
-  useOtp?: boolean;
-  useAi?: boolean;
-  useGoogleMap?: boolean;
-  isProductReview?: boolean;
-  freeShipping?: boolean;
-  contactDetails?: ContactDetails;
-  minimumOrderAmount?: number;
-  freeShippingAmount?: number;
-  currencyToWalletRatio?: number;
-  signupPoints?: number;
-  maxShopDistance?: number;
-  maximumQuestionLimit?: number;
-  deliveryTime?: DeliveryTime[];
-  logo?: Attachment;
-  taxClass?: string;
-  shippingClass?: string;
-  seo?: SeoSettings;
-  google?: GoogleSettings;
-  facebook?: FacebookSettings;
-  paymentGateway?: any;
-  defaultPaymentGateway?: string;
-  guestCheckout: boolean;
-  smsEvent?: SmsEvent;
-  emailEvent?: EmailEvent;
-  pushNotification?: PushNotification;
-  server_info?: ServerInfo;
-  enableEmailForDigitalProduct?: boolean;
-}
+
 
 export interface ContactDetails {
   socials?: ShopSocials[];
@@ -1228,8 +1196,12 @@ export interface PromoPopupFormValues {
   title?: string;
   description?: string;
   popUpDelay?: number;
+  popupDelay?: number; // legacy support
   popUpExpiredIn?: number;
+  popupExpiredIn?: number; // legacy support
   isPopUpNotShow?: boolean;
+  isNotShowAgain?: boolean;
+  isEnable?: boolean;
   popUpNotShow?: {
     title?: string;
     popUpExpiredIn?: number;
@@ -1311,6 +1283,12 @@ export interface FacebookSettingsInput {
   pageId?: string;
 }
 
+export interface PrinterSettings {
+  printer_id: string;
+  public_key: string;
+  private_key: string;
+}
+
 export interface SettingsOptions {
   siteTitle?: string;
   siteSubtitle?: string;
@@ -1337,9 +1315,6 @@ export interface SettingsOptions {
   useEnableGateway?: boolean;
   currencyOptions?: SettingCurrencyOptions;
   guestCheckout: boolean;
-  smsEvent?: SmsEvent;
-  emailEvent?: EmailEvent;
-  pushNotification?: PushNotification;
   server_info?: ServerInfo;
   enableTerms?: boolean;
   enableCoupons?: boolean;
@@ -1354,6 +1329,48 @@ export interface SettingsOptions {
   freeShipping?: boolean;
   freeShippingAmount?: number;
   isMultiCommissionRate?: boolean;
+  footer_text?: string;
+  printer?: PrinterSettings;
+  messages?: {
+    closed_message?: string;
+    not_accepting_orders_message?: string;
+  };
+  orders?: {
+    accept_orders?: boolean;
+    allowScheduleOrder?: boolean;
+    maxDays?: number;
+    deliveredOrderTime?: number;
+  };
+  operating_hours?: {
+    auto_close?: boolean;
+    schedule?: {
+      day: string;
+      open_time: string;
+      close_time: string;
+      is_closed: boolean;
+    }[];
+  };
+  delivery?: {
+    enabled?: boolean;
+    radius?: number;
+    fee?: number;
+    min_order?: number;
+  };
+  fees?: {
+    service_fee?: number;
+    tip?: number;
+    tip_type?: string;
+  };
+  taxes?: {
+    sales_tax?: number;
+  };
+  pushNotification?: any;
+}
+
+export interface PrinterSettings {
+  printer_id: string;
+  public_key: string;
+  private_key: string;
 }
 
 // *************** OLD Code ***************
@@ -1384,8 +1401,7 @@ export interface SettingsOptions {
 //   paymentGateway?: any;
 //   defaultPaymentGateway?: string;
 //   guestCheckout: boolean;
-//   smsEvent?: SmsEvent;
-//   emailEvent?: EmailEvent;
+//   printer?: any;
 //   pushNotification?: PushNotification;
 //   server_info?: ServerInfo;
 // }
@@ -1397,7 +1413,23 @@ export interface Maintenance {
   start: string;
   until: string;
   isUnderMaintenance: boolean;
+  isOverlayColor?: boolean;
+  overlayColor?: string;
+  overlayColorRange?: string;
+  buttonTitleOne?: string;
+  buttonTitleTwo?: string;
+  newsLetterTitle?: string;
+  newsLetterDescription?: string;
+  aboutUsTitle?: string;
+  aboutUsDescription?: string;
+  contactUsTitle?: string;
 }
+
+export interface MaintenanceFormValues {
+  isUnderMaintenance: boolean;
+  maintenance: Maintenance;
+}
+
 
 export interface ServerInfo {
   max_execution_time?: string;
@@ -1412,6 +1444,7 @@ export interface SettingsOptionsInput {
   siteSubtitle?: string;
   currency?: string;
   useOtp?: boolean;
+  printer?: PrinterSettings;
   useAi?: boolean;
   defaultAi?: any;
   freeShipping?: boolean;
@@ -1435,9 +1468,6 @@ export interface SettingsOptionsInput {
   currencyOptions?: SettingCurrencyOptions;
   useEnableGateway?: boolean;
   guestCheckout?: boolean;
-  smsEvent?: SmsEvent;
-  emailEvent?: EmailEvent;
-  pushNotification?: PushNotification;
   server_info?: ServerInfo;
   useGoogleMap?: boolean;
   enableTerms?: boolean;
@@ -1448,74 +1478,43 @@ export interface SettingsOptionsInput {
   promoPopup?: PromoPopupFormValues;
   enableReviewPopup?: boolean;
   reviewSystem?: string;
+  footer_text?: string;
+  messages?: {
+    closed_message?: string;
+    not_accepting_orders_message?: string;
+  };
+  orders?: {
+    accept_orders?: boolean;
+    allowScheduleOrder?: boolean;
+    maxDays?: number;
+    deliveredOrderTime?: number;
+  };
+  operating_hours?: {
+    auto_close?: boolean;
+    schedule?: {
+      day: string;
+      open_time: string;
+      close_time: string;
+      is_closed: boolean;
+    }[];
+  };
+  delivery?: {
+    enabled?: boolean;
+    radius?: number;
+    fee?: number;
+    min_order?: number;
+  };
+  fees?: {
+    service_fee?: number;
+    tip?: number;
+    tip_type?: string;
+  };
+  taxes?: {
+    sales_tax?: number;
+  };
 }
 
-export interface SmsEvent {
-  admin?: SmsAdminEvent;
-  vendor?: SmsVendorEvent;
-  customer?: SmsCustomerEvent;
-}
 
-export interface PushNotification {
-  all?: PushNotificationEvent;
-}
-
-export interface PushNotificationEvent {
-  storeNotice?: boolean;
-  order?: boolean;
-  message?: boolean;
-}
-
-export interface SmsAdminEvent {
-  createOrder?: boolean;
-  deliverOrder?: boolean;
-  cancelOrder?: boolean;
-  statusChangeOrder?: boolean;
-  refundOrder?: boolean;
-}
-
-export interface SmsCustomerEvent {
-  createOrder?: boolean;
-  deliverOrder?: boolean;
-  cancelOrder?: boolean;
-  statusChangeOrder?: boolean;
-  refundOrder?: boolean;
-}
-
-export interface SmsVendorEvent {
-  createOrder?: boolean;
-  deliverOrder?: boolean;
-  cancelOrder?: boolean;
-  statusChangeOrder?: boolean;
-  refundOrder?: boolean;
-}
-
-export interface EmailEvent {
-  admin?: EmailAdminEvent;
-  vendor?: EmailVendorEvent;
-  customer?: EmailCustomerEvent;
-}
-export interface EmailAdminEvent {
-  createOrder?: boolean;
-  deliverOrder?: boolean;
-  cancelOrder?: boolean;
-  statusChangeOrder?: boolean;
-  refundOrder?: boolean;
-}
-export interface EmailCustomerEvent {
-  createOrder?: boolean;
-  deliverOrder?: boolean;
-  cancelOrder?: boolean;
-  statusChangeOrder?: boolean;
-  refundOrder?: boolean;
-}
-export interface EmailVendorEvent {
-  createOrder?: boolean;
-  deliverOrder?: boolean;
-  cancelOrder?: boolean;
-  statusChangeOrder?: boolean;
-  refundOrder?: boolean;
-}
 
 export interface DeliveryTime {
   description?: string;
@@ -1527,9 +1526,18 @@ export interface DeliveryTimeInput {
   description?: string;
 }
 
+export interface ContactDetails {
+  socials?: ShopSocials[];
+  contact?: string;
+  contacts?: any[]; // For multi-phone support
+  location?: Location;
+  website?: string;
+}
+
 export interface ContactDetailsInput {
   socials?: ShopSocialInput[];
   contact?: string;
+  contacts?: any[]; // For multi-phone support
   location?: LocationInput;
   website?: string;
   emailAddress?: string;
@@ -2086,65 +2094,65 @@ export interface Customer {
   updatedAt?: string;
 }
 
-export interface CustomerPaginator extends PaginatorInfo<Customer> {}
+export interface CustomerPaginator extends PaginatorInfo<Customer> { }
 
-export interface ShopPaginator extends PaginatorInfo<Shop> {}
+export interface ShopPaginator extends PaginatorInfo<Shop> { }
 
-export interface WithdrawPaginator extends PaginatorInfo<Withdraw> {}
+export interface WithdrawPaginator extends PaginatorInfo<Withdraw> { }
 
-export interface UserPaginator extends PaginatorInfo<User> {}
+export interface UserPaginator extends PaginatorInfo<User> { }
 
-export interface LicensedDomainPaginator extends PaginatorInfo<Domain> {}
+export interface LicensedDomainPaginator extends PaginatorInfo<Domain> { }
 
-export interface QuestionPaginator extends PaginatorInfo<Question> {}
+export interface QuestionPaginator extends PaginatorInfo<Question> { }
 
-export interface StaffPaginator extends PaginatorInfo<User> {}
+export interface StaffPaginator extends PaginatorInfo<User> { }
 
-export interface OrderPaginator extends PaginatorInfo<Order> {}
+export interface OrderPaginator extends PaginatorInfo<Order> { }
 
-export interface NotifyLogsPaginator extends PaginatorInfo<NotifyLogs> {}
+export interface NotifyLogsPaginator extends PaginatorInfo<NotifyLogs> { }
 
-export interface CouponPaginator extends PaginatorInfo<Coupon> {}
+export interface CouponPaginator extends PaginatorInfo<Coupon> { }
 
-export interface StoreNoticePaginator extends PaginatorInfo<StoreNotice> {}
+export interface StoreNoticePaginator extends PaginatorInfo<StoreNotice> { }
 
-export interface FAQsPaginator extends PaginatorInfo<FAQs> {}
+export interface FAQsPaginator extends PaginatorInfo<FAQs> { }
 
-export interface FlashSalePaginator extends PaginatorInfo<FlashSale> {}
+export interface FlashSalePaginator extends PaginatorInfo<FlashSale> { }
 
 export interface TermsAndConditionsPaginator
-  extends PaginatorInfo<TermsAndConditions> {}
+  extends PaginatorInfo<TermsAndConditions> { }
 
-export interface ProductPaginator extends PaginatorInfo<Product> {}
+export interface ProductPaginator extends PaginatorInfo<Product> { }
 
-export interface CategoryPaginator extends PaginatorInfo<Category> {}
+export interface CategoryPaginator extends PaginatorInfo<Category> { }
 
-export interface TaxPaginator extends PaginatorInfo<Tax> {}
+export interface TaxPaginator extends PaginatorInfo<Tax> { }
 
-export interface ReviewPaginator extends PaginatorInfo<Review> {}
+export interface ReviewPaginator extends PaginatorInfo<Review> { }
 
-export interface TagPaginator extends PaginatorInfo<Tag> {}
+export interface TagPaginator extends PaginatorInfo<Tag> { }
 
-export interface AttributePaginator extends PaginatorInfo<Attribute> {}
+export interface AttributePaginator extends PaginatorInfo<Attribute> { }
 
 export interface AttributeValuePaginator
-  extends PaginatorInfo<AttributeValue> {}
+  extends PaginatorInfo<AttributeValue> { }
 
-export interface ShippingPaginator extends PaginatorInfo<Shipping> {}
+export interface ShippingPaginator extends PaginatorInfo<Shipping> { }
 
-export interface AuthorPaginator extends PaginatorInfo<Author> {}
+export interface AuthorPaginator extends PaginatorInfo<Author> { }
 
-export interface RefundPolicyPaginator extends PaginatorInfo<RefundPolicy> {}
+export interface RefundPolicyPaginator extends PaginatorInfo<RefundPolicy> { }
 
-export interface RefundReasonPaginator extends PaginatorInfo<RefundReason> {}
+export interface RefundReasonPaginator extends PaginatorInfo<RefundReason> { }
 
-export interface ManufacturerPaginator extends PaginatorInfo<Manufacturer> {}
+export interface ManufacturerPaginator extends PaginatorInfo<Manufacturer> { }
 
-export interface OrderStatusPaginator extends PaginatorInfo<OrderStatus> {}
+export interface OrderStatusPaginator extends PaginatorInfo<OrderStatus> { }
 
-export interface ConversionPaginator extends PaginatorInfo<Conversations> {}
+export interface ConversionPaginator extends PaginatorInfo<Conversations> { }
 
-export interface MessagePaginator extends PaginatorInfo<Message> {}
+export interface MessagePaginator extends PaginatorInfo<Message> { }
 
 export interface FlashSaleProductsRequest {
   id: string;
@@ -2180,30 +2188,11 @@ export interface FlashSaleRequestedProductsQueryOptions
 }
 
 export interface FlashSaleProductsRequestPaginator
-  extends PaginatorInfo<FlashSaleProductsRequest> {}
+  extends PaginatorInfo<FlashSaleProductsRequest> { }
 
-export interface MessagePaginator extends PaginatorInfo<Message> {}
+export interface MessagePaginator extends PaginatorInfo<Message> { }
 
-export type MaintenanceFormValues = {
-  isUnderMaintenance: boolean;
-  maintenance: {
-    image: Attachment;
-    title: string;
-    description: string;
-    start: string;
-    until: string;
-    isOverlayColor: boolean;
-    overlayColor: string;
-    buttonTitleOne: string;
-    buttonTitleTwo: string;
-    overlayColorRange: string;
-    newsLetterTitle: string;
-    newsLetterDescription: string;
-    aboutUsTitle: string;
-    aboutUsDescription: string;
-    contactUsTitle: string;
-  };
-};
+
 
 export interface CommissionItem {
   id?: string;
@@ -2376,7 +2365,7 @@ export interface OwnershipTransferInput {
 }
 
 export interface OwnershipTransferPaginator
-  extends PaginatorInfo<OwnershipTransfer> {}
+  extends PaginatorInfo<OwnershipTransfer> { }
 
 export interface OwnershipTransferQueryOptions extends QueryOptions {
   transaction_identifier?: string;
@@ -2404,16 +2393,16 @@ export interface StickerCardProps {
 
 export interface OrderStickerCardProps extends StickerCardProps {
   key:
-    | 'pending'
-    | 'processing'
-    | 'complete'
-    | 'cancelled'
-    | 'refunded'
-    | 'failed'
-    | 'localFacility'
-    | 'outForDelivery'
-    | 'total_earnings'
-    | 'current_balance'
-    | 'admin_commission_rate'
-    | 'withdrawn_amount';
+  | 'pending'
+  | 'processing'
+  | 'complete'
+  | 'cancelled'
+  | 'refunded'
+  | 'failed'
+  | 'localFacility'
+  | 'outForDelivery'
+  | 'total_earnings'
+  | 'current_balance'
+  | 'admin_commission_rate'
+  | 'withdrawn_amount';
 }

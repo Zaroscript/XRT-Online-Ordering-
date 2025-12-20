@@ -47,13 +47,10 @@ function PopularProductCard({ product }: { product: Product }) {
     <div className="flex flex-wrap items-center justify-between">
       <div className="flex w-full max-w-[calc(100%-120px)] items-center pe-2">
         <div className="relative aspect-square h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border-200/60 bg-gray-100">
-          <Image
+          <img
             alt={name}
             src={image?.thumbnail ?? siteSettings?.product?.placeholder}
-            fill
-            priority={true}
-            sizes="(max-width: 768px) 100vw"
-            className="object-cover"
+            className="h-full w-full object-cover"
           />
         </div>
         <div className="w-4/5 ps-3">

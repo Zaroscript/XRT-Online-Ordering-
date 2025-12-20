@@ -13,7 +13,19 @@ export default function AppLayout({
   userRole: string;
 }) {
   if (userRole === SUPER_ADMIN) {
-    return <AdminLayout {...props} />;
+    return (
+      <AdminLayout
+        {...props}
+        userRole={userRole}
+        userPermissions={userPermissions}
+      />
+    );
   }
-  return <OwnerLayout {...props} />;
+  return (
+    <OwnerLayout
+      {...props}
+      userRole={userRole}
+      userPermissions={userPermissions}
+    />
+  );
 }

@@ -51,9 +51,8 @@ function SidebarShortItem({
                   passHref
                   as={shop ? item?.href(shop?.toString()!) : item?.href}
                   href={{
-                    pathname: `${
-                      shop ? item?.href(shop?.toString()!) : item?.href
-                    }`,
+                    pathname: `${shop ? item?.href(shop?.toString()!) : item?.href
+                      }`,
                     query: { parents: label },
                   }}
                   className={cn(
@@ -103,6 +102,7 @@ const SidebarItem = ({
   childMenu,
   miniSidebar,
   permission,
+  currentUserRole: propUserRole,
 }: {
   href: any;
   icon: any;
@@ -110,12 +110,14 @@ const SidebarItem = ({
   childMenu: [];
   miniSidebar?: boolean;
   permission?: any;
+  currentUserRole?: string | null;
 }) => {
   const { closeSidebar } = useUI();
   const { t } = useTranslation();
   const router = useRouter();
   const { width } = useWindowSize();
-  const { role: currentUserRole } = getAuthCredentials();
+  const { role: authRole } = getAuthCredentials();
+  const currentUserRole = propUserRole || authRole;
 
   // Check if user has permission to view this menu item
   // console.log(`SidebarItem: ${label}, Role: ${currentUserRole}, Permission: ${JSON.stringify(permission)}, Access: ${permission ? hasAccess(permission, currentUserRole) : 'N/A'}`);
@@ -250,9 +252,8 @@ const SidebarItem = ({
                         <Link
                           passHref
                           href={{
-                            pathname: `${
-                              shop ? item?.href(shop?.toString()!) : item?.href
-                            }`,
+                            pathname: `${shop ? item?.href(shop?.toString()!) : item?.href
+                              }`,
                             query: {
                               parents: label,
                             },
@@ -263,7 +264,7 @@ const SidebarItem = ({
                             (
                               shop
                                 ? sanitizedPath ===
-                                  item?.href(shop?.toString()!)
+                                item?.href(shop?.toString()!)
                                 : sanitizedPath === item?.href
                             )
                               ? 'bg-transparent font-medium text-accent-hover'
@@ -288,15 +289,13 @@ const SidebarItem = ({
     <Link
       href={href}
       className={cn(
-        `group flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-gray-700 text-start focus:text-accent ${
-          miniSidebar && width >= RESPONSIVE_WIDTH
-            ? 'hover:text-accent-hover ltr:pl-3 rtl:pr-3'
-            : 'hover:bg-gray-100'
+        `group flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-gray-700 text-start focus:text-accent ${miniSidebar && width >= RESPONSIVE_WIDTH
+          ? 'hover:text-accent-hover ltr:pl-3 rtl:pr-3'
+          : 'hover:bg-gray-100'
         }`,
         sanitizedPath === href
-          ? `font-medium !text-accent-hover ${
-              !miniSidebar ? 'bg-accent/10 hover:!bg-accent/10' : ''
-            }`
+          ? `font-medium !text-accent-hover ${!miniSidebar ? 'bg-accent/10 hover:!bg-accent/10' : ''
+          }`
           : '',
       )}
       title={label}

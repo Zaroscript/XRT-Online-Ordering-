@@ -24,6 +24,35 @@ type IProps = {
   title?: string;
   className?: string;
 };
+const ProductPrice = ({
+  value,
+  record,
+}: {
+  value: number;
+  record: Product;
+}) => {
+  const { price: max_price } = usePrice({
+    amount: record?.max_price as number,
+  });
+  const { price: min_price } = usePrice({
+    amount: record?.min_price as number,
+  });
+
+  const { price } = usePrice({
+    amount: value,
+  });
+
+  const renderPrice =
+    record?.product_type === ProductType.Variable
+      ? `${min_price} - ${max_price}`
+      : price;
+
+  return (
+    <span className="whitespace-nowrap font-medium" title={renderPrice}>
+      {renderPrice}
+    </span>
+  );
+};
 
 const LowStockProduct = ({
   products,
@@ -115,29 +144,9 @@ const LowStockProduct = ({
       key: 'price',
       align: 'center',
       width: 120,
-      render: function Render(value: number, record: Product) {
-        const { price: max_price } = usePrice({
-          amount: record?.max_price as number,
-        });
-        const { price: min_price } = usePrice({
-          amount: record?.min_price as number,
-        });
-
-        const { price } = usePrice({
-          amount: value,
-        });
-
-        const renderPrice =
-          record?.product_type === ProductType.Variable
-            ? `${min_price} - ${max_price}`
-            : price;
-
-        return (
-          <span className="whitespace-nowrap font-medium" title={renderPrice}>
-            {renderPrice}
-          </span>
-        );
-      },
+      render: (value: number, record: Product) => (
+        <ProductPrice value={value} record={record} />
+      ),
     },
     {
       title: t('table:table-item-stock-status'),

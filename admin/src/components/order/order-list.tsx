@@ -127,7 +127,7 @@ const OrderList = ({
       dataIndex: 'products',
       key: 'products',
       align: 'center',
-      render: (products: Product) => <span>{products.length}</span>,
+      render: (products: Product) => <span>{products?.length}</span>,
     },
     {
       // title: t('table:table-item-order-date'),

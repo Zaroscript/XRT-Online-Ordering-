@@ -552,7 +552,6 @@
   "error-popup-expired-min": "请设置最小值 1 天。",
   "error-popup-expired": "弹出窗口过期时间为必填项",
   "error-image": "您需要提供图像文件。",
-
   "input-label-subtitle": "字幕",
   "error-subtitle-required": "需要字幕",
   "upload-image-help-text": "上传您的图片。",
@@ -614,5 +613,10 @@
   "error-minimum-balance-is-required": "需要最小余额",
   "error-maximum-balance-type": "最大余额数字或'over'文本",
   "error-maximum-balance-is-required": "需要最大余额",
-  "text-save-seller-information": "保存卖家信息"
+  "text-save-seller-information": "保存卖家信息",
+  "form-title-printer-settings": "Printer Settings",
+  "printer-settings-help-text": "Configure your printer connection settings here.",
+  "input-label-printer-id": "Printer ID",
+  "input-label-public-key": "Public Key",
+  "input-label-private-key": "Private Key"
 }

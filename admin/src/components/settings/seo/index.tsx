@@ -78,7 +78,7 @@ export default function SeoSettingsForm({ settings }: IProps) {
   }
   useConfirmRedirectIfDirty({ isDirty });
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:mt-8 sm:mb-3">
         <Description
           title={t('text-seo')}

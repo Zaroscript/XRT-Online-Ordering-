@@ -51,7 +51,7 @@ const StoreNoticeBar = ({ user }: IProps) => {
     });
   };
 
-  const activeStatus = storeNotices.filter((item) => {
+  const activeStatus = storeNotices?.filter((item) => {
     return item.is_read === false;
   });
 
@@ -88,7 +88,7 @@ const StoreNoticeBar = ({ user }: IProps) => {
         <Menu.Button
           className={cn(
             'flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-gray-200 bg-gray-50 text-gray-600 before:absolute before:top-0 before:right-0 before:h-2 before:w-2 before:rounded-full  focus:outline-none data-[headlessui-state=open]:bg-white data-[headlessui-state=open]:text-accent ',
-            activeStatus.length ? 'before:bg-[#F5A623]' : null
+            activeStatus?.length ? 'before:bg-[#F5A623]' : null
           )}
         >
           <NotificationIcon
@@ -123,7 +123,7 @@ const StoreNoticeBar = ({ user }: IProps) => {
                 </div>
 
                 <div>
-                  {storeNotices.length ? (
+                  {storeNotices?.length ? (
                     storeNotices?.map((item: any) => {
                       const activeUser = permissions?.includes('super_admin')
                         ? Routes?.storeNotice?.details(item?.id)
@@ -172,7 +172,7 @@ const StoreNoticeBar = ({ user }: IProps) => {
                   )}
                 </div>
 
-                {storeNotices.length ? (
+                {storeNotices?.length ? (
                   <Link
                     href={
                       permission

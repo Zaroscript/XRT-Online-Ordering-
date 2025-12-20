@@ -12,7 +12,7 @@ import { useWindowSize } from '@/utils/use-window-size';
 import { RESPONSIVE_WIDTH } from '@/utils/constants';
 import { getAuthCredentials, hasAccess } from '@/utils/auth-utils';
 
-const SideBarMenu = () => {
+const SideBarMenu = ({ userRole: propUserRole }: { userRole?: string }) => {
   const { t } = useTranslation();
   const { sidebarLinks } = siteSettings;
   const router = useRouter();
@@ -20,7 +20,8 @@ const SideBarMenu = () => {
   const { pathname } = router;
   const [miniSidebar, _] = useAtom(miniSidebarInitialValue);
   const { width } = useWindowSize();
-  const { role } = getAuthCredentials();
+  const { role: authRole } = getAuthCredentials();
+  const role = propUserRole || authRole;
 
   return (
     <>
@@ -47,11 +48,10 @@ const SideBarMenu = () => {
                       ? 'hover:text-accent-hover ltr:pl-3 rtl:pr-3'
                       : 'hover:bg-gray-100',
                     pathname === item?.href
-                      ? `font-medium !text-accent-hover ${
-                          !miniSidebar
-                            ? 'bg-accent/10 hover:!bg-accent/10'
-                            : null
-                        }`
+                      ? `font-medium !text-accent-hover ${!miniSidebar
+                        ? 'bg-accent/10 hover:!bg-accent/10'
+                        : null
+                      }`
                       : null,
                   )}
                   title={t(item?.label)}

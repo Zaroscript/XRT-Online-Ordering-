@@ -299,7 +299,7 @@ export default function CreateOrUpdateProductForm({
         />
       ) : null}
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form onSubmit={handleSubmit(onSubmit as any)} noValidate>
           <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
             <Description
               title={t('form:featured-image-title')}
@@ -416,11 +416,10 @@ export default function CreateOrUpdateProductForm({
           <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
             <Description
               title={t('form:item-description')}
-              details={`${
-                initialValues
+              details={`${initialValues
                   ? t('form:item-description-edit')
                   : t('form:item-description-add')
-              } ${t('form:product-description-help-text')}`}
+                } ${t('form:product-description-help-text')}`}
               className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
             />
 
@@ -487,21 +486,21 @@ export default function CreateOrUpdateProductForm({
                 <Label>{t('form:input-label-status')}</Label>
                 {!isEmpty(statusList)
                   ? statusList?.map((status: any, index: number) => (
-                      <Radio
-                        key={index}
-                        {...register('status')}
-                        label={t(status?.label)}
-                        id={status?.id}
-                        value={status?.value}
-                        className="mb-2"
-                        disabled={
-                          permission &&
+                    <Radio
+                      key={index}
+                      {...register('status')}
+                      label={t(status?.label)}
+                      id={status?.id}
+                      value={status?.value}
+                      className="mb-2"
+                      disabled={
+                        permission &&
                           initialValues?.status === ProductStatus?.Draft
-                            ? true
-                            : false
-                        }
-                      />
-                    ))
+                          ? true
+                          : false
+                      }
+                    />
+                  ))
                   : ''}
                 {errors.status?.message && (
                   <p className="my-2 text-xs text-red-500">

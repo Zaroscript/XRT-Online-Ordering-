@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { CheckMarkCircle } from '@/components/icons/checkmark-circle';
 import { CloseFillIcon } from '@/components/icons/close-fill';
 import { useModalAction } from '../modal/modal.context';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 
 export type LanguageSwitcherProps = {
   record: any;

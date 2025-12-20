@@ -79,10 +79,10 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
     // @ts-ignore
     defaultValues: initialValues
       ? {
-          ...initialValues,
-          active_from: new Date(initialValues.active_from!),
-          expire_at: new Date(initialValues.expire_at!),
-        }
+        ...initialValues,
+        active_from: new Date(initialValues.active_from!),
+        expire_at: new Date(initialValues.expire_at!),
+      }
       : defaultValues,
     //@ts-ignore
     resolver: yupResolver(couponValidationSchema),
@@ -169,7 +169,7 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
         <Description
           title={t('form:input-label-image')}
@@ -185,11 +185,10 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
       <div className="flex flex-wrap my-5 sm:my-8">
         <Description
           title={t('form:input-label-description')}
-          details={`${
-            initialValues
+          details={`${initialValues
               ? t('form:item-description-edit')
               : t('form:item-description-add')
-          } ${t('form:coupon-form-info-help-text')}`}
+            } ${t('form:coupon-form-info-help-text')}`}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5 "
         />
 

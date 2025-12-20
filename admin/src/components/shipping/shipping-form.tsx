@@ -57,15 +57,14 @@ export default function CreateOrUpdateShippingForm({ initialValues }: IProps) {
   const type = useWatch({ name: 'type', control });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       <div className="flex flex-wrap my-5 sm:my-8">
         <Description
           title={t('form:item-description')}
-          details={`${
-            initialValues
+          details={`${initialValues
               ? t('form:item-description-update')
               : t('form:item-description-add')
-          } ${t('form:shipping-form-info-help-text')}`}
+            } ${t('form:shipping-form-info-help-text')}`}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
         <Card className="w-full sm:w-8/12 md:w-2/3">

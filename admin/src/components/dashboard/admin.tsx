@@ -187,7 +187,7 @@ export default function Dashboard() {
   // Transform order status data from array to object format
   const transformOrderStatusData = (orderStatusArray: any[] | undefined) => {
     if (!orderStatusArray) return {};
-    
+
     return orderStatusArray.reduce((acc, item) => {
       const statusKey = item.status.replace('-', '');
       acc[statusKey] = item.count;
@@ -263,23 +263,23 @@ export default function Dashboard() {
           <div className="mt-3.5 inline-flex rounded-full bg-gray-100/80 p-1.5 sm:mt-0">
             {timeFrame
               ? timeFrame.map((time) => (
-                  <div key={time.day} className="relative">
-                    <Button
-                      className={cn(
-                        '!focus:ring-0  relative z-10 !h-7 rounded-full !px-2.5 text-sm font-medium text-gray-500',
-                        time.day === activeTimeFrame ? 'text-accent' : '',
-                      )}
-                      type="button"
-                      onClick={() => setActiveTimeFrame(time.day)}
-                      variant="custom"
-                    >
-                      {time.name}
-                    </Button>
-                    {time.day === activeTimeFrame ? (
-                      <motion.div className="absolute bottom-0 left-0 right-0 z-0 h-full rounded-3xl bg-accent/10" />
-                    ) : null}
-                  </div>
-                ))
+                <div key={time.day} className="relative">
+                  <Button
+                    className={cn(
+                      '!focus:ring-0  relative z-10 !h-7 rounded-full !px-2.5 text-sm font-medium text-gray-500',
+                      time.day === activeTimeFrame ? 'text-accent' : '',
+                    )}
+                    type="button"
+                    onClick={() => setActiveTimeFrame(time.day)}
+                    variant="custom"
+                  >
+                    {time.name}
+                  </Button>
+                  {time.day === activeTimeFrame ? (
+                    <motion.div className="absolute bottom-0 left-0 right-0 z-0 h-full rounded-3xl bg-accent/10" />
+                  ) : null}
+                </div>
+              ))
               : null}
           </div>
         </div>
@@ -335,14 +335,14 @@ export default function Dashboard() {
       </div>
 
       <PopularProductList
-        products={popularProductData}
+        products={popularProductData ?? []}
         title={t('table:popular-products-table-title')}
         className="lg:col-span-1 lg:col-start-2 lg:row-start-5 2xl:col-span-4 2xl:col-start-auto 2xl:row-start-auto"
       />
 
       <LowStockProduct
         //@ts-ignore
-        products={lowStockProduct}
+        products={lowStockProduct ?? []}
         title={'text-low-stock-products'}
         paginatorInfo={withdrawPaginatorInfo}
         onPagination={handlePagination}
@@ -358,12 +358,12 @@ export default function Dashboard() {
       />
 
       <TopRatedProducts
-        products={topRatedProducts}
+        products={topRatedProducts ?? []}
         title={'text-most-rated-products'}
         className="lg:col-span-1 lg:col-start-1 lg:row-start-5 2xl:col-span-5 2xl:col-start-auto 2xl:row-start-auto 2xl:me-20"
       />
       <ProductCountByCategory
-        products={productByCategory}
+        products={productByCategory ?? []}
         title={'text-most-category-products'}
         className="col-span-full 2xl:col-span-7 2xl:ltr:-ml-20 2xl:rtl:-mr-20"
       />

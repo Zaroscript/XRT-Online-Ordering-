@@ -26,6 +26,13 @@ type IProps = {
   className?: string;
 };
 
+const OrderPrice = ({ value }: { value: any }) => {
+  const { price } = usePrice({
+    amount: value,
+  });
+  return <span className="whitespace-nowrap font-medium">{price}</span>;
+};
+
 const RecentOrders = ({
   orders,
   paginatorInfo,
@@ -69,7 +76,7 @@ const RecentOrders = ({
       dataIndex: 'products',
       key: 'products',
       align: 'center',
-      render: (products: Product) => <span>{products.length}</span>,
+      render: (products: Product) => <span>{products?.length ?? 0}</span>,
     },
 
     {
@@ -94,12 +101,7 @@ const RecentOrders = ({
       dataIndex: 'total',
       key: 'total',
       align: 'center',
-      render: function Render(value: any) {
-        const { price } = usePrice({
-          amount: value,
-        });
-        return <span className="whitespace-nowrap font-medium">{price}</span>;
-      },
+      render: (value: any) => <OrderPrice value={value} />,
     },
     {
       title: t('table:table-item-status'),

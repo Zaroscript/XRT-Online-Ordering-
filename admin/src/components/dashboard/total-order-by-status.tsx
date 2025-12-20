@@ -1,6 +1,6 @@
 import StickerCard from '@/components/widgets/sticker-card';
 import { CartIconBig } from '@/components/icons/cart-icon-bag';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import { TodayTotalOrderByStatus } from '@/types';
 import { useAnalyticsQuery } from '@/data/dashboard';
 import Loader from '@/components/ui/loader/loader';

@@ -12,7 +12,7 @@ import Link from '@/components/ui/link';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'next-i18next';
 import dayjs from 'dayjs';
 import { adminOnly, getAuthCredentials, hasAccess } from '@/utils/auth-utils';
 import { PusherConfig } from '@/utils/pusher-config';
@@ -112,7 +112,7 @@ const RecentOrderBar = ({ user }: IProps) => {
     });
   };
 
-  const activeStatus = notifyLogs.filter((item) => {
+  const activeStatus = notifyLogs?.filter((item) => {
     return Boolean(item?.is_read) === false;
   });
 
@@ -148,7 +148,7 @@ const RecentOrderBar = ({ user }: IProps) => {
         <Menu.Button
           className={cn(
             'relative flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-gray-200 bg-gray-50 text-gray-600 before:absolute before:top-0 before:right-0 before:h-2 before:w-2 before:rounded-full focus:outline-none data-[headlessui-state=open]:bg-white data-[headlessui-state=open]:text-accent',
-            activeStatus.length > 0 ? 'before:bg-[#3080F8]' : ''
+            activeStatus?.length > 0 ? 'before:bg-[#3080F8]' : ''
           )}
         >
           <ShoppingBagIcon
@@ -174,7 +174,7 @@ const RecentOrderBar = ({ user }: IProps) => {
               <>
                 <div className="flex items-center justify-between rounded-tl-lg rounded-tr-lg border-b border-gray-200/80 px-6 py-4 font-medium">
                   <span>{t('text-orders')}</span>
-                  {activeStatus.length > 0 ? (
+                  {activeStatus?.length > 0 ? (
                     <span
                       className="block cursor-pointer text-sm font-medium text-accent hover:text-heading"
                       onClick={markAllAsRead}

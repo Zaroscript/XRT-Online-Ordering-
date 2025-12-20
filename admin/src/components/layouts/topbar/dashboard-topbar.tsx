@@ -12,12 +12,11 @@ type IProps = {};
 const DashboardTopBar = ({}: IProps) => {
   const { locale } = useRouter();
   const { data, isLoading: meLoading, error: meError } = useMeQuery();
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+
+  const options = settings?.options;
 
   return (
     <>

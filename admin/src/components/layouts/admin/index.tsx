@@ -29,7 +29,7 @@ interface MenuItemsProps {
   };
 }
 
-const SidebarItemMap = ({ menuItems }: any) => {
+const SidebarItemMap = ({ menuItems, userRole }: any) => {
   const { t } = useTranslation();
   const [miniSidebar, _] = useAtom(miniSidebarInitialValue);
   const { childMenu } = menuItems;
@@ -60,6 +60,7 @@ const SidebarItemMap = ({ menuItems }: any) => {
             childMenu={childMenu}
             permission={permission || permissions}
             miniSidebar={miniSidebar && width >= RESPONSIVE_WIDTH}
+            currentUserRole={userRole}
           />
         ),
       )}
@@ -67,7 +68,7 @@ const SidebarItemMap = ({ menuItems }: any) => {
   );
 };
 
-const SideBarGroup = () => {
+const SideBarGroup = ({ userRole }: { userRole?: string }) => {
   const { t } = useTranslation();
   // @ts-ignore
   const [miniSidebar, _] = useAtom(miniSidebarInitialValue);
@@ -95,15 +96,16 @@ const SideBarGroup = () => {
           >
             {t(menuItems[menu]?.label)}
           </div>
-          <SidebarItemMap menuItems={menuItems[menu]} />
+          <SidebarItemMap menuItems={menuItems[menu]} userRole={userRole} />
         </div>
       ))}
     </>
   );
 };
 
-const AdminLayout: React.FC<{ children?: React.ReactNode }> = ({
+const AdminLayout: React.FC<{ children?: React.ReactNode; userRole?: string; userPermissions?: string[] }> = ({
   children,
+  userRole,
 }) => {
   const { locale } = useRouter();
 
@@ -120,7 +122,7 @@ const AdminLayout: React.FC<{ children?: React.ReactNode }> = ({
     >
       <Navbar />
       <MobileNavigation>
-        <SideBarGroup />
+        <SideBarGroup userRole={userRole} />
       </MobileNavigation>
 
       <div className="flex flex-1">
@@ -143,7 +145,7 @@ const AdminLayout: React.FC<{ children?: React.ReactNode }> = ({
                 },
               }}
             >
-              <SideBarGroup />
+              <SideBarGroup userRole={userRole} />
             </Scrollbar>
           </div>
         </aside>

@@ -27,7 +27,7 @@ import { Fragment, useEffect, useState } from 'react';
 
 type IProps = {};
 
-const SearchBar: React.FC<IProps> = ({}: IProps) => {
+const SearchBar: React.FC<IProps> = ({ }: IProps) => {
   const { t } = useTranslation();
   const initialItem: ChildMenu[] = [];
   const [searchText, setSearchText] = useState('');
@@ -41,6 +41,7 @@ const SearchBar: React.FC<IProps> = ({}: IProps) => {
   const { data: me } = useMeQuery();
 
   const getAuthorizedURL = (links: any[]): any[] => {
+    if (!links) return [];
     return [...links].filter((link) =>
       hasAccess(link?.permissions!, currentUserPermissions)
     );

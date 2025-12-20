@@ -49,6 +49,12 @@ The XRT Customized System includes comprehensive API documentation for seamless 
 - `PATCH /roles/users/:id/assign` - Assign role to user
 - `PATCH /roles/users/:id/remove` - Remove user role
 
+### 💰 Withdraw Management (`/withdraws`)
+- `GET /withdraws` - List all withdraws (Admin only)
+- `POST /withdraws` - Request a withdrawal
+- `GET /withdraws/my-withdraws` - View my withdrawal requests
+- `PATCH /withdraws/:id/status` - Update withdrawal status (Admin only)
+
 ## 🧪 Testing Workflow
 
 ### Step 1: Create Admin Account
