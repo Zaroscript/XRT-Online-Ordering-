@@ -51,15 +51,9 @@ const businessSettingsSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
-      tip: {
+      tip_options: [{
         type: Number,
-        default: 0,
-      },
-      tip_type: {
-        type: String,
-        enum: ['fixed', 'percentage'],
-        default: 'percentage',
-      },
+      }],
     },
     taxes: {
       sales_tax: {
@@ -104,6 +98,13 @@ const businessSettingsSchema = new mongoose.Schema(
       website: { type: String, default: '' },
     },
     currency: { type: String, default: 'USD' },
+    heroSlides: [{
+      bgImage: { type: Object, default: {} },
+      title: { type: String, default: '' },
+      subtitle: { type: String, default: '' },
+      btnText: { type: String, default: '' },
+      btnLink: { type: String, default: '' },
+    }],
     currencyOptions: {
       formation: { type: String, default: 'en-US' },
       fractions: { type: Number, default: 2 },

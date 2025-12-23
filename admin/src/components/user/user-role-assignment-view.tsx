@@ -54,7 +54,7 @@ const UserRoleAssignmentView = () => {
 
   const roleOptions = [
     { label: 'Client', value: 'client' },
-    ...(roles?.map((role) => ({
+    ...(roles?.map((role: any) => ({
       label: role.displayName,
       value: role.id,
     })) || []),

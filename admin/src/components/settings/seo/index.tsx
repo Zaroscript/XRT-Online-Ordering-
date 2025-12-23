@@ -144,7 +144,7 @@ export default function SeoSettingsForm({ settings }: IProps) {
             {...register('seo.twitterHandle')}
             variant="outline"
             className="mb-5"
-            placeholder="your twitter username (exp: @username)"
+            
           />
           <Input
             label={t('form:input-label-twitter-card-type')}
@@ -152,7 +152,7 @@ export default function SeoSettingsForm({ settings }: IProps) {
             {...register('seo.twitterCardType')}
             variant="outline"
             className="mb-5"
-            placeholder="one of summary, summary_large_image, app, or player"
+            
           />
         </Card>
       </div>

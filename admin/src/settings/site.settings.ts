@@ -516,11 +516,6 @@ export const siteSettings = {
                 icon: 'InformationIcon',
               },
               {
-                href: Routes?.companyInformation,
-                label: 'text-company-settings',
-                icon: 'InformationIcon',
-              },
-              {
                 href: Routes?.socialSettings,
                 label: 'Social Settings',
                 icon: 'RefundsIcon',

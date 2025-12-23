@@ -68,21 +68,24 @@ export default function PrinterSettingsForm({ settings }: IProps) {
 
                 <Card className="w-full sm:w-8/12 md:w-2/3">
                     <Input
-                        label={t('form:input-label-printer-id')}
+                        label={t('Printer ID')}
+                        toolTipText={t('Your Star Micronics printer device ID')}
                         {...register('printer.printer_id')}
                         error={t(errors.printer?.printer_id?.message!)}
                         variant="outline"
                         className="mb-5"
                     />
                     <Input
-                        label={t('form:input-label-public-key')}
+                        label={t('Public Key')}
+                        toolTipText={t('API public key from Star Micronics CloudPRNT')}
                         {...register('printer.public_key')}
                         error={t(errors.printer?.public_key?.message!)}
                         variant="outline"
                         className="mb-5"
                     />
                     <Input
-                        label={t('form:input-label-private-key')}
+                        label={t('Private Key')}
+                        toolTipText={t('API private key from Star Micronics CloudPRNT')}
                         {...register('printer.private_key')}
                         error={t(errors.printer?.private_key?.message!)}
                         variant="outline"

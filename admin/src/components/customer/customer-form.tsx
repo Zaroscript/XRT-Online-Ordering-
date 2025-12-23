@@ -17,7 +17,7 @@ import Button from '@/components/ui/button';
 import Card from '@/components/common/card';
 import Description from '@/components/ui/description';
 import StickyFooterPanel from '@/components/ui/sticky-footer-panel';
-import { useBusinessesQuery } from '@/data/business';
+import { useShopsQuery } from '@/data/shop';
 import { useLocationsQuery } from '@/data/location';
 import Select from '@/components/ui/select/select';
 import { Controller } from 'react-hook-form';
@@ -33,7 +33,7 @@ const CustomerForm = ({ initialValues }: CustomerFormProps) => {
   const { mutate: updateCustomer, isLoading: updating } =
     useUpdateCustomerMutation();
 
-  const { data: businesses, isLoading: loadingBusinesses } = useBusinessesQuery(
+  const { shops: businesses, loading: loadingBusinesses } = useShopsQuery(
     { limit: 100 },
   );
   const { data: locations, isLoading: loadingLocations } = useLocationsQuery({
@@ -54,16 +54,16 @@ const CustomerForm = ({ initialValues }: CustomerFormProps) => {
   } = useForm<FormValues>({
     defaultValues: initialValues
       ? {
-          name: initialValues.name,
-          email: initialValues.email,
-          phoneNumber: initialValues.phoneNumber,
-          business_id:
-            initialValues.business_id?._id || initialValues.business_id,
-          location_id:
-            initialValues.location_id?._id || initialValues.location_id,
-          rewards: initialValues.rewards || 0,
-          notes: initialValues.notes || '',
-        }
+        name: initialValues.name,
+        email: initialValues.email,
+        phoneNumber: initialValues.phoneNumber,
+        business_id:
+          initialValues.business_id?._id || initialValues.business_id,
+        location_id:
+          initialValues.location_id?._id || initialValues.location_id,
+        rewards: initialValues.rewards || 0,
+        notes: initialValues.notes || '',
+      }
       : defaultValues,
     resolver: yupResolver(
       isNew ? customerValidationSchema : customerUpdateValidationSchema,

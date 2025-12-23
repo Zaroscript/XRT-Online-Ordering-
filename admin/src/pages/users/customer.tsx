@@ -19,8 +19,7 @@ import { adminOnly } from '@/utils/auth-utils';
 import PageHeading from '@/components/common/page-heading';
 import { toast } from 'react-toastify';
 import { useMeQuery } from '@/data/user';
-import { useBusinessesQuery } from '@/data/business';
-import { useLocationsQuery } from '@/data/location';
+import { useShopsQuery } from '@/data/shop';
 import Button from '@/components/ui/button';
 import { PlusIcon } from '@/components/icons/plus-icon';
 import { DownloadIcon } from '@/components/icons/download-icon';
@@ -47,10 +46,9 @@ export default function CustomersPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState<ImportRow[]>([]);
 
-  // Get current user and their business/location context
+  // Get current user and shops context
   const { data: currentUser } = useMeQuery();
-  const { data: businesses } = useBusinessesQuery({ limit: 100 });
-  const { data: locations } = useLocationsQuery({ limit: 100 });
+  const { shops } = useShopsQuery({ limit: 100 });
 
   const {
     data: customerData,
@@ -68,21 +66,21 @@ export default function CustomersPage() {
   const customers = customerData?.data || [];
   const paginatorInfo: MappedPaginatorInfo | null = customerData
     ? {
-        currentPage: customerData.current_page || page,
-        total: customerData.total || 0,
-        perPage: customerData.per_page || 20,
-        lastPage: customerData.last_page || 1,
-        hasMorePages:
-          (customerData.current_page || page) < (customerData.last_page || 1),
-        firstPageUrl: '',
-        from: 0,
-        lastPageUrl: '',
-        links: [],
-        nextPageUrl: null,
-        path: '',
-        prevPageUrl: null,
-        to: 0,
-      }
+      currentPage: customerData.current_page || page,
+      total: customerData.total || 0,
+      perPage: customerData.per_page || 20,
+      lastPage: customerData.last_page || 1,
+      hasMorePages:
+        (customerData.current_page || page) < (customerData.last_page || 1),
+      firstPageUrl: '',
+      from: 0,
+      lastPageUrl: '',
+      links: [],
+      nextPageUrl: null,
+      path: '',
+      prevPageUrl: null,
+      to: 0,
+    }
     : null;
 
   const importMutation = useImportCustomersMutation();
@@ -341,8 +339,8 @@ export default function CustomersPage() {
         }}
         onConfirm={handleConfirmImport}
         data={previewData as any}
-        businesses={businesses || []}
-        locations={locations || []}
+        businesses={shops || []}
+        locations={[]}
         isLoading={importMutation.isLoading}
       />
     </>

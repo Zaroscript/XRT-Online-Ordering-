@@ -68,15 +68,15 @@ export const userClient = {
       variables,
     );
   },
-  block: (variables: BlockUserInput & { id: string }) => {
+  block: (variables: BlockUserInput) => {
     return HttpClient.patch<any>(
-      API_ENDPOINTS.USER_BAN.replace(':id', variables.id),
+      API_ENDPOINTS.USER_BAN.replace(':id', String(variables.id)),
       variables,
     );
   },
-  unblock: (variables: BlockUserInput & { id: string }) => {
+  unblock: (variables: BlockUserInput) => {
     return HttpClient.patch<any>(
-      API_ENDPOINTS.USER_BAN.replace(':id', variables.id),
+      API_ENDPOINTS.USER_BAN.replace(':id', String(variables.id)),
       { ...variables, ban: false },
     );
   },
