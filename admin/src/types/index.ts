@@ -1358,13 +1358,28 @@ export interface SettingsOptions {
   };
   fees?: {
     service_fee?: number;
-    tip?: number;
-    tip_type?: string;
+    tip_options?: number[];
   };
   taxes?: {
     sales_tax?: number;
   };
   pushNotification?: any;
+  // Company Information fields
+  siteLink?: string;
+  copyrightText?: string;
+  externalText?: string;
+  externalLink?: string;
+  timezone?: string;
+  // Hero Slider
+  heroSlides?: HeroSlide[];
+}
+
+export interface HeroSlide {
+  bgImage?: AttachmentInput;
+  title: string;
+  subtitle: string;
+  btnText: string;
+  btnLink: string;
 }
 
 export interface PrinterSettings {

@@ -1,5 +1,5 @@
 import AdminLayout from '@/components/layouts/admin';
-import GeneralSettingsForm from '@/components/settings/general';
+import GeneralSettingsForm from '@/components/settings/settings-form';
 import ErrorMessage from '@/components/ui/error-message';
 import Loader from '@/components/ui/loader/loader';
 import { useSettingsQuery } from '@/data/settings';
