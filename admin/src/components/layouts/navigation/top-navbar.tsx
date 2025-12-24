@@ -153,7 +153,7 @@ const Navbar = () => {
     shop?.settings?.isShopUnderMaintenance,
   ]);
 
-  const currentSettings = settings?.options || settings;
+  const currentSettings = (settings as any)?.options || settings;
   const isAcceptingOrders = currentSettings?.orders?.accept_orders ?? true;
 
   const [isAccepting, setIsAccepting] = useState<boolean>(isAcceptingOrders);

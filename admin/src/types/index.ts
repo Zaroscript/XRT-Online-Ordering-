@@ -1625,7 +1625,7 @@ export declare interface MakeAdminInput {
 }
 
 export interface BlockUserInput {
-  id: number;
+  id: string | number;
 }
 
 export interface WalletPointsInput {

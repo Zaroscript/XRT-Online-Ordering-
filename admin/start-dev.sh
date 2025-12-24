@@ -9,3 +9,4 @@ echo "🚀 Starting Next.js development server..."
 # Suppress unhandled rejection warnings for cache errors
 NODE_OPTIONS="--unhandled-rejections=warn" npm run dev
 
+

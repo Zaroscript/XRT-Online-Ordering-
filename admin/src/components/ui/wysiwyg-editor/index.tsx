@@ -194,7 +194,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             theme="snow-quill-color-picker-enhance"
             {...field}
             placeholder={title ? title : placeholder}
-            onChange={(text) => {
+            onChange={(text: string) => {
               field?.onChange(text);
             }}
             className={twMerge(
