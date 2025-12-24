@@ -28,7 +28,7 @@ const nextConfig = {
       '127.0.0.1:8000',
     ],
   },
-  webpack: (config, { webpack }) => {
+  webpack: (config, { webpack, isServer }) => {
     // Fix for react/jsx-runtime resolution in ESM modules like @react-google-maps/api
     const jsxRuntimePath = require.resolve('react/jsx-runtime');
     const jsxDevRuntimePath = require.resolve('react/jsx-dev-runtime');
@@ -41,12 +41,23 @@ const nextConfig = {
     };
 
     // Fix for react-quill CSS import - resolve to quill package
-    try {
-      const quillCssPath = require.resolve('quill/dist/quill.snow.css');
-      config.resolve.alias['react-quill/dist/quill.snow.css'] = quillCssPath;
-    } catch (e) {
-      // quill might not be installed yet, will be resolved after npm install
+    // Use resolve.alias to redirect the import
+    const path = require('path');
+    const fs = require('fs');
+    
+    // Try multiple possible paths for quill CSS
+    const possiblePaths = [
+      path.resolve(process.cwd(), 'node_modules', 'quill', 'dist', 'quill.snow.css'),
+      path.resolve(process.cwd(), 'node_modules', 'react-quill', 'node_modules', 'quill', 'dist', 'quill.snow.css'),
+    ];
+    
+    let quillCssPath = possiblePaths.find(p => fs.existsSync(p));
+    if (!quillCssPath) {
+      // Fallback to relative path
+      quillCssPath = 'quill/dist/quill.snow.css';
     }
+    
+    config.resolve.alias['react-quill/dist/quill.snow.css'] = quillCssPath;
 
     // Use webpack's NormalModuleReplacementPlugin to handle react/jsx-runtime imports
     // This ensures ESM modules can resolve the jsx-runtime correctly
@@ -58,27 +69,13 @@ const nextConfig = {
       new webpack.NormalModuleReplacementPlugin(
         /^react\/jsx-dev-runtime$/,
         jsxDevRuntimePath
+      ),
+      // Fix for react-quill CSS import path - redirect to quill package
+      new webpack.NormalModuleReplacementPlugin(
+        /react-quill\/dist\/quill\.snow\.css$/,
+        'quill/dist/quill.snow.css'
       )
     );
-
-    // Fix for react-quill CSS import path - redirect to quill package
-    try {
-      const quillCssPath = require.resolve('quill/dist/quill.snow.css');
-      config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(
-          /^react-quill\/dist\/quill\.snow\.css$/,
-          quillCssPath
-        )
-      );
-    } catch (e) {
-      // If quill is not installed, add a plugin that will resolve it during build
-      config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(
-          /^react-quill\/dist\/quill\.snow\.css$/,
-          'quill/dist/quill.snow.css'
-        )
-      );
-    }
 
     return config;
   },
