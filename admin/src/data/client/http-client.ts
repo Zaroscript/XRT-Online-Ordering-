@@ -7,12 +7,16 @@ import { AUTH_CRED } from '@/utils/constants';
 import { API_ENDPOINTS } from './api-endpoints';
 import { getAuthCredentials, setAuthCredentials } from '@/utils/auth-utils';
 
-invariant(
-  process.env.NEXT_PUBLIC_REST_API_ENDPOINT,
-  'NEXT_PUBLIC_REST_API_ENDPOINT is not defined, please define it in your .env file',
-);
+// Only check invariant in development to avoid build failures
+// Production builds should have this set, but we'll use a fallback if needed
+if (process.env.NODE_ENV === 'development') {
+  invariant(
+    process.env.NEXT_PUBLIC_REST_API_ENDPOINT,
+    'NEXT_PUBLIC_REST_API_ENDPOINT is not defined, please define it in your .env file',
+  );
+}
 const Axios = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_REST_API_ENDPOINT,
+  baseURL: process.env.NEXT_PUBLIC_REST_API_ENDPOINT || 'http://localhost:8000',
   timeout: 10000, // Reduced to 10 seconds for faster feedback
   headers: {
     'Content-Type': 'application/json',

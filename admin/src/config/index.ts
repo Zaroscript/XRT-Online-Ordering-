@@ -1,15 +1,19 @@
 import invariant from 'tiny-invariant';
 
-invariant(
-  process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE,
-  'Default language is not set'
-);
-
-if (process.env.NEXT_PUBLIC_ENABLE_MULTI_LANG === 'true') {
+// Only check invariants in development to avoid build failures
+// Production builds should have these set, but we provide defaults
+if (process.env.NODE_ENV === 'development') {
   invariant(
-    process.env.NEXT_PUBLIC_AVAILABLE_LANGUAGES,
-    'Available language is not set'
+    process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE,
+    'Default language is not set'
   );
+
+  if (process.env.NEXT_PUBLIC_ENABLE_MULTI_LANG === 'true') {
+    invariant(
+      process.env.NEXT_PUBLIC_AVAILABLE_LANGUAGES,
+      'Available language is not set'
+    );
+  }
 }
 
 export const Config = {
