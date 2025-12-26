@@ -230,10 +230,13 @@ Production: https://xrt-online-ordering.vercel.app/api/v1
 
 | Method | Endpoint            | Description          | Auth Required | Role Required      |
 | ------ | ------------------- | -------------------- | ------------- | ------------------ |
-| GET    | `/admin/categories` | List all categories  | ✅            | Any authenticated  |
-| POST   | `/admin/categories` | Create category      | ✅            | `admin` or `super_admin` |
-| PUT    | `/admin/categories/:id` | Update category  | ✅            | `admin` or `super_admin` |
-| DELETE | `/admin/categories/:id` | Delete category  | ✅            | `admin` or `super_admin` |
+| Method | Endpoint            | Description              | Auth Required | Role Required               |
+| ------ | ------------------- | ------------------------ | ------------- | --------------------------- |
+| GET    | `/categories`       | List all categories      | ✅            | Any authenticated           |
+| GET    | `/categories/:id`   | Get category details     | ✅            | `admin` or `super_admin`    |
+| POST   | `/categories`       | Create category          | ✅            | `admin` or `super_admin`    |
+| PUT    | `/categories/:id`   | Update category          | ✅            | `admin` or `super_admin`    |
+| DELETE | `/categories/:id`   | Delete category          | ✅            | `admin` or `super_admin`    |
 
 ## 🔐 Authentication Flow
 

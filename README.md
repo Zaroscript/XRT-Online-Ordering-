@@ -262,6 +262,14 @@ NEXT_PUBLIC_APP_NAME=XRT Online Ordering
 - `POST /customers/import` - Import customers from CSV
 - `POST /customers/export` - Export customers to CSV
 
+#### Category Management
+
+- `GET /categories` - List all categories
+- `GET /categories/:id` - Get single category details
+- `POST /categories` - Create category (Multipart: image, icon)
+- `PUT /categories/:id` - Update category (Multipart: image, icon)
+- `DELETE /categories/:id` - Delete category
+
 #### Withdraw Management
 
 - `GET /withdraws` - List all withdrawal requests

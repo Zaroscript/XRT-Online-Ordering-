@@ -1,1 +1,34 @@
-{"version": 2, "builds": [{"src": "index.js", "use": "@vercel/node"}], "routes": [{"src": "/api-docs", "dest": "index.js"}, {"src": "/api-docs.json", "dest": "index.js"}, {"src": "/public/(.*)", "dest": "index.js"}, {"src": "/api/(.*)", "dest": "index.js"}, {"src": "/(.*)", "dest": "index.js"}], "env": {"NODE_ENV": "production"}}
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "src/server.ts",
+            "use": "@vercel/node"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api-docs",
+            "dest": "src/server.ts"
+        },
+        {
+            "src": "/api-docs.json",
+            "dest": "src/server.ts"
+        },
+        {
+            "src": "/public/(.*)",
+            "dest": "src/server.ts"
+        },
+        {
+            "src": "/api/(.*)",
+            "dest": "src/server.ts"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "src/server.ts"
+        }
+    ],
+    "env": {
+        "NODE_ENV": "production"
+    }
+}

@@ -97,26 +97,30 @@ app.use((req, res) => {
 // Error handler (must be last)
 app.use(errorHandler);
 
-// Start server
-const PORT = env.PORT;
-const server = app.listen(PORT, () => {
-  logger.info(`🚀 Server running on port ${PORT}`);
-  logger.info(`📝 Environment: ${env.NODE_ENV}`);
-  logger.info(`📡 API available at http://localhost:${PORT}${env.API_BASE_URL}`);
-});
+let server: any;
 
-// Handle port already in use error
-server.on('error', (err: NodeJS.ErrnoException) => {
-  if (err.code === 'EADDRINUSE') {
-    logger.error(`❌ Port ${PORT} is already in use!`);
-    logger.error(`💡 To fix this, run: lsof -ti:${PORT} | xargs kill -9`);
-    logger.error(`   Or manually kill the process using port ${PORT}`);
-    process.exit(1);
-  } else {
-    logger.error(`❌ Server error: ${err.message}`);
-    throw err;
-  }
-});
+// Start server if not running on Vercel
+if (!process.env.VERCEL) {
+  const PORT = env.PORT;
+  server = app.listen(PORT, () => {
+    logger.info(`🚀 Server running on port ${PORT}`);
+    logger.info(`📝 Environment: ${env.NODE_ENV}`);
+    logger.info(`📡 API available at http://localhost:${PORT}${env.API_BASE_URL}`);
+  });
+
+  // Handle port already in use error
+  server.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE') {
+      logger.error(`❌ Port ${PORT} is already in use!`);
+      logger.error(`💡 To fix this, run: lsof -ti:${PORT} | xargs kill -9`);
+      logger.error(`   Or manually kill the process using port ${PORT}`);
+      process.exit(1);
+    } else {
+      logger.error(`❌ Server error: ${err.message}`);
+      throw err;
+    }
+  });
+}
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err: Error) => {
@@ -126,9 +130,13 @@ process.on('unhandledRejection', (err: Error) => {
     logger.info('🔧 Development mode: Server will continue running');
     return;
   }
-  server.close(() => {
+  if (typeof server !== 'undefined' && server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  } else {
     process.exit(1);
-  });
+  }
 });
 
 // Handle uncaught exceptions
