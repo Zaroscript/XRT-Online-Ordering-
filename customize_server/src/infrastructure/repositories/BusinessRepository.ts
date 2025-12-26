@@ -2,7 +2,7 @@ import { IBusinessRepository } from '../../domain/repositories/IBusinessReposito
 import { Business, CreateBusinessDTO, UpdateBusinessDTO } from '../../domain/entities/Business';
 import { BusinessModel, BusinessDocument } from '../database/models/BusinessModel';
 import { NotFoundError } from '../../shared/errors/AppError';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export class BusinessRepository implements IBusinessRepository {
   private toDomain(document: BusinessDocument): Business {
@@ -35,7 +35,7 @@ export class BusinessRepository implements IBusinessRepository {
   async create(businessData: CreateBusinessDTO): Promise<Business> {
     const businessDoc = new BusinessModel({
       ...businessData,
-      id: uuidv4(),
+      id: randomUUID(),
     });
     await businessDoc.save();
     return this.toDomain(businessDoc);
