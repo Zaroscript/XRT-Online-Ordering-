@@ -19,7 +19,7 @@ const WithdrawSchema = new Schema<WithdrawDocument>(
       index: true,
     },
     business_id: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: 'Business',
       required: [true, 'Business ID is required'],
       index: true,
@@ -35,14 +35,14 @@ const WithdrawSchema = new Schema<WithdrawDocument>(
       type: String,
     },
     approvedBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: 'User',
     },
     approvedAt: {
       type: Date,
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: 'User',
       required: true,
     },

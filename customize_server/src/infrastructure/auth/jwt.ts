@@ -14,8 +14,8 @@ export const generateToken = (user: User): string => {
     role: user.role,
   };
 
-  return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: env.ACCESS_TOKEN_EXPIRE,
+  return jwt.sign(payload as object, env.JWT_SECRET, {
+    expiresIn: env.ACCESS_TOKEN_EXPIRE as any,
   });
 };
 

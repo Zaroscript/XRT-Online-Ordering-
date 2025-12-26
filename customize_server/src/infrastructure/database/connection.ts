@@ -13,7 +13,7 @@ const mongooseOptions = {
   socketTimeoutMS: 45000,
   connectTimeoutMS: 30000,
   retryWrites: true,
-  w: 'majority',
+  w: 'majority' as any,
   autoIndex: env.NODE_ENV !== 'production',
 };
 

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { connectDatabase } from '../src/infrastructure/database/connection';
 import { UserModel } from '../src/infrastructure/database/models/UserModel';
+import { UserRole } from '../src/shared/constants/roles';
 
 interface SuperAdminData {
   name: string;
@@ -37,7 +38,7 @@ const seedSuperAdmin = async (): Promise<void> => {
       // Optional: Update to super_admin if they exist but aren't super admin
       if (existingUser.role !== 'super_admin') {
         console.log('Updating existing user to super_admin role...');
-        existingUser.role = 'super_admin';
+        existingUser.role = UserRole.SUPER_ADMIN;
         existingUser.setDefaultPermissions();
         await existingUser.save();
         console.log('✅ User updated to super_admin.');

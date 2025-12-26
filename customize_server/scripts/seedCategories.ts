@@ -162,10 +162,10 @@ const seedCategories = async (): Promise<void> => {
                     hasChanges = true;
                 }
 
-                if (!exists.icon && catData.icon) {
-                    exists.icon = catData.icon;
-                    hasChanges = true;
-                }
+                // if (!exists.icon && catData.icon) {
+                //     exists.icon = catData.icon;
+                //     hasChanges = true;
+                // }
 
                 if (hasChanges) {
                     await exists.save();

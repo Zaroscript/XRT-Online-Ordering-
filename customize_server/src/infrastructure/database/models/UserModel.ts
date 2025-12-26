@@ -133,7 +133,7 @@ UserSchema.pre('save', function (next) {
 
 // Filter out inactive users by default
 UserSchema.pre(/^find/, function (next) {
-  this.find({ isActive: { $ne: false } });
+  (this as any).find({ isActive: { $ne: false } });
   next();
 });
 
@@ -173,15 +173,15 @@ UserSchema.methods.generateAccessToken = function (): string {
     {
       id: this._id,
       role: this.role,
-    },
+    } as object,
     env.JWT_SECRET,
-    { expiresIn: env.ACCESS_TOKEN_EXPIRE }
+    { expiresIn: env.ACCESS_TOKEN_EXPIRE as any }
   );
 };
 
 UserSchema.methods.generateRefreshToken = function (): string {
-  const refreshToken = jwt.sign({ id: this._id }, env.REFRESH_TOKEN_SECRET, {
-    expiresIn: env.REFRESH_TOKEN_EXPIRE,
+  const refreshToken = jwt.sign({ id: this._id } as object, env.REFRESH_TOKEN_SECRET, {
+    expiresIn: env.REFRESH_TOKEN_EXPIRE as any,
   });
 
   const hashedToken = crypto.createHash('sha256').update(refreshToken).digest('hex');

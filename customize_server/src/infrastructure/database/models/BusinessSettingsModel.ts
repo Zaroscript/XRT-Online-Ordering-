@@ -8,7 +8,7 @@ export interface BusinessSettingsDocument extends Omit<BusinessSettings, 'id'>, 
 const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
   {
     business: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId as any,
       ref: 'Business',
       required: [true, 'Settings must belong to a business'],
       unique: true,

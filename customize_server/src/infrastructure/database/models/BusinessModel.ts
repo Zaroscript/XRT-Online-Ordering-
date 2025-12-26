@@ -15,7 +15,7 @@ const BusinessSchema = new Schema<BusinessDocument>(
       index: true,
     },
     owner: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId as any,
       ref: 'User',
       required: [true, 'Please provide the business owner'],
       index: true,
@@ -123,7 +123,7 @@ BusinessSchema.index({ id: 1 });
 
 // Filter out inactive businesses by default
 BusinessSchema.pre(/^find/, function (next) {
-  this.find({ isActive: { $ne: false } });
+  (this as any).find({ isActive: { $ne: false } });
   next();
 });
 
