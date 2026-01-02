@@ -26,6 +26,7 @@ export const passwordRules = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
 export const ACCEPTED_FILE_TYPES = {
   'image/jpeg': [],
   'image/png': [],
+  'image/svg+xml': ['.svg'],
   'application/pdf': [],
   'application/zip': [],
   'application/vnd.rar': [],

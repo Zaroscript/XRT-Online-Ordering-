@@ -417,6 +417,7 @@
   "error-file-too-large": "File too large",
   "text-payment-status": "Payment Status",
   "error-invalid-file-type": "Your uploaded file type isn't supported",
+  "error-upload-failed": "Failed to upload file. Please try again.",
   "order-pending": "Pending",
   "order-processing": "Processing",
   "order-completed": "Completed",

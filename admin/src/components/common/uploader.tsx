@@ -6,7 +6,6 @@ import { CloseIcon } from '@/components/icons/close-icon';
 import Loader from '@/components/ui/loader/loader';
 import { useTranslation } from 'next-i18next';
 import { useUploadMutation } from '@/data/upload';
-import Image from 'next/image';
 import { zipPlaceholder } from '@/utils/placeholders';
 import { ACCEPTED_FILE_TYPES } from '@/utils/constants';
 import classNames from 'classnames';
@@ -54,7 +53,8 @@ export default function Uploader({
     // Default legacy logic
     if (!acceptFile) {
       return {
-        'image/*': ['.jpg', '.jpeg', '.png', '.webp'],
+        'image/*': ['.jpg', '.jpeg', '.png', '.webp', '.svg'],
+        'image/svg+xml': ['.svg'],
       };
     }
     return { ...ACCEPTED_FILE_TYPES };
@@ -69,28 +69,89 @@ export default function Uploader({
           { files: acceptedFiles, section, field: name }, // Pass name as field to identify 'icon'
           {
             onSuccess: (data: any) => {
+              // Handle response structure - data might be in data.data or just data
+              const filesData = data?.data || data || [];
+              
               // Process Digital File Name section
-              data &&
-                data?.map((file: any, idx: any) => {
-                  const splitArray = file?.original?.split('/');
-                  let fileSplitName =
-                    splitArray[splitArray?.length - 1]?.split('.');
-                  const fileType = fileSplitName?.pop(); // it will pop the last item from the fileSplitName arr which is the file ext
-                  const filename = fileSplitName?.join('.'); // it will join the array with dot, which restore the original filename
-                  data[idx]['file_name'] = filename + '.' + fileType;
+              filesData &&
+                filesData?.map((file: any, idx: any) => {
+                  // Ensure we have the correct structure
+                  if (!file.thumbnail && !file.original) {
+                    console.warn('Upload response missing thumbnail/original:', file);
+                    return;
+                  }
+                  
+                  // Extract filename from URL - Cloudinary URLs might have format like:
+                  // https://res.cloudinary.com/.../v1234567890/folder/filename.ext
+                  // or just the filename without extension
+                  let filename = '';
+                  let fileType = '';
+                  
+                  // Use original URL for extraction, fallback to thumbnail
+                  const urlToParse = file.original || file.thumbnail || '';
+                  
+                  if (urlToParse) {
+                    const urlParts = urlToParse.split('/');
+                    const lastPart = urlParts[urlParts.length - 1];
+                    
+                    // Check if last part has extension
+                    if (lastPart.includes('.')) {
+                      const parts = lastPart.split('.');
+                      fileType = parts.pop()?.toLowerCase() || '';
+                      filename = parts.join('.');
+                    } else {
+                      // No extension in URL, try to get from public_id or use a default
+                      filename = lastPart || file.id || 'uploaded-file';
+                      // Try to detect type from URL path
+                      const urlLower = urlToParse.toLowerCase();
+                      if (urlLower.includes('.svg') || urlLower.includes('/svg')) {
+                        fileType = 'svg';
+                      } else if (urlLower.includes('.png') || urlLower.includes('/png')) {
+                        fileType = 'png';
+                      } else if (urlLower.includes('.jpg') || urlLower.includes('.jpeg') || urlLower.includes('/jpg') || urlLower.includes('/jpeg')) {
+                        fileType = 'jpg';
+                      } else if (urlLower.includes('.webp') || urlLower.includes('/webp')) {
+                        fileType = 'webp';
+                      } else if (urlLower.includes('.gif') || urlLower.includes('/gif')) {
+                        fileType = 'gif';
+                      }
+                    }
+                  }
+                  
+                  // Set file_name if we have both filename and type
+                  if (filename && fileType) {
+                    filesData[idx]['file_name'] = `${filename}.${fileType}`;
+                  } else if (filename) {
+                    filesData[idx]['file_name'] = filename;
+                  } else if (file.id) {
+                    filesData[idx]['file_name'] = file.id;
+                  }
+                  
+                  // Ensure thumbnail and original are set (use original if thumbnail is missing)
+                  if (!filesData[idx]['thumbnail'] && filesData[idx]['original']) {
+                    filesData[idx]['thumbnail'] = filesData[idx]['original'];
+                  }
+                  if (!filesData[idx]['original'] && filesData[idx]['thumbnail']) {
+                    filesData[idx]['original'] = filesData[idx]['thumbnail'];
+                  }
                 });
 
               let mergedData;
               if (multiple) {
-                mergedData = files.concat(data);
-                setFiles(files.concat(data));
+                mergedData = files.concat(filesData);
+                setFiles(files.concat(filesData));
               } else {
-                mergedData = data[0];
-                setFiles(data);
+                mergedData = filesData[0] || filesData;
+                setFiles(Array.isArray(filesData) ? filesData : [filesData]);
               }
               if (onChange) {
                 onChange(mergedData);
               }
+            },
+            onError: (error: any) => {
+              console.error('Upload error:', error);
+              const errorMessage = error?.response?.data?.message || error?.message || t('error-upload-failed');
+              setError(errorMessage);
             },
           },
         );
@@ -134,13 +195,54 @@ export default function Uploader({
     ];
     // let filename, fileType, isImage;
     if (file && file.id) {
-      // const processedFile = processFileWithName(file);
-      const splitArray = file?.file_name
-        ? file?.file_name.split('.')
-        : file?.thumbnail?.split('.');
-      const fileType = splitArray?.pop(); // it will pop the last item from the fileSplitName arr which is the file ext
-      const filename = splitArray?.join('.'); // it will join the array with dot, which restore the original filename
-      const isImage = file?.thumbnail && imgTypes.includes(fileType); // check if the original filename has the img ext
+      // Extract file type and filename
+      let fileType: string | undefined;
+      let filename: string = '';
+      
+      // Try to get file type from file_name first
+      if (file?.file_name) {
+        const parts = file.file_name.split('.');
+        if (parts.length > 1) {
+          fileType = parts.pop()?.toLowerCase();
+          filename = parts.join('.');
+        } else {
+          filename = file.file_name;
+        }
+      } 
+      // Fallback to extracting from thumbnail URL
+      else if (file?.thumbnail) {
+        const urlParts = file.thumbnail.split('/');
+        const lastPart = urlParts[urlParts.length - 1];
+        const parts = lastPart.split('.');
+        if (parts.length > 1) {
+          fileType = parts.pop()?.toLowerCase();
+          filename = parts.join('.');
+        } else {
+          filename = lastPart;
+        }
+      }
+      // Fallback to extracting from original URL
+      else if (file?.original) {
+        const urlParts = file.original.split('/');
+        const lastPart = urlParts[urlParts.length - 1];
+        const parts = lastPart.split('.');
+        if (parts.length > 1) {
+          fileType = parts.pop()?.toLowerCase();
+          filename = parts.join('.');
+        } else {
+          filename = lastPart;
+        }
+      }
+      
+      // Check if it's an image type
+      // Also check if thumbnail/original URL suggests it's an image (has image extension or cloudinary URL)
+      const hasImageUrl = file?.thumbnail?.includes('cloudinary') || 
+                         file?.original?.includes('cloudinary') ||
+                         file?.thumbnail?.match(/\.(svg|png|jpg|jpeg|gif|webp)(\?|$)/i) ||
+                         file?.original?.match(/\.(svg|png|jpg|jpeg|gif|webp)(\?|$)/i);
+      
+      const isImage = (file?.thumbnail || file?.original) && 
+                     (fileType && imgTypes.includes(fileType) || hasImageUrl);
 
       // Old Code *******
 
@@ -162,16 +264,21 @@ export default function Uploader({
           {/* {file?.thumbnail && isImage ? ( */}
           {isImage ? (
             // Use regular img tag for SVG files or external URLs to avoid Next.js Image optimization issues
-            fileType === 'svg' || file.thumbnail?.includes('cloudinary') || file.thumbnail?.startsWith('http') ? (
-              <div className="flex items-center justify-center w-16 h-16 min-w-0 overflow-hidden">
+            // Always use thumbnail if available, fallback to original
+            (fileType === 'svg' || file.thumbnail?.includes('cloudinary') || file.thumbnail?.startsWith('http') || file.original?.includes('cloudinary') || file.original?.startsWith('http')) ? (
+              <div className="flex items-center justify-center w-16 h-16 min-w-0 overflow-hidden bg-gray-50 rounded">
                 <img
-                  src={file.thumbnail}
-                  alt={filename}
+                  src={file.thumbnail || file.original}
+                  alt={filename || 'uploaded-image'}
                   className="h-full w-full object-contain"
                   onError={(e) => {
-                    // Hide broken image if it fails to load
+                    // Silently handle broken images - prevent error propagation
+                    e.preventDefault();
+                    e.stopPropagation();
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
+                    // Remove src to prevent retry attempts
+                    target.src = '';
                     // Also hide parent container if image fails
                     if (target.parentElement) {
                       target.parentElement.style.display = 'none';
@@ -180,15 +287,18 @@ export default function Uploader({
                 />
               </div>
             ) : (
-              <figure className="relative flex items-center justify-center h-16 w-28 aspect-square">
+              <figure className="relative flex items-center justify-center h-16 w-28 aspect-square bg-gray-50 rounded">
                 {/* Using regular img for non-SVG to avoid Next.js Image fetchPriority warning */}
                 <img
-                  src={file.thumbnail}
-                  alt={filename}
+                  src={file.thumbnail || file.original}
+                  alt={filename || 'uploaded-image'}
                   className="h-full w-full object-cover"
                   onError={(e) => {
-                    // Hide broken image if it fails to load
+                    // Silently handle broken images - prevent error propagation
+                    e.preventDefault();
+                    e.stopPropagation();
                     const target = e.target as HTMLImageElement;
+                    target.src = '';
                     if (target.parentElement) {
                       target.parentElement.style.display = 'none';
                     }
@@ -199,11 +309,12 @@ export default function Uploader({
           ) : (
             <div className="flex flex-col items-center">
               <div className="flex items-center justify-center min-w-0 overflow-hidden h-14 w-14">
-                <Image
+                <img
                   src={zipPlaceholder}
                   width={56}
                   height={56}
                   alt="upload placeholder"
+                  className="object-contain"
                 />
               </div>
               <p className="flex items-baseline p-1 text-xs cursor-default text-body">

@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import Pagination from '@/components/ui/pagination';
 import { Table } from '@/components/ui/table';
 import { getIcon } from '@/utils/get-icon';
@@ -5,7 +6,6 @@ import * as categoriesIcon from '@/components/icons/category';
 import { SortOrder } from '@/types';
 import { useTranslation } from 'next-i18next';
 import { useIsRTL } from '@/utils/locals';
-import { useEffect, useState } from 'react';
 import TitleWithSort from '@/components/ui/title-with-sort';
 import { Category, MappedPaginatorInfo } from '@/types';
 import { Routes } from '@/config/routes';
@@ -18,6 +18,48 @@ import { TrashIcon } from '@/components/icons/trash';
 import Link from '@/components/ui/link';
 import { useModalAction, useModalState } from '@/components/ui/modal/modal.context';
 import { useRouter } from 'next/router';
+
+// Component to handle icon rendering with error state
+const CategoryIcon = ({ icon }: { icon: string }) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Pre-check: if URL contains known broken patterns, don't render
+  const isLikelyBroken = icon.includes('v1703515000') && icon.includes('dessert.svg');
+
+  if (isLikelyBroken || imageError) {
+    return null; // Don't render broken images
+  }
+
+  return (
+    <div className="relative h-5 w-5 mx-auto">
+      <img
+        src={icon}
+        alt="category-icon"
+        className="h-full w-full object-contain"
+        style={{ display: imageLoaded ? '' : 'none' }}
+        onError={(e) => {
+          // Silently handle broken images - hide the element
+          e.preventDefault();
+          e.stopPropagation();
+          setImageError(true);
+          const target = e.target as HTMLImageElement;
+          target.style.display = 'none';
+          // Remove the src to prevent retry attempts
+          target.src = '';
+          // Also hide parent container if image fails
+          if (target.parentElement) {
+            target.parentElement.style.display = 'none';
+          }
+        }}
+        onLoad={() => {
+          // Ensure image is visible on successful load
+          setImageLoaded(true);
+        }}
+      />
+    </div>
+  );
+};
 
 
 export type IProps = {
@@ -115,24 +157,7 @@ const CategoryList = ({
       render: (icon: string) => {
         if (!icon) return null;
         if (icon.startsWith('http') || icon.startsWith('/') || icon.includes('cloudinary')) {
-          return (
-            <div className="relative h-5 w-5 mx-auto">
-              <img
-                src={icon}
-                alt="category-icon"
-                className="h-full w-full object-contain"
-                onError={(e) => {
-                  // Silently handle broken images - hide the element
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  // Also hide parent container if image fails
-                  if (target.parentElement) {
-                    target.parentElement.style.display = 'none';
-                  }
-                }}
-              />
-            </div>
-          );
+          return <CategoryIcon icon={icon} />;
         }
         return (
           <span className="flex items-center justify-center">

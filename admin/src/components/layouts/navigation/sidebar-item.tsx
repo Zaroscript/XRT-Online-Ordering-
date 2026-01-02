@@ -116,8 +116,16 @@ const SidebarItem = ({
   const { t } = useTranslation();
   const router = useRouter();
   const { width } = useWindowSize();
+  const [isMounted, setIsMounted] = useState(false);
   const { role: authRole } = getAuthCredentials();
   const currentUserRole = propUserRole || authRole;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Use a default width during SSR to ensure consistent rendering
+  const effectiveWidth = isMounted ? width : 0;
 
   // Check if user has permission to view this menu item
   // console.log(`SidebarItem: ${label}, Role: ${currentUserRole}, Permission: ${JSON.stringify(permission)}, Access: ${permission ? hasAccess(permission, currentUserRole) : 'N/A'}`);
@@ -173,15 +181,146 @@ const SidebarItem = ({
     return null;
   }
 
+  // Ensure consistent rendering during SSR - use isMounted to prevent hydration mismatch
+  if (!isMounted) {
+    // During SSR, render the non-mini version to ensure consistency
+    return childMenu && childMenu?.length ? (
+      <>
+        <motion.div
+          initial={false}
+          className={cn(
+            'group cursor-pointer rounded-md px-3 py-2.5 text-body-dark hover:bg-gray-100 focus:text-accent',
+            isOpen ? 'bg-gray-100 font-medium' : '',
+          )}
+          onClick={onClick}
+        >
+          <div className={cn('flex w-full items-center text-sm')}>
+            <span className="text-gray-600">
+              {getIcon({
+                iconList: sidebarIcons,
+                iconName: icon,
+                className: 'w-5 h-5 me-3',
+              })}
+            </span>
+            <span>{label}</span>
+            <ChevronRight
+              className={cn(
+                'h-3.5 w-3.5 shrink-0 opacity-75 transition-transform duration-300 ltr:ml-auto ltr:mr-0 rtl:mr-auto rtl:ml-0',
+                isOpen ? 'rotate-90 transform' : '',
+              )}
+            />
+          </div>
+        </motion.div>
+        <AnimatePresence initial={false}>
+          {isOpen ? (
+            <motion.div
+              key="content"
+              initial="collapsed"
+              animate="open"
+              exit="collapsed"
+              variants={{
+                open: { opacity: 1, height: 'auto' },
+                collapsed: { opacity: 0, height: 0 },
+              }}
+              transition={{
+                duration: 0.35,
+                ease: [0.33, 1, 0.68, 1],
+              }}
+              className="!mt-0"
+            >
+              <div className="pt-2 ltr:pl-5 rtl:pr-5">
+                <div className="space-y-1 border-0 border-l border-dashed border-slate-300 ltr:pl-1 rtl:pr-1">
+                  {childMenu?.map((item: any, index: number) => {
+                    if (
+                      shop &&
+                      !hasAccess(
+                        item?.permissions || item?.permission,
+                        currentUserRole,
+                      )
+                    )
+                      return null;
+                    return (
+                      <div key={index}>
+                        <Link
+                          passHref
+                          href={{
+                            pathname: `${shop ? item?.href(shop?.toString()!) : item?.href
+                              }`,
+                            query: {
+                              parents: label,
+                            },
+                          }}
+                          as={shop ? item?.href(shop?.toString()!) : item?.href}
+                          className={cn(
+                            'relative flex w-full cursor-pointer items-center rounded-lg py-2 px-5 text-sm text-start before:absolute before:-left-0.5 before:top-[18px] before:h-px before:w-3 before:border-t before:border-dashed before:border-gray-300 before:content-[""] focus:text-accent',
+                            (
+                              shop
+                                ? sanitizedPath ===
+                                item?.href(shop?.toString()!)
+                                : sanitizedPath === item?.href
+                            )
+                              ? 'bg-transparent font-medium text-accent-hover'
+                              : 'text-body-dark hover:text-accent focus:text-accent',
+                          )}
+                          title={t(item.label)}
+                          onClick={() => closeSidebar()}
+                        >
+                          <span>{t(item.label)}</span>
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </>
+    ) : href ? (
+      <div>
+        <Link
+          href={href}
+          className={cn(
+            `group flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-gray-700 text-start focus:text-accent hover:bg-gray-100`,
+            sanitizedPath === href
+              ? `font-medium !text-accent-hover bg-accent/10 hover:!bg-accent/10`
+              : '',
+          )}
+          title={label}
+          onClick={() => closeSidebar()}
+        >
+          {icon ? (
+            <span
+              className={cn(
+                'transition',
+                sanitizedPath === href
+                  ? 'text-accent-hover'
+                  : 'text-gray-600 group-focus:text-accent',
+              )}
+            >
+              {getIcon({
+                iconList: sidebarIcons,
+                iconName: icon,
+                className: 'w-5 h-5',
+              })}
+            </span>
+          ) : null}
+          <span>{label}</span>
+        </Link>
+      </div>
+    ) : null;
+  }
+
   return childMenu && childMenu?.length ? (
-    miniSidebar && width >= RESPONSIVE_WIDTH ? (
+    // Only render mini sidebar after mount to prevent hydration mismatch
+    isMounted && miniSidebar && effectiveWidth >= RESPONSIVE_WIDTH ? (
       <SidebarShortItem
         currentUserRole={currentUserRole}
         shop={shop}
         label={label}
         childMenu={childMenu}
         icon={icon}
-        miniSidebar={miniSidebar && width >= RESPONSIVE_WIDTH}
+        miniSidebar={miniSidebar && effectiveWidth >= RESPONSIVE_WIDTH}
       />
     ) : (
       <>
@@ -203,7 +342,7 @@ const SidebarItem = ({
             </span>
             <span
               className={
-                width >= RESPONSIVE_WIDTH && miniSidebar ? 'hidden' : ''
+                isMounted && effectiveWidth >= RESPONSIVE_WIDTH && miniSidebar ? 'hidden' : ''
               }
             >
               {label}
@@ -213,7 +352,7 @@ const SidebarItem = ({
               className={cn(
                 'h-3.5 w-3.5 shrink-0 opacity-75 transition-transform duration-300 ltr:ml-auto ltr:mr-0 rtl:mr-auto rtl:ml-0',
                 isOpen ? 'rotate-90 transform' : '',
-                width >= RESPONSIVE_WIDTH && miniSidebar ? 'hidden' : '',
+                isMounted && effectiveWidth >= RESPONSIVE_WIDTH && miniSidebar ? 'hidden' : '',
               )}
             />
           </div>
@@ -285,14 +424,15 @@ const SidebarItem = ({
         </AnimatePresence>
       </>
     )
-  ) : (
+  ) : href ? (
     <Link
       href={href}
       className={cn(
-        `group flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-gray-700 text-start focus:text-accent ${miniSidebar && width >= RESPONSIVE_WIDTH
+        `group flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-gray-700 text-start focus:text-accent`,
+        // Only apply width-based classes after mount to prevent hydration mismatch
+        isMounted && miniSidebar && effectiveWidth >= RESPONSIVE_WIDTH
           ? 'hover:text-accent-hover ltr:pl-3 rtl:pr-3'
-          : 'hover:bg-gray-100'
-        }`,
+          : 'hover:bg-gray-100',
         sanitizedPath === href
           ? `font-medium !text-accent-hover ${!miniSidebar ? 'bg-accent/10 hover:!bg-accent/10' : ''
           }`
@@ -308,7 +448,7 @@ const SidebarItem = ({
             sanitizedPath === href
               ? 'text-accent-hover'
               : 'text-gray-600 group-focus:text-accent',
-            miniSidebar && width >= RESPONSIVE_WIDTH
+            isMounted && miniSidebar && effectiveWidth >= RESPONSIVE_WIDTH
               ? 'group-hover:text-accent'
               : null,
           )}
@@ -321,11 +461,25 @@ const SidebarItem = ({
         </span>
       ) : null}
       <span
-        className={cn(miniSidebar && width >= RESPONSIVE_WIDTH ? 'hidden' : '')}
+        className={cn(isMounted && miniSidebar && effectiveWidth >= RESPONSIVE_WIDTH ? 'hidden' : '')}
       >
         {label}
       </span>
     </Link>
+  ) : (
+    // Always render a div wrapper to maintain consistent DOM structure
+    <div className="group flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-gray-700">
+      {icon ? (
+        <span className="text-gray-600">
+          {getIcon({
+            iconList: sidebarIcons,
+            iconName: icon,
+            className: 'w-5 h-5',
+          })}
+        </span>
+      ) : null}
+      <span>{label}</span>
+    </div>
   );
 };
 
