@@ -1,0 +1,26 @@
+.background_shopping_bag {
+  border-radius: 50%;
+  background: #5C9963;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+
+.nav{
+    font-family: 'Poppins', sans-serif;
+}
+.background_icon {
+  border-radius: 50%;
+  background: #D9E8DB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+.icon-badge i{
+  font-size: 22px;
+  color: #2d8f5a;
+}
