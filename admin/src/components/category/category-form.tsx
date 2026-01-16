@@ -28,8 +28,6 @@ import { CategoryDetailSuggestion } from '@/components/category/category-ai-prom
 import SwitchInput from '@/components/ui/switch-input';
 import edit from '@/pages/[shop]/edit';
 
-
-
 type FormValues = {
   name: string;
   details?: string;
@@ -69,10 +67,38 @@ export default function CreateOrUpdateCategoriesForm({
   };
 
   const kitchenSectionOptions: { label: string; value: string }[] = [
-    { label: getFallback('kitchen-section-appetizers', 'common:kitchen-section-appetizers', 'Appetizers'), value: 'KS_001' },
-    { label: getFallback('kitchen-section-main-course', 'common:kitchen-section-main-course', 'Main Course'), value: 'KS_002' },
-    { label: getFallback('kitchen-section-desserts', 'common:kitchen-section-desserts', 'Desserts'), value: 'KS_003' },
-    { label: getFallback('kitchen-section-beverages', 'common:kitchen-section-beverages', 'Beverages'), value: 'KS_004' },
+    {
+      label: getFallback(
+        'kitchen-section-appetizers',
+        'common:kitchen-section-appetizers',
+        'Appetizers',
+      ),
+      value: 'KS_001',
+    },
+    {
+      label: getFallback(
+        'kitchen-section-main-course',
+        'common:kitchen-section-main-course',
+        'Main Course',
+      ),
+      value: 'KS_002',
+    },
+    {
+      label: getFallback(
+        'kitchen-section-desserts',
+        'common:kitchen-section-desserts',
+        'Desserts',
+      ),
+      value: 'KS_003',
+    },
+    {
+      label: getFallback(
+        'kitchen-section-beverages',
+        'common:kitchen-section-beverages',
+        'Beverages',
+      ),
+      value: 'KS_004',
+    },
   ];
 
   const {
@@ -86,19 +112,35 @@ export default function CreateOrUpdateCategoriesForm({
   } = useForm<FormValues>({
     defaultValues: initialValues
       ? {
-        ...initialValues,
-        image: initialValues?.image
-          ? typeof initialValues.image === 'string'
-            ? [{ id: 1, thumbnail: initialValues.image, original: initialValues.image, file_name: (initialValues.image as any).split('/').pop() }]
-            : [initialValues.image]
-          : [],
-        icon: initialValues?.icon
-          ? typeof initialValues.icon === 'string'
-            ? [{ id: 1, thumbnail: initialValues.icon, original: initialValues.icon, file_name: initialValues.icon.split('/').pop() }]
-            : [initialValues.icon]
-          : [],
-        kitchen_section_id: kitchenSectionOptions.find((opt: any) => opt.value === initialValues.kitchen_section_id),
-      }
+          ...initialValues,
+          image: initialValues?.image
+            ? typeof initialValues.image === 'string'
+              ? [
+                  {
+                    id: 1,
+                    thumbnail: initialValues.image,
+                    original: initialValues.image,
+                    file_name: (initialValues.image as any).split('/').pop(),
+                  },
+                ]
+              : [initialValues.image]
+            : [],
+          icon: initialValues?.icon
+            ? typeof initialValues.icon === 'string'
+              ? [
+                  {
+                    id: 1,
+                    thumbnail: initialValues.icon,
+                    original: initialValues.icon,
+                    file_name: initialValues.icon.split('/').pop(),
+                  },
+                ]
+              : [initialValues.icon]
+            : [],
+          kitchen_section_id: kitchenSectionOptions.find(
+            (opt: any) => opt.value === initialValues.kitchen_section_id,
+          ),
+        }
       : defaultValues,
     resolver: yupResolver(categoryValidationSchema),
   });
@@ -110,15 +152,31 @@ export default function CreateOrUpdateCategoriesForm({
         ...initialValues,
         image: initialValues?.image
           ? typeof initialValues.image === 'string'
-            ? [{ id: 1, thumbnail: initialValues.image, original: initialValues.image, file_name: (initialValues.image as any).split('/').pop() }]
+            ? [
+                {
+                  id: 1,
+                  thumbnail: initialValues.image,
+                  original: initialValues.image,
+                  file_name: (initialValues.image as any).split('/').pop(),
+                },
+              ]
             : [initialValues.image]
           : [],
         icon: initialValues?.icon
           ? typeof initialValues.icon === 'string'
-            ? [{ id: 1, thumbnail: initialValues.icon, original: initialValues.icon, file_name: initialValues.icon.split('/').pop() }]
+            ? [
+                {
+                  id: 1,
+                  thumbnail: initialValues.icon,
+                  original: initialValues.icon,
+                  file_name: initialValues.icon.split('/').pop(),
+                },
+              ]
             : [initialValues.icon]
           : [],
-        kitchen_section_id: kitchenSectionOptions.find((opt: any) => opt.value === initialValues.kitchen_section_id),
+        kitchen_section_id: kitchenSectionOptions.find(
+          (opt: any) => opt.value === initialValues.kitchen_section_id,
+        ),
       });
     }
   }, [initialValues, reset, kitchenSectionOptions]);
@@ -165,7 +223,9 @@ export default function CreateOrUpdateCategoriesForm({
 
     // Extract File objects if they exist in the values (returned as array from FileInput)
     // If the Uploader already successfully uploaded to /attachments, it will be an object with id/thumbnail/original
-    const imageValue = Array.isArray(values.image) ? values.image[0] : values.image;
+    const imageValue = Array.isArray(values.image)
+      ? values.image[0]
+      : values.image;
     const iconValue = Array.isArray(values.icon) ? values.icon[0] : values.icon;
 
     const imageFile = imageValue instanceof File ? imageValue : undefined;
@@ -221,14 +281,19 @@ export default function CreateOrUpdateCategoriesForm({
         />
 
         <Card className="w-full sm:w-8/12 md:w-2/3">
-          <FileInput name="image" control={control as any} multiple={false} section="categories" />
+          <FileInput
+            name="image"
+            control={control as any}
+            multiple={false}
+            section="categories"
+          />
         </Card>
       </div>
 
       <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
         <Description
-          title="Icon"
-          details="Upload an SVG icon for this category."
+          title={t('form:icon-title')}
+          details={t('form:icon-helper-text')}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
 
@@ -238,7 +303,7 @@ export default function CreateOrUpdateCategoriesForm({
             control={control as any}
             multiple={false}
             accept="image/svg+xml"
-            helperText="Upload SVG (Drag & drop or click)"
+            helperText={t('form:upload-svg-helper-text')}
             section="categories"
           />
         </Card>
@@ -247,10 +312,11 @@ export default function CreateOrUpdateCategoriesForm({
       <div className="flex flex-wrap my-5 sm:my-8">
         <Description
           title={t('form:input-label-description')}
-          details={`${initialValues
-            ? t('form:item-description-edit')
-            : t('form:item-description-add')
-            } ${t('form:category-description-helper-text')}`}
+          details={`${
+            initialValues
+              ? t('form:item-description-edit')
+              : t('form:item-description-add')
+          } ${t('form:category-description-helper-text')}`}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5 "
         />
 
@@ -278,7 +344,13 @@ export default function CreateOrUpdateCategoriesForm({
           </div>
 
           <div className="mb-5">
-            <Label>{getFallback('input-label-kitchen-section', 'form:input-label-kitchen-section', 'Kitchen Section')}</Label>
+            <Label>
+              {getFallback(
+                'input-label-kitchen-section',
+                'form:input-label-kitchen-section',
+                'Kitchen Section',
+              )}
+            </Label>
             <SelectInput
               name="kitchen_section_id"
               control={control as any}
@@ -290,7 +362,7 @@ export default function CreateOrUpdateCategoriesForm({
 
           <div className="mb-5">
             <Input
-              label="Sort Order"
+              label={t('form:input-label-sort-order')}
               {...register('sort_order')}
               type="number"
               variant="outline"
@@ -299,9 +371,12 @@ export default function CreateOrUpdateCategoriesForm({
           </div>
 
           <div className="mb-5">
-            <SwitchInput name="is_active" control={control as any} label="Is Active?" />
+            <SwitchInput
+              name="is_active"
+              control={control as any}
+              label={t('form:input-label-is-active-question')}
+            />
           </div>
-
         </Card>
       </div>
       <StickyFooterPanel className="z-0">

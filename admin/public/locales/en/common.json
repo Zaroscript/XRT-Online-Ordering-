@@ -1,5 +1,6 @@
 {
   "text-guest": "Guest",
+  "text-sizes": "Sizes",
   "text-read-more": "Read more",
   "text-less": "Less",
   "text-or": "Or",
@@ -601,5 +602,11 @@
   "input-label-password-rule-lowercase": "At least one lowercase letter",
   "input-label-password-rule-number": "At least one number",
   "delete-user-confirm": "Are you sure you want to delete this user?",
-  "button-label-delete-user": "Delete User"
+  "button-label-delete-user": "Delete User",
+  "text-for-days": "For {{days}} days",
+  "text-page-of-pages": "{{current}} of {{last}} pages",
+  "admin-login-subtitle": "Restaurant Management Platform",
+  "admin-register-subtitle": "Create your account to get started",
+  "text-prev": "Prev",
+  "text-next": "Next"
 }

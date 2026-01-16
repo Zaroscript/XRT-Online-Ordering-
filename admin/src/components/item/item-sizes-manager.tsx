@@ -41,12 +41,22 @@ export default function ItemSizesManager({
   disabled = false,
 }: ItemSizesManagerProps) {
   const { t } = useTranslation();
-  const { sizes: globalSizes, isLoading, error } = useItemSizesQuery(businessId);
-  const { mutate: createGlobalSize, isPending: creating } = useCreateItemSizeMutation();
+  const {
+    sizes: globalSizes,
+    isLoading,
+    error,
+  } = useItemSizesQuery(businessId);
+  const { mutate: createGlobalSize, isPending: creating } =
+    useCreateItemSizeMutation();
   const [showAddForm, setShowAddForm] = useState(false);
 
   // Form for creating a new GLOBAL size
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<CreateGlobalSizeForm>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CreateGlobalSizeForm>({
     defaultValues: {
       name: '',
       code: '',
@@ -55,28 +65,37 @@ export default function ItemSizesManager({
   });
 
   const handleCreateGlobalSize = (data: CreateGlobalSizeForm) => {
-    createGlobalSize({
-      business_id: businessId,
-      name: data.name,
-      code: data.code,
-      display_order: data.display_order,
-      is_active: true,
-    }, {
-      onSuccess: () => {
-        setShowAddForm(false);
-        reset();
+    createGlobalSize(
+      {
+        business_id: businessId,
+        name: data.name,
+        code: data.code,
+        display_order: data.display_order,
+        is_active: true,
       },
-    });
+      {
+        onSuccess: () => {
+          setShowAddForm(false);
+          reset();
+        },
+      },
+    );
   };
 
   // Helper handling changes to specific size config
-  const handleConfigChange = (sizeId: string, changes: Partial<ItemSizeConfig>) => {
+  const handleConfigChange = (
+    sizeId: string,
+    changes: Partial<ItemSizeConfig>,
+  ) => {
     // Check if config exists
-    const existingConfigIndex = value.findIndex(c => c.size_id === sizeId);
+    const existingConfigIndex = value.findIndex((c) => c.size_id === sizeId);
     let newValue = [...value];
 
     if (existingConfigIndex >= 0) {
-      newValue[existingConfigIndex] = { ...newValue[existingConfigIndex], ...changes };
+      newValue[existingConfigIndex] = {
+        ...newValue[existingConfigIndex],
+        ...changes,
+      };
     } else {
       // Create new config if we are enabling a size or setting a price
       newValue.push({
@@ -84,24 +103,24 @@ export default function ItemSizesManager({
         price: 0,
         is_default: false,
         is_active: true,
-        ...changes
+        ...changes,
       });
     }
 
-    // Filter out configs that are effectively empty/disabled if logic requires, 
-    // but typically we keep them if they are in the list. 
+    // Filter out configs that are effectively empty/disabled if logic requires,
+    // but typically we keep them if they are in the list.
     // Actually, let's say "enabled" means present in the array.
     onChange?.(newValue);
   };
 
   const toggleSizeEnabled = (sizeId: string, enabled: boolean) => {
     if (enabled) {
-      if (!value.find(c => c.size_id === sizeId)) {
+      if (!value.find((c) => c.size_id === sizeId)) {
         handleConfigChange(sizeId, {});
       }
     } else {
       // Remove from value
-      const newValue = value.filter(c => c.size_id !== sizeId);
+      const newValue = value.filter((c) => c.size_id !== sizeId);
       onChange?.(newValue);
 
       if (defaultSizeId === sizeId) {
@@ -110,12 +129,17 @@ export default function ItemSizesManager({
     }
   };
 
-  if (isLoading) return <Loader text={t('form:loading-sizes', { defaultValue: 'Loading sizes...' })} />;
-  if (error) return <ErrorMessage message={(error as any)?.message || t('form:error-loading-sizes', { defaultValue: 'Failed to load sizes.' })} />;
+  if (isLoading) return <Loader text={t('form:loading-sizes')} />;
+  if (error)
+    return (
+      <ErrorMessage
+        message={(error as any)?.message || t('form:error-loading-sizes')}
+      />
+    );
 
   // Prepare data for table: Merge global sizes with current item config
-  const data = globalSizes.map(globalSize => {
-    const config = value.find(c => c.size_id === globalSize.id);
+  const data = globalSizes.map((globalSize) => {
+    const config = value.find((c) => c.size_id === globalSize.id);
     return {
       ...globalSize,
       itemConfig: config,
@@ -130,15 +154,28 @@ export default function ItemSizesManager({
       key: 'isEnabled',
       width: 80,
       render: (isEnabled: boolean, record: any) => (
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isEnabled}
-            onChange={(e) => toggleSizeEnabled(record.id, e.target.checked)}
-            disabled={disabled}
-            className="form-checkbox h-5 w-5 text-accent border-gray-300 rounded focus:ring-accent"
-          />
-        </label>
+        <div className="flex items-center justify-center">
+          {isEnabled ? (
+            <button
+              type="button"
+              onClick={() => toggleSizeEnabled(record.id, false)}
+              disabled={disabled}
+              className="cursor-pointer disabled:cursor-not-allowed"
+            >
+              <CheckMark className="h-5 w-5 text-accent" />
+            </button>
+          ) : (
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={false}
+                onChange={(e) => toggleSizeEnabled(record.id, e.target.checked)}
+                disabled={disabled}
+                className="form-checkbox h-5 w-5 border-gray-300 rounded focus:ring-accent"
+              />
+            </label>
+          )}
+        </div>
       ),
     },
     {
@@ -148,7 +185,14 @@ export default function ItemSizesManager({
       width: 150,
       render: (name: string, record: any) => (
         <div className="flex flex-col">
-          <span className={cn("text-sm font-medium", !record.isEnabled && "text-gray-400")}>{name}</span>
+          <span
+            className={cn(
+              'text-sm font-medium',
+              !record.isEnabled && 'text-gray-400',
+            )}
+          >
+            {name}
+          </span>
           <span className="text-xs text-gray-500 font-mono">{record.code}</span>
         </div>
       ),
@@ -167,7 +211,9 @@ export default function ItemSizesManager({
             min="0"
             step="0.01"
             value={record.itemConfig?.price ?? 0}
-            onChange={(e) => handleConfigChange(id, { price: parseFloat(e.target.value) })}
+            onChange={(e) =>
+              handleConfigChange(id, { price: parseFloat(e.target.value) })
+            }
             disabled={disabled}
             className="!h-9 !text-sm w-32"
             placeholder="0.00"
@@ -213,19 +259,25 @@ export default function ItemSizesManager({
         return (
           <Switch
             checked={record.itemConfig?.is_active ?? true}
-            onChange={(checked: boolean) => handleConfigChange(id, { is_active: checked })}
+            onChange={(checked: boolean) =>
+              handleConfigChange(id, { is_active: checked })
+            }
             disabled={disabled}
             className={cn(
-              (record.itemConfig?.is_active ?? true) ? 'bg-accent' : 'bg-gray-300',
+              (record.itemConfig?.is_active ?? true)
+                ? 'bg-accent'
+                : 'bg-gray-300',
               'relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none',
-              disabled ? 'cursor-not-allowed bg-[#EEF1F4]' : ''
+              disabled ? 'cursor-not-allowed bg-[#EEF1F4]' : '',
             )}
           >
             <span className="sr-only">Enable</span>
             <span
               className={cn(
-                (record.itemConfig?.is_active ?? true) ? 'translate-x-6' : 'translate-x-1',
-                'inline-block h-4 w-4 transform rounded-full bg-light transition-transform'
+                (record.itemConfig?.is_active ?? true)
+                  ? 'translate-x-6'
+                  : 'translate-x-1',
+                'inline-block h-4 w-4 transform rounded-full bg-light transition-transform',
               )}
             />
           </Switch>
@@ -239,10 +291,10 @@ export default function ItemSizesManager({
       <div className="mb-6 flex items-center justify-between border-b border-border-200 pb-4">
         <div>
           <Label className="text-lg font-semibold text-heading">
-            {t('form:input-label-sizes', { defaultValue: 'Sizes' })}
+            {t('form:input-label-sizes')}
           </Label>
           <Description className="mt-1 text-sm text-body">
-            {t('form:sizes-global-help-text', { defaultValue: 'Select sizes from the Global Catalog to enable for this item.' })}
+            {t('form:sizes-global-help-text')}
           </Description>
         </div>
         {!showAddForm && (
@@ -254,7 +306,7 @@ export default function ItemSizesManager({
             className="shrink-0"
           >
             <PlusIcon className="h-4 w-4 me-2" />
-            {t('form:button-label-create-global-size', { defaultValue: 'Create New Size' })}
+            {t('form:button-label-create-global-size')}
           </Button>
         )}
       </div>
@@ -263,7 +315,7 @@ export default function ItemSizesManager({
         <Card className="mb-6 border-2 border-dashed border-accent/30 bg-accent/5">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-heading">
-              {t('form:create-new-global-size', { defaultValue: 'Create New Global Size' })}
+              {t('form:create-new-global-size')}
             </h3>
             <Button
               type="button"
@@ -329,17 +381,17 @@ export default function ItemSizesManager({
                       type="number"
                       className="!h-10"
                       placeholder="0"
+                      value={field.value ?? 0}
+                      onChange={(e) =>
+                        field.onChange(parseInt(e.target.value) || 0)
+                      }
                     />
                   )}
                 />
               </div>
             </div>
             <div className="mt-4 flex justify-end">
-              <Button
-                type="submit"
-                loading={creating}
-                disabled={creating}
-              >
+              <Button type="submit" loading={creating} disabled={creating}>
                 {t('form:button-label-create')}
               </Button>
             </div>
@@ -349,8 +401,12 @@ export default function ItemSizesManager({
 
       {globalSizes.length === 0 ? (
         <div className="py-8 text-center border rounded border-gray-200">
-          <p className="text-sm text-gray-500 mb-4">No global sizes found.</p>
-          <Button size="small" onClick={() => setShowAddForm(true)}>Create First Size</Button>
+          <p className="text-sm text-gray-500 mb-4">
+            {t('form:text-no-global-sizes-found')}
+          </p>
+          <Button size="small" onClick={() => setShowAddForm(true)}>
+            {t('form:button-create-first-size')}
+          </Button>
         </div>
       ) : (
         <Table

@@ -63,11 +63,11 @@ const RegistrationForm = () => {
       {
         onSuccess: (data: any) => {
           // Registration is disabled, this should not be reached
-          setErrorMessage('Registration is disabled. Please contact administrator.');
+          setErrorMessage(t('errors:registration-disabled'));
         },
         onError: (error: any) => {
           // Show the registration disabled error message
-          setErrorMessage(error?.message || 'Registration is disabled. Please contact administrator.');
+          setErrorMessage(error?.message || t('errors:registration-disabled'));
         },
       },
     );
@@ -96,7 +96,7 @@ const RegistrationForm = () => {
           label={t('form:input-label-name')}
           {...register('name')}
           variant="outline"
-          placeholder="Enter your full name"
+          placeholder={t('form:input-placeholder-full-name')}
           error={t(errors?.name?.message!)}
           className="transition-all duration-200 focus:ring-2 focus:ring-accent/20"
         />
@@ -105,7 +105,7 @@ const RegistrationForm = () => {
           {...register('email')}
           type="email"
           variant="outline"
-          placeholder="Enter your email address"
+          placeholder={t('form:input-placeholder-email-address')}
           error={t(errors?.email?.message!)}
           className="transition-all duration-200 focus:ring-2 focus:ring-accent/20"
         />
@@ -114,7 +114,7 @@ const RegistrationForm = () => {
           {...register('password')}
           error={t(errors?.password?.message!)}
           variant="outline"
-          placeholder="Create a password"
+          placeholder={t('form:input-placeholder-create-password')}
           className="transition-all duration-200 focus:ring-2 focus:ring-accent/20"
         />
         <Button
@@ -122,7 +122,7 @@ const RegistrationForm = () => {
           loading={loading}
           disabled={loading}
         >
-          {t('form:text-register') || 'Create Account'}
+          {t('form:button-label-create-account')}
         </Button>
       </form>
       <div className="relative flex flex-col items-center justify-center pt-6">
@@ -130,16 +130,16 @@ const RegistrationForm = () => {
           <div className="w-full border-t border-gray-200" />
         </div>
         <div className="relative bg-white px-4 text-sm text-gray-500">
-          {t('common:text-or') || 'or'}
+          {t('common:text-or')}
         </div>
       </div>
       <div className="text-center text-sm text-gray-600 sm:text-base">
-        {t('form:text-already-account') || 'Already have an account?'}{' '}
+        {t('form:text-already-account')}{' '}
         <Link
           href={Routes.login}
           className="font-semibold text-accent transition-colors duration-200 hover:text-accent-hover focus:text-accent-700 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:ring-offset-2 rounded"
         >
-          {t('form:button-label-login') || 'Sign In'}
+          {t('form:button-label-login')}
         </Link>
       </div>
     </div>

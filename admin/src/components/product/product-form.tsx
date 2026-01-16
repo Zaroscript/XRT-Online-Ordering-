@@ -417,10 +417,11 @@ export default function CreateOrUpdateProductForm({
           <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
             <Description
               title={t('form:item-description')}
-              details={`${initialValues
-                ? t('form:item-description-edit')
-                : t('form:item-description-add')
-                } ${t('form:product-description-help-text')}`}
+              details={`${
+                initialValues
+                  ? t('form:item-description-edit')
+                  : t('form:item-description-add')
+              } ${t('form:product-description-help-text')}`}
               className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
             />
 
@@ -487,21 +488,21 @@ export default function CreateOrUpdateProductForm({
                 <Label>{t('form:input-label-status')}</Label>
                 {!isEmpty(statusList)
                   ? statusList?.map((status: any, index: number) => (
-                    <Radio
-                      key={index}
-                      {...register('status')}
-                      label={t(status?.label)}
-                      id={status?.id}
-                      value={status?.value}
-                      className="mb-2"
-                      disabled={
-                        permission &&
+                      <Radio
+                        key={index}
+                        {...register('status')}
+                        label={t(status?.label)}
+                        id={status?.id}
+                        value={status?.value}
+                        className="mb-2"
+                        disabled={
+                          permission &&
                           initialValues?.status === ProductStatus?.Draft
-                          ? true
-                          : false
-                      }
-                    />
-                  ))
+                            ? true
+                            : false
+                        }
+                      />
+                    ))
                   : ''}
                 {errors.status?.message && (
                   <p className="my-2 text-xs text-red-500">
@@ -516,8 +517,8 @@ export default function CreateOrUpdateProductForm({
             <>
               <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
                 <Description
-                  title="Promotional"
-                  details="Product selected for this campaign."
+                  title={t('form:promotional-title')}
+                  details={t('form:promotional-details')}
                   className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
                 />
                 <Card className="w-full sm:w-8/12 md:w-2/3">
@@ -532,12 +533,14 @@ export default function CreateOrUpdateProductForm({
             <>
               <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
                 <Description
-                  title="Promotional"
-                  details="Select product promotional settings form here"
+                  title={t('form:promotional-title')}
+                  details={t('form:promotional-details-select')}
                   className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
                 />
                 <Card className="w-full sm:w-8/12 md:w-2/3">
-                  <Alert message={'Product is not selected in any campaign.'} />
+                  <Alert
+                    message={t('form:message-product-not-selected-in-campaign')}
+                  />
                 </Card>
               </div>
             </>

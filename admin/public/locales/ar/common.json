@@ -1,5 +1,9 @@
 {
   "text-guest": "ضيف",
+  "text-sizes": "أحجام",
+  "text-available": "متاح",
+  "text-unavailable": "غير متاح",
+  "text-item-not-found": "لم يتم العثور على العنصر",
   "text-read-more": "اقرأ أكثر",
   "text-less": "أقل",
   "text-or": "أو",

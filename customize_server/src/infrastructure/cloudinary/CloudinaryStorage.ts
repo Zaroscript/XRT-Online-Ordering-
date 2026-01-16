@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage as MulterCloudinaryStorage } from 'multer-storage-cloudinary';
+import createCloudinaryStorage from 'multer-storage-cloudinary';
 import { IImageStorage, ImageUploadResult } from '../../domain/services/IImageStorage';
 import { env } from '../../shared/config/env';
 
@@ -9,7 +9,7 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-export const storage = new MulterCloudinaryStorage({
+export const storage = createCloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req: any, file: any) => {
     let folder = 'xrttech';

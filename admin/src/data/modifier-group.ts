@@ -8,17 +8,11 @@ import {
   ModifierGroup,
   ModifierGroupPaginator,
   ModifierGroupQueryOptions,
-  GetParams,
 } from '@/types';
 import { mapPaginatorData } from '@/utils/data-mappers';
 import { modifierGroupClient } from './client/modifier-group';
 import { Config } from '@/config';
-import {
-  mockModifierGroups,
-  getModifierGroupWithModifiers,
-  mockModifiers,
-  getModifiersByGroupId
-} from './mock/modifiers';
+// Removed mock imports - using real API calls now
 
 export const useCreateModifierGroupMutation = () => {
   const queryClient = useQueryClient();
@@ -26,14 +20,7 @@ export const useCreateModifierGroupMutation = () => {
 
   return useMutation({
     mutationFn: async (input: any) => {
-      // Mock: Just return the input with generated ID
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return {
-        ...input,
-        id: `mg_${Date.now()}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      return modifierGroupClient.create(input);
     },
     onSuccess: () => {
       Router.push(Routes.modifierGroup.list, undefined, {
@@ -42,11 +29,16 @@ export const useCreateModifierGroupMutation = () => {
       toast.success(t('common:successfully-created'));
     },
     onError: (error: any) => {
-      console.error('❌ Create Modifier Group Error:', error);
-      toast.error(error?.response?.data?.message || t('common:create-failed'));
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          t('common:create-failed'),
+      );
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIER_GROUPS] });
+      queryClient.invalidateQueries({
+        queryKey: [API_ENDPOINTS.MODIFIER_GROUPS],
+      });
     },
   });
 };
@@ -57,15 +49,22 @@ export const useDeleteModifierGroupMutation = () => {
 
   return useMutation({
     mutationFn: async ({ id }: { id: string }) => {
-      // Mock: Just simulate deletion
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return { id };
+      return modifierGroupClient.delete({ id });
     },
     onSuccess: () => {
       toast.success(t('common:successfully-deleted'));
     },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          t('common:delete-failed'),
+      );
+    },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIER_GROUPS] });
+      queryClient.invalidateQueries({
+        queryKey: [API_ENDPOINTS.MODIFIER_GROUPS],
+      });
     },
   });
 };
@@ -76,51 +75,61 @@ export const useUpdateModifierGroupMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...input }: any) => {
-      // Mock: Just return the updated data
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return {
-        ...input,
-        id,
-        updated_at: new Date().toISOString(),
-      };
+      return modifierGroupClient.update({ id, ...input });
     },
     onSuccess: async (data, variables) => {
       const updatedGroup = (data as any)?.data || data;
       queryClient.setQueryData(
-        [API_ENDPOINTS.MODIFIER_GROUPS, { id: variables.id, language: router.locale }],
+        [
+          API_ENDPOINTS.MODIFIER_GROUPS,
+          { id: variables.id, language: router.locale },
+        ],
         (old: any) => {
           return { data: updatedGroup };
-        });
+        },
+      );
       toast.success(t('common:successfully-updated'));
       router.push(Routes.modifierGroup.list, undefined, {
         locale: Config.defaultLanguage,
       });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || t('common:update-failed'));
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          t('common:update-failed'),
+      );
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIER_GROUPS] });
+      queryClient.invalidateQueries({
+        queryKey: [API_ENDPOINTS.MODIFIER_GROUPS],
+      });
     },
   });
 };
 
-export const useModifierGroupQuery = ({ slug, id, language }: GetParams & { id?: string }) => {
-  // Use mock data instead of API call
-  const { data, error, isPending: isLoading } = useQuery<ModifierGroup, Error>({
+export const useModifierGroupQuery = ({
+  slug,
+  id,
+  language,
+}: {
+  slug?: string;
+  id?: string;
+  language: string;
+}) => {
+  // Use real API call
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<ModifierGroup, Error>({
     queryKey: [API_ENDPOINTS.MODIFIER_GROUPS, { slug, id, language }],
     queryFn: async () => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 200));
-
       const groupId = id || slug;
-      const group = getModifierGroupWithModifiers(groupId || '');
-
-      if (!group) {
-        throw new Error('Modifier group not found');
+      if (!groupId) {
+        throw new Error('Modifier group ID is required');
       }
-
-      return group;
+      return modifierGroupClient.get({ id: groupId, language });
     },
     enabled: Boolean(id || slug),
     // Detail pages: shorter stale time for fresher data
@@ -130,7 +139,7 @@ export const useModifierGroupQuery = ({ slug, id, language }: GetParams & { id?:
     refetchOnWindowFocus: false,
   });
 
-  const group = (data as any)?.data || data;
+  const group = ((data as any)?.data || data) as ModifierGroup | undefined;
 
   return {
     group,
@@ -139,65 +148,34 @@ export const useModifierGroupQuery = ({ slug, id, language }: GetParams & { id?:
   };
 };
 
-export const useModifierGroupsQuery = (options: Partial<ModifierGroupQueryOptions>) => {
-  // Use mock data instead of API call
-  const { data, error, isPending: isLoading } = useQuery<ModifierGroupPaginator, Error>({
+export const useModifierGroupsQuery = (
+  options: Partial<ModifierGroupQueryOptions>,
+) => {
+  // Use real API call instead of mock data
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<ModifierGroupPaginator, Error>({
     queryKey: [API_ENDPOINTS.MODIFIER_GROUPS, options],
-    queryFn: async () => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      let filteredGroups = [...mockModifierGroups];
-
-      // Apply filters
-      if (options.name) {
-        filteredGroups = filteredGroups.filter(g =>
-          g.name.toLowerCase().includes(options.name!.toLowerCase())
-        );
-      }
-
-      if (options.is_active !== undefined) {
-        filteredGroups = filteredGroups.filter(g => g.is_active === options.is_active);
-      }
-
-      // Add modifiers to each group
-      filteredGroups = filteredGroups.map(group => ({
-        ...group,
-        modifiers: getModifiersByGroupId(group.id),
-      }));
-
-      // Pagination
-      const page = options.page || 1;
-      const limit = options.limit || 20;
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedGroups = filteredGroups.slice(startIndex, endIndex);
-
-      return {
-        data: paginatedGroups,
-        current_page: page,
-        per_page: limit,
-        total: filteredGroups.length,
-        last_page: Math.ceil(filteredGroups.length / limit),
-        from: startIndex + 1,
-        to: Math.min(endIndex, filteredGroups.length),
-        first_page_url: '',
-        last_page_url: '',
-        next_page_url: null,
-        prev_page_url: null,
-        path: '',
-        links: [],
-      };
-    },
+    queryFn: ({ queryKey, pageParam }) =>
+      modifierGroupClient.paginated(
+        Object.assign({}, queryKey[1] as any, pageParam),
+      ),
     placeholderData: (previousData) => previousData,
-    // List pages: ISR-like caching with longer stale time
-    staleTime: 60 * 1000, // 1 minute
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
-    refetchOnWindowFocus: false,
   });
 
   const groups = (data as any)?.data ?? [];
-  const paginatorInfo = (data as any)?.paginatorInfo ?? mapPaginatorData(data);
+  // The paginated function returns a PaginatorInfo structure, so mapPaginatorData should work
+  // But we need to ensure it has a fallback
+  const mappedPaginator = mapPaginatorData(data);
+  const paginatorInfo = mappedPaginator || {
+    currentPage: 1,
+    lastPage: 1,
+    perPage: options.limit || 20,
+    total: groups.length,
+    hasMorePages: false,
+  };
 
   return {
     groups: Array.isArray(groups) ? groups : [],
@@ -206,4 +184,3 @@ export const useModifierGroupsQuery = (options: Partial<ModifierGroupQueryOption
     loading: isLoading,
   };
 };
-

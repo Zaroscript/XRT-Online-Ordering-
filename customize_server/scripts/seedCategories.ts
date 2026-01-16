@@ -49,7 +49,6 @@ const seedCategories = async (): Promise<void> => {
 
         // 2. Define Categories
         // Note: Icons should be uploaded through the admin interface or use valid Cloudinary URLs
-        // Using /raw/upload/ path structure: https://res.cloudinary.com/dbxavbtjp/raw/upload/v1766698372/xrttech/categories/icons/[hash]
         const categories = [
             {
                 business_id: businessId,
@@ -59,7 +58,6 @@ const seedCategories = async (): Promise<void> => {
                 sort_order: 1,
                 is_active: true,
                 image: 'https://placehold.co/150',
-                // icon: Leave empty - users should upload their own icons
             },
             {
                 business_id: businessId,
@@ -69,47 +67,60 @@ const seedCategories = async (): Promise<void> => {
                 sort_order: 2,
                 is_active: true,
                 image: 'https://placehold.co/150',
-                // icon: Leave empty - users should upload their own icons
-            },
-            {
-                business_id: businessId,
-                name: 'Desserts',
-                description: 'Sweet treats to end your meal',
-                kitchen_section_id: 'KS_003',
-                sort_order: 3,
-                is_active: true,
-                image: 'https://placehold.co/150',
-                // icon: Leave empty - users should upload their own icons
-            },
-            {
-                business_id: businessId,
-                name: 'Beverages',
-                description: 'Refreshing hot and cold drinks',
-                kitchen_section_id: 'KS_004',
-                sort_order: 4,
-                is_active: true,
-                image: 'https://placehold.co/150',
-                // icon: Leave empty - users should upload their own icons
             },
             {
                 business_id: businessId,
                 name: 'Burgers',
                 description: 'Our famous gourmet burgers',
                 kitchen_section_id: 'KS_002',
-                sort_order: 5,
+                sort_order: 3,
                 is_active: true,
                 image: 'https://placehold.co/150',
-                // icon: Leave empty - users should upload their own icons
+            },
+            {
+                business_id: businessId,
+                name: 'Pizza',
+                description: 'Freshly baked pizzas with premium toppings',
+                kitchen_section_id: 'KS_002',
+                sort_order: 4,
+                is_active: true,
+                image: 'https://placehold.co/150',
             },
             {
                 business_id: businessId,
                 name: 'Salads',
                 description: 'Fresh and healthy greens',
                 kitchen_section_id: 'KS_001',
+                sort_order: 5,
+                is_active: true,
+                image: 'https://placehold.co/150',
+            },
+            {
+                business_id: businessId,
+                name: 'Desserts',
+                description: 'Sweet treats to end your meal',
+                kitchen_section_id: 'KS_003',
                 sort_order: 6,
                 is_active: true,
                 image: 'https://placehold.co/150',
-                // icon: Leave empty - users should upload their own icons
+            },
+            {
+                business_id: businessId,
+                name: 'Beverages',
+                description: 'Refreshing hot and cold drinks',
+                kitchen_section_id: 'KS_004',
+                sort_order: 7,
+                is_active: true,
+                image: 'https://placehold.co/150',
+            },
+            {
+                business_id: businessId,
+                name: 'Sides',
+                description: 'Perfect accompaniments to your meal',
+                kitchen_section_id: 'KS_001',
+                sort_order: 8,
+                is_active: true,
+                image: 'https://placehold.co/150',
             }
         ];
 

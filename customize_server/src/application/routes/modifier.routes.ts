@@ -10,17 +10,20 @@ const modifierController = new ModifierController();
 router.use(requireAuth);
 
 // Get all modifiers - requires modifiers:read permission
-router.get(
-  '/modifiers',
-  requirePermission('modifiers:read'),
-  modifierController.index
-);
+router.get('/modifiers', requirePermission('modifiers:read'), modifierController.index);
 
 // Get all modifiers for a group - requires modifiers:read permission
 router.get(
   '/modifier-groups/:groupId/modifiers',
   requirePermission('modifiers:read'),
   modifierController.getAll
+);
+
+// Get single modifier - requires modifiers:read permission
+router.get(
+  '/modifier-groups/:groupId/modifiers/:id',
+  requirePermission('modifiers:read'),
+  modifierController.getById
 );
 
 // Create modifier - requires modifiers:create permission

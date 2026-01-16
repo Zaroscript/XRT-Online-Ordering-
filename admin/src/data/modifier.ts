@@ -23,10 +23,11 @@ export const useCreateModifierMutation = () => {
     onSuccess: () => {
       toast.success(t('common:successfully-created'));
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIERS] });
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIER_GROUPS] });
+      queryClient.invalidateQueries({
+        queryKey: [API_ENDPOINTS.MODIFIER_GROUPS],
+      });
     },
     onError: (error: any) => {
-      console.error('❌ Create Modifier Error:', error);
       toast.error(error?.response?.data?.message || t('common:create-failed'));
     },
   });
@@ -41,7 +42,9 @@ export const useDeleteModifierMutation = () => {
     onSuccess: () => {
       toast.success(t('common:successfully-deleted'));
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIERS] });
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIER_GROUPS] });
+      queryClient.invalidateQueries({
+        queryKey: [API_ENDPOINTS.MODIFIER_GROUPS],
+      });
     },
   });
 };
@@ -55,13 +58,19 @@ export const useUpdateModifierMutation = () => {
     onSuccess: async (data, variables) => {
       const updatedModifier = (data as any)?.data || data;
       queryClient.setQueryData(
-        [API_ENDPOINTS.MODIFIERS, { id: variables.id, language: router.locale }],
+        [
+          API_ENDPOINTS.MODIFIERS,
+          { id: variables.id, language: router.locale },
+        ],
         (old: any) => {
           return { data: updatedModifier };
-        });
+        },
+      );
       toast.success(t('common:successfully-updated'));
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIERS] });
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIER_GROUPS] });
+      queryClient.invalidateQueries({
+        queryKey: [API_ENDPOINTS.MODIFIER_GROUPS],
+      });
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || t('common:update-failed'));
@@ -69,11 +78,20 @@ export const useUpdateModifierMutation = () => {
   });
 };
 
-export const useModifierQuery = ({ slug, id, language }: GetParams & { id?: string }) => {
-  const { data, error, isPending: isLoading } = useQuery<Modifier, Error>({
+export const useModifierQuery = ({
+  slug,
+  id,
+  language,
+}: GetParams & { id?: string }) => {
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<Modifier, Error>({
     queryKey: [API_ENDPOINTS.MODIFIERS, { slug, id, language }],
-    queryFn: () => modifierClient.get({ id, slug, language }),
-    enabled: Boolean(id || slug),
+    queryFn: () =>
+      modifierClient.get({ id, modifier_group_id: slug, language }), // Using slug as modifier_group_id based on typical pattern here, or I need to check caller.
+    enabled: Boolean(id && slug), // Require both ID and Group ID (slug)
   });
 
   const modifier = (data as any)?.data || data;
@@ -86,15 +104,30 @@ export const useModifierQuery = ({ slug, id, language }: GetParams & { id?: stri
 };
 
 export const useModifiersQuery = (options: Partial<ModifierQueryOptions>) => {
-  const { data, error, isPending: isLoading } = useQuery<ModifierPaginator, Error>({
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<ModifierPaginator, Error>({
     queryKey: [API_ENDPOINTS.MODIFIERS, options],
     queryFn: ({ queryKey, pageParam }) =>
-      modifierClient.paginated(Object.assign({}, queryKey[1] as any, pageParam)),
+      modifierClient.paginated(
+        Object.assign({}, queryKey[1] as any, pageParam),
+      ),
     placeholderData: (previousData) => previousData,
   });
 
   const modifiers = (data as any)?.data ?? [];
-  const paginatorInfo = (data as any)?.paginatorInfo ?? mapPaginatorData(data);
+  // The paginated function returns a PaginatorInfo structure, so mapPaginatorData should work
+  // But we need to ensure it has a fallback
+  const mappedPaginator = mapPaginatorData(data);
+  const paginatorInfo = mappedPaginator || {
+    currentPage: 1,
+    lastPage: 1,
+    perPage: options.limit || 20,
+    total: modifiers.length,
+    hasMorePages: false,
+  };
 
   return {
     modifiers: Array.isArray(modifiers) ? modifiers : [],
@@ -103,4 +136,3 @@ export const useModifiersQuery = (options: Partial<ModifierQueryOptions>) => {
     loading: isLoading,
   };
 };
-

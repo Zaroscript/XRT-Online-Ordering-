@@ -1,5 +1,51 @@
 {
   "form-title-permission": "Permission",
+  "error-base-price-required": "Base price is required for non-sizeable items",
+  
+  "input-placeholder-modifier-group-name": "e.g., Toppings, Sizes, Extras",
+  "input-label-actions": "Actions",
+  "no-quantity-levels-helper": "Create levels like \"Light\", \"Normal\", \"Extra\" to allow customers to customize their order.",
+
+  "tab-basic-information": "Basic Information",
+  "tab-sizes": "Sizes",
+  "tab-image": "Image",
+  "tab-modifiers": "Modifiers",
+  "tab-settings": "Settings",
+  "input-placeholder-item-name": "Enter item name",
+  "item-sizes-help-text": "Manage item sizes. Enable \"Sizeable\" in Basic Information to use sizes. At least one size is required, and you must select a default size.",
+  "enable-sizeable-first": "Please enable \"Sizeable\" in the Basic Information tab to manage sizes.",
+  "save-item-first-to-manage-sizes": "Please save the item first to manage sizes.",
+
+
+
+
+
+  "loading-modifiers": "Loading modifiers...",
+
+
+  "no-modifiers-found": "No modifiers found for selected groups. Make sure the groups have modifiers assigned.",
+
+
+
+
+  "quantity-level-light": "Light",
+  "quantity-level-normal": "Normal",
+  "quantity-level-extra": "Extra",
+
+
+  "sizes-global-help-text": "Select sizes from the Global Catalog to enable for this item.",
+  "button-label-create-global-size": "Create New Size",
+  "create-new-global-size": "Create New Global Size",
+
+
+
+
+
+  "button-label-create": "Create",
+  "text-no-global-sizes-found": "No global sizes found.",
+  "button-create-first-size": "Create First Size",
+  "action-remove-signature": "Remove signature",
+  "action-mark-signature": "Mark as signature",
   "form-title-create-product": "Create New Product",
   "form-title-create-item": "Create New Item",
   "form-title-edit-item": "Edit Item",
@@ -770,8 +816,7 @@
   "input-label-printer-id": "Printer ID",
   "input-label-public-key": "Public Key",
   "input-label-private-key": "Private Key",
-  "input-label-role": "Role",
-  "error-role-required": "Role is required",
+
   "button-label-assign": "Assign",
   "button-label-update-user": "Update User",
   "button-label-update-role": "Update Role",
@@ -798,6 +843,13 @@
   "input-label-side-left": "Left",
   "input-label-side-right": "Right",
   "input-label-sizes": "Sizes",
+  "input-label-remember-me": "Remember me",
+  "button-label-create-account": "Create Account",
+  "input-placeholder-email": "Enter your email",
+  "input-placeholder-email-address": "Enter your email address",
+  "input-placeholder-password": "Enter your password",
+  "input-placeholder-create-password": "Create a password",
+  "input-placeholder-full-name": "Enter your full name",
   "input-label-size-name": "Size Name",
   "input-label-size-code": "Size Code",
   "input-placeholder-size-code": "e.g., L, M, S",
@@ -847,7 +899,40 @@
   "form-title-edit-modifier-group": "Edit Modifier Group",
   "modifier-group-details-helper-text": "Configure how customers can select modifiers from this group.",
   "modifier-group-required-note": "Group is required (min_select > 0)",
-  "applies-per-quantity-helper": "If enabled, modifier pricing applies per item quantity",
+  "applies-per-quantity-helper": "If enabled, modifier pricing applies per item quantity (e.g., $0.50 extra cheese × 2 pizzas = $1.00)",
+  "placeholder-start-date": "Start Date",
+  "placeholder-end-date": "End Date",
+  "placeholder-optional": "(Optional)",
+  "placeholder-transfer-message": "Don't share any personal information here (Optional)",
+  "label-ask-for-quote": "Ask for a quote?",
+  "label-quote": "Quote",
+  "label-ask-for-quote-content": "Ask for a quote content.",
+  "label-message-vendor": "Message towards vendor.",
+  "label-send-email-update": "Send email to already purchased customer of this item about this update.",
+  "label-product-update-message": "You can send message towards customer about this update.",
+  "shop-maintenance-settings-title": "Shop maintenance settings",
+  "shop-maintenance-settings-helper-text": "Control all the maintenance settings related to this shop.",
+  "ask-for-quote-helper-text": "Set your ask for a quote here.",
+  "promotional-title": "Promotional",
+  "promotional-details": "Product selected for this campaign.",
+  "promotional-details-select": "Select product promotional settings form here",
+  "message-product-not-selected-in-campaign": "Product is not selected in any campaign.",
+  "layout-content-settings-title": "Layout Content Settings.",
+  "layout-content-settings-helper-text": "Please set your layout content here.",
+  "input-label-enable-best-selling-products": "Enable Best Selling Products?",
+  "input-label-enable-popular-products": "Enable Popular Products?",
+  "input-label-enable-category": "Enable Category?",
+  "input-label-enable-handpicked-products": "Enable Handpicked Products?",
+  "input-label-enable-slider": "Enable Slider?",
+  "input-label-enable-new-arrival": "Enable New Arrival?",
+  "input-label-enable-authors": "Enable Authors?",
+  "placeholder-select-icon": "Select Icon",
+  "message-minimal-demo-banner": "Minimal demo will show only first item of banner.",
+  "message-disabled-item-shop": "Disabled item will not show in shop end.",
+  "icon-title": "Icon",
+  "icon-helper-text": "Upload an SVG icon for this category.",
+  "upload-svg-helper-text": "Upload SVG (Drag & drop or click)",
+  "input-label-is-active-question": "Is Active?",
   "modifier-group-enable-title": "Enable Modifier Group",
   "modifier-group-enable-description": "Are you sure you want to enable this modifier group?",
   "modifier-group-disable-title": "Disable Modifier Group",
@@ -869,7 +954,7 @@
   "quantity-levels-help-text": "Set prices for different quantity levels",
   "input-placeholder-quantity-level-name": "e.g., Light, Normal, Extra",
   "button-label-add-quantity-level": "Add Quantity Level",
-  "no-quantity-levels": "Click \"Add Quantity Level\" to add quantity levels with custom prices.",
+  "no-quantity-levels-action": "Click \"Add Quantity Level\" to add quantity levels with custom prices.",
   "button-label-cancel": "Cancel",
   "button-label-update-modifier": "Update Modifier",
   "button-label-add-modifier": "Add Modifier",
@@ -898,7 +983,7 @@
   "display-type-helper": "How customers select modifiers from this group",
   "modifier-group-optional-note": "Set to 0 for optional",
   "max-select-note": "Max items customer can select",
-  "applies-per-quantity-helper": "If enabled, modifier pricing applies per item quantity (e.g., $0.50 extra cheese × 2 pizzas = $1.00)",
+
   "quantity-levels-group-helper-text": "Define default quantity levels for ALL modifiers in this group. These levels (e.g., Light, Normal, Extra) will be available for all modifiers.",
   "no-quantity-levels": "No quantity levels defined yet",
   "pricing-by-size-group-helper-text": "Define default price deltas by size for ALL modifiers in this group. These prices will be applied to all modifiers.",
@@ -908,5 +993,25 @@
   "price-delta-helper": "Price difference from base price (can be negative)",
   "input-label-display-order": "Display Order",
   "button-label-add-price-by-size": "Add Price by Size",
-  "sort-order-note": "Lower numbers appear first"
+  "tab-basic-info": "Basic Information",
+  "tab-pricing-config": "Pricing Configuration",
+  "form-title-information": "Modifier Information",
+  "modifier-info-helper-text": "Configure basic modifier settings. You can override group-level pricing and quantity levels for this specific modifier.",
+  "modifier-override-note": "Note:",
+  "modifier-override-note-text": "Modifier-level configuration overrides group defaults. If not set, group-level settings will apply.",
+  "input-label-default": "Default",
+  "default-modifier-helper": "Mark this modifier as the default selection for the group",
+  "display-order-helper": "Order in which this modifier appears in the list",
+  "input-label-active": "Active",
+  "input-label-enable-sides": "Enable Sides Configuration",
+  "sides-config-helper": "Allow customers to select sides (LEFT, RIGHT, WHOLE) for this modifier",
+  "input-label-allowed-sides": "Allowed Sides",
+  "input-label-side-left": "Left",
+  "input-label-side-right": "Right",
+  "input-label-side-whole": "Whole",
+  "form-title-pricing": "Pricing Configuration",
+  "modifier-pricing-helper-text": "Configure pricing for this modifier. These settings override the group-level configuration.",
+  "input-label-inherit-pricing": "Inherit from Group",
+  "inherit-pricing-helper": "Enable to use the pricing configuration defined in the modifier group.",
+  "pricing-inherited-text": "Pricing and quantity levels are currently inherited from the modifier group. Disable inheritance to set custom pricing for this modifier."
 }

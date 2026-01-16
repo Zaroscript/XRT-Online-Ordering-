@@ -292,7 +292,7 @@ export default function ProductVariableForm({
                                     `variation_options.${index}.inform_purchased_customer`,
                                   )}
                                   id={`variation_options.${index}.inform_purchased_customer`}
-                                  label="Send email to already purchased customer of this item about this update."
+                                  label={t('form:label-send-email-update')}
                                   // disabled={Boolean(is_external)}
                                   className="mb-5"
                                 />
@@ -302,10 +302,12 @@ export default function ProductVariableForm({
                                       `variation_options.${index}.product_update_message`,
                                     )}
                                     id={`variation_options.${index}.product_update_message`}
-                                    label="You can send message towards customer about this update."
+                                    label={t(
+                                      'form:label-product-update-message',
+                                    )}
                                     variant="outline"
                                     className="col-span-2"
-                                    placeholder="(Optional)"
+                                    placeholder={t('form:placeholder-optional')}
                                   />
                                 ) : null}
                               </div>

@@ -410,12 +410,12 @@ const ModifierGroupList = ({
         />
       </div>
 
-      {!!paginatorInfo?.total && (
+      {paginatorInfo && paginatorInfo.total > 0 && (
         <div className="flex items-center justify-end mt-6">
           <Pagination
             total={paginatorInfo.total}
-            current={paginatorInfo.currentPage}
-            pageSize={paginatorInfo.perPage}
+            current={paginatorInfo.currentPage || 1}
+            pageSize={paginatorInfo.perPage || 20}
             onChange={onPagination}
           />
         </div>

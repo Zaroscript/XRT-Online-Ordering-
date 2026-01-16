@@ -9,7 +9,7 @@ import AuthPageLayout from '@/components/layouts/auth-layout';
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => ({
   props: {
-    ...(await serverSideTranslations(locale!, ['common', 'form'])),
+    ...(await serverSideTranslations(locale!, ['common', 'form', 'errors'])),
   },
 });
 

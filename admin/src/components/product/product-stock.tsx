@@ -185,7 +185,7 @@ const LowStockProduct = ({
       <div
         className={cn(
           'overflow-hidden rounded-lg bg-white p-6 md:p-7',
-          className
+          className,
         )}
       >
         <div className="flex items-center justify-between pb-7">
@@ -213,7 +213,10 @@ const LowStockProduct = ({
         {!!paginatorInfo?.total && (
           <div className="flex items-center justify-between py-2">
             <div className="mt-2 text-gray-500">
-              {paginatorInfo?.currentPage} of {paginatorInfo?.lastPage} pages
+              {t('common:text-page-of-pages', {
+                current: paginatorInfo?.currentPage,
+                last: paginatorInfo?.lastPage,
+              })}
             </div>
             <Pagination
               total={paginatorInfo?.total}

@@ -175,8 +175,8 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
           title: initialValues?.settings?.handpickedProducts?.title,
           products: initialValues?.settings?.handpickedProducts?.products
             ? initialValues?.settings?.handpickedProducts?.products?.map(
-              (product: any) => product,
-            )
+                (product: any) => product,
+              )
             : [],
         },
         newArrival: {
@@ -194,8 +194,8 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
       },
       icon: initialValues?.icon
         ? typeIconList.find(
-          (singleIcon) => singleIcon.value === initialValues?.icon,
-        )
+            (singleIcon) => singleIcon.value === initialValues?.icon,
+          )
         : '',
     },
   });
@@ -353,10 +353,11 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
       <div className="flex flex-wrap my-5 sm:my-8">
         <Description
           title={t('form:item-description')}
-          details={`${initialValues
+          details={`${
+            initialValues
               ? t('form:item-description-update')
               : t('form:item-description-add')
-            } ${t('form:group-description-help-text')}`}
+          } ${t('form:group-description-help-text')}`}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
 
@@ -367,7 +368,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
             error={t(errors.name?.message!)}
             variant="outline"
             className="mb-5"
-          // disabled={[].includes(Config.defaultLanguage)}
+            // disabled={[].includes(Config.defaultLanguage)}
           />
           {isSlugEditable ? (
             <div className="relative mb-5">
@@ -405,7 +406,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
               control={control}
               options={updatedIcons}
               isClearable={true}
-              placeholder="Select Icon"
+              placeholder={t('form:placeholder-select-icon')}
             />
           </div>
         </Card>
@@ -494,16 +495,16 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
           {layoutType === 'minimal' && fields?.length > 0 ? (
             <Alert
               className="mb-5"
-              message="Minimal demo will show only first item of banner."
+              message={t('form:message-minimal-demo-banner')}
             />
           ) : (
             ''
           )}
           {(layoutType === 'compact' || layoutType === 'minimal') &&
-            fields?.length > 0 ? (
+          fields?.length > 0 ? (
             <Alert
               className="mb-5"
-              message="Disabled item will not show in shop end."
+              message={t('form:message-disabled-item-shop')}
               variant="warning"
             />
           ) : (
@@ -616,8 +617,8 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
       {layoutType === 'compact' ? (
         <div className="my-5 flex flex-wrap sm:my-8">
           <Description
-            title="Layout Content Settings."
-            details="Please set your layout content here."
+            title={t('form:layout-content-settings-title')}
+            details={t('form:layout-content-settings-helper-text')}
             className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
           />
           <Card className="w-full sm:w-8/12 md:w-2/3">
@@ -631,7 +632,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
                   htmlFor="settings.bestSelling.enable"
                   className="mb-0 cursor-pointer"
                 >
-                  Enable Best Selling Products?
+                  {t('form:input-label-enable-best-selling-products')}
                 </Label>
               </div>
               {bestSellingEnable ? (
@@ -654,7 +655,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
                   className="mb-0 cursor-pointer"
                   htmlFor="settings.popularProducts.enable"
                 >
-                  Enable Popular Products?
+                  {t('form:input-label-enable-popular-products')}
                 </Label>
               </div>
               {popularProductsEnable ? (
@@ -677,7 +678,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
                   className="mb-0 cursor-pointer"
                   htmlFor="settings.category.enable"
                 >
-                  Enable Category?
+                  {t('form:input-label-enable-category')}
                 </Label>
               </div>
               {categoryEnable ? (
@@ -700,7 +701,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
                   className="mb-0 cursor-pointer"
                   htmlFor="settings.handpickedProducts.enable"
                 >
-                  Enable Handpicked Products?
+                  {t('form:input-label-enable-handpicked-products')}
                 </Label>
               </div>
               {handpickedProductsEnable ? (
@@ -722,7 +723,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
                       className="mb-0 cursor-pointer"
                       htmlFor="settings.handpickedProducts.enableSlider"
                     >
-                      Enable Slider?
+                      {t('form:input-label-enable-slider')}
                     </Label>
                   </div>
                   <div className="grid gap-5">
@@ -773,7 +774,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
                   className="mb-0 cursor-pointer"
                   htmlFor="settings.newArrival.enable"
                 >
-                  Enable New Arrival?
+                  {t('form:input-label-enable-new-arrival')}
                 </Label>
               </div>
               {newArrivalEnable ? (
@@ -793,7 +794,7 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
                   className="mb-0 cursor-pointer"
                   htmlFor="settings.authors.enable"
                 >
-                  Enable Authors?
+                  {t('form:input-label-enable-authors')}
                 </Label>
               </div>
               {authorsEnable ? (

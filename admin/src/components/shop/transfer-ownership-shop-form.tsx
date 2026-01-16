@@ -80,9 +80,9 @@ const TransferShopOwnershipForm = ({ shop, vendors }: Props) => {
             required
           />
           <TextArea
-            label="Message towards vendor."
+            label={t('form:label-message-vendor')}
             {...register('message')}
-            placeholder="Don't share any personal information here (Optional)"
+            placeholder={t('form:placeholder-transfer-message')}
             variant="outline"
             className="col-span-2 mt-5 mb-5"
           />

@@ -7,7 +7,7 @@ import { ModifierRepository } from '../../infrastructure/repositories/ModifierRe
 import { ModifierGroupRepository } from '../../infrastructure/repositories/ModifierGroupRepository';
 import { sendSuccess } from '../../shared/utils/response';
 import { asyncHandler } from '../../shared/utils/asyncHandler';
-import { ValidationError } from '../../shared/errors/AppError';
+import { ValidationError, NotFoundError } from '../../shared/errors/AppError';
 import { IModifierRepository } from '../../domain/repositories/IModifierRepository';
 
 export class ModifierController {
@@ -21,7 +21,10 @@ export class ModifierController {
     const modifierGroupRepository = new ModifierGroupRepository();
 
     this.modifierRepository = modifierRepository;
-    this.createModifierUseCase = new CreateModifierUseCase(modifierRepository, modifierGroupRepository);
+    this.createModifierUseCase = new CreateModifierUseCase(
+      modifierRepository,
+      modifierGroupRepository
+    );
     this.updateModifierUseCase = new UpdateModifierUseCase(modifierRepository);
     this.deleteModifierUseCase = new DeleteModifierUseCase(modifierRepository);
   }
@@ -35,6 +38,8 @@ export class ModifierController {
       display_order,
       is_active,
       sides_config,
+      quantity_levels,
+      prices_by_size,
     } = req.body;
 
     if (!groupId) {
@@ -57,8 +62,10 @@ export class ModifierController {
       is_default: is_default === true || is_default === 'true',
       max_quantity: max_quantity ? Number(max_quantity) : undefined,
       display_order: display_order ? Number(display_order) : 0,
-      is_active: is_active !== undefined ? (is_active === true || is_active === 'true') : true,
+      is_active: is_active !== undefined ? is_active === true || is_active === 'true' : true,
       sides_config: parsedSidesConfig,
+      quantity_levels: quantity_levels || [],
+      prices_by_size: prices_by_size || [],
     });
 
     return sendSuccess(res, 'Modifier created successfully', modifier, 201);
@@ -88,6 +95,22 @@ export class ModifierController {
     return sendSuccess(res, 'Modifiers retrieved successfully', { modifiers });
   });
 
+  getById = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id, groupId } = req.params;
+
+    if (!groupId) {
+      throw new ValidationError('groupId is required');
+    }
+
+    const modifier = await this.modifierRepository.findById(id, groupId);
+
+    if (!modifier) {
+      throw new NotFoundError('Modifier');
+    }
+
+    return sendSuccess(res, 'Modifier retrieved successfully', modifier);
+  });
+
   update = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { groupId } = req.params;
@@ -98,6 +121,8 @@ export class ModifierController {
       display_order,
       is_active,
       sides_config,
+      quantity_levels,
+      prices_by_size,
     } = req.body;
 
     if (!groupId) {
@@ -119,17 +144,17 @@ export class ModifierController {
     const updateData: any = {};
 
     if (name !== undefined) updateData.name = name;
-    if (is_default !== undefined) updateData.is_default = is_default === true || is_default === 'true';
-    if (max_quantity !== undefined) updateData.max_quantity = max_quantity ? Number(max_quantity) : undefined;
+    if (is_default !== undefined)
+      updateData.is_default = is_default === true || is_default === 'true';
+    if (max_quantity !== undefined)
+      updateData.max_quantity = max_quantity ? Number(max_quantity) : undefined;
     if (display_order !== undefined) updateData.display_order = Number(display_order);
     if (is_active !== undefined) updateData.is_active = is_active === true || is_active === 'true';
     if (parsedSidesConfig !== undefined) updateData.sides_config = parsedSidesConfig;
+    if (quantity_levels !== undefined) updateData.quantity_levels = quantity_levels;
+    if (prices_by_size !== undefined) updateData.prices_by_size = prices_by_size;
 
-    const modifier = await this.updateModifierUseCase.execute(
-      id,
-      groupId,
-      updateData
-    );
+    const modifier = await this.updateModifierUseCase.execute(id, groupId, updateData);
 
     return sendSuccess(res, 'Modifier updated successfully', modifier);
   });

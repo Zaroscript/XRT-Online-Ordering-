@@ -2619,6 +2619,9 @@ export interface CreateModifierInput {
     enabled?: boolean;
     allowed_sides?: string[];
   };
+  // Modifier-level configuration (overrides group defaults)
+  quantity_levels?: QuantityLevel[];
+  prices_by_size?: PricesBySize[];
 }
 
 export interface UpdateModifierInput extends Partial<CreateModifierInput> {

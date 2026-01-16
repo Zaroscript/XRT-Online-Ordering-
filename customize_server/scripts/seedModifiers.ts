@@ -50,26 +50,29 @@ const seedModifiers = async (): Promise<void> => {
 
         console.log('✅ Created global sizes:', Object.keys(sizeMap));
 
-        // 3b. Define and Create Modifier Groups
+        // 3b. Define and Create Modifier Groups with comprehensive configurations
         const groupsData = [
             {
                 name: 'Size Options',
                 display_type: 'RADIO',
                 min_select: 1,
                 max_select: 1,
+                applies_per_quantity: false,
                 sort_order: 1,
+                is_active: true,
                 quantity_levels: [
                     {
                         quantity: 1,
-                        name: 'Standard', // Quantity level name
+                        name: 'Standard',
                         price: 0,
                         is_active: true,
                         is_default: true,
                         display_order: 1,
                         prices_by_size: [
                             { size_id: sizeMap['S'], priceDelta: 0 },
-                            { size_id: sizeMap['M'], priceDelta: 2.00 }, // Medium +$2
-                            { size_id: sizeMap['L'], priceDelta: 4.00 }  // Large +$4
+                            { size_id: sizeMap['M'], priceDelta: 2.00 },
+                            { size_id: sizeMap['L'], priceDelta: 4.00 },
+                            { size_id: sizeMap['XL'], priceDelta: 6.00 }
                         ]
                     }
                 ]
@@ -79,15 +82,19 @@ const seedModifiers = async (): Promise<void> => {
                 display_type: 'CHECKBOX',
                 min_select: 0,
                 max_select: 3,
+                applies_per_quantity: false,
                 sort_order: 2,
-                quantity_levels: []
+                is_active: true,
+                quantity_levels: [] // Free sauces, no pricing
             },
             {
                 name: 'Extra Toppings',
                 display_type: 'CHECKBOX',
                 min_select: 0,
                 max_select: 5,
+                applies_per_quantity: true,
                 sort_order: 3,
+                is_active: true,
                 quantity_levels: [
                     {
                         quantity: 1,
@@ -97,6 +104,15 @@ const seedModifiers = async (): Promise<void> => {
                         is_default: true,
                         display_order: 1,
                         prices_by_size: []
+                    },
+                    {
+                        quantity: 2,
+                        name: 'Double',
+                        price: 2.75,
+                        is_active: true,
+                        is_default: false,
+                        display_order: 2,
+                        prices_by_size: []
                     }
                 ]
             },
@@ -105,8 +121,35 @@ const seedModifiers = async (): Promise<void> => {
                 display_type: 'RADIO',
                 min_select: 1,
                 max_select: 1,
+                applies_per_quantity: false,
                 sort_order: 4,
-                quantity_levels: []
+                is_active: true,
+                quantity_levels: [] // No pricing, just selection
+            },
+            {
+                name: 'Beverage Size',
+                display_type: 'RADIO',
+                min_select: 1,
+                max_select: 1,
+                applies_per_quantity: false,
+                sort_order: 5,
+                is_active: true,
+                quantity_levels: [
+                    {
+                        quantity: 1,
+                        name: 'Standard',
+                        price: 0,
+                        is_active: true,
+                        is_default: true,
+                        display_order: 1,
+                        prices_by_size: [
+                            { size_id: sizeMap['S'], priceDelta: 0 },
+                            { size_id: sizeMap['M'], priceDelta: 1.00 },
+                            { size_id: sizeMap['L'], priceDelta: 2.00 },
+                            { size_id: sizeMap['XL'], priceDelta: 3.00 }
+                        ]
+                    }
+                ]
             }
         ];
 
@@ -123,21 +166,54 @@ const seedModifiers = async (): Promise<void> => {
 
         console.log(`✅ Created ${createdGroups.length} modifier groups.`);
 
-        // 4. Create Modifiers for each Group
+        // 4. Create Modifiers for each Group with modifier-level configurations
         console.log('Creating modifiers...');
         const modifiers = [];
 
-        // Size Options
+        // Size Options - modifiers inherit group pricing
         const sizeGroup = createdGroups.find(g => g.name === 'Size Options');
         if (sizeGroup) {
             modifiers.push(
-                { modifier_group_id: sizeGroup._id, name: 'Small', is_default: false, display_order: 1, price: 0 },
-                { modifier_group_id: sizeGroup._id, name: 'Medium', is_default: true, display_order: 2, price: 2.00 },
-                { modifier_group_id: sizeGroup._id, name: 'Large', is_default: false, display_order: 3, price: 4.00 }
+                { 
+                    modifier_group_id: sizeGroup._id, 
+                    name: 'Small', 
+                    is_default: false, 
+                    display_order: 1,
+                    // No modifier-level override - uses group defaults
+                },
+                { 
+                    modifier_group_id: sizeGroup._id, 
+                    name: 'Medium', 
+                    is_default: true, 
+                    display_order: 2,
+                    // No modifier-level override - uses group defaults
+                },
+                { 
+                    modifier_group_id: sizeGroup._id, 
+                    name: 'Large', 
+                    is_default: false, 
+                    display_order: 3,
+                    // Example: Modifier-level override with custom pricing
+                    quantity_levels: [
+                        {
+                            quantity: 1,
+                            name: 'Standard',
+                            price: 0,
+                            is_active: true,
+                            is_default: true,
+                            display_order: 1,
+                            prices_by_size: [
+                                { size_id: sizeMap['S'], priceDelta: 0 },
+                                { size_id: sizeMap['M'], priceDelta: 2.50 }, // Override: +$2.50 instead of +$2.00
+                                { size_id: sizeMap['L'], priceDelta: 5.00 }  // Override: +$5.00 instead of +$4.00
+                            ]
+                        }
+                    ]
+                }
             );
         }
 
-        // Sauce Selection
+        // Sauce Selection - free sauces, no pricing
         const sauceGroup = createdGroups.find(g => g.name === 'Sauce Selection');
         if (sauceGroup) {
             modifiers.push(
@@ -149,18 +225,60 @@ const seedModifiers = async (): Promise<void> => {
             );
         }
 
-        // Extra Toppings
+        // Extra Toppings - modifiers with individual pricing overrides
         const toppingGroup = createdGroups.find(g => g.name === 'Extra Toppings');
         if (toppingGroup) {
             modifiers.push(
-                { modifier_group_id: toppingGroup._id, name: 'Cheese', display_order: 1, price: 1.50 },
-                { modifier_group_id: toppingGroup._id, name: 'Bacon', display_order: 2, price: 2.00 },
-                { modifier_group_id: toppingGroup._id, name: 'Mushrooms', display_order: 3, price: 1.00 },
-                { modifier_group_id: toppingGroup._id, name: 'Onions', display_order: 4, price: 0.50 }
+                { 
+                    modifier_group_id: toppingGroup._id, 
+                    name: 'Cheese', 
+                    display_order: 1,
+                    // Uses group default pricing (quantity_levels from group)
+                },
+                { 
+                    modifier_group_id: toppingGroup._id, 
+                    name: 'Bacon', 
+                    display_order: 2,
+                    // Modifier-level override: Premium pricing
+                    quantity_levels: [
+                        {
+                            quantity: 1,
+                            name: 'Standard',
+                            price: 2.50, // Override: $2.50 instead of group's $1.50
+                            is_active: true,
+                            is_default: true,
+                            display_order: 1,
+                            prices_by_size: []
+                        }
+                    ]
+                },
+                { 
+                    modifier_group_id: toppingGroup._id, 
+                    name: 'Mushrooms', 
+                    display_order: 3,
+                    // Uses group default pricing
+                },
+                { 
+                    modifier_group_id: toppingGroup._id, 
+                    name: 'Onions', 
+                    display_order: 4,
+                    // Modifier-level override: Discounted pricing
+                    quantity_levels: [
+                        {
+                            quantity: 1,
+                            name: 'Standard',
+                            price: 0.75, // Override: $0.75 instead of group's $1.50
+                            is_active: true,
+                            is_default: true,
+                            display_order: 1,
+                            prices_by_size: []
+                        }
+                    ]
+                }
             );
         }
 
-        // Spice Level
+        // Spice Level - no pricing, just selection
         const spiceGroup = createdGroups.find(g => g.name === 'Spice Level');
         if (spiceGroup) {
             modifiers.push(
@@ -171,49 +289,19 @@ const seedModifiers = async (): Promise<void> => {
             );
         }
 
-        // Note: The ModifierModel schema definition I saw earlier does NOT have a 'price' field directly on it.
-        // It seems pricing might be handled via 'QuantityLevel' or similar in the Group, OR the schema I saw was incomplete/different usage.
-        // However, usually modifiers have prices. Let's re-read the ModifierModel carefully.
+        // Beverage Size - modifiers inherit group pricing
+        const beverageGroup = createdGroups.find(g => g.name === 'Beverage Size');
+        if (beverageGroup) {
+            modifiers.push(
+                { modifier_group_id: beverageGroup._id, name: 'Small', is_default: false, display_order: 1 },
+                { modifier_group_id: beverageGroup._id, name: 'Medium', is_default: true, display_order: 2 },
+                { modifier_group_id: beverageGroup._id, name: 'Large', is_default: false, display_order: 3 },
+                { modifier_group_id: beverageGroup._id, name: 'Extra Large', is_default: false, display_order: 4 }
+            );
+        }
 
-        // Re-reading ModifierModel.ts:
-        // It has name, is_default, max_quantity, display_order, is_active, sides_config, deleted_at.
-        // NO PRICE field.
-
-        // Let's check ModifierGroupModel.ts again.
-        // It has QuantityLevelSchema which has price.
-        // And PricesBySizeSchema.
-
-        // Wait, if ModifierModel doesn't have price, where is the price stored for a simple modifier like "Cheese $1.50"?
-        // In some systems, modifiers are just items. Here, it seems separate.
-
-        // Let's check if there is another related model or if I missed something. 
-        // Or maybe pricing is NOT on the modifier but on the group configuration if it's "Quantity Level"?
-
-        // Actually, looking at ModifierGroupModel logic:
-        // `quantity_levels` has `name`, `price`, `is_default`, `display_order`.
-
-        // If the `Modifier` entity is just a "choice" within a group, maybe the cost is associated with that choice.
-        // But `ModifierModel` definitely didn't show a price field.
-
-        // Let's check `Modifier` entity definition in `src/domain/entities/Modifier.ts` if possible, but I don't have it open.
-        // I will trust `ModifierModel.ts` I just read. It has NO price.
-
-        // This implies that perhaps "Modifiers" in this system are purely option names, and maybe they link to Items? 
-        // OR the pricing is handled differently.
-
-        // However, for SEEDING purposes, I will just create the Modifiers as they are defined in the schema.
-        // If price is missing, I will omit it. The user just asked to seed modifiers to test the "page", which lists them.
-
-        // So I will remove 'price' from the modifier objects in my insert.
-
-        const modifierDocs = modifiers.map(m => {
-            // Remove price if present as it's not in schema
-            const { price, ...rest } = m as any;
-            return rest;
-        });
-
-        await ModifierModel.insertMany(modifierDocs);
-        console.log(`✅ Created ${modifierDocs.length} modifiers.`);
+        await ModifierModel.insertMany(modifiers);
+        console.log(`✅ Created ${modifiers.length} modifiers.`);
 
         console.log('🎉 Modifiers seeding completed!');
 

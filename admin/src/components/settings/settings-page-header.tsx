@@ -31,7 +31,7 @@ export default function SettingsPageHeader({
       </div>
       <div className="relative mb-9 flex items-center overflow-hidden border-b border-border-base/90 lg:mb-12">
         <button
-          title="Prev"
+          title={t('common:text-prev')}
           ref={sliderPrevBtn}
           onClick={() => scrollToTheLeft()}
           className="absolute -top-1 z-10 h-[calc(100%-4px)] w-8 bg-gradient-to-r from-gray-100 via-gray-100 to-transparent px-0 text-gray-500 start-0 hover:text-black 3xl:hidden"
@@ -66,7 +66,7 @@ export default function SettingsPageHeader({
           </div>
         </div>
         <button
-          title="Next"
+          title={t('common:text-next')}
           ref={sliderNextBtn}
           onClick={() => scrollToTheRight()}
           className="absolute -top-1 z-10 flex h-[calc(100%-4px)] w-8 items-center justify-center bg-gradient-to-l from-gray-100 via-gray-100 to-transparent text-gray-500 end-0 hover:text-black 3xl:hidden"

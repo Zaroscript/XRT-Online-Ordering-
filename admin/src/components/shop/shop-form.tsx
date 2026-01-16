@@ -113,25 +113,25 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
     shouldUnregister: true,
     ...(initialValues
       ? {
-        defaultValues: {
-          ...initialValues,
-          logo: getFormattedImage(initialValues?.logo as IImage),
-          cover_image: getFormattedImage(
-            initialValues?.cover_image as IImage,
-          ),
-          settings: {
-            ...initialValues?.settings,
-            socials: initialValues?.settings?.socials
-              ? initialValues?.settings?.socials.map((social: any) => ({
-                icon: updatedIcons?.find(
-                  (icon) => icon?.value === social?.icon,
-                ),
-                url: social?.url,
-              }))
-              : [],
+          defaultValues: {
+            ...initialValues,
+            logo: getFormattedImage(initialValues?.logo as IImage),
+            cover_image: getFormattedImage(
+              initialValues?.cover_image as IImage,
+            ),
+            settings: {
+              ...initialValues?.settings,
+              socials: initialValues?.settings?.socials
+                ? initialValues?.settings?.socials.map((social: any) => ({
+                    icon: updatedIcons?.find(
+                      (icon) => icon?.value === social?.icon,
+                    ),
+                    url: social?.url,
+                  }))
+                : [],
+            },
           },
-        },
-      }
+        }
       : {}),
     // @ts-ignore
     resolver: yupResolver(shopValidationSchema),
@@ -193,9 +193,9 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
       location: { ...omit(values?.settings?.location, '__typename') },
       socials: values?.settings?.socials
         ? values?.settings?.socials?.map((social: any) => ({
-          icon: social?.icon?.value,
-          url: social?.url,
-        }))
+            icon: social?.icon?.value,
+            url: social?.url,
+          }))
         : [],
       shopMaintenance: values?.settings?.shopMaintenance,
     };
@@ -586,8 +586,8 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
         {!permissions?.includes(SUPER_ADMIN) ? (
           <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:my-8">
             <Description
-              title="Shop maintenance settings "
-              details="Control all the maintenance settings related to this shop."
+              title={t('form:shop-maintenance-settings-title')}
+              details={t('form:shop-maintenance-settings-helper-text')}
               className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
             />
 
@@ -644,7 +644,7 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
                     minDate={today}
                     startDate={new Date(startDate)}
                     locale={locale}
-                    placeholder="Start Date"
+                    placeholder={t('form:placeholder-start-date')}
                     disabled={!isMaintenanceMode}
                     label={t('form:maintenance-start-time')}
                     toolTipText={t('form:input-tooltip-maintenance-start-time')}
@@ -668,7 +668,7 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
                     name="settings.shopMaintenance.until"
                     disabled={!startDate || !isMaintenanceMode}
                     minDate={new Date(startDate)}
-                    placeholder="End Date"
+                    placeholder={t('form:placeholder-end-date')}
                     locale={locale}
                     {...(isMaintenanceMode && {
                       required: true,
@@ -693,13 +693,13 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
           ''
         )}
         {!permissions?.includes(SUPER_ADMIN) &&
-          !permissions?.includes(STAFF) &&
-          !Boolean(initialValues?.is_active) &&
-          Boolean(options?.isMultiCommissionRate) ? (
+        !permissions?.includes(STAFF) &&
+        !Boolean(initialValues?.is_active) &&
+        Boolean(options?.isMultiCommissionRate) ? (
           <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:my-8">
             <Description
-              title="Ask for a quote?"
-              details="Set your ask for a quote here."
+              title={t('form:label-ask-for-quote')}
+              details={t('form:ask-for-quote-helper-text')}
               className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
             />
 
@@ -707,13 +707,13 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
               <SwitchInput
                 name="settings.askForAQuote.enable"
                 control={control}
-                label="Ask for a quote?"
+                label={t('form:label-ask-for-quote')}
                 className={askForAQuote ? 'mb-4' : ''}
               />
               {askForAQuote ? (
                 <>
                   <Input
-                    label="Quote"
+                    label={t('form:label-quote')}
                     {...register('settings.askForAQuote.quote')}
                     variant="outline"
                     className="mb-5"
@@ -721,7 +721,7 @@ const ShopForm = ({ initialValues }: { initialValues?: Shop }) => {
                     required
                   />
                   <TextArea
-                    label="Ask for a quote content."
+                    label={t('form:label-ask-for-quote-content')}
                     {...register('settings.askForAQuote.content')}
                     variant="outline"
                     error={t(errors?.settings?.askForAQuote?.content?.message)}

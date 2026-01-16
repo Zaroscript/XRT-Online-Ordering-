@@ -18,7 +18,7 @@ const StickerCard = ({
   linkText,
   iconClassName,
 }: StickerCardProps) => {
-  const { t } = useTranslation('widgets');
+  const { t } = useTranslation(['widgets', 'common']);
   return (
     <div
       className="flex h-full w-full flex-col rounded-lg border border-b-4 border-border-200 bg-light p-5 md:p-6"

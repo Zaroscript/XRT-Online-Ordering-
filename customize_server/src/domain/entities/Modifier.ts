@@ -1,3 +1,5 @@
+import { QuantityLevel, PricesBySize } from './ModifierGroup';
+
 export interface Modifier {
   id: string;
   modifier_group_id: string;
@@ -14,6 +16,9 @@ export interface Modifier {
     enabled: boolean;
     allowed_sides?: string[]; // Array of 'LEFT', 'RIGHT', 'WHOLE'
   };
+  // Modifier-level configuration (overrides group defaults)
+  quantity_levels?: QuantityLevel[];
+  prices_by_size?: PricesBySize[];
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date; // For soft delete
@@ -30,6 +35,9 @@ export interface CreateModifierDTO {
     enabled?: boolean;
     allowed_sides?: string[];
   };
+  // Modifier-level configuration (overrides group defaults)
+  quantity_levels?: QuantityLevel[];
+  prices_by_size?: PricesBySize[];
 }
 
 export interface UpdateModifierDTO {
@@ -42,6 +50,9 @@ export interface UpdateModifierDTO {
     enabled?: boolean;
     allowed_sides?: string[];
   };
+  // Modifier-level configuration (overrides group defaults)
+  quantity_levels?: QuantityLevel[];
+  prices_by_size?: PricesBySize[];
 }
 
 export interface ModifierFilters {

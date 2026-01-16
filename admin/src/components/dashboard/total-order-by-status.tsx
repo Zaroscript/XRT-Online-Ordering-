@@ -16,7 +16,7 @@ const TotalOrderByStatus: React.FC<IProps> = ({ order, timeFrame = 1 }) => {
 
   return (
     <Fragment>
-      <h3>{`For ${timeFrame} days`}</h3>
+      <h3>{t('common:text-for-days', { days: timeFrame })}</h3>
 
       <div className="w-full">
         <StickerCard
@@ -29,7 +29,7 @@ const TotalOrderByStatus: React.FC<IProps> = ({ order, timeFrame = 1 }) => {
       </div>
       <div className="w-full">
         <StickerCard
-          titleTransKey={t('text-processing-order')}
+          titleTransKey={'text-processing-order'}
           subtitleTransKey={`sticker-card-subtitle-last-${timeFrame}-days`}
           icon={<CartIconBig />}
           iconBgStyle={{ backgroundColor: '#A7F3D0' }}
@@ -38,7 +38,7 @@ const TotalOrderByStatus: React.FC<IProps> = ({ order, timeFrame = 1 }) => {
       </div>
       <div className="w-full">
         <StickerCard
-          titleTransKey={t('text-completed-order')}
+          titleTransKey={'text-completed-order'}
           subtitleTransKey={`sticker-card-subtitle-last-${timeFrame}-days`}
           icon={<CartIconBig />}
           iconBgStyle={{ backgroundColor: '#A7F3D0' }}
@@ -47,7 +47,7 @@ const TotalOrderByStatus: React.FC<IProps> = ({ order, timeFrame = 1 }) => {
       </div>
       <div className="w-full">
         <StickerCard
-          titleTransKey={t('text-cancelled-order')}
+          titleTransKey={'text-cancelled-order'}
           subtitleTransKey={`sticker-card-subtitle-last-${timeFrame}-days`}
           icon={<CartIconBig />}
           iconBgStyle={{ backgroundColor: '#A7F3D0' }}
@@ -56,7 +56,7 @@ const TotalOrderByStatus: React.FC<IProps> = ({ order, timeFrame = 1 }) => {
       </div>
       <div className="w-full">
         <StickerCard
-          titleTransKey={t('text-refunded-order')}
+          titleTransKey={'text-refunded-order'}
           subtitleTransKey={`sticker-card-subtitle-last-${timeFrame}-days`}
           icon={<CartIconBig />}
           iconBgStyle={{ backgroundColor: '#A7F3D0' }}
@@ -65,7 +65,7 @@ const TotalOrderByStatus: React.FC<IProps> = ({ order, timeFrame = 1 }) => {
       </div>
       <div className="w-full">
         <StickerCard
-          titleTransKey={t('text-failed-order')}
+          titleTransKey={'text-failed-order'}
           subtitleTransKey={`sticker-card-subtitle-last-${timeFrame}-days`}
           icon={<CartIconBig />}
           iconBgStyle={{ backgroundColor: '#A7F3D0' }}
@@ -74,7 +74,7 @@ const TotalOrderByStatus: React.FC<IProps> = ({ order, timeFrame = 1 }) => {
       </div>
       <div className="w-full">
         <StickerCard
-          titleTransKey={t('text-order-local-facility')}
+          titleTransKey={'text-order-local-facility'}
           subtitleTransKey={`sticker-card-subtitle-last-${timeFrame}-days`}
           icon={<CartIconBig />}
           iconBgStyle={{ backgroundColor: '#A7F3D0' }}
@@ -83,7 +83,7 @@ const TotalOrderByStatus: React.FC<IProps> = ({ order, timeFrame = 1 }) => {
       </div>
       <div className="w-full">
         <StickerCard
-          titleTransKey={t('text-order-out-delivery')}
+          titleTransKey={'text-order-out-delivery'}
           subtitleTransKey={`sticker-card-subtitle-last-${timeFrame}-days`}
           icon={<CartIconBig />}
           iconBgStyle={{ backgroundColor: '#A7F3D0' }}

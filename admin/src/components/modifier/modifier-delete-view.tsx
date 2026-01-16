@@ -14,7 +14,8 @@ const ModifierDeleteView = () => {
 
   function handleDelete() {
     deleteModifier({
-      id: data,
+      id: data?.id,
+      modifier_group_id: data?.modifier_group_id,
     });
     closeModal();
   }
@@ -29,4 +30,3 @@ const ModifierDeleteView = () => {
 };
 
 export default ModifierDeleteView;
-

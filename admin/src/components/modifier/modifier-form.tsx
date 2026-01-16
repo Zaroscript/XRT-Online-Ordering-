@@ -1,11 +1,16 @@
 import Input from '@/components/ui/input';
-import { useForm, useWatch } from 'react-hook-form';
+import {
+  useForm,
+  useWatch,
+  useFieldArray,
+  FormProvider,
+} from 'react-hook-form';
 import Button from '@/components/ui/button';
 import Card from '@/components/common/card';
 import Description from '@/components/ui/description';
 import { useRouter } from 'next/router';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Modifier } from '@/types';
+import { Modifier, QuantityLevel, PricesBySize } from '@/types';
 import { Routes } from '@/config/routes';
 import { useTranslation } from 'next-i18next';
 import SwitchInput from '@/components/ui/switch-input';
@@ -13,10 +18,15 @@ import {
   useCreateModifierMutation,
   useUpdateModifierMutation,
 } from '@/data/modifier';
+import { useModifierGroupQuery } from '@/data/modifier-group';
 import StickyFooterPanel from '@/components/ui/sticky-footer-panel';
 import { EditIcon } from '@/components/icons/edit';
 import Label from '@/components/ui/label';
 import * as yup from 'yup';
+import { Tabs, TabList, Tab, TabPanel } from '@/components/ui/tabs';
+import { useItemSizesQuery } from '@/data/item-size';
+import QuantityLevelField from '@/components/modifier-group/quantity-level-field';
+import { TrashIcon } from '@/components/icons/trash';
 
 type FormValues = {
   name: string;
@@ -28,6 +38,9 @@ type FormValues = {
     enabled?: boolean;
     allowed_sides?: string[];
   };
+  quantity_levels?: QuantityLevel[];
+  prices_by_size?: PricesBySize[];
+  inherit_pricing?: boolean;
 };
 
 const modifierValidationSchema = yup.object().shape({
@@ -35,20 +48,63 @@ const modifierValidationSchema = yup.object().shape({
   is_default: yup.boolean().optional(),
   max_quantity: yup
     .number()
-    .transform((value) => (isNaN(value) || value === null || value === '') ? undefined : value)
+    .transform((value) =>
+      isNaN(value) || value === null || value === '' ? undefined : value,
+    )
     .nullable()
     .optional()
     .min(1, 'form:error-max-quantity-min'),
   display_order: yup
     .number()
-    .transform((value) => (isNaN(value) || value === null || value === '') ? 0 : value)
+    .transform((value) =>
+      isNaN(value) || value === null || value === '' ? 0 : value,
+    )
     .required('form:error-display-order-required')
     .min(0, 'form:error-display-order-min'),
   is_active: yup.boolean().optional(),
-  sides_config: yup.object().shape({
-    enabled: yup.boolean().optional(),
-    allowed_sides: yup.array().of(yup.string().required()).optional(),
-  }).optional(),
+  sides_config: yup
+    .object()
+    .shape({
+      enabled: yup.boolean().optional(),
+      allowed_sides: yup.array().of(yup.string().required()).optional(),
+    })
+    .optional(),
+  inherit_pricing: yup.boolean().optional(),
+  quantity_levels: yup.array().when('inherit_pricing', {
+    is: (val: boolean) => val === false,
+    then: (schema) =>
+      schema.of(
+        yup.object().shape({
+          quantity: yup
+            .number()
+            .required('form:error-quantity-required')
+            .min(1, 'form:error-quantity-min'),
+          name: yup.string().optional(),
+          price: yup
+            .number()
+            .transform((value) => (isNaN(value) ? undefined : value))
+            .optional()
+            .min(0, 'form:error-price-must-positive'),
+          is_default: yup.boolean(),
+          display_order: yup
+            .number()
+            .transform((value) => (isNaN(value) ? undefined : value))
+            .optional()
+            .min(0, 'form:error-display-order-min'),
+          is_active: yup.boolean(),
+        }),
+      ),
+    otherwise: (schema) => schema.optional(),
+  }),
+  prices_by_size: yup.array().of(
+    yup.object().shape({
+      sizeCode: yup
+        .string()
+        .oneOf(['S', 'M', 'L', 'XL', 'XXL'])
+        .required('form:error-size-code-required'),
+      priceDelta: yup.number().required('form:error-price-delta-required'),
+    }),
+  ),
 });
 
 const defaultValues: FormValues = {
@@ -61,6 +117,7 @@ const defaultValues: FormValues = {
     enabled: false,
     allowed_sides: [],
   },
+  inherit_pricing: true,
 };
 
 type IProps = {
@@ -68,7 +125,6 @@ type IProps = {
   modifierGroupId: string;
   onSuccess?: () => void;
 };
-
 export default function CreateOrUpdateModifierForm({
   initialValues,
   modifierGroupId,
@@ -76,17 +132,19 @@ export default function CreateOrUpdateModifierForm({
 }: IProps) {
   const router = useRouter();
   const { t } = useTranslation();
-  const { mutate: createModifier, isPending: creating } = useCreateModifierMutation();
-  const { mutate: updateModifier, isPending: updating } = useUpdateModifierMutation();
+  const { mutate: createModifier, isPending: creating } =
+    useCreateModifierMutation();
+  const { mutate: updateModifier, isPending: updating } =
+    useUpdateModifierMutation();
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FormValues>({
-    resolver: yupResolver(modifierValidationSchema),
+  // Fetch Modifier Group Data for Inheritance
+  const { group: modifierGroup } = useModifierGroupQuery({
+    id: modifierGroupId,
+    language: router.locale!,
+  });
+
+  const methods = useForm<FormValues>({
+    resolver: yupResolver(modifierValidationSchema) as any,
     defaultValues: initialValues
       ? {
           name: initialValues.name,
@@ -94,15 +152,48 @@ export default function CreateOrUpdateModifierForm({
           max_quantity: initialValues.max_quantity,
           display_order: initialValues.display_order,
           is_active: initialValues.is_active,
+          quantity_levels:
+            initialValues.quantity_levels?.map((ql) => ({
+              ...ql,
+              name: ql.name ?? undefined,
+              display_order: ql.display_order ?? 0,
+              price: (ql as any).pivot?.price ?? (ql as any).price ?? 0,
+              prices_by_size: ql.prices_by_size || [],
+            })) || [],
+          prices_by_size: initialValues.prices_by_size || [],
+          inherit_pricing:
+            !initialValues.quantity_levels ||
+            initialValues.quantity_levels.length === 0,
         }
       : defaultValues,
   });
 
-  const allowedSides = useWatch({
+  const {
+    register,
     control,
-    name: 'sides_config.allowed_sides',
-    defaultValue: [],
-  }) || [];
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = methods;
+
+  const { sizes: itemSizes } = useItemSizesQuery();
+
+  const {
+    fields: quantityLevelFields,
+    append: appendQuantityLevel,
+    remove: removeQuantityLevel,
+  } = useFieldArray({
+    control,
+    name: 'quantity_levels',
+  });
+
+  const allowedSides =
+    useWatch({
+      control,
+      name: 'sides_config.allowed_sides',
+      defaultValue: [],
+    }) || [];
 
   const sidesEnabled = useWatch({
     control,
@@ -110,15 +201,44 @@ export default function CreateOrUpdateModifierForm({
     defaultValue: false,
   });
 
+  const inheritPricing = useWatch({
+    control,
+    name: 'inherit_pricing',
+    defaultValue: true,
+  });
+
   const toggleSide = (side: string) => {
     const currentSides = allowedSides || [];
     const newSides = currentSides.includes(side)
-      ? currentSides.filter(s => s !== side)
+      ? currentSides.filter((s) => s !== side)
       : [...currentSides, side];
     setValue('sides_config.allowed_sides', newSides);
   };
 
   const onSubmit = async (values: FormValues): Promise<void> => {
+    let quantityLevels = values.quantity_levels || [];
+    let pricesBySize = values.prices_by_size || [];
+
+    // If inheriting pricing, use data from Modifier Group
+    if (values.inherit_pricing && modifierGroup) {
+      if (modifierGroup.quantity_levels) {
+        quantityLevels = modifierGroup.quantity_levels.map((ql) => ({
+          ...ql,
+          // Ensure optional fields are handled correctly
+          name: ql.name ?? undefined,
+          price: ql.price ?? 0,
+          is_default: ql.is_default ?? false,
+          display_order: ql.display_order ?? 0,
+          is_active: ql.is_active ?? true,
+          prices_by_size: ql.prices_by_size || [],
+        }));
+      }
+
+      if (modifierGroup.prices_by_size) {
+        pricesBySize = modifierGroup.prices_by_size;
+      }
+    }
+
     const input: any = {
       modifier_group_id: modifierGroupId,
       name: values.name,
@@ -126,6 +246,8 @@ export default function CreateOrUpdateModifierForm({
       max_quantity: values.max_quantity || undefined,
       display_order: values.display_order || 0,
       is_active: values.is_active !== undefined ? values.is_active : true,
+      quantity_levels: quantityLevels,
+      prices_by_size: pricesBySize,
     };
 
     // Include sides_config only if enabled
@@ -166,7 +288,7 @@ export default function CreateOrUpdateModifierForm({
               router.push(Routes.modifierGroup.details(modifierGroupId));
             }
           },
-        }
+        },
       );
     }
   };
@@ -174,157 +296,241 @@ export default function CreateOrUpdateModifierForm({
   const isLoading = creating || updating;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
-        <Description
-          title={t('form:form-title-information') || 'Modifier Information'}
-          details={
-            t('form:modifier-info-helper-text') || 
-            'Configure basic modifier settings. Note: Pricing, quantity levels, and selection rules are managed at the Modifier Group level and will automatically apply to this modifier.'
-          }
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
-        />
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <div className="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>{t('form:modifier-group-settings-note') || 'Note:'}</strong>{' '}
-              {t('form:modifier-group-settings-note-text') || 
-                'All pricing, quantity levels, and selection rules are configured at the Modifier Group level. These settings automatically apply to all modifiers in the group.'}
-            </p>
-          </div>
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Tabs defaultTab="basic">
+          <TabList>
+            <Tab id="basic">{t('form:tab-basic-info')}</Tab>
+            <Tab id="pricing">{t('form:tab-pricing-config')}</Tab>
+          </TabList>
 
-          <Input
-            label={t('form:input-label-name') || 'Name'}
-            {...register('name')}
-            error={t(errors.name?.message!)}
-            variant="outline"
-            className="mb-5"
-            required
-          />
-
-          <div className="mb-5">
-            <SwitchInput
-              name="is_default"
-              control={control}
-              label={t('form:input-label-default') || 'Default'}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {t('form:default-modifier-helper') || 'Mark this modifier as the default selection for the group'}
-            </p>
-          </div>
-
-          <div className="mb-5">
-            <Input
-              label={t('form:input-label-max-quantity') || 'Max Quantity'}
-              {...register('max_quantity', {
-                valueAsNumber: true,
-              })}
-              type="number"
-              min="1"
-              error={t(errors.max_quantity?.message!)}
-              variant="outline"
-              placeholder={t('form:input-placeholder-max-quantity') || 'Leave empty if no quantity limit'}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {t('form:max-quantity-help-text') || 'Set maximum quantity allowed for this specific modifier (optional)'}
-            </p>
-          </div>
-
-          <div className="mb-5">
-            <Input
-              label={t('form:input-label-display-order') || 'Display Order'}
-              {...register('display_order', {
-                valueAsNumber: true,
-              })}
-              type="number"
-              min="0"
-              error={t(errors.display_order?.message!)}
-              variant="outline"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {t('form:display-order-helper') || 'Order in which this modifier appears in the list'}
-            </p>
-          </div>
-
-          <div className="mb-5">
-            <SwitchInput
-              name="is_active"
-              control={control}
-              label={t('form:input-label-active') || 'Active'}
-            />
-          </div>
-
-          <div className="mb-5 p-4 border border-border-200 rounded-lg bg-gray-50">
-            <div className="mb-3">
-              <SwitchInput
-                name="sides_config.enabled"
-                control={control}
-                label={t('form:input-label-enable-sides') || 'Enable Sides Configuration'}
+          <TabPanel id="basic">
+            <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
+              <Description
+                title={t('form:form-title-information')}
+                details={t('form:modifier-info-helper-text')}
+                className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {t('form:sides-config-helper') || 'Allow customers to select sides (LEFT, RIGHT, WHOLE) for this modifier'}
-              </p>
-            </div>
-            {sidesEnabled && (
-              <div className="mt-4 space-y-3">
-                <Label className="mb-3 block text-sm font-medium">
-                  {t('form:input-label-allowed-sides') || 'Allowed Sides'}
-                </Label>
-                {['LEFT', 'RIGHT', 'WHOLE'].map((side) => (
-                  <div key={side} className="flex items-center justify-between">
-                    <Label className="text-sm text-body">
-                      {t(`form:input-label-side-${side.toLowerCase()}`) || side}
-                    </Label>
-                    <input
-                      type="checkbox"
-                      checked={allowedSides.includes(side)}
-                      onChange={() => toggleSide(side)}
-                      className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
+              <Card className="w-full sm:w-8/12 md:w-2/3">
+                <div className="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>{t('form:modifier-override-note')}</strong>{' '}
+                    {t('form:modifier-override-note-text')}
+                  </p>
+                </div>
 
-      <StickyFooterPanel className="z-0">
-        <div className="text-end">
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (onSuccess) {
-                onSuccess();
-              } else {
-                router.push(Routes.modifierGroup.details(modifierGroupId));
-              }
-            }}
-            className="text-sm me-4 md:ms-0"
-          >
-            {t('form:button-label-cancel') || 'Cancel'}
-          </Button>
-          <Button
-            loading={isLoading}
-            disabled={isLoading}
-            className="text-sm"
-          >
-            {initialValues ? (
-              <>
-                <EditIcon className="w-5 h-5 shrink-0 ltr:mr-2 rtl:pl-2" />
-                <span className="sm:hidden">
-                  {t('form:button-label-update')}
-                </span>
-                <span className="hidden sm:block">
-                  {t('form:button-label-update-modifier') || 'Update Modifier'}
-                </span>
-              </>
-            ) : (
-              t('form:button-label-add-modifier') || 'Add Modifier'
-            )}
-          </Button>
-        </div>
-      </StickyFooterPanel>
-    </form>
+                <Input
+                  label={t('form:input-label-name')}
+                  {...register('name')}
+                  error={t(errors.name?.message!)}
+                  variant="outline"
+                  className="mb-5"
+                  required
+                />
+
+                <div className="mb-5">
+                  <SwitchInput
+                    name="is_default"
+                    control={control}
+                    label={t('form:input-label-default')}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('form:default-modifier-helper')}
+                  </p>
+                </div>
+
+                <div className="mb-5">
+                  <Input
+                    label={t('form:input-label-max-quantity')}
+                    {...register('max_quantity', {
+                      valueAsNumber: true,
+                    })}
+                    type="number"
+                    min="1"
+                    error={t(errors.max_quantity?.message!)}
+                    variant="outline"
+                    placeholder={t('form:input-placeholder-max-quantity')}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('form:max-quantity-help-text')}
+                  </p>
+                </div>
+
+                <div className="mb-5">
+                  <Input
+                    label={t('form:input-label-display-order')}
+                    {...register('display_order', {
+                      valueAsNumber: true,
+                    })}
+                    type="number"
+                    min="0"
+                    error={t(errors.display_order?.message!)}
+                    variant="outline"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('form:display-order-helper')}
+                  </p>
+                </div>
+
+                <div className="mb-5">
+                  <SwitchInput
+                    name="is_active"
+                    control={control}
+                    label={t('form:input-label-active')}
+                  />
+                </div>
+
+                <div className="mb-5 p-4 border border-border-200 rounded-lg bg-gray-50">
+                  <div className="mb-3">
+                    <SwitchInput
+                      name="sides_config.enabled"
+                      control={control}
+                      label={t('form:input-label-enable-sides')}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {t('form:sides-config-helper')}
+                    </p>
+                  </div>
+                  {sidesEnabled && (
+                    <div className="mt-4 space-y-3">
+                      <Label className="mb-3 block text-sm font-medium">
+                        {t('form:input-label-allowed-sides')}
+                      </Label>
+                      {['LEFT', 'RIGHT', 'WHOLE'].map((side) => (
+                        <div
+                          key={side}
+                          className="flex items-center justify-between"
+                        >
+                          <Label className="text-sm text-body">
+                            {t(`form:input-label-side-${side.toLowerCase()}`)}
+                          </Label>
+                          <input
+                            type="checkbox"
+                            checked={allowedSides.includes(side)}
+                            onChange={() => toggleSide(side)}
+                            className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+          </TabPanel>
+
+          <TabPanel id="pricing">
+            <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
+              <Description
+                title={t('form:form-title-pricing')}
+                details={t('form:modifier-pricing-helper-text')}
+                className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+              />
+              <Card className="w-full sm:w-8/12 md:w-2/3">
+                <div className="mb-5 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="mb-2">
+                    <SwitchInput
+                      name="inherit_pricing"
+                      control={control}
+                      label={t('form:input-label-inherit-pricing')}
+                    />
+                    <p className="text-xs text-body mt-1">
+                      {t('form:inherit-pricing-helper')}
+                    </p>
+                  </div>
+                </div>
+
+                {inheritPricing ? (
+                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-blue-700 text-sm">
+                    {t('form:pricing-inherited-text')}
+                  </div>
+                ) : (
+                  <div className="mb-5 animate-fadeIn">
+                    <div className="flex items-center justify-between mb-4">
+                      <Label className="text-lg font-semibold">
+                        {t('form:input-label-quantity-levels')}
+                      </Label>
+                      <Button
+                        type="button"
+                        onClick={() =>
+                          appendQuantityLevel({
+                            quantity: 1,
+                            name: '',
+                            price: 0,
+                            is_default: false,
+                            display_order: quantityLevelFields.length,
+                            is_active: true,
+                            prices_by_size: [],
+                          })
+                        }
+                        size="small"
+                      >
+                        {t('form:button-label-add-quantity-level')}
+                      </Button>
+                    </div>
+
+                    {quantityLevelFields.length === 0 ? (
+                      <p className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded">
+                        {t('form:no-quantity-levels')}
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {quantityLevelFields.map((field, index) => (
+                          <QuantityLevelField
+                            key={field.id}
+                            index={index}
+                            remove={() => removeQuantityLevel(index)}
+                            control={control}
+                            errors={errors}
+                            globalSizes={itemSizes}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            </div>
+          </TabPanel>
+        </Tabs>
+
+        <StickyFooterPanel className="z-0">
+          <div className="text-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (onSuccess) {
+                  onSuccess();
+                } else {
+                  router.push(Routes.modifierGroup.details(modifierGroupId));
+                }
+              }}
+              className="text-sm me-4 md:ms-0"
+            >
+              {t('form:button-label-cancel')}
+            </Button>
+            <Button
+              loading={isLoading}
+              disabled={isLoading}
+              className="text-sm"
+            >
+              {initialValues ? (
+                <>
+                  <EditIcon className="w-5 h-5 shrink-0 ltr:mr-2 rtl:pl-2" />
+                  <span className="sm:hidden">
+                    {t('form:button-label-update')}
+                  </span>
+                  <span className="hidden sm:block">
+                    {t('form:button-label-update-modifier')}
+                  </span>
+                </>
+              ) : (
+                t('form:button-label-add-modifier')
+              )}
+            </Button>
+          </div>
+        </StickyFooterPanel>
+      </form>
+    </FormProvider>
   );
 }

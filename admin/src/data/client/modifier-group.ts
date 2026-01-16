@@ -18,21 +18,43 @@ export const modifierGroupClient = {
       ...params,
       business_id,
     });
-    const groups = response?.data || response || [];
+    
+    // Backend returns: { success: true, data: { modifierGroups: [...], total, page, limit, totalPages } }
+    const result = response?.data || response;
+    
+    // Handle both formats: direct array or PaginatedModifierGroups object
+    let groups: any[] = [];
+    let paginationInfo: any = {};
+    
+    if (Array.isArray(result)) {
+      groups = result;
+    } else if (result?.modifierGroups && Array.isArray(result.modifierGroups)) {
+      groups = result.modifierGroups;
+      paginationInfo = {
+        total: result.total || groups.length,
+        page: result.page || 1,
+        limit: result.limit || 10,
+        totalPages: result.totalPages || Math.ceil((result.total || groups.length) / (result.limit || 10)),
+      };
+    } else if (result?.data && Array.isArray(result.data)) {
+      groups = result.data;
+    }
+    
     return {
-      data: Array.isArray(groups) ? groups : [],
-      current_page: 1,
+      data: groups,
+      current_page: paginationInfo.page || 1,
       first_page_url: '',
-      from: 1,
-      last_page: 1,
+      from: ((paginationInfo.page || 1) - 1) * (paginationInfo.limit || 10) + 1,
+      last_page: paginationInfo.totalPages || 1,
       last_page_url: '',
       links: [],
       next_page_url: null,
       path: '',
-      per_page: 10,
+      per_page: paginationInfo.limit || 10,
       prev_page_url: null,
-      to: Array.isArray(groups) ? groups.length : 0,
-      total: Array.isArray(groups) ? groups.length : 0,
+      to: Math.min(((paginationInfo.page || 1) - 1) * (paginationInfo.limit || 10) + groups.length, paginationInfo.total || groups.length),
+      total: paginationInfo.total || groups.length,
+      paginatorInfo: paginationInfo,
     };
   },
   get: async ({ id, language }: any) => {

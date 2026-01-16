@@ -11,9 +11,12 @@ import { HttpClient } from './http-client';
 
 export const modifierClient = {
   ...crudFactory<Modifier, QueryOptions, CreateModifierInput>(
-    API_ENDPOINTS.MODIFIERS
+    API_ENDPOINTS.MODIFIERS,
   ),
-  paginated: async ({ modifier_group_id, ...params }: Partial<ModifierQueryOptions>) => {
+  paginated: async ({
+    modifier_group_id,
+    ...params
+  }: Partial<ModifierQueryOptions>) => {
     const response = await HttpClient.get<any>(API_ENDPOINTS.MODIFIERS, {
       ...params,
       modifier_group_id,
@@ -35,27 +38,50 @@ export const modifierClient = {
       total: Array.isArray(modifiers) ? modifiers.length : 0,
     };
   },
-  get: async ({ id, language }: any) => {
-    const response = await HttpClient.get<any>(
-      `${API_ENDPOINTS.MODIFIERS}/${id}`
-    );
+  get: async ({ id, modifier_group_id, language }: any) => {
+    let url = `${API_ENDPOINTS.MODIFIERS}/${id}`;
+
+    // If we have modifier_group_id, use the nested route
+    if (modifier_group_id) {
+      url = `${API_ENDPOINTS.MODIFIER_GROUPS}/${modifier_group_id}/${API_ENDPOINTS.MODIFIERS}/${id}`;
+    }
+
+    const response = await HttpClient.get<any>(url, {
+      language,
+    });
     // Handle backend response format: { success: true, data: {...} }
     return response?.data || response;
   },
   create: async (input: CreateModifierInput) => {
-    const response = await HttpClient.post<any>(API_ENDPOINTS.MODIFIERS, input);
-    return response?.data || response;
-  },
-  update: async ({ id, ...input }: any) => {
-    const response = await HttpClient.put<any>(
-      `${API_ENDPOINTS.MODIFIERS}/${id}`,
-      input
+    if (!input.modifier_group_id) {
+      throw new Error('Modifier Group ID is required to create a modifier');
+    }
+    const response = await HttpClient.post<any>(
+      `${API_ENDPOINTS.MODIFIER_GROUPS}/${input.modifier_group_id}/${API_ENDPOINTS.MODIFIERS}`,
+      input,
     );
     return response?.data || response;
   },
-  delete: async ({ id }: { id: string }) => {
-    const response = await HttpClient.delete<any>(`${API_ENDPOINTS.MODIFIERS}/${id}`);
+  update: async ({ id, ...input }: any) => {
+    if (!input.modifier_group_id) {
+      throw new Error('Modifier Group ID is required to update a modifier');
+    }
+    const response = await HttpClient.put<any>(
+      `${API_ENDPOINTS.MODIFIER_GROUPS}/${input.modifier_group_id}/${API_ENDPOINTS.MODIFIERS}/${id}`,
+      input,
+    );
+    return response?.data || response;
+  },
+  delete: async ({
+    id,
+    modifier_group_id,
+  }: {
+    id: string;
+    modifier_group_id: string;
+  }) => {
+    const response = await HttpClient.delete<any>(
+      `${API_ENDPOINTS.MODIFIER_GROUPS}/${modifier_group_id}/${API_ENDPOINTS.MODIFIERS}/${id}`,
+    );
     return response?.data || response;
   },
 };
-

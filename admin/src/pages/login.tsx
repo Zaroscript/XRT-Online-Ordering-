@@ -10,7 +10,7 @@ import { Routes } from '@/config/routes';
 
 export const getServerSideProps: GetServerSideProps = async ({ locale }) => ({
   props: {
-    ...(await serverSideTranslations(locale!, ['common', 'form'])),
+    ...(await serverSideTranslations(locale!, ['common', 'form', 'errors'])),
   },
 });
 

@@ -88,7 +88,13 @@ const LoginForm = () => {
               role === 'admin' ||
               role === 'client'
             ) {
-              setAuthCredentials(token, permissions, role, refreshToken, rememberMe);
+              setAuthCredentials(
+                token,
+                permissions,
+                role,
+                refreshToken,
+                rememberMe,
+              );
               Router.push(Routes.dashboard);
               return;
             }
@@ -114,28 +120,36 @@ const LoginForm = () => {
           let errorMsg = t('common:login-failed');
 
           // Handle network errors and timeouts
-          if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
-            errorMsg = 'Network error: Please check if the backend server is running on http://localhost:3001';
+          if (
+            error?.code === 'ERR_NETWORK' ||
+            error?.message?.includes('Network Error')
+          ) {
+            errorMsg = t('errors:network-error');
             setErrorMessage(errorMsg);
             toast.error(errorMsg);
             return;
           }
 
           // Handle timeout errors
-          if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
-            errorMsg = `Request timeout: Backend server is not responding. Please check:
-1. Backend server is running on http://localhost:3001
-2. Restart the frontend dev server (npm run dev) to clear cache`;
+          if (
+            error?.code === 'ECONNABORTED' ||
+            error?.message?.includes('timeout')
+          ) {
+            errorMsg = t('errors:timeout-error');
             setErrorMessage(errorMsg);
-            toast.error('Request timeout - check backend server');
+            toast.error(t('errors:request-timeout-toast'));
             return;
           }
 
           // Handle different HTTP error types
           if (error?.response?.status === 401) {
-            errorMsg = error?.response?.data?.message || t('form:error-credential-wrong');
+            errorMsg =
+              error?.response?.data?.message ||
+              t('form:error-credential-wrong');
           } else if (error?.response?.status === 403) {
-            errorMsg = error?.response?.data?.message || t('form:error-enough-permission');
+            errorMsg =
+              error?.response?.data?.message ||
+              t('form:error-enough-permission');
           } else if (error?.response?.status === 429) {
             errorMsg = t('form:error-too-many-attempts');
           } else if (error?.response?.data?.message) {
@@ -175,7 +189,7 @@ const LoginForm = () => {
               type="email"
               variant="outline"
               error={t(errors?.email?.message!)}
-              placeholder="Enter your email"
+              placeholder={t('form:input-placeholder-email')}
               className="transition-all duration-200 focus:ring-2 focus:ring-accent/20"
             />
             <PasswordInput
@@ -184,7 +198,7 @@ const LoginForm = () => {
               {...register('password')}
               error={t(errors?.password?.message!)}
               variant="outline"
-              placeholder="Enter your password"
+              placeholder={t('form:input-placeholder-password')}
               forgotPageLink={Routes.forgotPassword}
               className="transition-all duration-200 focus:ring-2 focus:ring-accent/20"
             />
@@ -201,7 +215,7 @@ const LoginForm = () => {
                   htmlFor="remember"
                   className="ml-2 block text-sm text-body"
                 >
-                  {t('form:input-label-remember-me') || 'Remember me'}
+                  {t('form:input-label-remember-me')}
                 </label>
               </div>
             </div>
@@ -210,7 +224,7 @@ const LoginForm = () => {
               loading={isLoading}
               disabled={isLoading}
             >
-              {t('form:button-label-login') || 'Sign In'}
+              {t('form:button-label-login')}
             </Button>
           </div>
         )}

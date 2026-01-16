@@ -10,7 +10,11 @@ import { SortOrder } from '@/types';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Routes } from '@/config/routes';
-import { adminOnly, getAuthCredentials, hasPermission } from '@/utils/auth-utils';
+import {
+  adminOnly,
+  getAuthCredentials,
+  hasPermission,
+} from '@/utils/auth-utils';
 import { useModifiersQuery, useModifierQuery } from '@/data/modifier';
 import { useModifierGroupQuery } from '@/data/modifier-group';
 import { useRouter } from 'next/router';
@@ -30,16 +34,24 @@ export default function ModifierGroupDetailsPage() {
   const [sortedBy, setColumn] = useState<SortOrder>(SortOrder.Desc);
 
   // Fetch modifier group details
-  const { group, isLoading: groupLoading, error: groupError } = useModifierGroupQuery({
+  const {
+    group,
+    isLoading: groupLoading,
+    error: groupError,
+  } = useModifierGroupQuery({
     id: groupId as string,
     slug: groupId as string,
     language: locale!,
   });
 
-  // Fetch modifier for editing
-  const { modifier, isLoading: modifierLoading, error: modifierError } = useModifierQuery({
+  // Fetch modifiers for editing
+  const {
+    modifier,
+    isLoading: modifierLoading,
+    error: modifierError,
+  } = useModifierQuery({
     id: editModifier as string,
-    slug: editModifier as string,
+    slug: groupId as string, // Pass groupId as slug, since the hook maps slug to modifier_group_id
     language: locale!,
   });
 
@@ -56,11 +68,21 @@ export default function ModifierGroupDetailsPage() {
 
   // Clear query params after successful form submission
   const handleFormSuccess = () => {
-    router.replace(Routes.modifierGroup.details(groupId as string), undefined, { shallow: true });
+    router.replace(Routes.modifierGroup.details(groupId as string), undefined, {
+      shallow: true,
+    });
   };
 
-  if (groupLoading || (editModifier && modifierLoading) || loading) return <Loader text={t('common:text-loading')} />;
-  if (groupError || (editModifier && modifierError) || error) return <ErrorMessage message={groupError?.message || modifierError?.message || error?.message} />;
+  if (groupLoading || (editModifier && modifierLoading) || loading)
+    return <Loader text={t('common:text-loading')} />;
+  if (groupError || (editModifier && modifierError) || error)
+    return (
+      <ErrorMessage
+        message={
+          groupError?.message || modifierError?.message || error?.message
+        }
+      />
+    );
 
   function handleSearch({ searchText }: { searchText: string }) {
     setSearchTerm(searchText);
@@ -93,7 +115,9 @@ export default function ModifierGroupDetailsPage() {
             </Link>
             <span className="text-gray-400">/</span>
             <span className="text-heading font-medium">
-              {editModifier ? t('form:form-title-edit-modifier') || 'Edit Modifier' : t('form:form-title-create-modifier') || 'Create Modifier'}
+              {editModifier
+                ? t('form:form-title-edit-modifier') || 'Edit Modifier'
+                : t('form:form-title-create-modifier') || 'Create Modifier'}
             </span>
           </div>
         </Card>
@@ -145,7 +169,11 @@ export default function ModifierGroupDetailsPage() {
                 <IosArrowLeft width={18} />
               </Link>
               <PageHeading
-                title={group?.name ? `${group.name} - ${t('form:input-label-modifiers')}` : t('form:input-label-modifiers')}
+                title={
+                  group?.name
+                    ? `${group.name} - ${t('form:input-label-modifiers')}`
+                    : t('form:input-label-modifiers')
+                }
               />
             </div>
           </div>
@@ -189,4 +217,3 @@ export const getServerSideProps = async ({ locale }: any) => ({
     ...(await serverSideTranslations(locale, ['table', 'common', 'form'])),
   },
 });
-

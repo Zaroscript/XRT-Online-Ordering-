@@ -36,12 +36,73 @@ export const itemClient = {
         return response?.data || response;
     },
     updateItem: async (data: UpdateItemInput) => {
-        const response = await HttpClient.put<any>(`${API_ENDPOINTS.ITEMS}/${data.id}`, data);
+        const formData = new FormData();
+        const { id, ...input } = data;
+        
+        Object.keys(input).forEach((key) => {
+            const value = input[key as keyof typeof input];
+            
+            if (key === 'image' && value) {
+                // Handle image file
+                if (value instanceof File) {
+                    formData.append('image', value);
+                } else if (typeof value === 'string') {
+                    // If it's a URL string, don't append (backend will handle it)
+                    // Only append if it's actually a file
+                }
+            } else if (key === 'modifier_groups' && value) {
+                // Serialize modifier_groups as JSON string for backend
+                formData.append('modifier_groups', JSON.stringify(value));
+            } else if (value !== undefined && value !== null) {
+                // Convert other values to strings
+                if (typeof value === 'boolean') {
+                    formData.append(key, value ? 'true' : 'false');
+                } else if (typeof value === 'object') {
+                    formData.append(key, JSON.stringify(value));
+                } else {
+                    formData.append(key, String(value));
+                }
+            }
+        });
+        
+        const response = await HttpClient.put<any>(`${API_ENDPOINTS.ITEMS}/${id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         // Handle backend response format: { success: true, data: { item: {...} } }
         return response?.data?.item || response?.data || response;
     },
     create: async (variables: CreateItemInput) => {
-        const response = await HttpClient.post<any>(API_ENDPOINTS.ITEMS, variables);
+        const formData = new FormData();
+        
+        Object.keys(variables).forEach((key) => {
+            const value = variables[key as keyof CreateItemInput];
+            
+            if (key === 'image' && value) {
+                // Handle image file
+                if (value instanceof File) {
+                    formData.append('image', value);
+                } else if (typeof value === 'string') {
+                    // If it's a URL string, don't append (backend will handle it)
+                    // Only append if it's actually a file
+                }
+            } else if (key === 'modifier_groups' && value) {
+                // Serialize modifier_groups as JSON string for backend
+                formData.append('modifier_groups', JSON.stringify(value));
+            } else if (value !== undefined && value !== null) {
+                // Convert other values to strings
+                if (typeof value === 'boolean') {
+                    formData.append(key, value ? 'true' : 'false');
+                } else if (typeof value === 'object') {
+                    formData.append(key, JSON.stringify(value));
+                } else {
+                    formData.append(key, String(value));
+                }
+            }
+        });
+        
+        const response = await HttpClient.post<any>(API_ENDPOINTS.ITEMS, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         // Handle backend response format: { success: true, data: { item: {...} } }
         return response?.data?.item || response?.data || response;
     },
