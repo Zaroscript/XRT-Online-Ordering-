@@ -141,4 +141,5 @@ All responses follow a consistent format:
 `;
 
 fs.writeFileSync(INDEX_FILE, content);
+
 console.log(`Generated ${INDEX_FILE}`);
