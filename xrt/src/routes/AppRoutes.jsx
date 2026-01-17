@@ -1,6 +1,4 @@
-import { Route, Routes, useRoutes } from 'react-router-dom';
-import Home from "@/pages/Home.jsx"
-import Contact from '../pages/Contact';
+import { useRoutes } from 'react-router-dom';
 import { routes } from '../config/constants';
 
 
