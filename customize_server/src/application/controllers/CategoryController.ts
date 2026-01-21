@@ -61,9 +61,8 @@ export class CategoryController {
     let parsedModifierGroups = undefined;
     if (modifier_groups !== undefined) {
       try {
-        parsedModifierGroups = typeof modifier_groups === 'string' 
-          ? JSON.parse(modifier_groups) 
-          : modifier_groups;
+        parsedModifierGroups =
+          typeof modifier_groups === 'string' ? JSON.parse(modifier_groups) : modifier_groups;
       } catch (error) {
         throw new ValidationError('Invalid modifier_groups format. Expected JSON array.');
       }
@@ -138,6 +137,14 @@ export class CategoryController {
       language,
       modifier_groups,
     } = req.body;
+
+    console.log('--- UPDATE CATEGORY REQUEST ---');
+    console.log('Payload Body Keys:', Object.keys(req.body));
+    console.log('Modifier Groups (Raw):', modifier_groups);
+    // @ts-ignore
+    console.log('Apply to Items Flag (Raw):', req.body.apply_modifier_groups_to_items);
+    console.log('-------------------------------');
+
     const business_id = req.user?.business_id || req.body.business_id;
 
     if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
@@ -148,9 +155,8 @@ export class CategoryController {
     let parsedModifierGroups = undefined;
     if (modifier_groups !== undefined) {
       try {
-        parsedModifierGroups = typeof modifier_groups === 'string' 
-          ? JSON.parse(modifier_groups) 
-          : modifier_groups;
+        parsedModifierGroups =
+          typeof modifier_groups === 'string' ? JSON.parse(modifier_groups) : modifier_groups;
       } catch (error) {
         throw new ValidationError('Invalid modifier_groups format. Expected JSON array.');
       }

@@ -3,9 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateCategoryUseCase = void 0;
 const AppError_1 = require("../../../shared/errors/AppError");
 class UpdateCategoryUseCase {
-    constructor(categoryRepository, imageStorage) {
+    constructor(categoryRepository, imageStorage, itemRepository) {
         this.categoryRepository = categoryRepository;
         this.imageStorage = imageStorage;
+        this.itemRepository = itemRepository;
     }
     async execute(id, business_id, categoryData, files) {
         const existingCategory = await this.categoryRepository.findById(id, business_id);
@@ -63,6 +64,26 @@ class UpdateCategoryUseCase {
             ...(iconUrl && { icon: iconUrl, icon_public_id: iconPublicId }),
             translated_languages: updatedLanguages,
         };
+        console.log('Checking modifier propagation...');
+        console.log('Has groups:', !!categoryData.modifier_groups);
+        console.log('Flag value:', categoryData.apply_modifier_groups_to_items);
+        if (categoryData.modifier_groups && categoryData.apply_modifier_groups_to_items) {
+            console.log(`Applying modifier groups to items in category ${id}:`, categoryData.modifier_groups);
+            try {
+                await this.itemRepository.assignModifierGroupsToCategoryItems(id, business_id, categoryData.modifier_groups);
+                console.log(`Successfully applied modifier groups to items in category ${id}`);
+            }
+            catch (err) {
+                console.error(`Failed to apply modifier groups to items:`, err);
+            }
+        }
+        else {
+            console.log('Skipping modifier propagation. Reason:');
+            if (!categoryData.modifier_groups)
+                console.log('- No modifier groups in payload');
+            if (!categoryData.apply_modifier_groups_to_items)
+                console.log('- Flag apply_modifier_groups_to_items is false/undefined');
+        }
         return await this.categoryRepository.update(id, business_id, finalCategoryData);
     }
 }

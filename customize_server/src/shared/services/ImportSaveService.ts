@@ -18,7 +18,7 @@ export class ImportSaveService {
     private modifierGroupRepository: IModifierGroupRepository,
     private modifierRepository: IModifierRepository,
     private categoryRepository: ICategoryRepository
-  ) { }
+  ) {}
 
   /**
    * Save all import data in a single transaction
@@ -53,8 +53,11 @@ export class ImportSaveService {
           sizeId = createdSize.id;
         } else {
           const sizes = await this.itemSizeRepository.findAll({ business_id });
-          const foundSize = sizes.find(s => s.code === sizeData.size_code);
-          if (!foundSize) throw new Error(`Size ${sizeData.size_code} exists but not found for business_id: ${business_id}`);
+          const foundSize = sizes.find((s) => s.code === sizeData.size_code);
+          if (!foundSize)
+            throw new Error(
+              `Size ${sizeData.size_code} exists but not found for business_id: ${business_id}`
+            );
           sizeId = foundSize.id;
         }
 
@@ -75,7 +78,8 @@ export class ImportSaveService {
           limit: 1,
         });
 
-        const existingGroup = existingGroups.modifierGroups.length > 0 ? existingGroups.modifierGroups[0] : null;
+        const existingGroup =
+          existingGroups.modifierGroups.length > 0 ? existingGroups.modifierGroups[0] : null;
 
         if (existingGroup) {
           groupKeyToId.set(groupData.group_key, existingGroup.id);
@@ -86,14 +90,15 @@ export class ImportSaveService {
             display_type: groupData.display_type,
             min_select: groupData.min_select,
             max_select: groupData.max_select,
-            applies_per_quantity: groupData.applies_per_quantity,
             is_active: groupData.is_active ?? true,
             sort_order: groupData.sort_order ?? 0,
             quantity_levels: groupData.quantity_levels,
-            prices_by_size: groupData.prices_by_size?.map(p => ({
-              size_id: sizeCodeToId.get(p.sizeCode)!,
-              priceDelta: p.priceDelta
-            })).filter(p => p.size_id),
+            prices_by_size: groupData.prices_by_size
+              ?.map((p) => ({
+                size_id: sizeCodeToId.get(p.sizeCode)!,
+                priceDelta: p.priceDelta,
+              }))
+              .filter((p) => p.size_id),
           };
 
           const createdGroup = await this.modifierGroupRepository.create(createGroupDTO);
@@ -105,7 +110,9 @@ export class ImportSaveService {
       for (const modifierData of data.modifiers) {
         const groupId = groupKeyToId.get(modifierData.group_key);
         if (!groupId) {
-          throw new ValidationError(`ModifierGroup with group_key '${modifierData.group_key}' not found`);
+          throw new ValidationError(
+            `ModifierGroup with group_key '${modifierData.group_key}' not found`
+          );
         }
 
         // Check if modifier exists by name in group
@@ -117,7 +124,10 @@ export class ImportSaveService {
         const existingModifier = existingModifiers.length > 0 ? existingModifiers[0] : null;
 
         if (existingModifier) {
-          modifierKeyToId.set(`${modifierData.group_key}:${modifierData.modifier_key}`, existingModifier.id);
+          modifierKeyToId.set(
+            `${modifierData.group_key}:${modifierData.modifier_key}`,
+            existingModifier.id
+          );
         } else {
           const createModifierDTO: CreateModifierDTO = {
             modifier_group_id: groupId,
@@ -129,7 +139,10 @@ export class ImportSaveService {
           };
 
           const createdModifier = await this.modifierRepository.create(createModifierDTO);
-          modifierKeyToId.set(`${modifierData.group_key}:${modifierData.modifier_key}`, createdModifier.id);
+          modifierKeyToId.set(
+            `${modifierData.group_key}:${modifierData.modifier_key}`,
+            createdModifier.id
+          );
         }
       }
 
@@ -151,7 +164,9 @@ export class ImportSaveService {
           categoryId = categoryNameToId.get(itemData.category_name.toLowerCase());
         }
         if (!categoryId) {
-          throw new ValidationError(`Category not found for item_key: ${itemData.item_key}. Provide category_id or category_name.`);
+          throw new ValidationError(
+            `Category not found for item_key: ${itemData.item_key}. Provide category_id or category_name.`
+          );
         }
 
         const createItemDTO: CreateItemDTO = {
@@ -191,7 +206,7 @@ export class ImportSaveService {
 
         // Find overrides for this item
         const itemOverrides = data.itemModifierOverrides.filter(
-          o => o.item_key === itemData.item_key
+          (o) => o.item_key === itemData.item_key
         );
 
         // Group overrides by group_key
@@ -204,30 +219,34 @@ export class ImportSaveService {
         }
 
         // Build modifier_groups array
-        const modifierGroups = Array.from(overridesByGroup.keys()).map((group_key, index) => {
-          const groupId = groupKeyToId.get(group_key);
-          if (!groupId) return null;
+        const modifierGroups = Array.from(overridesByGroup.keys())
+          .map((group_key, index) => {
+            const groupId = groupKeyToId.get(group_key);
+            if (!groupId) return null;
 
-          const groupOverrides = overridesByGroup.get(group_key)!;
-          const modifierOverrides = groupOverrides.map(override => {
-            const modifierId = modifierKeyToId.get(`${override.group_key}:${override.modifier_key}`);
-            if (!modifierId) return null;
+            const groupOverrides = overridesByGroup.get(group_key)!;
+            const modifierOverrides = groupOverrides
+              .map((override) => {
+                const modifierId = modifierKeyToId.get(
+                  `${override.group_key}:${override.modifier_key}`
+                );
+                if (!modifierId) return null;
+
+                return {
+                  modifier_id: modifierId,
+                  prices_by_size: override.prices_by_size,
+                  quantity_levels: override.quantity_levels,
+                };
+              })
+              .filter((o) => o !== null) as any[];
 
             return {
-              modifier_id: modifierId,
-              max_quantity: override.max_quantity,
-              is_default: override.is_default,
-              prices_by_size: override.prices_by_size,
-              quantity_levels: override.quantity_levels,
+              modifier_group_id: groupId,
+              display_order: index,
+              modifier_overrides: modifierOverrides.length > 0 ? modifierOverrides : undefined,
             };
-          }).filter(o => o !== null) as any[];
-
-          return {
-            modifier_group_id: groupId,
-            display_order: index,
-            modifier_overrides: modifierOverrides.length > 0 ? modifierOverrides : undefined,
-          };
-        }).filter(g => g !== null) as any[];
+          })
+          .filter((g) => g !== null) as any[];
 
         // Update item with modifier groups
         if (modifierGroups.length > 0) {

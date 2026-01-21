@@ -27,7 +27,9 @@ export const useItemFormCache = ({
   initialValues,
 }: UseItemFormCacheOptions): UseItemFormCacheReturn => {
   // Create cache key based on item ID or 'new' for create mode
-  const cacheKey = `item-form-cache-${itemId || 'new'}-${shopId || ''}`;
+  const cacheKey = `item-form-cache-${itemId || 'new'}-${shopId || ''}-${
+    initialValues?.updated_at || ''
+  }`;
 
   const [cachedFormData, setCachedFormData] =
     useLocalStorage<FormValues | null>(cacheKey, null);
@@ -59,6 +61,9 @@ export const useItemFormCache = ({
           (initialValues.sizes && initialValues.sizes.length > 0) ||
           false,
         is_customizable: initialValues.is_customizable || false,
+        is_max_per_order_unlimited:
+          initialValues.max_per_order == null ||
+          initialValues.max_per_order === undefined,
         modifier_assignment: initialValues.modifier_assignment || {
           modifier_groups: [],
           default_modifiers: [],

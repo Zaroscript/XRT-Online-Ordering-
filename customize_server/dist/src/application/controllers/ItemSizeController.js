@@ -14,7 +14,7 @@ const roles_1 = require("../../shared/constants/roles");
 class ItemSizeController {
     constructor() {
         this.create = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
-            const business_id = req.user?.business_id || req.body.restaurant_id;
+            const business_id = req.user?.business_id || req.body.business_id || req.body.restaurant_id;
             if (!business_id && req.user?.role !== roles_1.UserRole.SUPER_ADMIN) {
                 throw new AppError_1.ValidationError('restaurant_id is required');
             }

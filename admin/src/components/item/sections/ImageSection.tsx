@@ -6,7 +6,7 @@ import FileInput from '@/components/ui/file-input';
 import { FormValues } from '../item-form-types';
 
 interface ImageSectionProps {
-  control: Control<FormValues>;
+  control: Control<FormValues, any, any>;
 }
 
 export default function ImageSection({ control }: ImageSectionProps) {

@@ -35,6 +35,49 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ModifierModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+const PricesBySizeSchema = new mongoose_1.Schema({
+    size_id: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'ItemSize',
+        required: true,
+    },
+    priceDelta: {
+        type: Number,
+        required: true,
+    },
+}, { _id: false });
+const QuantityLevelSchema = new mongoose_1.Schema({
+    quantity: {
+        type: Number,
+        required: true,
+        min: 1,
+    },
+    name: {
+        type: String,
+        trim: true,
+    },
+    price: {
+        type: Number,
+        min: 0,
+    },
+    is_default: {
+        type: Boolean,
+        default: false,
+    },
+    display_order: {
+        type: Number,
+        default: 0,
+        min: 0,
+    },
+    is_active: {
+        type: Boolean,
+        default: true,
+    },
+    prices_by_size: {
+        type: [PricesBySizeSchema],
+        default: [],
+    },
+}, { _id: false });
 const ModifierSchema = new mongoose_1.Schema({
     modifier_group_id: {
         type: mongoose_1.Schema.Types.ObjectId,
@@ -75,6 +118,15 @@ const ModifierSchema = new mongoose_1.Schema({
             enum: ['LEFT', 'RIGHT', 'WHOLE'],
             default: [],
         },
+    },
+    // Modifier-level configuration (overrides group defaults)
+    quantity_levels: {
+        type: [QuantityLevelSchema],
+        default: [],
+    },
+    prices_by_size: {
+        type: [PricesBySizeSchema],
+        default: [],
     },
     deleted_at: {
         type: Date,

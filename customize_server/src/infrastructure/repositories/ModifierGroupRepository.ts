@@ -1,4 +1,7 @@
-import { IModifierGroupRepository, PaginatedModifierGroups } from '../../domain/repositories/IModifierGroupRepository';
+import {
+  IModifierGroupRepository,
+  PaginatedModifierGroups,
+} from '../../domain/repositories/IModifierGroupRepository';
 import {
   ModifierGroup,
   CreateModifierGroupDTO,
@@ -19,7 +22,6 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
       display_type: document.display_type,
       min_select: document.min_select,
       max_select: document.max_select,
-      applies_per_quantity: document.applies_per_quantity,
       quantity_levels: document.quantity_levels || [],
       is_active: document.is_active,
       sort_order: document.sort_order,
@@ -34,7 +36,6 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
       ...data,
       is_active: data.is_active ?? true,
       sort_order: data.sort_order ?? 0,
-      applies_per_quantity: data.applies_per_quantity ?? false,
     });
     await modifierGroupDoc.save();
     return this.toDomain(modifierGroupDoc);

@@ -19,10 +19,18 @@ export const itemValidationSchema = yup.object().shape({
         .number()
         .transform((value) => (isNaN(value) ? undefined : value))
         .nullable(),
+    is_max_per_order_unlimited: yup.boolean(),
     max_per_order: yup
         .number()
         .transform((value) => (isNaN(value) ? undefined : value))
-        .nullable(),
+        .when('is_max_per_order_unlimited', {
+            is: (value: boolean) => !value,
+            then: (schema) =>
+                schema
+                    .min(1, 'form:error-max-per-order-must-be-positive')
+                    .required('form:error-max-per-order-required'),
+            otherwise: (schema) => schema.nullable(),
+        }),
     is_active: yup.boolean(),
     is_available: yup.boolean(),
     is_signature: yup.boolean(),

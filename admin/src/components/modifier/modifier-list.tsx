@@ -185,29 +185,7 @@ const ModifierList = ({
         </Link>
       ),
     },
-    {
-      title: t('form:input-label-default') || 'Default',
-      dataIndex: 'is_default',
-      key: 'is_default',
-      align: 'center',
-      width: 100,
-      render: (is_default: boolean) =>
-        is_default ? (
-          <span className="inline-block rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
-            {t('common:text-yes')}
-          </span>
-        ) : (
-          <span className="text-gray-400 text-sm">{t('common:text-no')}</span>
-        ),
-    },
-    {
-      title: t('form:input-label-max-quantity') || 'Max Qty',
-      dataIndex: 'max_quantity',
-      key: 'max_quantity',
-      align: 'center',
-      width: 100,
-      render: (maxQty: number | undefined) => maxQty || '—',
-    },
+
     {
       title: t('table:table-item-actions'),
       key: 'actions',
@@ -300,11 +278,6 @@ const ModifierList = ({
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <CardTitle>{modifier.name}</CardTitle>
-                  {modifier.is_default && (
-                    <CardBadge variant="info">
-                      {t('form:input-label-default') || 'Default'}
-                    </CardBadge>
-                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -325,12 +298,6 @@ const ModifierList = ({
                   <CardRow
                     label={t('form:input-label-price') || 'Price'}
                     value={<PriceDisplay amount={price} />}
-                  />
-                )}
-                {modifier.max_quantity && (
-                  <CardRow
-                    label={t('form:input-label-max-quantity') || 'Max Qty'}
-                    value={modifier.max_quantity}
                   />
                 )}
               </CardContent>

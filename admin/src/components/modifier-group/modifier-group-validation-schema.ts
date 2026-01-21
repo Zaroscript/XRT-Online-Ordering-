@@ -31,7 +31,6 @@ export const modifierGroupValidationSchema = yup.object().shape({
       },
     )
     .required('form:error-max-select-required'),
-  applies_per_quantity: yup.boolean(),
   quantity_levels: yup.array().of(
     yup.object().shape({
       quantity: yup

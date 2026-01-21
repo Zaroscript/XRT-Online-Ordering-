@@ -86,24 +86,30 @@ export class UpdateCategoryUseCase {
       translated_languages: updatedLanguages,
     };
 
-    // Apply modifier groups to all items in the category if:
-    // 1. The flag is explicitly set to true, OR
-    // 2. Modifier groups are provided (automatic application when flag is not explicitly false)
-    const hasModifierGroups = categoryData.modifier_groups && 
-                              Array.isArray(categoryData.modifier_groups) && 
-                              categoryData.modifier_groups.length > 0;
-    
-    const shouldApplyToItems = hasModifierGroups && 
-                               (categoryData.apply_modifier_groups_to_items !== false);
+    console.log('Checking modifier propagation...');
+    console.log('Has groups:', !!categoryData.modifier_groups);
+    console.log('Flag value:', categoryData.apply_modifier_groups_to_items);
 
-    if (shouldApplyToItems) {
-      console.log(`Applying modifier groups to items in category ${id}:`, categoryData.modifier_groups);
-      await this.itemRepository.assignModifierGroupsToCategoryItems(
-        id,
-        business_id,
+    if (categoryData.modifier_groups && categoryData.apply_modifier_groups_to_items) {
+      console.log(
+        `Applying modifier groups to items in category ${id}:`,
         categoryData.modifier_groups
       );
-      console.log(`Successfully applied modifier groups to items in category ${id}`);
+      try {
+        await this.itemRepository.assignModifierGroupsToCategoryItems(
+          id,
+          business_id,
+          categoryData.modifier_groups
+        );
+        console.log(`Successfully applied modifier groups to items in category ${id}`);
+      } catch (err) {
+        console.error(`Failed to apply modifier groups to items:`, err);
+      }
+    } else {
+      console.log('Skipping modifier propagation. Reason:');
+      if (!categoryData.modifier_groups) console.log('- No modifier groups in payload');
+      if (!categoryData.apply_modifier_groups_to_items)
+        console.log('- Flag apply_modifier_groups_to_items is false/undefined');
     }
 
     return await this.categoryRepository.update(id, business_id, finalCategoryData);

@@ -2563,8 +2563,6 @@ export interface Modifier {
     name: string;
   };
   name: string;
-  is_default: boolean;
-  max_quantity?: number;
   // Per-modifier overrides
   quantity_levels?: QuantityLevel[];
   prices_by_size?: PricesBySize[];
@@ -2587,7 +2585,6 @@ export interface ModifierGroup {
   display_type: ModifierDisplayType;
   min_select: number;
   max_select: number;
-  applies_per_quantity: boolean;
   // Group-level quantity levels (defaults for all modifiers)
   quantity_levels?: QuantityLevel[];
   prices_by_size?: PricesBySize[];
@@ -2601,8 +2598,6 @@ export interface ModifierGroup {
 export interface CreateModifierInput {
   modifier_group_id: string;
   name: string;
-  is_default?: boolean;
-  max_quantity?: number;
   display_order?: number;
   is_active?: boolean;
   sides_config?: {
@@ -2624,7 +2619,6 @@ export interface CreateModifierGroupInput {
   display_type: ModifierDisplayType;
   min_select: number;
   max_select: number;
-  applies_per_quantity?: boolean;
   // Group-level quantity levels
   quantity_levels?: QuantityLevel[];
   is_active?: boolean;
@@ -2668,8 +2662,6 @@ export interface ItemModifierQuantityLevelOverride {
 
 export interface ItemModifierOverride {
   modifier_id: string;
-  max_quantity?: number;
-  is_default?: boolean;
   prices_by_size?: ItemModifierPriceOverride[];
   quantity_levels?: ItemModifierQuantityLevelOverride[];
 }

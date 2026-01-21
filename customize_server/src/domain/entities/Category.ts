@@ -31,6 +31,7 @@ export interface CreateCategoryDTO {
   icon_public_id?: string;
   language?: string;
   modifier_groups?: ItemModifierGroupAssignment[];
+  apply_modifier_groups_to_items?: boolean;
 }
 
 export interface UpdateCategoryDTO {

@@ -132,13 +132,6 @@ const ItemSchema = new mongoose_1.Schema({
                                 ref: 'Modifier',
                                 required: true,
                             },
-                            max_quantity: {
-                                type: Number,
-                                min: 1,
-                            },
-                            is_default: {
-                                type: Boolean,
-                            },
                             prices_by_size: {
                                 type: [
                                     {
@@ -158,7 +151,7 @@ const ItemSchema = new mongoose_1.Schema({
                                     validator: function (v) {
                                         if (!v || v.length === 0)
                                             return true;
-                                        const sizeCodes = v.map(ps => ps.sizeCode);
+                                        const sizeCodes = v.map((ps) => ps.sizeCode);
                                         return new Set(sizeCodes).size === sizeCodes.length;
                                     },
                                     message: 'Size codes must be unique within prices_by_size.',
@@ -197,7 +190,7 @@ const ItemSchema = new mongoose_1.Schema({
                                     validator: function (v) {
                                         if (!v || v.length === 0)
                                             return true;
-                                        return v.filter(ql => ql.is_default).length <= 1;
+                                        return v.filter((ql) => ql.is_default).length <= 1;
                                     },
                                     message: 'Only one quantity level can be set as default.',
                                 },

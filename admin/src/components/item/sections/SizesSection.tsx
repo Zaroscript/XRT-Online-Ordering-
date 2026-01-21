@@ -12,7 +12,7 @@ import ItemSizesManager from '../item-sizes-manager';
 import { FormValues } from '../item-form-types';
 
 interface SizesSectionProps {
-  control: Control<FormValues>;
+  control: Control<FormValues, any, any>;
   errors: FieldErrors<FormValues>;
   setValue: UseFormSetValue<FormValues>;
   isSizeable?: boolean;

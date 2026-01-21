@@ -79,6 +79,35 @@ const CategorySchema = new mongoose_1.Schema({
         type: [String],
         default: ['en'],
     },
+    modifier_groups: [
+        {
+            modifier_group_id: { type: mongoose_1.Schema.Types.ObjectId, ref: 'ModifierGroup' },
+            display_order: Number,
+            modifier_overrides: [
+                {
+                    modifier_id: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Modifier' },
+                    max_quantity: Number,
+                    is_default: Boolean,
+                    prices_by_size: [
+                        {
+                            sizeCode: String,
+                            priceDelta: Number,
+                        },
+                    ],
+                    quantity_levels: [
+                        {
+                            quantity: Number,
+                            name: String,
+                            price: Number,
+                            is_default: Boolean,
+                            display_order: Number,
+                            is_active: Boolean,
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
 }, {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
 });

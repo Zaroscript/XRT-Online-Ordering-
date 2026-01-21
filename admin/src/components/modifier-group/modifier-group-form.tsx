@@ -42,7 +42,6 @@ type FormValues = {
   display_type: 'RADIO' | 'CHECKBOX';
   min_select: number;
   max_select: number;
-  applies_per_quantity?: boolean;
   quantity_levels?: QuantityLevel[];
   is_active?: boolean;
   sort_order: number;
@@ -54,7 +53,6 @@ const defaultValues: FormValues = {
   display_type: 'RADIO' as const,
   min_select: 0,
   max_select: 1,
-  applies_per_quantity: false,
   quantity_levels: [],
   is_active: true,
   sort_order: 0,
@@ -78,7 +76,6 @@ export default function CreateOrUpdateModifierGroupForm({
           display_type: initialValues.display_type,
           min_select: initialValues.min_select,
           max_select: initialValues.max_select,
-          applies_per_quantity: initialValues.applies_per_quantity,
           quantity_levels:
             initialValues.quantity_levels?.map((ql) => ({
               ...ql,
@@ -148,7 +145,6 @@ export default function CreateOrUpdateModifierGroupForm({
       display_type: (values.display_type as any)?.value || values.display_type,
       min_select: Number(values.min_select),
       max_select: Number(values.max_select),
-      applies_per_quantity: values.applies_per_quantity || false,
       quantity_levels: values.quantity_levels || [],
       is_active: values.is_active !== false,
       sort_order: Number(values.sort_order),
@@ -395,23 +391,6 @@ export default function CreateOrUpdateModifierGroupForm({
                         'Max items customer can select'}
                     </p>
                   </div>
-                </div>
-
-                <div className="pt-3 sm:pt-4 border-t border-border-100">
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <SwitchInput
-                      name="applies_per_quantity"
-                      control={control as any}
-                      label={
-                        t('form:input-label-applies-per-quantity') ||
-                        'Applies Per Quantity'
-                      }
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2 ml-0 sm:ml-11">
-                    {t('form:applies-per-quantity-helper') ||
-                      'If enabled, modifier pricing applies per item quantity (e.g., $0.50 extra cheese × 2 pizzas = $1.00)'}
-                  </p>
                 </div>
               </div>
             </Card>

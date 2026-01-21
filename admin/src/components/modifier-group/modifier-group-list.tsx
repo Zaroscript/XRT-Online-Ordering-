@@ -13,7 +13,10 @@ import { Switch } from '@headlessui/react';
 import { EditIcon } from '@/components/icons/edit';
 import { TrashIcon } from '@/components/icons/trash';
 import Link from '@/components/ui/link';
-import { useModalAction, useModalState } from '@/components/ui/modal/modal.context';
+import {
+  useModalAction,
+  useModalState,
+} from '@/components/ui/modal/modal.context';
 import { useRouter } from 'next/router';
 import {
   ResponsiveCard,
@@ -70,7 +73,9 @@ const ModifierGroupList = ({
   const onHeaderClick = (column: string | null) => ({
     onClick: () => {
       onSort((currentSortDirection: SortOrder) =>
-        currentSortDirection === SortOrder.Desc ? SortOrder.Asc : SortOrder.Desc
+        currentSortDirection === SortOrder.Desc
+          ? SortOrder.Asc
+          : SortOrder.Desc,
       );
       onOrder(column!);
 
@@ -83,8 +88,12 @@ const ModifierGroupList = ({
   });
 
   const { permissions, role } = getAuthCredentials();
-  const canUpdate = role === 'super_admin' || hasPermission(['modifier_groups:update'], permissions);
-  const canDelete = role === 'super_admin' || hasPermission(['modifier_groups:delete'], permissions);
+  const canUpdate =
+    role === 'super_admin' ||
+    hasPermission(['modifier_groups:update'], permissions);
+  const canDelete =
+    role === 'super_admin' ||
+    hasPermission(['modifier_groups:delete'], permissions);
 
   // Show skeleton when loading
   if (isLoading) {
@@ -99,7 +108,9 @@ const ModifierGroupList = ({
         <div className="mb-1 pt-6 text-base font-semibold text-heading">
           {t('table:empty-table-data')}
         </div>
-        <p className="text-[13px] text-body">{t('table:empty-table-sorry-text')}</p>
+        <p className="text-[13px] text-body">
+          {t('table:empty-table-sorry-text')}
+        </p>
       </div>
     );
   }
@@ -147,11 +158,12 @@ const ModifierGroupList = ({
       align: alignLeft,
       width: 120,
       render: (type: string) => {
-        const displayTypeLabel = type === 'RADIO'
-          ? t('common:text-radio')
-          : type === 'CHECKBOX'
-            ? t('common:text-checkbox')
-            : type;
+        const displayTypeLabel =
+          type === 'RADIO'
+            ? t('common:text-radio')
+            : type === 'CHECKBOX'
+              ? t('common:text-checkbox')
+              : type;
         return (
           <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
             {displayTypeLabel}
@@ -175,18 +187,7 @@ const ModifierGroupList = ({
       width: 100,
       render: (max: number) => max,
     },
-    {
-      title: t('form:input-label-applies-per-quantity') || 'Per Quantity',
-      dataIndex: 'applies_per_quantity',
-      key: 'applies_per_quantity',
-      align: 'center',
-      width: 120,
-      render: (applies: boolean) => (
-        <span className={applies ? 'text-green-600 font-medium' : 'text-gray-400'}>
-          {applies ? t('common:text-yes') : t('common:text-no')}
-        </span>
-      ),
-    },
+
     {
       title: t('form:input-label-modifiers-count') || 'Modifiers',
       dataIndex: 'modifiers',
@@ -225,13 +226,15 @@ const ModifierGroupList = ({
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                   }}
-                  className={`${record?.is_active ? 'bg-accent' : 'bg-gray-300'
-                    } relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2`}
+                  className={`${
+                    record?.is_active ? 'bg-accent' : 'bg-gray-300'
+                  } relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2`}
                 >
                   <span className="sr-only">Toggle Status</span>
                   <span
-                    className={`${record?.is_active ? 'translate-x-6' : 'translate-x-1'
-                      } inline-block h-4 w-4 transform rounded-full bg-light transition-transform`}
+                    className={`${
+                      record?.is_active ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block h-4 w-4 transform rounded-full bg-light transition-transform`}
                   />
                 </Switch>
               </div>
@@ -282,7 +285,9 @@ const ModifierGroupList = ({
           >
             <CardHeader>
               <CardTitle>{group.name}</CardTitle>
-              <CardBadge variant={group.display_type === 'RADIO' ? 'info' : 'default'}>
+              <CardBadge
+                variant={group.display_type === 'RADIO' ? 'info' : 'default'}
+              >
                 {group.display_type === 'RADIO'
                   ? t('common:text-radio')
                   : t('common:text-checkbox')}
@@ -305,12 +310,6 @@ const ModifierGroupList = ({
                   </span>
                 }
               />
-              {group.applies_per_quantity && (
-                <CardRow
-                  label={t('form:input-label-applies-per-quantity') || 'Per Quantity'}
-                  value={<span className="text-green-600 font-medium">{t('common:text-yes')}</span>}
-                />
-              )}
             </CardContent>
 
             {(canUpdate || canDelete) && (
@@ -323,13 +322,15 @@ const ModifierGroupList = ({
                         setTogglingId(group.id);
                         openModal('TOGGLE_MODIFIER_GROUP_STATUS', group);
                       }}
-                      className={`${group.is_active ? 'bg-accent' : 'bg-gray-300'
-                        } relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none`}
+                      className={`${
+                        group.is_active ? 'bg-accent' : 'bg-gray-300'
+                      } relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none`}
                     >
                       <span className="sr-only">Toggle Status</span>
                       <span
-                        className={`${group.is_active ? 'translate-x-6' : 'translate-x-1'
-                          } inline-block h-4 w-4 transform rounded-full bg-light transition-transform`}
+                        className={`${
+                          group.is_active ? 'translate-x-6' : 'translate-x-1'
+                        } inline-block h-4 w-4 transform rounded-full bg-light transition-transform`}
                       />
                     </Switch>
                   </div>
@@ -379,7 +380,8 @@ const ModifierGroupList = ({
           rowKey="id"
           scroll={{ x: 1000 }}
           onRow={(record: any) => {
-            const baseClassName = 'cursor-pointer hover:bg-gray-50 transition-colors';
+            const baseClassName =
+              'cursor-pointer hover:bg-gray-50 transition-colors';
             const statusClassName =
               record.id === deletingId
                 ? 'animate-pulse bg-red-100/30'

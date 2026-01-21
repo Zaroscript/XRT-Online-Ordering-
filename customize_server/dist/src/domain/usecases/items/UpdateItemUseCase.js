@@ -75,24 +75,24 @@ class UpdateItemUseCase {
         // Business rule validation for is_sizeable and default_size_id
         const isSizeable = itemData.is_sizeable !== undefined ? itemData.is_sizeable : existingItem.is_sizeable;
         const defaultSizeId = itemData.default_size_id !== undefined ? itemData.default_size_id : existingItem.default_size_id;
-        // If changing is_sizeable to true, ensure at least one size exists
+        // If changing is_sizeable to true, ensure at least one size exists for the business
         if (itemData.is_sizeable === true && !existingItem.is_sizeable) {
-            const sizeCount = await this.itemSizeRepository.countByItemId(id);
-            if (sizeCount === 0) {
-                throw new AppError_1.ValidationError('Cannot set is_sizeable to true. At least one item size must exist. Create sizes first using POST /items/:itemId/sizes');
+            const sizes = await this.itemSizeRepository.findAll({ business_id });
+            if (sizes.length === 0) {
+                throw new AppError_1.ValidationError('Cannot set is_sizeable to true. At least one size must exist for the business. Create sizes first using POST /sizes');
             }
         }
         if (isSizeable) {
             // If item is sizable:
             // - base_price is ignored (not validated)
-            // - default_size_id must reference an existing size of this item (if provided)
+            // - default_size_id must reference an existing size of this business (if provided)
             if (defaultSizeId) {
-                const defaultSize = await this.itemSizeRepository.findById(defaultSizeId, id);
+                const defaultSize = await this.itemSizeRepository.findById(defaultSizeId);
                 if (!defaultSize) {
-                    throw new AppError_1.ValidationError('default_size_id must reference an existing size of this item');
+                    throw new AppError_1.ValidationError('default_size_id must reference an existing size');
                 }
-                if (defaultSize.item_id !== id) {
-                    throw new AppError_1.ValidationError('default_size_id must belong to this item');
+                if (defaultSize.business_id !== business_id) {
+                    throw new AppError_1.ValidationError('default_size_id must belong to this business');
                 }
                 if (!defaultSize.is_active) {
                     throw new AppError_1.ValidationError('default_size_id must reference an active size');

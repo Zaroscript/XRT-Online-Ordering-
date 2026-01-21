@@ -14,7 +14,7 @@ const roles_1 = require("../../shared/constants/roles");
 class ModifierGroupController {
     constructor() {
         this.create = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
-            const { name, display_type, min_select, max_select, applies_per_quantity, quantity_levels, prices_by_size, is_active, sort_order, } = req.body;
+            const { name, display_type, min_select, max_select, quantity_levels, prices_by_size, is_active, sort_order, } = req.body;
             const business_id = req.user?.business_id || req.body.business_id;
             if (!business_id && req.user?.role !== roles_1.UserRole.SUPER_ADMIN) {
                 throw new AppError_1.ValidationError('business_id is required');
@@ -25,10 +25,9 @@ class ModifierGroupController {
                 display_type,
                 min_select: Number(min_select),
                 max_select: Number(max_select),
-                applies_per_quantity: applies_per_quantity === true || applies_per_quantity === 'true',
                 quantity_levels: quantity_levels || [],
                 prices_by_size: prices_by_size || [],
-                is_active: is_active !== undefined ? (is_active === true || is_active === 'true') : true,
+                is_active: is_active !== undefined ? is_active === true || is_active === 'true' : true,
                 sort_order: sort_order ? Number(sort_order) : 0,
             });
             return (0, response_1.sendSuccess)(res, 'Modifier group created successfully', modifierGroup, 201);
@@ -49,7 +48,7 @@ class ModifierGroupController {
                 sortedBy: req.query.sortedBy,
             };
             // Remove undefined values
-            Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+            Object.keys(filters).forEach((key) => filters[key] === undefined && delete filters[key]);
             const result = await this.getModifierGroupsUseCase.execute(filters);
             return (0, response_1.sendSuccess)(res, 'Modifier groups retrieved successfully', result);
         });
@@ -67,7 +66,7 @@ class ModifierGroupController {
         });
         this.update = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
-            const { name, display_type, min_select, max_select, applies_per_quantity, quantity_levels, prices_by_size, is_active, sort_order, } = req.body;
+            const { name, display_type, min_select, max_select, quantity_levels, prices_by_size, is_active, sort_order, } = req.body;
             const business_id = req.user?.business_id || req.body.business_id;
             if (!business_id && req.user?.role !== roles_1.UserRole.SUPER_ADMIN) {
                 throw new AppError_1.ValidationError('business_id is required');
@@ -81,8 +80,6 @@ class ModifierGroupController {
                 updateData.min_select = Number(min_select);
             if (max_select !== undefined)
                 updateData.max_select = Number(max_select);
-            if (applies_per_quantity !== undefined)
-                updateData.applies_per_quantity = applies_per_quantity === true || applies_per_quantity === 'true';
             if (quantity_levels !== undefined)
                 updateData.quantity_levels = quantity_levels;
             if (prices_by_size !== undefined)

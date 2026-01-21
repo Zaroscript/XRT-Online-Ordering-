@@ -7,7 +7,7 @@ import Card from '@/components/common/card';
 import Description from '@/components/ui/description';
 import { useRouter } from 'next/router';
 import ValidationError from '@/components/ui/form-validation-error';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Category, ItemProps } from '@/types';
 import { Routes } from '@/config/routes';
 import { Config } from '@/config';
@@ -38,6 +38,7 @@ type FormValues = {
   sort_order: number;
   is_active?: boolean;
   modifier_groups?: any;
+  apply_modifier_groups_to_items?: boolean;
 };
 
 const defaultValues = {
@@ -49,6 +50,7 @@ const defaultValues = {
   sort_order: 0,
   is_active: true,
   modifier_groups: [],
+  apply_modifier_groups_to_items: false,
 };
 
 type IProps = {
@@ -110,6 +112,20 @@ export default function CreateOrUpdateCategoriesForm({
     [t],
   );
 
+  const { locale } = router;
+  const {
+    // @ts-ignore
+    settings: { options },
+  } = useSettingsQuery({
+    language: locale!,
+  });
+
+  const { groups: modifierGroups, loading: loadingModifierGroups } =
+    useModifierGroupsQuery({
+      limit: 1000,
+      language: locale!,
+    });
+
   const {
     register,
     handleSubmit,
@@ -162,68 +178,76 @@ export default function CreateOrUpdateCategoriesForm({
     resolver: yupResolver(categoryValidationSchema),
   });
 
-  // Reset form when initialValues changes (when data loads)
-  useEffect(() => {
-    if (initialValues) {
-      reset({
-        ...initialValues,
-        image: initialValues?.image
-          ? typeof initialValues.image === 'string'
-            ? [
-                {
-                  id: 1,
-                  thumbnail: initialValues.image,
-                  original: initialValues.image,
-                  file_name: (initialValues.image as any).split('/').pop(),
-                },
-              ]
-            : [initialValues.image]
-          : [],
-        icon: initialValues?.icon
-          ? typeof initialValues.icon === 'string'
-            ? [
-                {
-                  id: 1,
-                  thumbnail: initialValues.icon,
-                  original: initialValues.icon,
-                  file_name: initialValues.icon.split('/').pop(),
-                },
-              ]
-            : [initialValues.icon]
-          : [],
-        kitchen_section_id: kitchenSectionOptions.find(
-          (opt: any) => opt.value === initialValues.kitchen_section_id,
-        ),
-        modifier_groups: initialValues.modifier_groups?.map((bg: any) => ({
-          label: bg.modifier_group_id?.name || bg.modifier_group_id,
+  const formattedValues = useMemo(() => {
+    if (!initialValues) return undefined;
+    return {
+      ...initialValues,
+      image: initialValues?.image
+        ? typeof initialValues.image === 'string'
+          ? [
+              {
+                id: 1,
+                thumbnail: initialValues.image,
+                original: initialValues.image,
+                file_name: (initialValues.image as any).split('/').pop(),
+              },
+            ]
+          : [initialValues.image]
+        : [],
+      icon: initialValues?.icon
+        ? typeof initialValues.icon === 'string'
+          ? [
+              {
+                id: 1,
+                thumbnail: initialValues.icon,
+                original: initialValues.icon,
+                file_name: initialValues.icon.split('/').pop(),
+              },
+            ]
+          : [initialValues.icon]
+        : [],
+      kitchen_section_id: kitchenSectionOptions.find(
+        (opt: any) => opt.value === initialValues.kitchen_section_id,
+      ),
+      modifier_groups: initialValues.modifier_groups?.map((bg: any) => {
+        const modifierGroupId =
+          bg.modifier_group_id?._id || bg.modifier_group_id;
+        const group = modifierGroups?.find(
+          (g: any) => g.id === modifierGroupId,
+        );
+        return {
+          label:
+            group?.display_name ||
+            group?.name ||
+            bg.modifier_group_id?.name ||
+            bg.modifier_group_id,
           value: {
-            modifier_group_id:
-              bg.modifier_group_id?._id || bg.modifier_group_id,
+            modifier_group_id: modifierGroupId,
             display_order: bg.display_order,
           },
-        })),
-      });
+        };
+      }),
+    };
+  }, [initialValues, kitchenSectionOptions, modifierGroups]);
+
+  const previousValuesRef = useRef<string | null>(null);
+
+  // Reset form when formattedValues changes (using deep comparison check)
+  useEffect(() => {
+    if (formattedValues) {
+      const stringifiedValues = JSON.stringify(formattedValues);
+      if (previousValuesRef.current !== stringifiedValues) {
+        reset(formattedValues);
+        previousValuesRef.current = stringifiedValues;
+      }
     }
-  }, [initialValues, reset, kitchenSectionOptions]);
+  }, [formattedValues, reset]);
 
   const { openModal } = useModalAction();
-  const { locale } = router;
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
-    language: locale!,
-  });
-
-  const { groups: modifierGroups, loading: loadingModifierGroups } =
-    useModifierGroupsQuery({
-      limit: 1000,
-      language: locale!,
-    });
 
   const generateName = watch('name');
   const selectedModifierGroups = watch('modifier_groups');
-  
+
   const categoryDetailSuggestionLists = useMemo(() => {
     return CategoryDetailSuggestion({ name: generateName ?? '' });
   }, [generateName]);
@@ -231,18 +255,20 @@ export default function CreateOrUpdateCategoriesForm({
   // Create modifier group options - filter out already selected ones to prevent duplicate selection
   const availableModifierGroupOptions = useMemo(() => {
     const selectedIds = (selectedModifierGroups || []).map(
-      (mg: any) => mg?.value?.modifier_group_id || mg?.modifier_group_id
+      (mg: any) => mg?.value?.modifier_group_id || mg?.modifier_group_id,
     );
-    return modifierGroups
-      ?.filter((group) => !selectedIds.includes(group.id))
-      .map((group) => ({
-        label: group.display_name || group.name, // Use display_name if available, fallback to name
-        value: {
-          modifier_group_id: group.id,
-          modifier_group_name: group.name, // Use name for system use
-          display_order: 0,
-        },
-      })) || [];
+    return (
+      modifierGroups
+        ?.filter((group) => !selectedIds.includes(group.id))
+        .map((group) => ({
+          label: group.display_name || group.name, // Use display_name if available, fallback to name
+          value: {
+            modifier_group_id: group.id,
+            modifier_group_name: group.name, // Use name for system use
+            display_order: 0,
+          },
+        })) || []
+    );
   }, [modifierGroups, selectedModifierGroups]);
 
   const handleGenerateDescription = useCallback(() => {
@@ -273,8 +299,7 @@ export default function CreateOrUpdateCategoriesForm({
         modifier_group_id: mg.value.modifier_group_id,
         display_order: mg.value.display_order || 0,
       })),
-      // Automatically apply modifier groups to all items when modifier groups are selected
-      apply_modifier_groups_to_items: values.modifier_groups && values.modifier_groups.length > 0,
+      apply_modifier_groups_to_items: !!values.apply_modifier_groups_to_items,
     };
 
     // Extract File objects if they exist in the values (returned as array from FileInput)
@@ -445,6 +470,13 @@ export default function CreateOrUpdateCategoriesForm({
             />
           </div>
 
+          <div className="mb-5">
+            <SwitchInput
+              name="apply_modifier_groups_to_items"
+              control={control as any}
+              label={t('form:input-label-apply-modifier-groups-to-items')}
+            />
+          </div>
         </Card>
       </div>
       <StickyFooterPanel className="z-0">

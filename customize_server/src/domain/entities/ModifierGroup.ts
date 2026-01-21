@@ -23,7 +23,7 @@ export interface ModifierGroup {
   display_type: ModifierDisplayType;
   min_select: number;
   max_select: number;
-  applies_per_quantity: boolean;
+
   quantity_levels?: QuantityLevel[];
   is_active: boolean;
   sort_order: number;
@@ -39,7 +39,6 @@ export interface CreateModifierGroupDTO {
   display_type: ModifierDisplayType;
   min_select: number;
   max_select: number;
-  applies_per_quantity?: boolean;
   quantity_levels?: QuantityLevel[];
   prices_by_size?: PricesBySize[]; // Added missing field
   is_active?: boolean;
@@ -52,7 +51,6 @@ export interface UpdateModifierGroupDTO {
   display_type?: ModifierDisplayType;
   min_select?: number;
   max_select?: number;
-  applies_per_quantity?: boolean;
   quantity_levels?: QuantityLevel[];
   prices_by_size?: PricesBySize[]; // Added missing field
   is_active?: boolean;

@@ -17,7 +17,7 @@ import { useMemo } from 'react';
 
 interface ModifiersSectionProps {
   register: UseFormRegister<FormValues>;
-  control: Control<FormValues>;
+  control: Control<FormValues, any, any>;
   setValue: UseFormSetValue<FormValues>;
   modifierGroupsFiltered: any[];
   loadingModifierGroups: boolean;

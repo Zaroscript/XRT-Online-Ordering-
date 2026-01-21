@@ -13,7 +13,7 @@ class ModifierController {
     constructor() {
         this.create = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { groupId } = req.params;
-            const { name, is_default, max_quantity, display_order, is_active, sides_config, } = req.body;
+            const { name, is_default, max_quantity, display_order, is_active, sides_config, quantity_levels, prices_by_size, } = req.body;
             if (!groupId) {
                 throw new AppError_1.ValidationError('groupId is required');
             }
@@ -33,8 +33,10 @@ class ModifierController {
                 is_default: is_default === true || is_default === 'true',
                 max_quantity: max_quantity ? Number(max_quantity) : undefined,
                 display_order: display_order ? Number(display_order) : 0,
-                is_active: is_active !== undefined ? (is_active === true || is_active === 'true') : true,
+                is_active: is_active !== undefined ? is_active === true || is_active === 'true' : true,
                 sides_config: parsedSidesConfig,
+                quantity_levels: quantity_levels || [],
+                prices_by_size: prices_by_size || [],
             });
             return (0, response_1.sendSuccess)(res, 'Modifier created successfully', modifier, 201);
         });
@@ -55,10 +57,21 @@ class ModifierController {
             const modifiers = await this.modifierRepository.findByGroupId(groupId);
             return (0, response_1.sendSuccess)(res, 'Modifiers retrieved successfully', { modifiers });
         });
+        this.getById = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            const { id, groupId } = req.params;
+            if (!groupId) {
+                throw new AppError_1.ValidationError('groupId is required');
+            }
+            const modifier = await this.modifierRepository.findById(id, groupId);
+            if (!modifier) {
+                throw new AppError_1.NotFoundError('Modifier');
+            }
+            return (0, response_1.sendSuccess)(res, 'Modifier retrieved successfully', modifier);
+        });
         this.update = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
             const { groupId } = req.params;
-            const { name, is_default, max_quantity, display_order, is_active, sides_config, } = req.body;
+            const { name, is_default, max_quantity, display_order, is_active, sides_config, quantity_levels, prices_by_size, } = req.body;
             if (!groupId) {
                 throw new AppError_1.ValidationError('groupId is required');
             }
@@ -87,6 +100,10 @@ class ModifierController {
                 updateData.is_active = is_active === true || is_active === 'true';
             if (parsedSidesConfig !== undefined)
                 updateData.sides_config = parsedSidesConfig;
+            if (quantity_levels !== undefined)
+                updateData.quantity_levels = quantity_levels;
+            if (prices_by_size !== undefined)
+                updateData.prices_by_size = prices_by_size;
             const modifier = await this.updateModifierUseCase.execute(id, groupId, updateData);
             return (0, response_1.sendSuccess)(res, 'Modifier updated successfully', modifier);
         });

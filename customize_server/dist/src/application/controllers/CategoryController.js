@@ -7,6 +7,7 @@ const GetCategoriesUseCase_1 = require("../../domain/usecases/categories/GetCate
 const UpdateCategoryUseCase_1 = require("../../domain/usecases/categories/UpdateCategoryUseCase");
 const DeleteCategoryUseCase_1 = require("../../domain/usecases/categories/DeleteCategoryUseCase");
 const CategoryRepository_1 = require("../../infrastructure/repositories/CategoryRepository");
+const ItemRepository_1 = require("../../infrastructure/repositories/ItemRepository");
 const CloudinaryStorage_1 = require("../../infrastructure/cloudinary/CloudinaryStorage");
 const response_1 = require("../../shared/utils/response");
 const asyncHandler_1 = require("../../shared/utils/asyncHandler");
@@ -15,10 +16,21 @@ const roles_1 = require("../../shared/constants/roles");
 class CategoryController {
     constructor() {
         this.create = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
-            const { name, description, details, kitchen_section_id, sort_order, is_active, image, image_public_id, icon, icon_public_id, language, } = req.body;
+            const { name, description, details, kitchen_section_id, sort_order, is_active, image, image_public_id, icon, icon_public_id, language, modifier_groups, } = req.body;
             const business_id = req.user?.business_id || req.body.business_id;
             if (!business_id && req.user?.role !== roles_1.UserRole.SUPER_ADMIN) {
                 throw new AppError_1.ValidationError('business_id is required');
+            }
+            // Parse modifier_groups if it's a string (common in form data)
+            let parsedModifierGroups = undefined;
+            if (modifier_groups !== undefined) {
+                try {
+                    parsedModifierGroups =
+                        typeof modifier_groups === 'string' ? JSON.parse(modifier_groups) : modifier_groups;
+                }
+                catch (error) {
+                    throw new AppError_1.ValidationError('Invalid modifier_groups format. Expected JSON array.');
+                }
             }
             try {
                 const category = await this.createCategoryUseCase.execute({
@@ -33,6 +45,9 @@ class CategoryController {
                     icon,
                     icon_public_id,
                     language,
+                    modifier_groups: parsedModifierGroups,
+                    apply_modifier_groups_to_items: req.body.apply_modifier_groups_to_items === 'true' ||
+                        req.body.apply_modifier_groups_to_items === true,
                 }, req.files);
                 return (0, response_1.sendSuccess)(res, 'Category created successfully', category, 201);
             }
@@ -61,10 +76,27 @@ class CategoryController {
         });
         this.update = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { id } = req.params;
-            const { name, description, details, kitchen_section_id, sort_order, is_active, image, image_public_id, icon, icon_public_id, language, } = req.body;
+            const { name, description, details, kitchen_section_id, sort_order, is_active, image, image_public_id, icon, icon_public_id, language, modifier_groups, } = req.body;
+            console.log('--- UPDATE CATEGORY REQUEST ---');
+            console.log('Payload Body Keys:', Object.keys(req.body));
+            console.log('Modifier Groups (Raw):', modifier_groups);
+            // @ts-ignore
+            console.log('Apply to Items Flag (Raw):', req.body.apply_modifier_groups_to_items);
+            console.log('-------------------------------');
             const business_id = req.user?.business_id || req.body.business_id;
             if (!business_id && req.user?.role !== roles_1.UserRole.SUPER_ADMIN) {
                 throw new AppError_1.ValidationError('business_id is required');
+            }
+            // Parse modifier_groups if it's a string (common in form data)
+            let parsedModifierGroups = undefined;
+            if (modifier_groups !== undefined) {
+                try {
+                    parsedModifierGroups =
+                        typeof modifier_groups === 'string' ? JSON.parse(modifier_groups) : modifier_groups;
+                }
+                catch (error) {
+                    throw new AppError_1.ValidationError('Invalid modifier_groups format. Expected JSON array.');
+                }
             }
             const category = await this.updateCategoryUseCase.execute(id, business_id, {
                 name,
@@ -77,6 +109,9 @@ class CategoryController {
                 icon,
                 icon_public_id,
                 language,
+                modifier_groups: parsedModifierGroups,
+                apply_modifier_groups_to_items: req.body.apply_modifier_groups_to_items === 'true' ||
+                    req.body.apply_modifier_groups_to_items === true,
             }, req.files);
             return (0, response_1.sendSuccess)(res, 'Category updated successfully', category);
         });
@@ -103,10 +138,11 @@ class CategoryController {
             return (0, response_1.sendSuccess)(res, 'Category deleted successfully');
         });
         const categoryRepository = new CategoryRepository_1.CategoryRepository();
+        const itemRepository = new ItemRepository_1.ItemRepository();
         const imageStorage = new CloudinaryStorage_1.CloudinaryStorage();
         this.createCategoryUseCase = new CreateCategoryUseCase_1.CreateCategoryUseCase(categoryRepository, imageStorage);
         this.getCategoriesUseCase = new GetCategoriesUseCase_1.GetCategoriesUseCase(categoryRepository);
-        this.updateCategoryUseCase = new UpdateCategoryUseCase_1.UpdateCategoryUseCase(categoryRepository, imageStorage);
+        this.updateCategoryUseCase = new UpdateCategoryUseCase_1.UpdateCategoryUseCase(categoryRepository, imageStorage, itemRepository);
         this.deleteCategoryUseCase = new DeleteCategoryUseCase_1.DeleteCategoryUseCase(categoryRepository, imageStorage);
         this.getCategoryByIdUseCase = new GetCategoryByIdUseCase_1.GetCategoryByIdUseCase(categoryRepository);
     }

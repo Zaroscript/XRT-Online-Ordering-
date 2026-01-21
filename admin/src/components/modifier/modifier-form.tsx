@@ -30,8 +30,6 @@ import { TrashIcon } from '@/components/icons/trash';
 
 type FormValues = {
   name: string;
-  is_default?: boolean;
-  max_quantity?: number | null;
   display_order: number;
   is_active?: boolean;
   sides_config?: {
@@ -45,15 +43,6 @@ type FormValues = {
 
 const modifierValidationSchema = yup.object().shape({
   name: yup.string().required('form:error-name-required'),
-  is_default: yup.boolean().optional(),
-  max_quantity: yup
-    .number()
-    .transform((value) =>
-      isNaN(value) || value === null || value === '' ? undefined : value,
-    )
-    .nullable()
-    .optional()
-    .min(1, 'form:error-max-quantity-min'),
   display_order: yup
     .number()
     .transform((value) =>
@@ -109,8 +98,6 @@ const modifierValidationSchema = yup.object().shape({
 
 const defaultValues: FormValues = {
   name: '',
-  is_default: false,
-  max_quantity: undefined,
   display_order: 0,
   is_active: true,
   sides_config: {
@@ -148,8 +135,6 @@ export default function CreateOrUpdateModifierForm({
     defaultValues: initialValues
       ? {
           name: initialValues.name,
-          is_default: initialValues.is_default,
-          max_quantity: initialValues.max_quantity,
           display_order: initialValues.display_order,
           is_active: initialValues.is_active,
           quantity_levels:
@@ -242,8 +227,6 @@ export default function CreateOrUpdateModifierForm({
     const input: any = {
       modifier_group_id: modifierGroupId,
       name: values.name,
-      is_default: values.is_default || false,
-      max_quantity: values.max_quantity || undefined,
       display_order: values.display_order || 0,
       is_active: values.is_active !== undefined ? values.is_active : true,
       quantity_levels: quantityLevels,
@@ -327,34 +310,6 @@ export default function CreateOrUpdateModifierForm({
                   className="mb-5"
                   required
                 />
-
-                <div className="mb-5">
-                  <SwitchInput
-                    name="is_default"
-                    control={control}
-                    label={t('form:input-label-default')}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {t('form:default-modifier-helper')}
-                  </p>
-                </div>
-
-                <div className="mb-5">
-                  <Input
-                    label={t('form:input-label-max-quantity')}
-                    {...register('max_quantity', {
-                      valueAsNumber: true,
-                    })}
-                    type="number"
-                    min="1"
-                    error={t(errors.max_quantity?.message!)}
-                    variant="outline"
-                    placeholder={t('form:input-placeholder-max-quantity')}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {t('form:max-quantity-help-text')}
-                  </p>
-                </div>
 
                 <div className="mb-5">
                   <Input
@@ -498,6 +453,7 @@ export default function CreateOrUpdateModifierForm({
           <div className="flex items-center justify-end">
             <Button
               variant="outline"
+              type="button"
               onClick={() => {
                 if (onSuccess) {
                   onSuccess();

@@ -89,6 +89,10 @@ const ModifierGroupSchema = new mongoose_1.Schema({
         required: true,
         trim: true,
     },
+    display_name: {
+        type: String,
+        trim: true,
+    },
     display_type: {
         type: String,
         required: true,
@@ -106,10 +110,6 @@ const ModifierGroupSchema = new mongoose_1.Schema({
         required: true,
         min: 1,
         default: 1,
-    },
-    applies_per_quantity: {
-        type: Boolean,
-        default: false,
     },
     quantity_levels: {
         type: [QuantityLevelSchema],

@@ -13,14 +13,16 @@ class ItemRepository {
             is_active: document.is_active,
             base_price: document.base_price,
             category_id: document.category_id
-                ? (document.category_id._id
+                ? document.category_id._id
                     ? document.category_id._id.toString()
-                    : document.category_id.toString())
+                    : document.category_id.toString()
                 : '',
-            category: (document.category_id && document.category_id.name) ? {
-                id: document.category_id._id.toString(),
-                name: document.category_id.name
-            } : undefined,
+            category: document.category_id && document.category_id.name
+                ? {
+                    id: document.category_id._id.toString(),
+                    name: document.category_id.name,
+                }
+                : undefined,
             image: document.image,
             image_public_id: document.image_public_id,
             is_available: document.is_available,
@@ -29,27 +31,31 @@ class ItemRepository {
             is_sizeable: document.is_sizeable,
             is_customizable: document.is_customizable,
             default_size_id: document.default_size_id
-                ? (typeof document.default_size_id === 'string'
+                ? typeof document.default_size_id === 'string'
                     ? document.default_size_id
                     : document.default_size_id?._id
                         ? document.default_size_id._id.toString()
-                        : document.default_size_id.toString())
+                        : document.default_size_id.toString()
                 : undefined,
-            modifier_groups: document.modifier_groups ? document.modifier_groups.map((mg) => ({
-                modifier_group_id: typeof mg.modifier_group_id === 'string'
-                    ? mg.modifier_group_id
-                    : (mg.modifier_group_id?._id || mg.modifier_group_id).toString(),
-                display_order: mg.display_order || 0,
-                modifier_overrides: mg.modifier_overrides ? mg.modifier_overrides.map((mo) => ({
-                    modifier_id: typeof mo.modifier_id === 'string'
-                        ? mo.modifier_id
-                        : (mo.modifier_id?._id || mo.modifier_id).toString(),
-                    max_quantity: mo.max_quantity,
-                    is_default: mo.is_default,
-                    prices_by_size: mo.prices_by_size || undefined,
-                    quantity_levels: mo.quantity_levels || undefined,
-                })) : undefined,
-            })) : [],
+            modifier_groups: document.modifier_groups
+                ? document.modifier_groups.map((mg) => ({
+                    modifier_group_id: typeof mg.modifier_group_id === 'string'
+                        ? mg.modifier_group_id
+                        : (mg.modifier_group_id?._id || mg.modifier_group_id).toString(),
+                    display_order: mg.display_order || 0,
+                    modifier_overrides: mg.modifier_overrides
+                        ? mg.modifier_overrides.map((mo) => ({
+                            modifier_id: typeof mo.modifier_id === 'string'
+                                ? mo.modifier_id
+                                : (mo.modifier_id?._id || mo.modifier_id).toString(),
+                            max_quantity: mo.max_quantity,
+                            is_default: mo.is_default,
+                            prices_by_size: mo.prices_by_size || undefined,
+                            quantity_levels: mo.quantity_levels || undefined,
+                        }))
+                        : undefined,
+                }))
+                : [],
             created_at: document.created_at,
             updated_at: document.updated_at,
         };
@@ -136,6 +142,9 @@ class ItemRepository {
     }
     async delete(id, business_id) {
         await ItemModel_1.ItemModel.findOneAndDelete({ _id: id, business_id });
+    }
+    async assignModifierGroupsToCategoryItems(categoryId, businessId, modifierGroups) {
+        await ItemModel_1.ItemModel.updateMany({ category_id: categoryId, business_id: businessId }, { modifier_groups: modifierGroups });
     }
 }
 exports.ItemRepository = ItemRepository;

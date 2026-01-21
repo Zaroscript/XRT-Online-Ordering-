@@ -43,7 +43,6 @@ export const transformModifierAssignment = (
 
     groupModifiers.forEach((modifier: any) => {
       const modifierId = modifier.id;
-      const isDefault = defaultModifierIds.includes(modifierId);
 
       // Check if this modifier has pricing overrides
       const hasSizePricing =
@@ -54,15 +53,12 @@ export const transformModifierAssignment = (
         Object.keys(modifierPricesBySizeAndQuantity[modifierId]).length > 0;
 
       // Only create override if there's something to override
-      if (isDefault || hasSizePricing || hasQuantityPricing) {
+      if (hasSizePricing || hasQuantityPricing) {
         const override: any = {
           modifier_id: modifierId,
         };
 
         // Add is_default if it's a default modifier
-        if (isDefault) {
-          override.is_default = true;
-        }
 
         // Build prices_by_size array
         if (
@@ -188,7 +184,9 @@ export const buildCreateItemInput = (
     base_price: basePrice,
     category_id: values.category?.id,
     sort_order: values.sort_order ?? undefined,
-    max_per_order: values.max_per_order ?? undefined,
+    max_per_order: values.is_max_per_order_unlimited
+      ? undefined
+      : (values.max_per_order ?? undefined),
     is_active: values.is_active,
     is_available: values.is_available,
     is_signature: values.is_signature,

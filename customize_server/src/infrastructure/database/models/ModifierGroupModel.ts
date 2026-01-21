@@ -1,54 +1,65 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { ModifierGroup, ModifierDisplayType, QuantityLevel, PricesBySize } from '../../../domain/entities/ModifierGroup';
+import {
+  ModifierGroup,
+  ModifierDisplayType,
+  QuantityLevel,
+  PricesBySize,
+} from '../../../domain/entities/ModifierGroup';
 
 export interface ModifierGroupDocument extends Omit<ModifierGroup, 'id'>, Document {
   _id: mongoose.Types.ObjectId;
 }
 
-const PricesBySizeSchema = new Schema({
-  size_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'ItemSize',
-    required: true,
+const PricesBySizeSchema = new Schema(
+  {
+    size_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'ItemSize',
+      required: true,
+    },
+    priceDelta: {
+      type: Number,
+      required: true,
+    },
   },
-  priceDelta: {
-    type: Number,
-    required: true,
-  },
-}, { _id: false });
+  { _id: false }
+);
 
-const QuantityLevelSchema = new Schema({
-  quantity: {
-    type: Number,
-    required: true,
-    min: 1,
+const QuantityLevelSchema = new Schema(
+  {
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    name: {
+      type: String,
+      trim: true,
+    },
+    price: {
+      type: Number,
+      min: 0,
+    },
+    is_default: {
+      type: Boolean,
+      default: false,
+    },
+    display_order: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    is_active: {
+      type: Boolean,
+      default: true,
+    },
+    prices_by_size: {
+      type: [PricesBySizeSchema],
+      default: [],
+    },
   },
-  name: {
-    type: String,
-    trim: true,
-  },
-  price: {
-    type: Number,
-    min: 0,
-  },
-  is_default: {
-    type: Boolean,
-    default: false,
-  },
-  display_order: {
-    type: Number,
-    default: 0,
-    min: 0,
-  },
-  is_active: {
-    type: Boolean,
-    default: true,
-  },
-  prices_by_size: {
-    type: [PricesBySizeSchema],
-    default: [],
-  },
-}, { _id: false });
+  { _id: false }
+);
 
 const ModifierGroupSchema = new Schema<ModifierGroupDocument>(
   {
@@ -83,10 +94,6 @@ const ModifierGroupSchema = new Schema<ModifierGroupDocument>(
       required: true,
       min: 1,
       default: 1,
-    },
-    applies_per_quantity: {
-      type: Boolean,
-      default: false,
     },
     quantity_levels: {
       type: [QuantityLevelSchema],
@@ -138,4 +145,7 @@ ModifierGroupSchema.index({ business_id: 1, name: 1 }, { unique: true });
 ModifierGroupSchema.index({ business_id: 1, is_active: 1 });
 ModifierGroupSchema.index({ business_id: 1, deleted_at: 1 });
 
-export const ModifierGroupModel = mongoose.model<ModifierGroupDocument>('ModifierGroup', ModifierGroupSchema);
+export const ModifierGroupModel = mongoose.model<ModifierGroupDocument>(
+  'ModifierGroup',
+  ModifierGroupSchema
+);

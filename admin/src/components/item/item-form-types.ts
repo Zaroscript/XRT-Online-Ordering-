@@ -23,7 +23,8 @@ export type FormValues = {
   category: any;
   image?: any;
   sort_order?: number | null;
-  max_per_order?: number | null;
+  is_max_per_order_unlimited?: boolean;
+  max_per_order?: number;
   is_active?: boolean;
   is_available?: boolean;
   is_signature?: boolean;
@@ -51,7 +52,8 @@ export const defaultFormValues: FormValues = {
   category: null,
   image: '',
   sort_order: 0,
-  max_per_order: 0,
+  is_max_per_order_unlimited: true,
+  max_per_order: undefined,
   is_active: true,
   is_available: true,
   is_signature: false,

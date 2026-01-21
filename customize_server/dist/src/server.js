@@ -26,10 +26,10 @@ const permission_routes_1 = __importDefault(require("./application/routes/permis
 const env_1 = require("./shared/config/env");
 const logger_1 = require("./shared/utils/logger");
 // Import swagger config - using relative path from src to config directory
-const swagger_1 = require("../config/swagger");
+const swagger_1 = require("./swagger");
 const app = (0, express_1.default)();
 // Database connection
-(0, connection_1.connectDatabase)();
+// Database connection will be established in startServer function
 // Global middlewares
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
@@ -105,28 +105,38 @@ app.use((req, res) => {
 // Error handler (must be last)
 app.use(middlewares_1.errorHandler);
 let server;
-// Start server if not running on Vercel
-if (!process.env.VERCEL) {
-    const PORT = env_1.env.PORT;
-    server = app.listen(PORT, () => {
-        logger_1.logger.info(`🚀 Server running on port ${PORT}`);
-        logger_1.logger.info(`📝 Environment: ${env_1.env.NODE_ENV}`);
-        logger_1.logger.info(`📡 API available at http://localhost:${PORT}${env_1.env.API_BASE_URL}`);
-    });
-    // Handle port already in use error
-    server.on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-            logger_1.logger.error(`❌ Port ${PORT} is already in use!`);
-            logger_1.logger.error(`💡 To fix this, run: lsof -ti:${PORT} | xargs kill -9`);
-            logger_1.logger.error(`   Or manually kill the process using port ${PORT}`);
-            process.exit(1);
+const startServer = async () => {
+    try {
+        await (0, connection_1.connectDatabase)();
+        // Start server if not running on Vercel
+        if (!process.env.VERCEL) {
+            const PORT = env_1.env.PORT;
+            server = app.listen(PORT, () => {
+                logger_1.logger.info(`🚀 Server running on port ${PORT}`);
+                logger_1.logger.info(`📝 Environment: ${env_1.env.NODE_ENV}`);
+                logger_1.logger.info(`📡 API available at http://localhost:${PORT}${env_1.env.API_BASE_URL}`);
+            });
+            // Handle port already in use error
+            server.on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    logger_1.logger.error(`❌ Port ${PORT} is already in use!`);
+                    logger_1.logger.error(`💡 To fix this, run: lsof -ti:${PORT} | xargs kill -9`);
+                    logger_1.logger.error(`   Or manually kill the process using port ${PORT}`);
+                    process.exit(1);
+                }
+                else {
+                    logger_1.logger.error(`❌ Server error: ${err.message}`);
+                    throw err;
+                }
+            });
         }
-        else {
-            logger_1.logger.error(`❌ Server error: ${err.message}`);
-            throw err;
-        }
-    });
-}
+    }
+    catch (error) {
+        logger_1.logger.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+startServer();
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
     logger_1.logger.error('UNHANDLED REJECTION! 💥');

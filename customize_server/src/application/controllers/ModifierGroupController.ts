@@ -34,7 +34,6 @@ export class ModifierGroupController {
       display_type,
       min_select,
       max_select,
-      applies_per_quantity,
       quantity_levels,
       prices_by_size,
       is_active,
@@ -52,10 +51,9 @@ export class ModifierGroupController {
       display_type,
       min_select: Number(min_select),
       max_select: Number(max_select),
-      applies_per_quantity: applies_per_quantity === true || applies_per_quantity === 'true',
       quantity_levels: quantity_levels || [],
       prices_by_size: prices_by_size || [],
-      is_active: is_active !== undefined ? (is_active === true || is_active === 'true') : true,
+      is_active: is_active !== undefined ? is_active === true || is_active === 'true' : true,
       sort_order: sort_order ? Number(sort_order) : 0,
     });
 
@@ -81,7 +79,7 @@ export class ModifierGroupController {
     };
 
     // Remove undefined values
-    Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+    Object.keys(filters).forEach((key) => filters[key] === undefined && delete filters[key]);
 
     const result = await this.getModifierGroupsUseCase.execute(filters);
 
@@ -100,7 +98,10 @@ export class ModifierGroupController {
       business_id = undefined;
     }
 
-    const modifierGroup = await this.getModifierGroupUseCase.execute(id, business_id as string | undefined);
+    const modifierGroup = await this.getModifierGroupUseCase.execute(
+      id,
+      business_id as string | undefined
+    );
 
     return sendSuccess(res, 'Modifier group retrieved successfully', modifierGroup);
   });
@@ -112,7 +113,6 @@ export class ModifierGroupController {
       display_type,
       min_select,
       max_select,
-      applies_per_quantity,
       quantity_levels,
       prices_by_size,
       is_active,
@@ -130,7 +130,6 @@ export class ModifierGroupController {
     if (display_type !== undefined) updateData.display_type = display_type;
     if (min_select !== undefined) updateData.min_select = Number(min_select);
     if (max_select !== undefined) updateData.max_select = Number(max_select);
-    if (applies_per_quantity !== undefined) updateData.applies_per_quantity = applies_per_quantity === true || applies_per_quantity === 'true';
     if (quantity_levels !== undefined) updateData.quantity_levels = quantity_levels;
     if (prices_by_size !== undefined) updateData.prices_by_size = prices_by_size;
     if (is_active !== undefined) updateData.is_active = is_active === true || is_active === 'true';

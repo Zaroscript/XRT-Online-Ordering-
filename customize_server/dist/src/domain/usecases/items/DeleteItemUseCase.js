@@ -12,11 +12,11 @@ class DeleteItemUseCase {
         if (!item) {
             throw new Error('Item not found');
         }
-        // Delete all associated item sizes
-        const sizes = await this.itemSizeRepository.findAll({ item_id: id });
-        for (const size of sizes) {
-            await this.itemSizeRepository.delete(size.id, id);
-        }
+        // Global item sizes should NOT be deleted when an item is deleted
+        // const sizes = await this.itemSizeRepository.findAll({ item_id: id });
+        // for (const size of sizes) {
+        //     await this.itemSizeRepository.delete(size.id, id);
+        // }
         if (item.image_public_id) {
             await this.imageStorage.deleteImage(item.image_public_id);
         }

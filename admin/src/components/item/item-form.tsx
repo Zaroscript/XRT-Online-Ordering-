@@ -55,7 +55,6 @@ import BasicInfoSection from './sections/BasicInfoSection';
 import SizesSection from './sections/SizesSection';
 import ImageSection from './sections/ImageSection';
 import ModifiersSection from './sections/ModifiersSection';
-import SettingsSection from './sections/SettingsSection';
 
 export default function CreateOrUpdateItemForm({
   initialValues,
@@ -65,6 +64,7 @@ export default function CreateOrUpdateItemForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { t } = useTranslation();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
 
   // Shop data
   const { data: shopData } = useShopQuery(
@@ -139,6 +139,7 @@ export default function CreateOrUpdateItemForm({
         ...initialValues,
         category: initialValues.category,
         sizes: initialValues.sizes || [],
+        max_per_order: initialValues.max_per_order ?? undefined,
         is_sizeable:
           initialValues.is_sizeable || !!initialValues.default_size_id || false,
         default_size_id: initialValues.default_size_id || null,
@@ -189,6 +190,15 @@ export default function CreateOrUpdateItemForm({
     }
   }, [initialValues?.id, initialValues?.default_size_id, isSizeable]);
 
+  // Switch to sizes tab when is_sizeable is enabled - REMOVED to prevent auto-switching on load
+  /*
+  useEffect(() => {
+    if (isSizeable) {
+      setActiveTab('sizes');
+    }
+  }, [isSizeable]);
+  */
+
   // Mutations
   const { mutate: createItem, isPending: creating } = useCreateItemMutation();
   const { mutate: updateItem, isPending: updating } = useUpdateItemMutation();
@@ -202,9 +212,14 @@ export default function CreateOrUpdateItemForm({
 
   const handleUpdateItem = useCallback(
     (data: UpdateItemInput) => {
-      updateItem(data, { onSuccess: clearCache });
+      updateItem(data, {
+        onSuccess: () => {
+          clearCache();
+          router.back();
+        },
+      });
     },
-    [updateItem, clearCache],
+    [updateItem, clearCache, router],
   );
 
   // Data queries
@@ -370,13 +385,17 @@ export default function CreateOrUpdateItemForm({
       ) : null}
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
-          <Tabs defaultTab="basic" className="w-full">
+          <Tabs
+            defaultTab="basic"
+            className="w-full"
+            selectedTab={activeTab}
+            onTabChange={setActiveTab}
+          >
             <TabList>
               <Tab id="basic">{t('form:tab-basic-information')}</Tab>
               <Tab id="sizes">{t('form:tab-sizes')}</Tab>
               <Tab id="image">{t('form:tab-image')}</Tab>
               <Tab id="modifiers">{t('form:tab-modifiers')}</Tab>
-              <Tab id="settings">{t('form:tab-settings')}</Tab>
             </TabList>
 
             <MobileTabSelect
@@ -385,7 +404,6 @@ export default function CreateOrUpdateItemForm({
                 { id: 'sizes', label: t('form:tab-sizes') },
                 { id: 'image', label: t('form:tab-image') },
                 { id: 'modifiers', label: t('form:tab-modifiers') },
-                { id: 'settings', label: t('form:tab-settings') },
               ]}
             />
 
@@ -431,10 +449,6 @@ export default function CreateOrUpdateItemForm({
                 isSizeable={isSizeable}
                 itemSizes={itemSizes}
               />
-            </TabPanel>
-
-            <TabPanel id="settings">
-              <SettingsSection control={control} />
             </TabPanel>
           </Tabs>
 

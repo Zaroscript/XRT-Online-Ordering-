@@ -25,8 +25,36 @@ class ImportSaveService {
             const itemKeyToId = new Map();
             const groupKeyToId = new Map();
             const modifierKeyToId = new Map();
-            const itemIdToDefaultSizeId = new Map();
-            // 1. Create/Update Modifier Groups first (no dependencies)
+            const sizeCodeToId = new Map();
+            const itemKeyToDefaultSizeCode = new Map();
+            // 1. Create Item Sizes (Global) - Dependencies for Modifier Groups & Items
+            for (const sizeData of data.itemSizes) {
+                let sizeId;
+                const existingSize = await this.itemSizeRepository.exists(sizeData.size_code, business_id);
+                if (!existingSize) {
+                    const createSizeDTO = {
+                        business_id: business_id,
+                        name: sizeData.name,
+                        code: sizeData.size_code,
+                        display_order: sizeData.display_order ?? 0,
+                        is_active: sizeData.is_active ?? true,
+                    };
+                    const createdSize = await this.itemSizeRepository.create(createSizeDTO);
+                    sizeId = createdSize.id;
+                }
+                else {
+                    const sizes = await this.itemSizeRepository.findAll({ business_id });
+                    const foundSize = sizes.find((s) => s.code === sizeData.size_code);
+                    if (!foundSize)
+                        throw new Error(`Size ${sizeData.size_code} exists but not found for business_id: ${business_id}`);
+                    sizeId = foundSize.id;
+                }
+                sizeCodeToId.set(sizeData.size_code, sizeId);
+                if (sizeData.is_default && sizeData.item_key) {
+                    itemKeyToDefaultSizeCode.set(sizeData.item_key, sizeData.size_code);
+                }
+            }
+            // 2. Create/Update Modifier Groups (depends on Sizes)
             for (const groupData of data.modifierGroups) {
                 // Check if group exists by name
                 const existingGroups = await this.modifierGroupRepository.findAll({
@@ -46,17 +74,21 @@ class ImportSaveService {
                         display_type: groupData.display_type,
                         min_select: groupData.min_select,
                         max_select: groupData.max_select,
-                        applies_per_quantity: groupData.applies_per_quantity,
                         is_active: groupData.is_active ?? true,
                         sort_order: groupData.sort_order ?? 0,
                         quantity_levels: groupData.quantity_levels,
-                        prices_by_size: groupData.prices_by_size,
+                        prices_by_size: groupData.prices_by_size
+                            ?.map((p) => ({
+                            size_id: sizeCodeToId.get(p.sizeCode),
+                            priceDelta: p.priceDelta,
+                        }))
+                            .filter((p) => p.size_id),
                     };
                     const createdGroup = await this.modifierGroupRepository.create(createGroupDTO);
                     groupKeyToId.set(groupData.group_key, createdGroup.id);
                 }
             }
-            // 2. Create Modifiers (depends on Modifier Groups)
+            // 3. Create Modifiers (depends on Modifier Groups)
             for (const modifierData of data.modifiers) {
                 const groupId = groupKeyToId.get(modifierData.group_key);
                 if (!groupId) {
@@ -84,7 +116,7 @@ class ImportSaveService {
                     modifierKeyToId.set(`${modifierData.group_key}:${modifierData.modifier_key}`, createdModifier.id);
                 }
             }
-            // 3. Resolve category IDs
+            // 4. Resolve category IDs
             const categoryNameToId = new Map();
             // Get all categories for the business
             const allCategories = await this.categoryRepository.findAll({
@@ -94,7 +126,7 @@ class ImportSaveService {
             for (const category of allCategories) {
                 categoryNameToId.set(category.name.toLowerCase(), category.id);
             }
-            // 4. Create Items
+            // 5. Create Items
             for (const itemData of data.items) {
                 let categoryId = itemData.category_id;
                 if (!categoryId && itemData.category_name) {
@@ -120,32 +152,15 @@ class ImportSaveService {
                 const createdItem = await this.itemRepository.create(createItemDTO);
                 itemKeyToId.set(itemData.item_key, createdItem.id);
             }
-            // 5. Create Item Sizes (depends on Items)
-            for (const sizeData of data.itemSizes) {
-                const itemId = itemKeyToId.get(sizeData.item_key);
-                if (!itemId) {
-                    throw new AppError_1.ValidationError(`Item with item_key '${sizeData.item_key}' not found`);
-                }
-                const createSizeDTO = {
-                    item_id: itemId,
-                    restaurant_id: business_id,
-                    name: sizeData.name,
-                    code: sizeData.size_code,
-                    price: sizeData.price,
-                    display_order: sizeData.display_order ?? 0,
-                    is_active: sizeData.is_active ?? true,
-                };
-                const createdSize = await this.itemSizeRepository.create(createSizeDTO);
-                // Track default size
-                if (sizeData.is_default) {
-                    itemIdToDefaultSizeId.set(itemId, createdSize.id);
-                }
-            }
             // 6. Set default_size_id for items
-            for (const [itemId, defaultSizeId] of itemIdToDefaultSizeId.entries()) {
-                await this.itemRepository.update(itemId, business_id, {
-                    default_size_id: defaultSizeId,
-                });
+            for (const [itemKey, sizeCode] of itemKeyToDefaultSizeCode.entries()) {
+                const itemId = itemKeyToId.get(itemKey);
+                const sizeId = sizeCodeToId.get(sizeCode);
+                if (itemId && sizeId) {
+                    await this.itemRepository.update(itemId, business_id, {
+                        default_size_id: sizeId,
+                    });
+                }
             }
             // 7. Link Items to Modifier Groups and apply overrides
             for (const itemData of data.items) {
@@ -153,7 +168,7 @@ class ImportSaveService {
                 if (!itemId)
                     continue;
                 // Find overrides for this item
-                const itemOverrides = data.itemModifierOverrides.filter(o => o.item_key === itemData.item_key);
+                const itemOverrides = data.itemModifierOverrides.filter((o) => o.item_key === itemData.item_key);
                 // Group overrides by group_key
                 const overridesByGroup = new Map();
                 for (const override of itemOverrides) {
@@ -163,29 +178,31 @@ class ImportSaveService {
                     overridesByGroup.get(override.group_key).push(override);
                 }
                 // Build modifier_groups array
-                const modifierGroups = Array.from(overridesByGroup.keys()).map((group_key, index) => {
+                const modifierGroups = Array.from(overridesByGroup.keys())
+                    .map((group_key, index) => {
                     const groupId = groupKeyToId.get(group_key);
                     if (!groupId)
                         return null;
                     const groupOverrides = overridesByGroup.get(group_key);
-                    const modifierOverrides = groupOverrides.map(override => {
+                    const modifierOverrides = groupOverrides
+                        .map((override) => {
                         const modifierId = modifierKeyToId.get(`${override.group_key}:${override.modifier_key}`);
                         if (!modifierId)
                             return null;
                         return {
                             modifier_id: modifierId,
-                            max_quantity: override.max_quantity,
-                            is_default: override.is_default,
                             prices_by_size: override.prices_by_size,
                             quantity_levels: override.quantity_levels,
                         };
-                    }).filter(o => o !== null);
+                    })
+                        .filter((o) => o !== null);
                     return {
                         modifier_group_id: groupId,
                         display_order: index,
                         modifier_overrides: modifierOverrides.length > 0 ? modifierOverrides : undefined,
                     };
-                }).filter(g => g !== null);
+                })
+                    .filter((g) => g !== null);
                 // Update item with modifier groups
                 if (modifierGroups.length > 0) {
                     await this.itemRepository.update(itemId, business_id, {

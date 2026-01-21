@@ -12,6 +12,8 @@ router.use(auth_1.requireAuth);
 router.get('/modifiers', (0, authorize_1.requirePermission)('modifiers:read'), modifierController.index);
 // Get all modifiers for a group - requires modifiers:read permission
 router.get('/modifier-groups/:groupId/modifiers', (0, authorize_1.requirePermission)('modifiers:read'), modifierController.getAll);
+// Get single modifier - requires modifiers:read permission
+router.get('/modifier-groups/:groupId/modifiers/:id', (0, authorize_1.requirePermission)('modifiers:read'), modifierController.getById);
 // Create modifier - requires modifiers:create permission
 router.post('/modifier-groups/:groupId/modifiers', (0, authorize_1.requirePermission)('modifiers:create'), modifierController.create);
 // Update modifier - requires modifiers:update permission
