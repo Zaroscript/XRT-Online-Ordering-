@@ -22,4 +22,5 @@ export interface IModifierGroupRepository {
   exists(name: string, business_id: string, excludeId?: string): Promise<boolean>;
   isUsedByItems(modifierGroupId: string): Promise<boolean>;
   findActiveById(id: string, business_id?: string): Promise<ModifierGroup | null>;
+  updateSortOrder(items: { id: string; order: number }[]): Promise<void>;
 }

@@ -109,4 +109,17 @@ export class ItemSizeController {
 
     return sendSuccess(res, 'Item size deleted successfully', null, 200);
   });
+
+  updateSortOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items)) {
+      throw new ValidationError('items array is required');
+    }
+
+    const repo = new ItemSizeRepository();
+    await repo.updateSortOrder(items);
+
+    return sendSuccess(res, 'Item size sort order updated successfully');
+  });
 }

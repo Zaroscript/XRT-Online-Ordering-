@@ -11,17 +11,28 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Routes } from '@/config/routes';
 import KitchenSectionFilter from '@/components/category/kitchen-section-filter';
-import { adminOnly, getAuthCredentials, hasPermission } from '@/utils/auth-utils';
+import {
+  adminOnly,
+  getAuthCredentials,
+  hasPermission,
+} from '@/utils/auth-utils';
 import { useCategoriesQuery } from '@/data/category';
 import { useRouter } from 'next/router';
 import { Config } from '@/config';
 import PageHeading from '@/components/common/page-heading';
+import { HttpClient } from '@/data/client/http-client';
+import { API_ENDPOINTS } from '@/data/client/api-endpoints';
+import { useModalAction } from '@/components/ui/modal/modal.context';
+import { DownloadIcon } from '@/components/icons/download-icon';
+import { UploadIcon } from '@/components/icons/upload-icon';
+
 export default function Categories() {
   const { locale } = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [kitchenSection, setKitchenSection] = useState('');
   const [page, setPage] = useState(1);
   const { t } = useTranslation(['common', 'form', 'table']);
+  const { openModal } = useModalAction();
   const [orderBy, setOrder] = useState('created_at');
   const [sortedBy, setColumn] = useState<SortOrder>(SortOrder.Desc);
   const { categories, paginatorInfo, loading, error } = useCategoriesQuery({
@@ -47,6 +58,28 @@ export default function Categories() {
     setPage(current);
   }
 
+  const handleExport = async () => {
+    try {
+      // Use HttpClient to request with auth headers but handle blob response manually if needed
+      // Or just use window.open if cookies/auth allows.
+      // Since we use Bearer token, we need to fetch blob and download.
+      const response = await HttpClient.get<string>(
+        `${API_ENDPOINTS.CATEGORY_EXPORT}`,
+        { responseType: 'blob' } as any,
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response as any]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'categories-export.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (error) {
+      console.error('Export failed', error);
+    }
+  };
+
   return (
     <>
       <Card className="mb-8 flex flex-col">
@@ -69,19 +102,28 @@ export default function Categories() {
               }}
             />
 
-            {locale === Config.defaultLanguage && (getAuthCredentials().role === 'super_admin' || hasPermission(['categories:create'], getAuthCredentials().permissions)) && (
-              <LinkButton
-                href={`${Routes.category.create}`}
-                className="h-12 w-full md:w-auto md:ms-6"
-              >
-                <span className="block md:hidden xl:block">
-                  + {t('form:button-label-add-categories')}
-                </span>
-                <span className="hidden md:block xl:hidden">
-                  + {t('form:button-label-add')}
-                </span>
-              </LinkButton>
-            )}
+            <div className="flex items-center space-x-3 md:ms-6">
+              {/* Import/Export moved to separate page */}
+            </div>
+
+            {locale === Config.defaultLanguage &&
+              (getAuthCredentials().role === 'super_admin' ||
+                hasPermission(
+                  ['categories:create'],
+                  getAuthCredentials().permissions,
+                )) && (
+                <LinkButton
+                  href={`${Routes.category.create}`}
+                  className="h-12 w-full md:w-auto md:ms-6"
+                >
+                  <span className="block md:hidden xl:block">
+                    + {t('form:button-label-add-categories')}
+                  </span>
+                  <span className="hidden md:block xl:hidden">
+                    + {t('form:button-label-add')}
+                  </span>
+                </LinkButton>
+              )}
           </div>
         </div>
       </Card>

@@ -1,3 +1,4 @@
+import React from 'react';
 import Navbar from '@/components/layouts/navigation/top-navbar';
 import { miniSidebarInitialValue } from '@/utils/constants';
 import { useRouter } from 'next/router';
@@ -48,43 +49,6 @@ const SidebarItemMap = ({ menuItems }: any) => {
   const { role: currentUserRole } = getAuthCredentials();
   const [miniSidebar, _] = useAtom(miniSidebarInitialValue);
   const { width } = useWindowSize();
-  const router = useRouter();
-  const {
-    query: { shop },
-    pathname,
-  } = router;
-  const { data: me } = useMeQuery();
-
-  // Get shop from query, or try to extract from pathname if missing
-  // Pathname might be like /[shop]/items/[id]/edit or /items/[id]/edit
-  let shopSlug = shop?.toString() || '';
-
-  // If shop is missing from query but we're in a shop-scoped route, extract from pathname
-  if (!shopSlug && pathname) {
-    const pathParts = pathname.split('/').filter(Boolean);
-    // Check if pathname starts with a shop slug pattern (not a known route)
-    const knownRoutes = [
-      'items',
-      'products',
-      'categories',
-      'modifiers',
-      'orders',
-      'settings',
-    ];
-    if (pathParts.length > 0 && !knownRoutes.includes(pathParts[0])) {
-      // First part might be shop slug
-      shopSlug = pathParts[0];
-    }
-  }
-
-  // If still no shop slug, try to get from user's shops (fallback)
-  if (!shopSlug && me?.shops && me.shops.length > 0) {
-    // Use the first shop or managed shop
-    const shopToUse = me.managed_shop || me.shops[0];
-    if (shopToUse?.slug) {
-      shopSlug = shopToUse.slug;
-    }
-  }
 
   let termsAndConditions;
   let coupons;
@@ -113,7 +77,7 @@ const SidebarItemMap = ({ menuItems }: any) => {
           permissions,
           childMenu,
         }: {
-          href: string | ((shop: string) => string);
+          href: string;
           label: string;
           icon: string;
           childMenu: any;
@@ -123,25 +87,10 @@ const SidebarItemMap = ({ menuItems }: any) => {
             return null;
           }
 
-          // Generate href, handling function case and preventing double slashes
-          let finalHref = '#';
-          if (href) {
-            if (typeof href === 'function') {
-              finalHref = href(shopSlug || '');
-              // Fix double slashes: replace // with / at the start
-              if (typeof finalHref === 'string' && finalHref.startsWith('//')) {
-                finalHref = finalHref.replace(/^\/\//, '/');
-              }
-            } else {
-              finalHref = href;
-            }
-          }
-
           return (
             <SidebarItem
               key={label}
-              // @ts-ignore
-              href={finalHref}
+              href={href}
               label={t(label)}
               icon={icon}
               childMenu={childMenu}
@@ -159,11 +108,18 @@ const SideBarGroup = () => {
   const { role } = getAuthCredentials();
   const menuItems: MenuItemsProps =
     role === 'staff'
-      ? siteSettings?.sidebarLinks?.staff
-      : siteSettings?.sidebarLinks?.shop;
+      ? siteSettings?.sidebarLinks?.admin
+      : siteSettings?.sidebarLinks?.admin;
   const menuKeys = Object.keys(menuItems);
   const { width } = useWindowSize();
   const { t } = useTranslation();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <>

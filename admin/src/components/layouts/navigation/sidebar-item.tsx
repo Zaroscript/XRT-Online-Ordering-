@@ -118,7 +118,7 @@ const SidebarItem = ({
   const router = useRouter();
   const { width } = useWindowSize();
   const [isMounted, setIsMounted] = useState(false);
-  const [isOpen, setOpen] = useState<boolean>(false);
+  const [isOpen, setOpen] = useState<boolean>(true);
 
   // Initialize auth role safely - use propUserRole during SSR to prevent hydration mismatch
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(
@@ -168,8 +168,8 @@ const SidebarItem = ({
     href && href !== '/' && href?.endsWith('/') ? href?.slice(0, -1) : href;
 
   useEffect(() => {
-    if (isMounted) {
-      setOpen(isActive);
+    if (isMounted && isActive) {
+      setOpen(true);
     }
   }, [isActive, isMounted]);
 

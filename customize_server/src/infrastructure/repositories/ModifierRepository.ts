@@ -1,4 +1,7 @@
-import { IModifierRepository, PaginatedModifiers } from '../../domain/repositories/IModifierRepository';
+import {
+  IModifierRepository,
+  PaginatedModifiers,
+} from '../../domain/repositories/IModifierRepository';
 import {
   Modifier,
   CreateModifierDTO,
@@ -17,19 +20,19 @@ export class ModifierRepository implements IModifierRepository {
         : document.modifier_group_id.toString(),
       modifier_group: (document.modifier_group_id as any).name
         ? {
-          id: (document.modifier_group_id as any)._id.toString(),
-          name: (document.modifier_group_id as any).name,
-        }
+            id: (document.modifier_group_id as any)._id.toString(),
+            name: (document.modifier_group_id as any).name,
+          }
         : undefined,
       name: document.name,
-      is_default: document.is_default,
-      max_quantity: document.max_quantity,
       display_order: document.display_order,
       is_active: document.is_active,
-      sides_config: document.sides_config ? {
-        enabled: document.sides_config.enabled || false,
-        allowed_sides: document.sides_config.allowed_sides || [],
-      } : undefined,
+      sides_config: document.sides_config
+        ? {
+            enabled: document.sides_config.enabled || false,
+            allowed_sides: document.sides_config.allowed_sides || [],
+          }
+        : undefined,
       created_at: document.created_at,
       updated_at: document.updated_at,
       deleted_at: document.deleted_at,
@@ -37,17 +40,8 @@ export class ModifierRepository implements IModifierRepository {
   }
 
   async create(data: CreateModifierDTO): Promise<Modifier> {
-    // If setting as default, unset other defaults in the group
-    if (data.is_default) {
-      await ModifierModel.updateMany(
-        { modifier_group_id: data.modifier_group_id, deleted_at: null },
-        { $set: { is_default: false } }
-      );
-    }
-
     const modifierDoc = new ModifierModel({
       ...data,
-      is_default: data.is_default ?? false,
       display_order: data.display_order ?? 0,
       is_active: data.is_active ?? true,
     });
@@ -88,10 +82,6 @@ export class ModifierRepository implements IModifierRepository {
       query.is_active = filters.is_active;
     }
 
-    if (filters.is_default !== undefined) {
-      query.is_default = filters.is_default;
-    }
-
     const modifierDocs = await ModifierModel.find(query)
       .populate('modifier_group_id', 'name')
       .sort({ display_order: 1, created_at: 1 });
@@ -106,23 +96,7 @@ export class ModifierRepository implements IModifierRepository {
     return modifierDocs.map((doc) => this.toDomain(doc));
   }
 
-  async update(
-    id: string,
-    modifier_group_id: string,
-    data: UpdateModifierDTO
-  ): Promise<Modifier> {
-    // If setting as default, unset other defaults in the group
-    if (data.is_default === true) {
-      await ModifierModel.updateMany(
-        {
-          modifier_group_id,
-          _id: { $ne: id },
-          deleted_at: null
-        },
-        { $set: { is_default: false } }
-      );
-    }
-
+  async update(id: string, modifier_group_id: string, data: UpdateModifierDTO): Promise<Modifier> {
     const modifierDoc = await ModifierModel.findOneAndUpdate(
       { _id: id, modifier_group_id, deleted_at: null },
       data,
@@ -165,5 +139,18 @@ export class ModifierRepository implements IModifierRepository {
 
     const count = await ModifierModel.countDocuments(query);
     return count > 0;
+  }
+
+  async updateSortOrder(items: { id: string; order: number }[]): Promise<void> {
+    if (!items || items.length === 0) return;
+
+    const operations = items.map((item) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { display_order: item.order },
+      },
+    }));
+
+    await ModifierModel.bulkWrite(operations);
   }
 }

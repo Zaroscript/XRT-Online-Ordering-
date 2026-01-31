@@ -103,5 +103,12 @@
   "table-item-last-order": "Last Order",
   "table-item-rewards": "Rewards",
   "table-item-kitchen-section": "Kitchen Section",
-  "table-item-role": "Role"
+  "table-item-role": "Role",
+  "table-item-items": "Items",
+  "table-item-categories": "Categories",
+  "table-item-price": "Base Price",
+  "table-item-date": "Date",
+  "table-item-operation": "Operation",
+  "table-item-admin": "Admin",
+  "table-item-affected-items": "Affected Items"
 }

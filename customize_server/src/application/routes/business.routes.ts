@@ -9,9 +9,7 @@ const businessController = new BusinessController();
 router.use(requireAuth);
 
 router.post('/', businessController.createBusiness);
-router.get('/', businessController.getBusinesses);
-router.get('/:id', businessController.getBusinessById);
-router.patch('/:id', businessController.updateBusiness);
+router.get('/', businessController.getBusiness);
+router.patch('/', businessController.updateBusiness);
 
 export default router;
-

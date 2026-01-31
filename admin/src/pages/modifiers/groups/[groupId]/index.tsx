@@ -201,6 +201,7 @@ export default function ModifierGroupDetailsPage() {
         onPagination={handlePagination}
         onOrder={setOrder}
         onSort={setColumn}
+        enabledDnD={!searchTerm}
       />
     </>
   );

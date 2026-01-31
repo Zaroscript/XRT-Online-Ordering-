@@ -156,4 +156,17 @@ export class ModifierGroupController {
 
     return sendSuccess(res, 'Modifier group deleted successfully');
   });
+
+  updateSortOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items)) {
+      throw new ValidationError('items array is required');
+    }
+
+    const repo = new ModifierGroupRepository();
+    await repo.updateSortOrder(items);
+
+    return sendSuccess(res, 'Modifier group sort order updated successfully');
+  });
 }

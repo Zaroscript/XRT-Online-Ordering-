@@ -101,9 +101,10 @@ const BarChart = ({
     series: [
       {
         type: 'column',
-        data: Array.isArray(series) 
+        data: Array.isArray(series)
           ? series.map((val: any) => {
-              const num = typeof val === 'number' ? val : parseFloat(String(val || '0'));
+              const num =
+                typeof val === 'number' ? val : parseFloat(String(val || '0'));
               return isNaN(num) || !isFinite(num) ? 0 : Math.max(0, num);
             })
           : [],
@@ -138,7 +139,7 @@ const BarChart = ({
             <span className="text-sm text-heading ms-1">
               <span
                 className={cn(
-                  position === 'down' ? 'text-red-400' : 'text-green-500'
+                  position === 'down' ? 'text-red-400' : 'text-green-500',
                 )}
               >
                 {percentage}
@@ -155,7 +156,6 @@ const BarChart = ({
           options={options.options}
           series={options.series}
           height="350"
-          width="100%"
           type="bar"
         />
       </div>

@@ -10,12 +10,16 @@ import { HttpClient } from './http-client';
 
 export const categoryClient = {
   ...crudFactory<Category, QueryOptions, CreateCategoryInput>(
-    API_ENDPOINTS.CATEGORIES
+    API_ENDPOINTS.CATEGORIES,
   ),
-  paginated: async ({ type, name, self, business_id, ...params }: Partial<CategoryQueryOptions>) => {
+  paginated: async ({
+    type,
+    name,
+    self,
+    ...params
+  }: Partial<CategoryQueryOptions>) => {
     const response = await HttpClient.get<any>(API_ENDPOINTS.CATEGORIES, {
       ...params,
-      business_id,
     });
     const categories = response?.data || response || [];
     return {
@@ -36,7 +40,7 @@ export const categoryClient = {
   },
   get: async ({ id, language }: any) => {
     const response = await HttpClient.get<any>(
-      `${API_ENDPOINTS.CATEGORIES}/${id}`
+      `${API_ENDPOINTS.CATEGORIES}/${id}`,
     );
     // Handle backend response format: { success: true, data: {...} }
     return response?.data || response;
@@ -48,7 +52,10 @@ export const categoryClient = {
         formData.append('image', input.image);
       } else if (key === 'icon' && input.icon) {
         formData.append('icon', input.icon);
-      } else if (key === 'modifier_groups' && (input as any).modifier_groups !== undefined) {
+      } else if (
+        key === 'modifier_groups' &&
+        (input as any).modifier_groups !== undefined
+      ) {
         // Serialize arrays/objects as JSON strings for FormData
         formData.append(key, JSON.stringify((input as any).modifier_groups));
       } else if (input[key as keyof CreateCategoryInput] !== undefined) {
@@ -64,9 +71,13 @@ export const categoryClient = {
         }
       }
     });
-    const response = await HttpClient.post<any>(API_ENDPOINTS.CATEGORIES, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await HttpClient.post<any>(
+      API_ENDPOINTS.CATEGORIES,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
+    );
     return response?.data || response;
   },
   update: async ({ id, ...input }: any) => {
@@ -76,7 +87,10 @@ export const categoryClient = {
         formData.append('image', input.image);
       } else if (key === 'icon' && input.icon) {
         formData.append('icon', input.icon);
-      } else if (key === 'modifier_groups' && input.modifier_groups !== undefined) {
+      } else if (
+        key === 'modifier_groups' &&
+        input.modifier_groups !== undefined
+      ) {
         // Serialize arrays/objects as JSON strings for FormData
         formData.append(key, JSON.stringify(input.modifier_groups));
       } else if (input[key] !== undefined) {
@@ -96,11 +110,21 @@ export const categoryClient = {
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      },
+    );
     return response?.data || response;
   },
   delete: async ({ id }: { id: string }) => {
-    const response = await HttpClient.delete<any>(`${API_ENDPOINTS.CATEGORIES}/${id}`);
+    const response = await HttpClient.delete<any>(
+      `${API_ENDPOINTS.CATEGORIES}/${id}`,
+    );
     return response?.data || response;
+  },
+  importCategories: (data: FormData) => {
+    return HttpClient.post<any>(API_ENDPOINTS.CATEGORY_IMPORT, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   },
 };

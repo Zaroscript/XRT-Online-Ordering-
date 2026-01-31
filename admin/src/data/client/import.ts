@@ -6,6 +6,7 @@ export interface ImportSession {
   business_id: string;
   status: 'draft' | 'validated' | 'confirmed' | 'discarded';
   parsedData: {
+    categories?: any[];
     items: any[];
     itemSizes: any[];
     modifierGroups: any[];
@@ -51,51 +52,56 @@ export const importClient = {
     if (input.business_id) {
       formData.append('business_id', input.business_id);
     }
-    const response = await HttpClient.post<{ success: boolean; data: ImportSession; message: string }>(
-      'import/parse',
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
-    );
+    const response = await HttpClient.post<{
+      success: boolean;
+      data: ImportSession;
+      message: string;
+    }>('import/parse', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response?.data || response;
   },
 
   getSession: async (id: string) => {
-    const response = await HttpClient.get<{ success: boolean; data: ImportSession; message: string }>(
-      `import/sessions/${id}`
-    );
+    const response = await HttpClient.get<{
+      success: boolean;
+      data: ImportSession;
+      message: string;
+    }>(`import/sessions/${id}`);
     return response?.data || response;
   },
 
   listSessions: async (business_id?: string) => {
-    const response = await HttpClient.get<{ success: boolean; data: ImportSession[]; message: string }>(
-      'import/sessions',
-      { business_id }
-    );
+    const response = await HttpClient.get<{
+      success: boolean;
+      data: ImportSession[];
+      message: string;
+    }>('import/sessions', { business_id });
     return response?.data || response;
   },
 
   updateSession: async (id: string, input: UpdateImportSessionInput) => {
-    const response = await HttpClient.put<{ success: boolean; data: ImportSession; message: string }>(
-      `import/sessions/${id}`,
-      input
-    );
+    const response = await HttpClient.put<{
+      success: boolean;
+      data: ImportSession;
+      message: string;
+    }>(`import/sessions/${id}`, input);
     return response?.data || response;
   },
 
   finalSave: async (id: string) => {
-    const response = await HttpClient.post<{ success: boolean; message: string }>(
-      `import/sessions/${id}/save`,
-      {}
-    );
+    const response = await HttpClient.post<{
+      success: boolean;
+      message: string;
+    }>(`import/sessions/${id}/save`, {});
     return response;
   },
 
   discardSession: async (id: string) => {
-    const response = await HttpClient.delete<{ success: boolean; message: string }>(
-      `import/sessions/${id}`
-    );
+    const response = await HttpClient.delete<{
+      success: boolean;
+      message: string;
+    }>(`import/sessions/${id}`);
     return response;
   },
 

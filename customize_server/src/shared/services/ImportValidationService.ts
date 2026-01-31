@@ -19,6 +19,52 @@ export class ImportValidationService {
     const errors: ImportValidationError[] = [];
     const warnings: ImportValidationWarning[] = [];
 
+    // Validate Categories
+    if (data.categories) {
+      const categoryNames = new Set<string>();
+      data.categories.forEach((cat, index) => {
+        const row = index + 2;
+
+        // name is required
+        if (!cat.name || cat.name.trim() === '') {
+          errors.push({
+            file: filename,
+            row,
+            entity: 'Category',
+            field: 'name',
+            message: 'name is required',
+            value: cat.name,
+          });
+        } else {
+          const lowerName = cat.name.toLowerCase().trim();
+          if (categoryNames.has(lowerName)) {
+            errors.push({
+              file: filename,
+              row,
+              entity: 'Category',
+              field: 'name',
+              message: `Duplicate category name: ${cat.name}`,
+              value: cat.name,
+            });
+          } else {
+            categoryNames.add(lowerName);
+          }
+        }
+
+        // business_id validation
+        if (cat.business_id && cat.business_id !== business_id) {
+          warnings.push({
+            file: filename,
+            row,
+            entity: 'Category',
+            field: 'business_id',
+            message: `business_id mismatch. Using session business_id: ${business_id}`,
+            value: cat.business_id,
+          });
+        }
+      });
+    }
+
     // Validate Items
     const itemKeys = new Set<string>();
     data.items.forEach((item, index) => {
@@ -73,7 +119,7 @@ export class ImportValidationService {
         }
       } else {
         // if is_sizeable = true → at least one Item Size is required
-        const itemSizes = data.itemSizes.filter(s => s.item_key === item.item_key);
+        const itemSizes = data.itemSizes.filter((s) => s.item_key === item.item_key);
         if (itemSizes.length === 0) {
           errors.push({
             file: filename,
@@ -87,7 +133,7 @@ export class ImportValidationService {
 
         // default_size_code must exist when sizable
         if (item.default_size_code) {
-          const defaultSize = itemSizes.find(s => s.size_code === item.default_size_code);
+          const defaultSize = itemSizes.find((s) => s.size_code === item.default_size_code);
           if (!defaultSize) {
             errors.push({
               file: filename,
@@ -197,7 +243,7 @@ export class ImportValidationService {
     // Validate exactly ONE default size per item
     defaultSizes.forEach((count, item_key) => {
       if (count === 0) {
-        const itemSizes = data.itemSizes.filter(s => s.item_key === item_key);
+        const itemSizes = data.itemSizes.filter((s) => s.item_key === item_key);
         if (itemSizes.length > 0) {
           warnings.push({
             file: filename,
@@ -285,7 +331,7 @@ export class ImportValidationService {
       }
 
       // max_select ≤ modifiers count (validate after modifiers are processed)
-      const groupModifiers = data.modifiers.filter(m => m.group_key === group.group_key);
+      const groupModifiers = data.modifiers.filter((m) => m.group_key === group.group_key);
       if (group.max_select > groupModifiers.length) {
         warnings.push({
           file: filename,
@@ -372,7 +418,7 @@ export class ImportValidationService {
       }
 
       // Validate group exists
-      const groupExists = data.modifierGroups.some(g => g.group_key === modifier.group_key);
+      const groupExists = data.modifierGroups.some((g) => g.group_key === modifier.group_key);
       if (!groupExists) {
         errors.push({
           file: filename,
@@ -400,7 +446,7 @@ export class ImportValidationService {
         });
       } else {
         // Validate item exists
-        const itemExists = data.items.some(i => i.item_key === override.item_key);
+        const itemExists = data.items.some((i) => i.item_key === override.item_key);
         if (!itemExists) {
           errors.push({
             file: filename,
@@ -424,7 +470,7 @@ export class ImportValidationService {
         });
       } else {
         // Validate group exists
-        const groupExists = data.modifierGroups.some(g => g.group_key === override.group_key);
+        const groupExists = data.modifierGroups.some((g) => g.group_key === override.group_key);
         if (!groupExists) {
           errors.push({
             file: filename,
@@ -449,7 +495,7 @@ export class ImportValidationService {
       } else {
         // Validate modifier exists and belongs to group
         const modifierExists = data.modifiers.some(
-          m => m.modifier_key === override.modifier_key && m.group_key === override.group_key
+          (m) => m.modifier_key === override.modifier_key && m.group_key === override.group_key
         );
         if (!modifierExists) {
           errors.push({
@@ -465,10 +511,10 @@ export class ImportValidationService {
 
       // Validate size_code exists for item (if prices_by_size provided)
       if (override.prices_by_size && override.prices_by_size.length > 0) {
-        const itemSizes = data.itemSizes.filter(s => s.item_key === override.item_key);
-        const itemSizeCodes = new Set(itemSizes.map(s => s.size_code));
-        
-        override.prices_by_size.forEach(priceOverride => {
+        const itemSizes = data.itemSizes.filter((s) => s.item_key === override.item_key);
+        const itemSizeCodes = new Set(itemSizes.map((s) => s.size_code));
+
+        override.prices_by_size.forEach((priceOverride) => {
           if (!itemSizeCodes.has(priceOverride.sizeCode)) {
             errors.push({
               file: filename,

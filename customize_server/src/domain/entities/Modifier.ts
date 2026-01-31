@@ -8,8 +8,6 @@ export interface Modifier {
     name: string;
   };
   name: string;
-  is_default: boolean;
-  max_quantity?: number;
   display_order: number;
   is_active: boolean;
   sides_config?: {
@@ -27,8 +25,6 @@ export interface Modifier {
 export interface CreateModifierDTO {
   modifier_group_id: string;
   name: string;
-  is_default?: boolean;
-  max_quantity?: number;
   display_order?: number;
   is_active?: boolean;
   sides_config?: {
@@ -42,8 +38,6 @@ export interface CreateModifierDTO {
 
 export interface UpdateModifierDTO {
   name?: string;
-  is_default?: boolean;
-  max_quantity?: number;
   display_order?: number;
   is_active?: boolean;
   sides_config?: {

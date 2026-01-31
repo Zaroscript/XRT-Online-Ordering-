@@ -115,4 +115,17 @@ export class CategoryRepository implements ICategoryRepository {
     });
     return count > 0;
   }
+
+  async updateSortOrder(items: { id: string; order: number }[]): Promise<void> {
+    if (!items || items.length === 0) return;
+
+    const operations = items.map((item) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { sort_order: item.order },
+      },
+    }));
+
+    await CategoryModel.bulkWrite(operations);
+  }
 }

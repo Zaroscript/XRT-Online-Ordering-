@@ -12,5 +12,5 @@ export interface ICategoryRepository {
   update(id: string, business_id: string, categoryData: UpdateCategoryDTO): Promise<Category>;
   delete(id: string, business_id: string): Promise<void>;
   exists(name: string, business_id: string): Promise<boolean>;
+  updateSortOrder(items: { id: string; order: number }[]): Promise<void>;
 }
-

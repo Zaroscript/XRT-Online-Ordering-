@@ -62,6 +62,13 @@ export const useLogoutMutation = () => {
         toastId: 'logoutSuccess',
       });
     },
+    onError: () => {
+      Cookies.remove(AUTH_CRED);
+      router.replace(Routes.login);
+      toast.success(t('common:successfully-logout'), {
+        toastId: 'logoutSuccess',
+      });
+    },
   });
 };
 

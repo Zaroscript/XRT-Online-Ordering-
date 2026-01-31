@@ -60,9 +60,13 @@ export const useFlashSaleQuery = ({
   language: string;
   shop_id?: string;
 }) => {
-  const { data, error, isPending: isLoading } = useQuery<any, Error>({
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<any, Error>({
     queryKey: [API_ENDPOINTS.FLASH_SALE, { slug, language, shop_id }],
-    queryFn: () => flashSaleClient.get({ slug, language, shop_id })
+    queryFn: () => flashSaleClient.get({ slug, language }),
   });
 
   return {
@@ -75,7 +79,11 @@ export const useFlashSaleQuery = ({
 // Read All flashSale
 
 export const useFlashSalesQuery = (options: Partial<FlashSaleQueryOptions>) => {
-  const { data, error, isPending: isLoading } = useQuery<FlashSalePaginator, Error>({
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<FlashSalePaginator, Error>({
     queryKey: [API_ENDPOINTS.FLASH_SALE, options],
     queryFn: ({ queryKey, pageParam }) =>
       flashSaleClient.paginated(Object.assign({}, queryKey[1], pageParam)),
@@ -94,7 +102,7 @@ export const useFlashSalesQuery = (options: Partial<FlashSaleQueryOptions>) => {
 
 export const useFlashSalesLoadMoreQuery = (
   options: Partial<FlashSaleQueryOptions>,
-  config: Partial<UseInfiniteQueryOptions<FlashSalePaginator, Error>> = {}
+  config: Partial<UseInfiniteQueryOptions<FlashSalePaginator, Error>> = {},
 ) => {
   const {
     data,
@@ -213,9 +221,14 @@ export const useProductFlashSaleInfo = ({
   id: string;
   language: string;
 }) => {
-  const { data, error, isPending: isLoading } = useQuery<FlashSale, Error>({
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<FlashSale, Error>({
     queryKey: [API_ENDPOINTS.PRODUCT_FLASH_SALE_INFO, { id, language }],
-    queryFn: () => flashSaleClient.getFlashSaleInfoByProductID({ id, language })
+    queryFn: () =>
+      flashSaleClient.getFlashSaleInfoByProductID({ id, language }),
   });
 
   return {

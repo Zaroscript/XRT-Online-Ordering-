@@ -15,8 +15,11 @@ import Badge from '@/components/ui/badge/badge';
 import { Routes } from '@/config/routes';
 import LinkButton from '@/components/ui/link-button';
 import { PlusIcon } from '@/components/icons/plus-icon';
+import { DownloadIcon } from '@/components/icons/download-icon';
+import { HttpClient } from '@/data/client/http-client';
+import { API_ENDPOINTS } from '@/data/client/api-endpoints';
 
-export default function ImportListPage() {
+const ImportListPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { query } = router;
@@ -25,6 +28,25 @@ export default function ImportListPage() {
 
   if (isLoading) return <Loader text={t('common:text-loading')} />;
   if (error) return <ErrorMessage message={(error as any)?.message} />;
+
+  const handleExport = async () => {
+    try {
+      const response = await HttpClient.get<string>(
+        `${API_ENDPOINTS.CATEGORY_EXPORT}`,
+        { responseType: 'blob' } as any,
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response as any]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'categories-export.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (error) {
+      console.error('Export failed', error);
+    }
+  };
 
   const columns = [
     {
@@ -39,12 +61,7 @@ export default function ImportListPage() {
           confirmed: 'bg-blue-500',
           discarded: 'bg-red-500',
         };
-        return (
-          <Badge
-            text={status}
-            color={colors[status] || 'bg-gray-500'}
-          />
-        );
+        return <Badge text={status} color={colors[status] || 'bg-gray-500'} />;
       },
     },
     {
@@ -85,7 +102,9 @@ export default function ImportListPage() {
           {record.status !== 'discarded' && (
             <Button
               size="small"
-              onClick={() => router.push(Routes.import.review.replace(':id', id))}
+              onClick={() =>
+                router.push(Routes.import.review.replace(':id', id))
+              }
             >
               {t('common:review')}
             </Button>
@@ -100,9 +119,16 @@ export default function ImportListPage() {
       <Card className="mb-8 flex flex-col">
         <div className="flex w-full flex-col items-center md:flex-row">
           <div className="mb-4 md:mb-0 md:w-1/4">
-            <PageHeading title={t('common:import-sessions')} />
+            <PageHeading title="Import / Export" />
           </div>
-          <div className="flex items-center ms-auto">
+          <div className="flex items-center space-x-3 md:ms-6">
+            <button
+              className="flex items-center text-sm font-semibold text-accent transition-colors hover:text-accent-hover focus:text-accent-hover focus:outline-none"
+              onClick={handleExport}
+            >
+              <DownloadIcon className="h-4 w-4 me-1" />
+              {t('common:text-export-categories')}
+            </button>
             <LinkButton
               href={Routes.import.upload}
               className="h-12 md:ms-4 md:h-12"
@@ -126,18 +152,23 @@ export default function ImportListPage() {
               <p className="mb-1 pt-6 text-base font-semibold text-heading">
                 {t('common:no-import-sessions')}
               </p>
-              <p className="text-[13px]">{t('common:start-by-uploading-a-file')}</p>
+              <p className="text-[13px]">
+                {t('common:start-by-uploading-a-file')}
+              </p>
             </div>
           )}
         />
       </Card>
     </>
   );
-}
+};
 
 ImportListPage.authenticate = {
   permissions: adminOnly,
 };
+ImportListPage.Layout = Layout;
+
+export default ImportListPage;
 
 export const getServerSideProps = async ({ locale }: any) => ({
   props: {

@@ -12,12 +12,16 @@ import { useRouter } from 'next/router';
 import Loader from '@/components/ui/loader/loader';
 import ErrorMessage from '@/components/ui/error-message';
 
-export default function ImportUploadPage() {
+const ImportUploadPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [businessId, setBusinessId] = useState<string>('');
-  const { mutate: parseImport, isPending: isLoading, error } = useParseImportMutation();
+  const {
+    mutate: parseImport,
+    isPending: isLoading,
+    error,
+  } = useParseImportMutation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -45,7 +49,9 @@ export default function ImportUploadPage() {
 
       <Card>
         <div className="mb-6">
-          <h3 className="mb-4 text-lg font-semibold">{t('common:upload-import-file')}</h3>
+          <h3 className="mb-4 text-lg font-semibold">
+            {t('common:upload-import-file')}
+          </h3>
           <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
             {t('common:import-description')}
           </p>
@@ -68,7 +74,8 @@ export default function ImportUploadPage() {
 
           <div>
             <label className="mb-2 block text-sm font-medium text-heading">
-              {t('common:csv-or-zip-file')} <span className="text-red-500">*</span>
+              {t('common:csv-or-zip-file')}{' '}
+              <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <input
@@ -97,7 +104,12 @@ export default function ImportUploadPage() {
           </div>
 
           {error && (
-            <ErrorMessage message={(error as any)?.response?.data?.message || t('common:upload-failed')} />
+            <ErrorMessage
+              message={
+                (error as any)?.response?.data?.message ||
+                t('common:upload-failed')
+              }
+            />
           )}
 
           <div className="flex justify-end space-x-4">
@@ -114,18 +126,23 @@ export default function ImportUploadPage() {
               disabled={!file || !businessId || isLoading}
               loading={isLoading}
             >
-              {isLoading ? t('common:text-loading') : t('common:parse-and-validate')}
+              {isLoading
+                ? t('common:text-loading')
+                : t('common:parse-and-validate')}
             </Button>
           </div>
         </form>
       </Card>
     </>
   );
-}
+};
 
 ImportUploadPage.authenticate = {
   permissions: adminOnly,
 };
+ImportUploadPage.Layout = Layout;
+
+export default ImportUploadPage;
 
 export const getServerSideProps = async ({ locale }: any) => ({
   props: {

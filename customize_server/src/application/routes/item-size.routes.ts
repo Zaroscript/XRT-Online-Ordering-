@@ -8,6 +8,9 @@ const itemSizeController = new ItemSizeController();
 
 router.use(requireAuth);
 
+// Sort order update - specific route before generic /:id routes
+router.post('/sort-order', requireAuth, itemSizeController.updateSortOrder);
+
 // Get all sizes (Global per business)
 router.get(
   '/', // Was /:itemId/sizes - now mounted at /api/sizes likely, or need to check mount point
@@ -16,31 +19,15 @@ router.get(
 );
 
 // Get single item size
-router.get(
-  '/:id',
-  requirePermission('items:read'),
-  itemSizeController.getById
-);
+router.get('/:id', requirePermission('items:read'), itemSizeController.getById);
 
 // Create item size
-router.post(
-  '/',
-  requirePermission('items:create'),
-  itemSizeController.create
-);
+router.post('/', requirePermission('items:create'), itemSizeController.create);
 
 // Update item size
-router.put(
-  '/:id',
-  requirePermission('items:update'),
-  itemSizeController.update
-);
+router.put('/:id', requirePermission('items:update'), itemSizeController.update);
 
 // Delete item size
-router.delete(
-  '/:id',
-  requirePermission('items:delete'),
-  itemSizeController.delete
-);
+router.delete('/:id', requirePermission('items:delete'), itemSizeController.delete);
 
 export default router;

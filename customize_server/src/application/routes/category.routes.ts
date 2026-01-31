@@ -10,19 +10,25 @@ const categoryController = new CategoryController();
 // All category routes require authentication
 router.use(requireAuth);
 
-// Get all categories - requires categories:read permission
-router.get(
-  '/',
-  requirePermission('categories:read'),
-  categoryController.getAll
+// Sort order update - specific route before generic /:id routes
+router.post('/sort-order', requireAuth, categoryController.updateSortOrder);
+
+// Export categories - requires categories:read permission
+router.get('/export', requirePermission('categories:read'), categoryController.exportCategories);
+
+// Import categories - requires categories:create (and potentially update) permission
+router.post(
+  '/import',
+  requirePermission('categories:create'),
+  uploadImage.single('csv'), // Using single file upload with key 'csv'
+  categoryController.importCategories
 );
 
+// Get all categories - requires categories:read permission
+router.get('/', requirePermission('categories:read'), categoryController.getAll);
+
 // Get single category - requires categories:read permission
-router.get(
-  '/:id',
-  requirePermission('categories:read'),
-  categoryController.getById
-);
+router.get('/:id', requirePermission('categories:read'), categoryController.getById);
 
 // Create category - requires categories:create permission
 router.post(
@@ -47,10 +53,6 @@ router.put(
 );
 
 // Delete category - requires categories:delete permission
-router.delete(
-  '/:id',
-  requirePermission('categories:delete'),
-  categoryController.delete
-);
+router.delete('/:id', requirePermission('categories:delete'), categoryController.delete);
 
 export default router;

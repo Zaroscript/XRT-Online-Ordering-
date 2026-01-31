@@ -55,7 +55,7 @@ const StoreNoticeList = ({
       onSort((currentSortDirection: SortOrder) =>
         currentSortDirection === SortOrder?.Desc
           ? SortOrder?.Asc
-          : SortOrder?.Desc
+          : SortOrder?.Desc,
       );
       onOrder(column!);
 
@@ -228,14 +228,7 @@ const StoreNoticeList = ({
               <ActionButtons
                 id={data?.id}
                 deleteModalView="DELETE_STORE_NOTICE"
-                editUrl={
-                  shop
-                    ? Routes?.storeNotice?.editWithoutLang(
-                        data?.id,
-                        shop as string
-                      )
-                    : Routes?.storeNotice?.editWithoutLang(data?.id)
-                }
+                editUrl={Routes?.storeNotice?.editWithoutLang(data?.id)}
               />
             </>
           );

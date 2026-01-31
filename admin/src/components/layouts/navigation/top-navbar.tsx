@@ -149,9 +149,7 @@ const Navbar = () => {
       setUnderMaintenance(checkIsMaintenance as boolean);
       setUnderMaintenanceStart(checkIsMaintenanceStart as boolean);
     }
-  }, [
-    shop?.settings?.isShopUnderMaintenance,
-  ]);
+  }, [shop?.settings?.isShopUnderMaintenance]);
 
   const currentSettings = (settings as any)?.options || settings;
   const isAcceptingOrders = currentSettings?.orders?.accept_orders ?? true;
@@ -162,7 +160,8 @@ const Navbar = () => {
     setIsAccepting(isAcceptingOrders);
   }, [isAcceptingOrders]);
 
-  const { mutate: updateSettingsMutation, isPending: updating } = useUpdateSettingsMutation();
+  const { mutate: updateSettingsMutation, isPending: updating } =
+    useUpdateSettingsMutation();
 
   const handleToggleOrders = (value: boolean) => {
     if (!currentSettings) return;
@@ -302,27 +301,31 @@ const Navbar = () => {
 
                 <div className="flex items-center gap-2 px-6 py-5 border-gray-200/80 border-s border-e">
                   <span className="text-xs font-semibold text-heading uppercase tracking-wider hidden xl:block">
-                    {isAccepting ? t('common:text-accepting-orders') : t('common:text-not-accepting-orders')}
+                    {isAccepting
+                      ? t('common:text-accepting-orders')
+                      : t('common:text-not-accepting-orders')}
                   </span>
                   <Switch
                     checked={isAccepting}
                     onChange={handleToggleOrders}
                     disabled={updating}
-                    className={`${isAccepting ? 'bg-accent' : 'bg-gray-300'
-                      } relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none transition-colors duration-200 ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`${
+                      isAccepting ? 'bg-accent' : 'bg-gray-300'
+                    } relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none transition-colors duration-200 ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
                     dir="ltr"
                   >
                     <span className="sr-only">Toggle Order Acceptance</span>
                     <span
-                      className={`${isAccepting ? 'translate-x-6' : 'translate-x-1'
-                        } inline-block h-4 w-4 transform rounded-full bg-light transition-transform duration-200`}
+                      className={`${
+                        isAccepting ? 'translate-x-6' : 'translate-x-1'
+                      } inline-block h-4 w-4 transform rounded-full bg-light transition-transform duration-200`}
                     />
                   </Switch>
                 </div>
 
                 {settings?.options?.pushNotification?.all?.order ||
-                  settings?.options?.pushNotification?.all?.message ||
-                  settings?.options?.pushNotification?.all?.storeNotice ? (
+                settings?.options?.pushNotification?.all?.message ||
+                settings?.options?.pushNotification?.all?.storeNotice ? (
                   <div className="flex items-center gap-3 px-0.5 py-3 sm:relative sm:border-gray-200/80 sm:py-3.5 sm:px-6 sm:border-s lg:py-5">
                     {settings?.options?.pushNotification?.all?.order ? (
                       <RecentOrderBar user={data} />

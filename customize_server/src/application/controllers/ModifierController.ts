@@ -31,16 +31,8 @@ export class ModifierController {
 
   create = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { groupId } = req.params;
-    const {
-      name,
-      is_default,
-      max_quantity,
-      display_order,
-      is_active,
-      sides_config,
-      quantity_levels,
-      prices_by_size,
-    } = req.body;
+    const { name, display_order, is_active, sides_config, quantity_levels, prices_by_size } =
+      req.body;
 
     if (!groupId) {
       throw new ValidationError('groupId is required');
@@ -59,8 +51,6 @@ export class ModifierController {
     const modifier = await this.createModifierUseCase.execute({
       modifier_group_id: groupId,
       name,
-      is_default: is_default === true || is_default === 'true',
-      max_quantity: max_quantity ? Number(max_quantity) : undefined,
       display_order: display_order ? Number(display_order) : 0,
       is_active: is_active !== undefined ? is_active === true || is_active === 'true' : true,
       sides_config: parsedSidesConfig,
@@ -114,16 +104,8 @@ export class ModifierController {
   update = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { groupId } = req.params;
-    const {
-      name,
-      is_default,
-      max_quantity,
-      display_order,
-      is_active,
-      sides_config,
-      quantity_levels,
-      prices_by_size,
-    } = req.body;
+    const { name, display_order, is_active, sides_config, quantity_levels, prices_by_size } =
+      req.body;
 
     if (!groupId) {
       throw new ValidationError('groupId is required');
@@ -144,10 +126,6 @@ export class ModifierController {
     const updateData: any = {};
 
     if (name !== undefined) updateData.name = name;
-    if (is_default !== undefined)
-      updateData.is_default = is_default === true || is_default === 'true';
-    if (max_quantity !== undefined)
-      updateData.max_quantity = max_quantity ? Number(max_quantity) : undefined;
     if (display_order !== undefined) updateData.display_order = Number(display_order);
     if (is_active !== undefined) updateData.is_active = is_active === true || is_active === 'true';
     if (parsedSidesConfig !== undefined) updateData.sides_config = parsedSidesConfig;
@@ -170,5 +148,23 @@ export class ModifierController {
     await this.deleteModifierUseCase.execute(id, groupId);
 
     return sendSuccess(res, 'Modifier deleted successfully');
+  });
+
+  updateSortOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items)) {
+      throw new ValidationError('items array is required');
+    }
+
+    // Since IModifierRepository doesn't strictly have updateSortOrder on the interface yet if I used a strict type,
+    // but the concrete implementation does.
+    // Wait, I just added it to the interface in the previous tool call (simulated parallel).
+    // The controller uses `this.modifierRepository` which is typed as `IModifierRepository`.
+    // So it should be fine.
+
+    await this.modifierRepository.updateSortOrder(items);
+
+    return sendSuccess(res, 'Modifier sort order updated successfully');
   });
 }

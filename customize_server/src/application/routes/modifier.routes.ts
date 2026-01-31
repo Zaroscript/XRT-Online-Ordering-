@@ -9,6 +9,13 @@ const modifierController = new ModifierController();
 // All modifier routes require authentication
 router.use(requireAuth);
 
+// Sort order update - specific route before generic /:id routes
+router.post(
+  '/modifier-groups/:groupId/modifiers/sort-order',
+  requireAuth,
+  modifierController.updateSortOrder
+);
+
 // Get all modifiers - requires modifiers:read permission
 router.get('/modifiers', requirePermission('modifiers:read'), modifierController.index);
 
@@ -46,5 +53,4 @@ router.delete(
   requirePermission('modifiers:delete'),
   modifierController.delete
 );
-
 export default router;

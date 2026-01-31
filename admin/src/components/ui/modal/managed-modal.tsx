@@ -11,9 +11,7 @@ const FaqsDeleteView = dynamic(
 );
 const TermsAndConditionsDeleteView = dynamic(
   () =>
-    import(
-      '@/components/terms-and-conditions/terms-and-conditions-delete-view'
-    ),
+    import('@/components/terms-and-conditions/terms-and-conditions-delete-view'),
 );
 const TagDeleteView = dynamic(() => import('@/components/tag/tag-delete-view'));
 const TaxDeleteView = dynamic(() => import('@/components/tax/tax-delete-view'));
@@ -40,6 +38,9 @@ const ShippingDeleteView = dynamic(
 );
 const CategoryDeleteView = dynamic(
   () => import('@/components/category/category-delete-view'),
+);
+const ImportCategories = dynamic(
+  () => import('@/components/category/import-categories'),
 );
 const CouponDeleteView = dynamic(
   () => import('@/components/coupon/coupon-delete-view'),
@@ -174,9 +175,7 @@ const DisApproveCouponView = dynamic(
 
 const FlashSaleRequestDeleteView = dynamic(
   () =>
-    import(
-      '@/components/flash-sale/vendor-request/flash-sale-vendor-request-delete-view'
-    ),
+    import('@/components/flash-sale/vendor-request/flash-sale-vendor-request-delete-view'),
 );
 const ApproveVendorFSRequestView = dynamic(
   () => import('@/components/flash-sale/vendor-request/approve-view'),
@@ -220,6 +219,10 @@ const ModifierToggleView = dynamic(
   () => import('@/components/modifier/modifier-toggle-view'),
 );
 
+const ViewDetailsModal = dynamic(
+  () => import('@/components/common/view-details-modal'),
+);
+
 function renderModal(view: MODAL_VIEWS | undefined, data: any) {
   switch (view) {
     case 'DELETE_PRODUCT':
@@ -230,6 +233,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <AttributeDeleteView />;
     case 'DELETE_CATEGORY':
       return <CategoryDeleteView />;
+    case 'IMPORT_CATEGORIES':
+      return <ImportCategories />;
     case 'TOGGLE_CATEGORY_STATUS':
       return <CategoryToggleView />;
     case 'DELETE_MODIFIER_GROUP':
@@ -352,6 +357,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <CreateAdminView />;
     case 'ADMIN_PERMISSIONS_VIEW':
       return <AdminPermissionsView />;
+    case 'VIEW_DETAILS':
+      return <ViewDetailsModal />;
     default:
       return null;
   }

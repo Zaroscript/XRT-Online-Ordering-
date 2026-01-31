@@ -27,7 +27,8 @@ export const useUpdateSettingsMutation = () => {
     onSuccess: (data: any) => {
       updateSettings(data?.options || data); // Handle flat response
       setMaintenanceDetails(
-        data?.options?.maintenance?.isUnderMaintenance || (data as any)?.maintenance?.isUnderMaintenance,
+        data?.options?.maintenance?.isUnderMaintenance ||
+          (data as any)?.maintenance?.isUnderMaintenance,
         data?.options?.maintenance || (data as any)?.maintenance,
       );
       toast.success(t('common:successfully-updated'));
@@ -43,9 +44,13 @@ export const useSettingsQuery = ({ language }: { language: string }) => {
   const { query } = useRouter();
   const { token } = getAuthCredentials();
 
-  const { data, error, isPending: isLoading } = useQuery<Settings, Error>({
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<Settings, Error>({
     queryKey: [API_ENDPOINTS.SETTINGS, { language }],
-    queryFn: () => settingsClient.all({ language, businessId: (query as any)?.shop }),
+    queryFn: () => settingsClient.all({ language }),
     retry: false,
     refetchOnWindowFocus: false,
     enabled: !!token, // Only fetch settings when authenticated
@@ -56,7 +61,12 @@ export const useSettingsQuery = ({ language }: { language: string }) => {
 
   return {
     settings: settings as Settings | undefined,
-    error: error && (error as any)?.response?.status !== 401 && (error as any)?.response?.status !== 400 ? error : null,
+    error:
+      error &&
+      (error as any)?.response?.status !== 401 &&
+      (error as any)?.response?.status !== 400
+        ? error
+        : null,
     loading: isLoading,
   };
 };

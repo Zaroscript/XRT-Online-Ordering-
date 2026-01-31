@@ -1,0 +1,7 @@
+{
+  "network-error": "Wir haben Probleme, eine Verbindung zum Server herzustellen. Bitte überprüfen Sie Ihre Internetverbindung oder versuchen Sie es später erneut.",
+  "timeout-error": "Der Server braucht zu lange, um zu antworten. Dies könnte an einer langsamen Internetverbindung liegen. Bitte versuchen Sie es in wenigen Augenblicken erneut.",
+  "registration-disabled": "Die Registrierung ist derzeit nicht möglich. Bitte wenden Sie sich an unser Support-Team, um Hilfe zu erhalten.",
+  "unexpected-login-response": "Beim Anmelden ist ein Problem aufgetreten. Bitte versuchen Sie es erneut oder wenden Sie sich an den Support.",
+  "request-timeout-toast": "Zeitüberschreitung der Verbindung. Bitte versuchen Sie es erneut."
+}

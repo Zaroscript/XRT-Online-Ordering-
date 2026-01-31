@@ -98,7 +98,6 @@ export class UpdateCategoryUseCase {
       try {
         await this.itemRepository.assignModifierGroupsToCategoryItems(
           id,
-          business_id,
           categoryData.modifier_groups
         );
         console.log(`Successfully applied modifier groups to items in category ${id}`);

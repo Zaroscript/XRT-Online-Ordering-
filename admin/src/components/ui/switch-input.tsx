@@ -3,11 +3,11 @@ import TooltipLabel from '@/components/ui/tooltip-label';
 import { Switch } from '@headlessui/react';
 import classNames from 'classnames';
 import { useTranslation } from 'next-i18next';
-import { Control, Controller } from 'react-hook-form';
+import { Control, Controller, useFormContext } from 'react-hook-form';
 import { twMerge } from 'tailwind-merge';
 
 interface Props {
-  control: Control<any>;
+  control?: Control<any>;
   error?: string;
   name: string;
   disabled?: boolean;
@@ -32,6 +32,18 @@ const SwitchInput = ({
   ...rest
 }: Props) => {
   const { t } = useTranslation();
+  const methods = useFormContext();
+
+  // Use passed control or fall back to context control
+  const effectiveControl = control || methods?.control;
+
+  if (!effectiveControl) {
+    console.error(
+      `SwitchInput: No control provided for ${name} and no FormContext found.`,
+    );
+    return null;
+  }
+
   return (
     <>
       <div
@@ -39,11 +51,11 @@ const SwitchInput = ({
       >
         <Controller
           name={name}
-          control={control}
+          control={effectiveControl}
           {...rest}
           render={({ field: { onChange, value } }) => (
             <Switch
-              checked={value}
+              checked={value ?? false}
               onChange={onChange}
               disabled={disabled}
               className={`${

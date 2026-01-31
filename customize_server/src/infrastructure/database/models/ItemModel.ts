@@ -11,11 +11,6 @@ export interface ItemDocument
 
 const ItemSchema = new Schema<ItemDocument>(
   {
-    business_id: {
-      type: String,
-      required: true,
-      index: true,
-    },
     name: {
       type: String,
       required: true,
@@ -182,8 +177,8 @@ const ItemSchema = new Schema<ItemDocument>(
   }
 );
 
-ItemSchema.index({ business_id: 1, category_id: 1 });
-ItemSchema.index({ business_id: 1, name: 1 });
+ItemSchema.index({ category_id: 1 });
+ItemSchema.index({ name: 1 });
 ItemSchema.index({ 'modifier_groups.modifier_group_id': 1 });
 
 export const ItemModel = mongoose.model<ItemDocument>('Item', ItemSchema);

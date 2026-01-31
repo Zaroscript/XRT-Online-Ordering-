@@ -8,7 +8,7 @@ import { Category } from './components/schemas/Category.schema';
 import { CreateBusinessRequest } from './components/schemas/CreateBusinessRequest.schema';
 import { CreateLocationRequest } from './components/schemas/CreateLocationRequest.schema';
 import { CreateModifierGroupRequest } from './components/schemas/CreateModifierGroupRequest.schema';
-import { CreateModifierRequest } from './components/schemas/CreateModifierRequest.schema';
+import { CreateModifierRequestSchema } from './components/schemas/CreateModifierRequest.schema';
 import { CreateRoleRequest } from './components/schemas/CreateRoleRequest.schema';
 import { CreateWithdrawRequest } from './components/schemas/CreateWithdrawRequest.schema';
 import { Customer } from './components/schemas/Customer.schema';
@@ -41,7 +41,7 @@ import { UpdateBusinessRequest } from './components/schemas/UpdateBusinessReques
 import { UpdateBusinessSettingsRequest } from './components/schemas/UpdateBusinessSettingsRequest.schema';
 import { UpdateLocationRequest } from './components/schemas/UpdateLocationRequest.schema';
 import { UpdateModifierGroupRequest } from './components/schemas/UpdateModifierGroupRequest.schema';
-import { UpdateModifierRequest } from './components/schemas/UpdateModifierRequest.schema';
+import { UpdateModifierRequestSchema } from './components/schemas/UpdateModifierRequest.schema';
 import { UpdatePasswordRequest } from './components/schemas/UpdatePasswordRequest.schema';
 import { UpdatePermissionsRequest } from './components/schemas/UpdatePermissionsRequest.schema';
 import { UpdateRoleRequest } from './components/schemas/UpdateRoleRequest.schema';
@@ -112,7 +112,8 @@ All responses follow a consistent format:
   },
   servers: [
     {
-      url: process.env.PRODUCTION_URL || `https://xrt-online-ordering.vercel.app${env.API_BASE_URL}`,
+      url:
+        process.env.PRODUCTION_URL || `https://xrt-online-ordering.vercel.app${env.API_BASE_URL}`,
       description: 'Production',
     },
     {
@@ -122,7 +123,7 @@ All responses follow a consistent format:
   ],
   components: {
     securitySchemes: {
-      bearerAuth: { ...bearerAuth }
+      bearerAuth: { ...bearerAuth },
     },
     schemas: {
       AssignRoleRequest,
@@ -134,7 +135,7 @@ All responses follow a consistent format:
       CreateBusinessRequest,
       CreateLocationRequest,
       CreateModifierGroupRequest,
-      CreateModifierRequest,
+      CreateModifierRequest: CreateModifierRequestSchema,
       CreateRoleRequest,
       CreateWithdrawRequest,
       Customer,
@@ -167,20 +168,16 @@ All responses follow a consistent format:
       UpdateBusinessSettingsRequest,
       UpdateLocationRequest,
       UpdateModifierGroupRequest,
-      UpdateModifierRequest,
+      UpdateModifierRequest: UpdateModifierRequestSchema,
       UpdatePasswordRequest,
       UpdatePermissionsRequest,
       UpdateRoleRequest,
       UpdateWithdrawStatusRequest,
       User,
-      Withdraw
+      Withdraw,
     },
-    responses: {
-      
-    },
-    parameters: {
-      
-    }
+    responses: {},
+    parameters: {},
   },
   paths: {
     ...attachments_paths,
@@ -199,6 +196,6 @@ All responses follow a consistent format:
     ...role_management_paths,
     ...roles_paths,
     ...user_management_paths,
-    ...withdraws_paths
-  }
+    ...withdraws_paths,
+  },
 };

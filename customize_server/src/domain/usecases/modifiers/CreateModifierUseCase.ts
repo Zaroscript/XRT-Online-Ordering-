@@ -11,27 +11,17 @@ export class CreateModifierUseCase {
 
   async execute(data: CreateModifierDTO): Promise<Modifier> {
     // Verify modifier group exists and is active
-    const modifierGroup = await this.modifierGroupRepository.findActiveById(
-      data.modifier_group_id
-    );
+    const modifierGroup = await this.modifierGroupRepository.findActiveById(data.modifier_group_id);
 
     if (!modifierGroup) {
       throw new NotFoundError('Modifier Group');
     }
 
     // Check if name already exists in this group
-    const nameExists = await this.modifierRepository.exists(
-      data.name,
-      data.modifier_group_id
-    );
+    const nameExists = await this.modifierRepository.exists(data.name, data.modifier_group_id);
 
     if (nameExists) {
       throw new ValidationError('Modifier name already exists in this group');
-    }
-
-    // Validate max_quantity if provided
-    if (data.max_quantity !== undefined && data.max_quantity < 1) {
-      throw new ValidationError('max_quantity must be greater than or equal to 1');
     }
 
     // Validate display_order
@@ -41,14 +31,21 @@ export class CreateModifierUseCase {
 
     // Validate sides_config if provided
     if (data.sides_config) {
-      if (data.sides_config.enabled && (!data.sides_config.allowed_sides || data.sides_config.allowed_sides.length === 0)) {
+      if (
+        data.sides_config.enabled &&
+        (!data.sides_config.allowed_sides || data.sides_config.allowed_sides.length === 0)
+      ) {
         throw new ValidationError('allowed_sides must be provided when sides_config is enabled');
       }
       if (data.sides_config.allowed_sides) {
         const validSides = ['LEFT', 'RIGHT', 'WHOLE'];
-        const invalidSides = data.sides_config.allowed_sides.filter(side => !validSides.includes(side));
+        const invalidSides = data.sides_config.allowed_sides.filter(
+          (side) => !validSides.includes(side)
+        );
         if (invalidSides.length > 0) {
-          throw new ValidationError(`Invalid allowed_sides values: ${invalidSides.join(', ')}. Valid values are: LEFT, RIGHT, WHOLE`);
+          throw new ValidationError(
+            `Invalid allowed_sides values: ${invalidSides.join(', ')}. Valid values are: LEFT, RIGHT, WHOLE`
+          );
         }
       }
     }

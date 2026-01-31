@@ -6,11 +6,7 @@ import {
   useProductByCategoryQuery,
   useTopRatedProductsQuery,
 } from '@/data/dashboard';
-import {
-  adminOnly,
-  adminAndOwnerOnly,
-  hasAccess,
-} from '@/utils/auth-utils';
+import { adminOnly, adminAndOwnerOnly, hasAccess } from '@/utils/auth-utils';
 import usePrice from '@/utils/use-price';
 import cn from 'classnames';
 import { useTranslation } from 'next-i18next';
@@ -36,9 +32,7 @@ const OrderStatusWidget = dynamic(
 );
 const ProductCountByCategory = dynamic(
   () =>
-    import(
-      '@/components/dashboard/widgets/table/widget-product-count-by-category'
-    ),
+    import('@/components/dashboard/widgets/table/widget-product-count-by-category'),
 );
 
 const TopRatedProducts = dynamic(
@@ -77,12 +71,10 @@ const OwnerShopLayout = () => {
   // Always call the hook, but pass empty array if not authenticated
   const { token } = getAuthCredentials();
   useDashboardLoading({
-    loadingStates: token ? [
-      loading,
-      productByCategoryLoading,
-      topRatedProductsLoading
-    ] : [],
-    loadingMessage: 'Loading dashboard data...'
+    loadingStates: token
+      ? [loading, productByCategoryLoading, topRatedProductsLoading]
+      : [],
+    loadingMessage: 'Loading dashboard data...',
   });
 
   const { price: total_revenue } = usePrice(
@@ -114,14 +106,17 @@ const OwnerShopLayout = () => {
     salesByYear = data.totalYearSaleByMonth.map((item: any, index: number) => {
       if (index < 12) {
         const total = item?.total ?? item?.value ?? 0;
-        const value = typeof total === 'number' ? total : parseFloat(String(total || '0'));
+        const value =
+          typeof total === 'number' ? total : parseFloat(String(total || '0'));
         return isNaN(value) || !isFinite(value) ? 0 : Math.max(0, value);
       }
       return 0;
     });
   }
   // Ensure all values are valid numbers (no NaN, null, or undefined)
-  salesByYear = salesByYear.map((val) => (typeof val === 'number' && !isNaN(val) && isFinite(val) ? val : 0));
+  salesByYear = salesByYear.map((val) =>
+    typeof val === 'number' && !isNaN(val) && isFinite(val) ? val : 0,
+  );
 
   const timeFrame = [
     { name: t('text-today'), day: 1 },
@@ -154,7 +149,7 @@ const OwnerShopLayout = () => {
   // Transform order status data from array to object format
   const transformOrderStatusData = (orderStatusArray: any[] | undefined) => {
     if (!orderStatusArray) return {};
-    
+
     return orderStatusArray.reduce((acc, item) => {
       const statusKey = item.status.replace('-', '');
       acc[statusKey] = item.count;

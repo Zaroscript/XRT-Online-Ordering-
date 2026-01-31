@@ -10,8 +10,9 @@ import { getAuthCredentials, setAuthCredentials } from '@/utils/auth-utils';
 // Environment variable should be set in Vercel, but we provide a fallback
 // If NEXT_PUBLIC_REST_API_ENDPOINT is missing, it will use the fallback below
 const Axios = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_REST_API_ENDPOINT || 'http://localhost:3001/api/v1',
-  timeout: 10000, // Reduced to 10 seconds for faster feedback
+  baseURL:
+    process.env.NEXT_PUBLIC_REST_API_ENDPOINT || 'http://localhost:3001/api/v1',
+  timeout: 30000, // Increased to 30 seconds to avoid timeouts in dev
   headers: {
     'Content-Type': 'application/json',
   },
@@ -38,6 +39,20 @@ Axios.interceptors.request.use((config) => {
 
   return config;
 });
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 Axios.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -48,12 +63,29 @@ Axios.interceptors.response.use(
       error.response.status === 401 &&
       !originalRequest._retry
     ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            return Axios(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
+
       const { refreshToken, permissions, role } = getAuthCredentials();
 
       if (refreshToken) {
         try {
-          const apiBaseUrl = process.env.NEXT_PUBLIC_REST_API_ENDPOINT || 'http://localhost:3001/api/v1';
+          const apiBaseUrl =
+            process.env.NEXT_PUBLIC_REST_API_ENDPOINT ||
+            'http://localhost:3001/api/v1';
           const { data } = await axios.post(
             `${apiBaseUrl}/${API_ENDPOINTS.REFRESH_TOKEN}`,
             { refreshToken },
@@ -64,15 +96,23 @@ Axios.interceptors.response.use(
               data.accessToken,
               permissions,
               role,
-              refreshToken,
+              data.refreshToken || refreshToken, // Token rotation: use new if available, else keep old
             );
             originalRequest.headers['Authorization'] =
               `Bearer ${data.accessToken}`;
+
+            processQueue(null, data.accessToken);
             return Axios(originalRequest);
           }
         } catch (refreshError) {
-          // If refresh fails, proceed to logout
+          processQueue(refreshError, null);
+          // If refresh fails, fall through to logout handling
+        } finally {
+          isRefreshing = false;
         }
+      } else {
+        isRefreshing = false; // logic adjust: if no refresh token, we technically didn't refresh, but we should clear queue
+        // Actually if no refresh token, we just fail immediately below.
       }
     }
 
@@ -92,11 +132,16 @@ Axios.interceptors.response.use(
         currentPath === '/forgot-password' ||
         currentPath.includes('/forgot-password') ||
         currentPath === '/reset-password' ||
-        currentPath.includes('/reset-password');
+        currentPath.includes('/reset-password') ||
+        currentPath === '/logout' ||
+        currentPath.includes('/logout');
 
-      if (!isAuthPage) {
+      // Don't redirect to logout if the request was already a logout attempt that failed
+      const isLogoutRequest = originalRequest.url?.includes('/auth/logout');
+
+      if (!isAuthPage && !isLogoutRequest) {
         Cookies.remove(AUTH_CRED);
-        Router.reload();
+        Router.push('/logout');
       }
     }
     return Promise.reject(error);

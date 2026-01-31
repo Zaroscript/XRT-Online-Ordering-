@@ -137,6 +137,15 @@ export default function CreateOrUpdateModifierForm({
           name: initialValues.name,
           display_order: initialValues.display_order,
           is_active: initialValues.is_active,
+          sides_config: initialValues.sides_config
+            ? {
+                enabled: initialValues.sides_config.enabled ?? false,
+                allowed_sides: initialValues.sides_config.allowed_sides || [],
+              }
+            : {
+                enabled: false,
+                allowed_sides: [],
+              },
           quantity_levels:
             initialValues.quantity_levels?.map((ql) => ({
               ...ql,
@@ -172,25 +181,12 @@ export default function CreateOrUpdateModifierForm({
     control,
     name: 'quantity_levels',
   });
+  // Re-declaring to ensure scope availability if needed, but it's already above.
+  // Actually, let's just replace the usage.
 
-  const allowedSides =
-    useWatch({
-      control,
-      name: 'sides_config.allowed_sides',
-      defaultValue: [],
-    }) || [];
-
-  const sidesEnabled = useWatch({
-    control,
-    name: 'sides_config.enabled',
-    defaultValue: false,
-  });
-
-  const inheritPricing = useWatch({
-    control,
-    name: 'inherit_pricing',
-    defaultValue: true,
-  });
+  const allowedSides = watch('sides_config.allowed_sides') || [];
+  const sidesEnabled = watch('sides_config.enabled') ?? false;
+  const inheritPricing = watch('inherit_pricing') ?? true;
 
   const toggleSide = (side: string) => {
     const currentSides = allowedSides || [];

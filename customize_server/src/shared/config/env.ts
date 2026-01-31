@@ -15,8 +15,8 @@ export const env = {
   // JWT
   JWT_SECRET: process.env.JWT_SECRET || '',
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET || '',
-  ACCESS_TOKEN_EXPIRE: process.env.ACCESS_TOKEN_EXPIRE || '15m',
-  REFRESH_TOKEN_EXPIRE: process.env.REFRESH_TOKEN_EXPIRE || '7d',
+  ACCESS_TOKEN_EXPIRE: process.env.ACCESS_TOKEN_EXPIRE || '24h',
+  REFRESH_TOKEN_EXPIRE: process.env.REFRESH_TOKEN_EXPIRE || '30d',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRE || '30d',
   JWT_COOKIE_EXPIRE: parseInt(process.env.JWT_COOKIE_EXPIRE || '30'),
 
@@ -26,10 +26,17 @@ export const env = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
 
   // CORS
-  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8000',
+  CORS_ORIGIN:
+    process.env.CORS_ORIGIN ||
+    'http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8000',
   ALLOWED_ORIGINS: process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:8000'],
+    ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+    : [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        'http://localhost:8000',
+      ],
 
   // Email
   EMAIL_HOST: process.env.EMAIL_HOST || '',
@@ -59,4 +66,3 @@ const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
 //     }
 //   });
 // }
-

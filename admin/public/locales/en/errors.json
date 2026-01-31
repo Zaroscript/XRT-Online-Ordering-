@@ -1,7 +1,7 @@
 {
-  "network-error": "Network error: Please check if the backend server is running on http://localhost:3001",
-  "timeout-error": "Request timeout: Backend server is not responding. Please check:\n1. Backend server is running on http://localhost:3001\n2. Restart the frontend dev server (npm run dev) to clear cache",
-  "registration-disabled": "Registration is disabled. Please contact administrator.",
-  "unexpected-login-response": "Unexpected login response format",
-  "request-timeout-toast": "Request timeout - check backend server"
+  "network-error": "We're having trouble connecting to the server. Please check your internet connection or try again later.",
+  "timeout-error": "The server is taking too long to respond. This might be due to a slow internet connection. Please try again in a few moments.",
+  "registration-disabled": "Registration is currently unavailable. Please contact our support team for assistance.",
+  "unexpected-login-response": "We encountered an issue while signing you in. Please try again or contact support.",
+  "request-timeout-toast": "Connection timed out. Please try again."
 }

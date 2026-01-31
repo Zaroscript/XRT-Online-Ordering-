@@ -44,21 +44,16 @@ export class ItemSizeRepository implements IItemSizeRepository {
       query.is_active = filters.is_active;
     }
 
-    const itemSizeDocs = await ItemSizeModel.find(query)
-      .sort({ display_order: 1, created_at: 1 });
+    const itemSizeDocs = await ItemSizeModel.find(query).sort({ display_order: 1, created_at: 1 });
 
     return itemSizeDocs.map((doc) => this.toDomain(doc));
   }
 
   async update(id: string, data: UpdateItemSizeDTO): Promise<ItemSize> {
-    const itemSizeDoc = await ItemSizeModel.findOneAndUpdate(
-      { _id: id },
-      data,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    const itemSizeDoc = await ItemSizeModel.findOneAndUpdate({ _id: id }, data, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!itemSizeDoc) {
       throw new Error('Item size not found');
@@ -85,5 +80,18 @@ export class ItemSizeRepository implements IItemSizeRepository {
     }
     const count = await ItemSizeModel.countDocuments(query);
     return count > 0;
+  }
+
+  async updateSortOrder(items: { id: string; order: number }[]): Promise<void> {
+    if (!items || items.length === 0) return;
+
+    const operations = items.map((item) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { display_order: item.order },
+      },
+    }));
+
+    await ItemSizeModel.bulkWrite(operations);
   }
 }

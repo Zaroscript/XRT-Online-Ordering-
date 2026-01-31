@@ -5,20 +5,20 @@ import { ItemSizeModel } from '../src/infrastructure/database/models/ItemSizeMod
 
 /**
  * Migration script to convert embedded item sizes to separate ItemSize collection
- * 
+ *
  * This script:
  * 1. Finds all items with embedded sizes
  * 2. Creates ItemSize documents for each embedded size
  * 3. Updates the item's default_size_id to point to the default size
  * 4. Removes the embedded sizes array from items
- * 
+ *
  * Run with: npx ts-node scripts/migrateItemSizes.ts
  */
 
 const migrateItemSizes = async (): Promise<void> => {
   try {
     console.log('🔄 Starting ItemSize migration...');
-    
+
     // Connect to database
     await connectDatabase();
     console.log('✅ Connected to database');
@@ -26,7 +26,7 @@ const migrateItemSizes = async (): Promise<void> => {
     // Find all items with embedded sizes
     const itemsWithSizes = await ItemModel.find({
       sizes: { $exists: true, $ne: [], $type: 'array' },
-      'sizes.0': { $exists: true }
+      'sizes.0': { $exists: true },
     });
 
     console.log(`📦 Found ${itemsWithSizes.length} items with embedded sizes`);
@@ -50,13 +50,15 @@ const migrateItemSizes = async (): Promise<void> => {
 
         for (let i = 0; i < embeddedSizes.length; i++) {
           const embeddedSize = embeddedSizes[i];
-          
+
           // Generate code from name or use index-based code
           let code = embeddedSize.code;
           if (!code) {
             // Try to extract code from name (e.g., "Small (S)" -> "S")
             const codeMatch = embeddedSize.name?.match(/\(([A-Z]+)\)/i);
-            code = codeMatch ? codeMatch[1].toUpperCase() : embeddedSize.name?.substring(0, 5).toUpperCase().trim() || `SIZE${i + 1}`;
+            code = codeMatch
+              ? codeMatch[1].toUpperCase()
+              : embeddedSize.name?.substring(0, 5).toUpperCase().trim() || `SIZE${i + 1}`;
           }
 
           // Ensure code is unique by checking existing sizes
@@ -69,7 +71,7 @@ const migrateItemSizes = async (): Promise<void> => {
 
           const itemSize = new ItemSizeModel({
             item_id: itemId,
-            restaurant_id: item.business_id,
+            restaurant_id: (item as any).business_id,
             name: embeddedSize.name || `Size ${i + 1}`,
             code: uniqueCode,
             price: embeddedSize.price || 0,
@@ -104,7 +106,9 @@ const migrateItemSizes = async (): Promise<void> => {
         );
 
         migratedCount++;
-        console.log(`✅ Migrated item ${itemId}: Created ${createdSizes.length} sizes, default_size_id: ${defaultSizeId}`);
+        console.log(
+          `✅ Migrated item ${itemId}: Created ${createdSizes.length} sizes, default_size_id: ${defaultSizeId}`
+        );
       } catch (error: any) {
         errorCount++;
         console.error(`❌ Error migrating item ${item._id}:`, error.message);
@@ -115,7 +119,6 @@ const migrateItemSizes = async (): Promise<void> => {
     console.log(`✅ Successfully migrated: ${migratedCount} items`);
     console.log(`❌ Errors: ${errorCount} items`);
     console.log('🎉 Migration completed!');
-
   } catch (error: any) {
     console.error('❌ Migration error:', error);
     process.exit(1);

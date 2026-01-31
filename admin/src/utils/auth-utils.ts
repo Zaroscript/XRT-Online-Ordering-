@@ -56,7 +56,12 @@ export function getAuthCredentials(context?: any): {
   if (authCred) {
     return JSON.parse(authCred);
   }
-  return { token: null, permissions: null, role: null, refreshToken: null };
+  return {
+    token: null,
+    permissions: null,
+    role: null,
+    refreshToken: null,
+  };
 }
 
 export function parseSSRCookie(context: any) {
@@ -107,7 +112,7 @@ export function hasPermission(
   }
 
   return _allowedPermissions.some((permission) =>
-    _userPermissions.includes(permission)
+    _userPermissions.includes(permission),
   );
 }
 

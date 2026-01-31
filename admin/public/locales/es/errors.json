@@ -1,0 +1,7 @@
+{
+  "network-error": "Tenemos problemas para conectarnos al servidor. Por favor, comprueba tu conexión a internet o inténtalo de nuevo más tarde.",
+  "timeout-error": "El servidor está tardando demasiado en responder. Esto podría deberse a una conexión a internet lenta. Por favor, inténtalo de nuevo en unos momentos.",
+  "registration-disabled": "El registro no está disponible en este momento. Por favor, ponte en contacto con nuestro equipo de soporte para obtener ayuda.",
+  "unexpected-login-response": "Encontramos un problema al iniciar sesión. Por favor, inténtalo de nuevo o contacta al soporte.",
+  "request-timeout-toast": "La conexión se agotó. Por favor, inténtalo de nuevo."
+}

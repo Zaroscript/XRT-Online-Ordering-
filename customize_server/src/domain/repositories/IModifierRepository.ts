@@ -22,4 +22,5 @@ export interface IModifierRepository {
   delete(id: string, modifier_group_id: string): Promise<void>; // Soft delete
   exists(name: string, modifier_group_id: string, excludeId?: string): Promise<boolean>;
   findActiveById(id: string, modifier_group_id?: string): Promise<Modifier | null>;
+  updateSortOrder(items: { id: string; order: number }[]): Promise<void>;
 }

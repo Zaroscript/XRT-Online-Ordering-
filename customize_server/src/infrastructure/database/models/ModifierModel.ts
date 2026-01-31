@@ -7,50 +7,56 @@ export interface ModifierDocument extends Omit<Modifier, 'id' | 'modifier_group_
   modifier_group_id: mongoose.Types.ObjectId | string;
 }
 
-const PricesBySizeSchema = new Schema({
-  size_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'ItemSize',
-    required: true,
+const PricesBySizeSchema = new Schema(
+  {
+    size_id: {
+      type: Schema.Types.ObjectId,
+      ref: 'ItemSize',
+      required: true,
+    },
+    priceDelta: {
+      type: Number,
+      required: true,
+    },
   },
-  priceDelta: {
-    type: Number,
-    required: true,
-  },
-}, { _id: false });
+  { _id: false }
+);
 
-const QuantityLevelSchema = new Schema({
-  quantity: {
-    type: Number,
-    required: true,
-    min: 1,
+const QuantityLevelSchema = new Schema(
+  {
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    name: {
+      type: String,
+      trim: true,
+    },
+    price: {
+      type: Number,
+      min: 0,
+    },
+    is_default: {
+      type: Boolean,
+      default: false,
+    },
+    display_order: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    is_active: {
+      type: Boolean,
+      default: true,
+    },
+    prices_by_size: {
+      type: [PricesBySizeSchema],
+      default: [],
+    },
   },
-  name: {
-    type: String,
-    trim: true,
-  },
-  price: {
-    type: Number,
-    min: 0,
-  },
-  is_default: {
-    type: Boolean,
-    default: false,
-  },
-  display_order: {
-    type: Number,
-    default: 0,
-    min: 0,
-  },
-  is_active: {
-    type: Boolean,
-    default: true,
-  },
-  prices_by_size: {
-    type: [PricesBySizeSchema],
-    default: [],
-  },
-}, { _id: false });
+  { _id: false }
+);
 
 const ModifierSchema = new Schema<ModifierDocument>(
   {
@@ -64,14 +70,6 @@ const ModifierSchema = new Schema<ModifierDocument>(
       type: String,
       required: true,
       trim: true,
-    },
-    is_default: {
-      type: Boolean,
-      default: false,
-    },
-    max_quantity: {
-      type: Number,
-      min: 1,
     },
     display_order: {
       type: Number,

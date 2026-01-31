@@ -43,6 +43,8 @@ type Props = {
   flashSaleVendorRequestApproveButton?: boolean;
   isFlashSaleVendorRequestApproved?: boolean;
   transferShopOwnership?: boolean;
+  showViewDetails?: boolean;
+  viewDetailsData?: any;
   data?: {
     [key: string]: string | boolean | number;
   };
@@ -73,6 +75,8 @@ const ActionButtons = ({
   flashSaleVendorRequestApproveButton = false,
   isFlashSaleVendorRequestApproved,
   transferShopOwnership,
+  showViewDetails = false,
+  viewDetailsData,
   data,
   disabled,
 }: Props) => {
@@ -84,6 +88,10 @@ const ActionButtons = ({
 
   function handleDelete() {
     openModal(deleteModalView, id);
+  }
+
+  function handleViewDetails() {
+    openModal('VIEW_DETAILS', viewDetailsData);
   }
 
   function handleEditModal() {
@@ -154,6 +162,15 @@ const ActionButtons = ({
 
   return (
     <div className="inline-flex items-center w-auto gap-3">
+      {showViewDetails && (
+        <button
+          onClick={handleViewDetails}
+          className="transition duration-200 text-accent hover:text-accent-hover focus:outline-none"
+          title={t('common:text-view-details')}
+        >
+          <EyeIcon width={18} />
+        </button>
+      )}
       {showReplyQuestion && (
         <button
           onClick={handleReplyQuestion}

@@ -70,6 +70,8 @@ export const API_ENDPOINTS = {
   PRODUCTS: 'products',
   ORDERS: 'orders',
   CATEGORIES: 'categories',
+  CATEGORY_EXPORT: 'categories/export',
+  CATEGORY_IMPORT: 'categories/import',
   ATTRIBUTES: 'attributes',
   TYPES: 'types',
   ANALYTICS: 'analytics',
@@ -168,4 +170,7 @@ export const API_ENDPOINTS = {
   REFUND_POLICIES: 'refund-policies',
   REFUND_REASONS: 'refund-reasons',
   TRANSFER_SHOP_OWNERSHIP: 'shops/transfer-ownership',
+  PRICES_BULK_UPDATE: 'prices/bulk-update',
+  PRICES_ROLLBACK: 'prices/rollback/:id',
+  PRICES_HISTORY: 'prices/history',
 };

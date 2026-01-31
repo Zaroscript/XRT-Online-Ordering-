@@ -101,7 +101,16 @@ export interface ParsedItemModifierOverrideData {
   }>;
 }
 
+export interface ParsedCategoryData {
+  business_id: string;
+  name: string;
+  description?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
 export interface ParsedImportData {
+  categories: ParsedCategoryData[]; // Added
   items: ParsedItemData[];
   itemSizes: ParsedItemSizeData[];
   modifierGroups: ParsedModifierGroupData[];

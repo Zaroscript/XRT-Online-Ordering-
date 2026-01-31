@@ -33,7 +33,6 @@ export interface ItemSizeConfig {
 
 export interface Item {
   id: string;
-  business_id: string;
   name: string;
   description?: string;
   sort_order: number;
@@ -59,7 +58,6 @@ export interface Item {
 }
 
 export interface CreateItemDTO {
-  business_id: string;
   name: string;
   description?: string;
   sort_order?: number;
@@ -96,7 +94,6 @@ export interface UpdateItemDTO {
 }
 
 export interface ItemFilters {
-  business_id?: string;
   category_id?: string;
   is_active?: boolean;
   is_available?: boolean;

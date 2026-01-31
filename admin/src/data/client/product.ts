@@ -23,7 +23,6 @@ export const productClient = {
     type,
     name,
     categories,
-    shop_id,
     product_type,
     status,
     ...params
@@ -31,34 +30,32 @@ export const productClient = {
     return HttpClient.get<ProductPaginator>(API_ENDPOINTS.PRODUCTS, {
       searchJoin: 'and',
       with: 'shop;type;categories',
-      shop_id,
       ...params,
       search: HttpClient.formatSearchParams({
         type,
         name,
         categories,
-        shop_id,
         product_type,
         status,
       }),
     });
   },
-  popular({ shop_id, ...params }: Partial<ProductQueryOptions>) {
+  popular({ ...params }: Partial<ProductQueryOptions>) {
     return HttpClient.get<Product[]>(API_ENDPOINTS.POPULAR_PRODUCTS, {
       searchJoin: 'and',
       with: 'type;shop',
       ...params,
-      search: HttpClient.formatSearchParams({ shop_id }),
+      search: HttpClient.formatSearchParams({}),
     });
   },
-  lowStock({ shop_id, ...params }: Partial<ProductQueryOptions>) {
+  lowStock({ ...params }: Partial<ProductQueryOptions>) {
     return HttpClient.get<Product[]>(
       API_ENDPOINTS.LOW_STOCK_PRODUCTS_ANALYTICS,
       {
         searchJoin: 'and',
         with: 'type;shop',
         ...params,
-        search: HttpClient.formatSearchParams({ shop_id }),
+        search: HttpClient.formatSearchParams({}),
       },
     );
   },
@@ -67,7 +64,6 @@ export const productClient = {
   },
   newOrInActiveProducts: ({
     user_id,
-    shop_id,
     status,
     name,
     ...params
@@ -77,7 +73,6 @@ export const productClient = {
       {
         searchJoin: 'and',
         user_id,
-        shop_id,
         status,
         name,
         ...params,
@@ -90,7 +85,6 @@ export const productClient = {
   },
   lowOrOutOfStockProducts: ({
     user_id,
-    shop_id,
     status,
     categories,
     name,
@@ -102,7 +96,6 @@ export const productClient = {
       {
         searchJoin: 'and',
         user_id,
-        shop_id,
         status,
         name,
         ...params,
@@ -127,38 +120,22 @@ export const productClient = {
       language,
     });
   },
-  // productByCategory({ shop_id, ...params }: Partial<ProductQueryOptions>) {
-  //   return HttpClient.get<Product[]>(API_ENDPOINTS.CATEGORY_WISE_PRODUCTS, {
-  //     searchJoin: 'and',
-  //     ...params,
-  //     search: HttpClient.formatSearchParams({ shop_id }),
-  //   });
-  mostSoldProductByCategory({
-    shop_id,
-    ...params
-  }: Partial<ProductQueryOptions>) {
+  mostSoldProductByCategory({ ...params }: Partial<ProductQueryOptions>) {
     return HttpClient.get<Product[]>(
       API_ENDPOINTS.CATEGORY_WISE_PRODUCTS_SALE,
       {
         searchJoin: 'and',
         ...params,
-        search: HttpClient.formatSearchParams({ shop_id }),
+        search: HttpClient.formatSearchParams({}),
       },
     );
   },
-  getProductsByFlashSale: ({
-    user_id,
-    shop_id,
-    slug,
-    name,
-    ...params
-  }: any) => {
+  getProductsByFlashSale: ({ user_id, slug, name, ...params }: any) => {
     return HttpClient.get<ProductPaginator>(
       API_ENDPOINTS.PRODUCTS_BY_FLASH_SALE,
       {
         searchJoin: 'and',
         user_id,
-        shop_id,
         slug,
         name,
         ...params,
@@ -168,11 +145,11 @@ export const productClient = {
       },
     );
   },
-  topRated({ shop_id, ...params }: Partial<ProductQueryOptions>) {
+  topRated({ ...params }: Partial<ProductQueryOptions>) {
     return HttpClient.get<Product[]>(API_ENDPOINTS.TOP_RATED_PRODUCTS, {
       searchJoin: 'and',
       ...params,
-      search: HttpClient.formatSearchParams({ shop_id }),
+      search: HttpClient.formatSearchParams({}),
     });
   },
 };

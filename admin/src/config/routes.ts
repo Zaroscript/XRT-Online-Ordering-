@@ -146,6 +146,9 @@ export const Routes = {
   draftProducts: '/products/draft',
   outOfStockOrLowProducts: '/products/product-stock',
   productInventory: '/products/inventory',
+  priceUpdates: {
+    ...routesFactory('/price-updates'),
+  },
   transaction: '/orders/transaction',
   termsAndCondition: {
     ...routesFactory('/terms-and-conditions'),
@@ -165,18 +168,14 @@ export const Routes = {
   myProductsInFlashSale: '/flash-sale/my-products',
   ownerDashboardNotifyLogs: '/notify-logs',
   inventory: {
-    editWithoutLang: (slug: string, shop?: string) => {
-      return shop ? `/${shop}/products/${slug}/edit` : `/products/${slug}/edit`;
+    editWithoutLang: (slug: string) => {
+      return `/products/${slug}/edit`;
     },
-    edit: (slug: string, language: string, shop?: string) => {
-      return shop
-        ? `/${language}/${shop}/products/${slug}/edit`
-        : `/${language}/products/${slug}/edit`;
+    edit: (slug: string, language: string) => {
+      return `/${language}/products/${slug}/edit`;
     },
-    translate: (slug: string, language: string, shop?: string) => {
-      return shop
-        ? `/${language}/${shop}/products/${slug}/translate`
-        : `/${language}/products/${slug}/translate`;
+    translate: (slug: string, language: string) => {
+      return `/${language}/products/${slug}/translate`;
     },
   },
   visitStore: (slug: string) =>
@@ -195,24 +194,18 @@ function routesFactory(endpoint: string) {
   return {
     list: `${endpoint}`,
     create: `${endpoint}/create`,
-    editWithoutLang: (slug: string, shop?: string) => {
-      return shop
-        ? `/${shop}${endpoint}/${slug}/edit`
-        : `${endpoint}/${slug}/edit`;
+    editWithoutLang: (slug: string) => {
+      return `${endpoint}/${slug}/edit`;
     },
-    edit: (slug: string, language: string, shop?: string) => {
-      return shop
-        ? `/${language}/${shop}${endpoint}/${slug}/edit`
-        : `/${language}${endpoint}/${slug}/edit`;
+    edit: (slug: string, language: string) => {
+      return `/${language}${endpoint}/${slug}/edit`;
     },
-    translate: (slug: string, language: string, shop?: string) => {
-      return shop
-        ? `/${language}/${shop}${endpoint}/${slug}/translate`
-        : `${language}${endpoint}/${slug}/translate`;
+    translate: (slug: string, language: string) => {
+      return `${language}${endpoint}/${slug}/translate`;
     },
     details: (slug: string) => `${endpoint}/${slug}`,
-    editByIdWithoutLang: (id: string, shop?: string) => {
-      return shop ? `/${shop}${endpoint}/${id}/edit` : `${endpoint}/${id}/edit`;
+    editByIdWithoutLang: (id: string) => {
+      return `${endpoint}/${id}/edit`;
     },
   };
 }

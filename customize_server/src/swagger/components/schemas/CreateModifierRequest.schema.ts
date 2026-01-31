@@ -1,11 +1,40 @@
-export const CreateModifierRequest = {
-        type: 'object',
-        required: ['name'],
-        properties: {
-          name: { type: 'string', example: 'Pepperoni' },
-          is_default: { type: 'boolean', example: false },
-          max_quantity: { type: 'integer', minimum: 1, example: 3 },
-          display_order: { type: 'integer', minimum: 0, example: 1 },
-          is_active: { type: 'boolean', example: true },
+export const CreateModifierRequestSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      example: 'Extra Cheese',
+    },
+    display_order: {
+      type: 'integer',
+      example: 0,
+    },
+    is_active: {
+      type: 'boolean',
+      example: true,
+    },
+    sides_config: {
+      type: 'object',
+      properties: {
+        enabled: { type: 'boolean' },
+        allowed_sides: {
+          type: 'array',
+          items: { type: 'string', enum: ['LEFT', 'RIGHT', 'WHOLE'] },
         },
-      };
+      },
+    },
+    quantity_levels: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/QuantityLevel',
+      },
+    },
+    prices_by_size: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/PricesBySize',
+      },
+    },
+  },
+  required: ['name'],
+};

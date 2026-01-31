@@ -10,43 +10,27 @@ import { HttpClient } from './http-client';
 
 export const flashSaleClient = {
   ...crudFactory<FlashSale, any, FlashSaleInput>(API_ENDPOINTS.FLASH_SALE),
-  all: ({ title, shop_id, ...params }: Partial<FlashSaleQueryOptions> = {}) =>
+  all: ({ title, ...params }: Partial<FlashSaleQueryOptions> = {}) =>
     HttpClient.get<FlashSalePaginator>(API_ENDPOINTS.FLASH_SALE, {
       searchJoin: 'and',
-      shop_id: shop_id,
       ...params,
       search: HttpClient.formatSearchParams({
         title,
-        shop_id,
       }),
     }),
-  get({
-    slug,
-    language,
-    shop_id,
-  }: {
-    slug: string;
-    language: string;
-    shop_id?: string;
-  }) {
+  get({ slug, language }: { slug: string; language: string }) {
     return HttpClient.get<FlashSale>(`${API_ENDPOINTS.FLASH_SALE}/${slug}`, {
       language,
-      shop_id,
       slug,
       with: 'products',
     });
   },
-  paginated: ({
-    title,
-    shop_id,
-    ...params
-  }: Partial<FlashSaleQueryOptions>) => {
+  paginated: ({ title, ...params }: Partial<FlashSaleQueryOptions>) => {
     return HttpClient.get<FlashSalePaginator>(API_ENDPOINTS.FLASH_SALE, {
       searchJoin: 'and',
-      shop_id: shop_id,
       // with: ''
       ...params,
-      search: HttpClient.formatSearchParams({ title, shop_id }),
+      search: HttpClient.formatSearchParams({ title }),
     });
   },
   approve: (variables: { variables: string }) => {

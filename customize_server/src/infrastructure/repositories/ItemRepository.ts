@@ -6,7 +6,6 @@ export class ItemRepository implements IItemRepository {
   private toDomain(document: ItemDocument): Item {
     return {
       id: document._id.toString(),
-      business_id: document.business_id,
       name: document.name,
       description: document.description,
       sort_order: document.sort_order,
@@ -70,11 +69,8 @@ export class ItemRepository implements IItemRepository {
     return this.toDomain(itemDoc);
   }
 
-  async findById(id: string, business_id?: string): Promise<Item | null> {
+  async findById(id: string): Promise<Item | null> {
     const query: any = { _id: id };
-    if (business_id) {
-      query.business_id = business_id;
-    }
     const itemDoc = await ItemModel.findOne(query)
       .populate('category_id')
       .populate('default_size_id')
@@ -91,10 +87,6 @@ export class ItemRepository implements IItemRepository {
     const sortedBy = filters.sortedBy === 'asc' ? 1 : -1;
 
     const query: any = {};
-
-    if (filters.business_id) {
-      query.business_id = filters.business_id;
-    }
 
     if (filters.category_id) {
       query.category_id = filters.category_id;
@@ -142,8 +134,8 @@ export class ItemRepository implements IItemRepository {
     };
   }
 
-  async update(id: string, business_id: string, itemData: UpdateItemDTO): Promise<Item> {
-    const itemDoc = await ItemModel.findOneAndUpdate({ _id: id, business_id }, itemData, {
+  async update(id: string, itemData: UpdateItemDTO): Promise<Item> {
+    const itemDoc = await ItemModel.findOneAndUpdate({ _id: id }, itemData, {
       new: true,
       runValidators: true,
     })
@@ -159,18 +151,27 @@ export class ItemRepository implements IItemRepository {
     return this.toDomain(itemDoc);
   }
 
-  async delete(id: string, business_id: string): Promise<void> {
-    await ItemModel.findOneAndDelete({ _id: id, business_id });
+  async delete(id: string): Promise<void> {
+    await ItemModel.findOneAndDelete({ _id: id });
   }
 
   async assignModifierGroupsToCategoryItems(
     categoryId: string,
-    businessId: string,
     modifierGroups: any[]
   ): Promise<void> {
-    await ItemModel.updateMany(
-      { category_id: categoryId, business_id: businessId },
-      { modifier_groups: modifierGroups }
-    );
+    await ItemModel.updateMany({ category_id: categoryId }, { modifier_groups: modifierGroups });
+  }
+
+  async updateSortOrder(items: { id: string; order: number }[]): Promise<void> {
+    if (!items || items.length === 0) return;
+
+    const operations = items.map((item) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { sort_order: item.order },
+      },
+    }));
+
+    await ItemModel.bulkWrite(operations);
   }
 }

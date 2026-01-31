@@ -41,34 +41,16 @@ export class BusinessRepository implements IBusinessRepository {
     return this.toDomain(businessDoc);
   }
 
-  async findById(id: string, ownerId?: string): Promise<Business | null> {
-    const query: any = { _id: id };
-    if (ownerId) {
-      query.owner = ownerId;
-    }
-    const businessDoc = await BusinessModel.findOne(query);
+  async findOne(): Promise<Business | null> {
+    const businessDoc = await BusinessModel.findOne();
     return businessDoc ? this.toDomain(businessDoc) : null;
   }
 
-  async findByOwner(ownerId: string): Promise<Business[]> {
-    const businessDocs = await BusinessModel.find({ owner: ownerId });
-    return businessDocs.map((doc) => this.toDomain(doc));
-  }
-
-  async findByBusinessId(businessId: string): Promise<Business | null> {
-    const businessDoc = await BusinessModel.findOne({ id: businessId });
-    return businessDoc ? this.toDomain(businessDoc) : null;
-  }
-
-  async update(id: string, ownerId: string, businessData: UpdateBusinessDTO): Promise<Business> {
-    const businessDoc = await BusinessModel.findOneAndUpdate(
-      { _id: id, owner: ownerId },
-      businessData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+  async update(id: string, businessData: UpdateBusinessDTO): Promise<Business> {
+    const businessDoc = await BusinessModel.findOneAndUpdate({ _id: id }, businessData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!businessDoc) {
       throw new NotFoundError('Business');
@@ -77,16 +59,10 @@ export class BusinessRepository implements IBusinessRepository {
     return this.toDomain(businessDoc);
   }
 
-  async delete(id: string, ownerId: string): Promise<void> {
-    const result = await BusinessModel.findOneAndDelete({ _id: id, owner: ownerId });
+  async delete(id: string): Promise<void> {
+    const result = await BusinessModel.findOneAndDelete({ _id: id });
     if (!result) {
       throw new NotFoundError('Business');
     }
   }
-
-  async exists(businessId: string): Promise<boolean> {
-    const count = await BusinessModel.countDocuments({ id: businessId });
-    return count > 0;
-  }
 }
-

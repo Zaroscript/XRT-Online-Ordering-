@@ -25,6 +25,7 @@ import modifierRoutes from './application/routes/modifier.routes';
 import itemSizeRoutes from './application/routes/item-size.routes';
 import importRoutes from './application/routes/import.routes';
 import permissionRoutes from './application/routes/permission.routes';
+import priceRoutes from './application/routes/price.routes';
 import { env } from './shared/config/env';
 import { logger } from './shared/utils/logger';
 // Import swagger config - using relative path from src to config directory
@@ -108,6 +109,7 @@ app.use(`${env.API_BASE_URL}/customers`, customerRoutes);
 app.use(`${env.API_BASE_URL}/modifier-groups`, modifierGroupRoutes);
 app.use(`${env.API_BASE_URL}/import`, importRoutes);
 app.use(`${env.API_BASE_URL}`, modifierRoutes);
+app.use(`${env.API_BASE_URL}/prices`, priceRoutes);
 app.use(`${env.API_BASE_URL}`, mockRoutes);
 
 // 404 handler

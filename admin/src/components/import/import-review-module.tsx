@@ -19,7 +19,9 @@ export default function ImportReviewModule({
   isUpdating,
 }: ImportReviewModuleProps) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'items' | 'sizes' | 'groups' | 'modifiers' | 'overrides'>('items');
+  const [activeTab, setActiveTab] = useState<
+    'categories' | 'items' | 'sizes' | 'groups' | 'modifiers' | 'overrides'
+  >('categories');
   const [editedData, setEditedData] = useState(session.parsedData);
 
   useEffect(() => {
@@ -28,17 +30,22 @@ export default function ImportReviewModule({
 
   const getRowErrors = (entity: string, index: number) => {
     return session.validationErrors.filter(
-      err => err.entity === entity && err.row === index + 2
+      (err) => err.entity === entity && err.row === index + 2,
     );
   };
 
   const getRowWarnings = (entity: string, index: number) => {
     return session.validationWarnings.filter(
-      warn => warn.entity === entity && warn.row === index + 2
+      (warn) => warn.entity === entity && warn.row === index + 2,
     );
   };
 
-  const updateData = (entity: keyof typeof editedData, index: number, field: string, value: any) => {
+  const updateData = (
+    entity: keyof typeof editedData,
+    index: number,
+    field: string,
+    value: any,
+  ) => {
     const newData = { ...editedData };
     (newData[entity] as any[])[index] = {
       ...(newData[entity] as any[])[index],
@@ -50,6 +57,104 @@ export default function ImportReviewModule({
   const handleSave = () => {
     onSaveDraft(editedData);
   };
+
+  const categoriesColumns = [
+    {
+      title: t('common:status'),
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (_: any, record: any, index: number) => {
+        const errors = getRowErrors('Category', index);
+        const warnings = getRowWarnings('Category', index);
+        if (errors.length > 0)
+          return <Badge text={t('common:error')} color="bg-red-500" />;
+        if (warnings.length > 0)
+          return <Badge text={t('common:warning')} color="bg-yellow-500" />;
+        return <Badge text={t('common:valid')} color="bg-green-500" />;
+      },
+    },
+    {
+      title: t('common:name'),
+      dataIndex: 'name',
+      key: 'name',
+      width: 200,
+      render: (value: string, record: any, index: number) => (
+        <Input
+          name={`category_name_${index}`}
+          value={value || ''}
+          onChange={(e) =>
+            updateData('categories' as any, index, 'name', e.target.value)
+          }
+          className="!h-9 !text-sm"
+        />
+      ),
+    },
+    {
+      title: t('common:description'),
+      dataIndex: 'description',
+      key: 'description',
+      width: 250,
+      render: (value: string, record: any, index: number) => (
+        <Input
+          name={`category_description_${index}`}
+          value={value || ''}
+          onChange={(e) =>
+            updateData(
+              'categories' as any,
+              index,
+              'description',
+              e.target.value,
+            )
+          }
+          className="!h-9 !text-sm"
+        />
+      ),
+    },
+    {
+      title: t('common:sort-order'),
+      dataIndex: 'sort_order',
+      key: 'sort_order',
+      width: 120,
+      render: (value: number, record: any, index: number) => (
+        <Input
+          name={`category_sort_order_${index}`}
+          type="number"
+          value={value || 0}
+          onChange={(e) =>
+            updateData(
+              'categories' as any,
+              index,
+              'sort_order',
+              parseInt(e.target.value) || 0,
+            )
+          }
+          className="!h-9 !text-sm"
+        />
+      ),
+    },
+    {
+      title: t('common:active'),
+      dataIndex: 'is_active',
+      key: 'is_active',
+      width: 100,
+      render: (value: boolean, record: any, index: number) => (
+        <input
+          type="checkbox"
+          checked={value !== false}
+          onChange={(e) =>
+            updateData(
+              'categories' as any,
+              index,
+              'is_active',
+              e.target.checked,
+            )
+          }
+          className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
+        />
+      ),
+    },
+  ];
 
   const itemsColumns = [
     {
@@ -78,7 +183,9 @@ export default function ImportReviewModule({
         <Input
           name={`item_key_${index}`}
           value={value || ''}
-          onChange={(e) => updateData('items', index, 'item_key', e.target.value)}
+          onChange={(e) =>
+            updateData('items', index, 'item_key', e.target.value)
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -106,7 +213,9 @@ export default function ImportReviewModule({
         <Input
           name={`item_description_${index}`}
           value={value || ''}
-          onChange={(e) => updateData('items', index, 'description', e.target.value)}
+          onChange={(e) =>
+            updateData('items', index, 'description', e.target.value)
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -122,7 +231,14 @@ export default function ImportReviewModule({
           type="number"
           step="0.01"
           value={value || ''}
-          onChange={(e) => updateData('items', index, 'base_price', parseFloat(e.target.value) || 0)}
+          onChange={(e) =>
+            updateData(
+              'items',
+              index,
+              'base_price',
+              parseFloat(e.target.value) || 0,
+            )
+          }
           className="!h-9 !text-sm"
           disabled={record.is_sizeable}
         />
@@ -137,7 +253,9 @@ export default function ImportReviewModule({
         <input
           type="checkbox"
           checked={value || false}
-          onChange={(e) => updateData('items', index, 'is_sizeable', e.target.checked)}
+          onChange={(e) =>
+            updateData('items', index, 'is_sizeable', e.target.checked)
+          }
           className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
         />
       ),
@@ -151,7 +269,9 @@ export default function ImportReviewModule({
         <Input
           name={`item_default_size_code_${index}`}
           value={value || ''}
-          onChange={(e) => updateData('items', index, 'default_size_code', e.target.value)}
+          onChange={(e) =>
+            updateData('items', index, 'default_size_code', e.target.value)
+          }
           className="!h-9 !text-sm"
           disabled={!record.is_sizeable}
         />
@@ -193,7 +313,9 @@ export default function ImportReviewModule({
         <Input
           name={`size_code_${index}`}
           value={value || ''}
-          onChange={(e) => updateData('itemSizes', index, 'size_code', e.target.value)}
+          onChange={(e) =>
+            updateData('itemSizes', index, 'size_code', e.target.value)
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -207,7 +329,9 @@ export default function ImportReviewModule({
         <Input
           name={`size_name_${index}`}
           value={value || ''}
-          onChange={(e) => updateData('itemSizes', index, 'name', e.target.value)}
+          onChange={(e) =>
+            updateData('itemSizes', index, 'name', e.target.value)
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -223,7 +347,14 @@ export default function ImportReviewModule({
           type="number"
           step="0.01"
           value={value || ''}
-          onChange={(e) => updateData('itemSizes', index, 'price', parseFloat(e.target.value) || 0)}
+          onChange={(e) =>
+            updateData(
+              'itemSizes',
+              index,
+              'price',
+              parseFloat(e.target.value) || 0,
+            )
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -237,7 +368,9 @@ export default function ImportReviewModule({
         <input
           type="checkbox"
           checked={value || false}
-          onChange={(e) => updateData('itemSizes', index, 'is_default', e.target.checked)}
+          onChange={(e) =>
+            updateData('itemSizes', index, 'is_default', e.target.checked)
+          }
           className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
         />
       ),
@@ -271,7 +404,9 @@ export default function ImportReviewModule({
         <Input
           name={`group_key_${index}`}
           value={value || ''}
-          onChange={(e) => updateData('modifierGroups', index, 'group_key', e.target.value)}
+          onChange={(e) =>
+            updateData('modifierGroups', index, 'group_key', e.target.value)
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -285,7 +420,9 @@ export default function ImportReviewModule({
         <Input
           name={`group_name_${index}`}
           value={value || ''}
-          onChange={(e) => updateData('modifierGroups', index, 'name', e.target.value)}
+          onChange={(e) =>
+            updateData('modifierGroups', index, 'name', e.target.value)
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -298,7 +435,9 @@ export default function ImportReviewModule({
       render: (value: string, record: any, index: number) => (
         <select
           value={value || 'RADIO'}
-          onChange={(e) => updateData('modifierGroups', index, 'display_type', e.target.value)}
+          onChange={(e) =>
+            updateData('modifierGroups', index, 'display_type', e.target.value)
+          }
           className="h-9 w-full rounded border border-gray-300 px-3 text-sm focus:border-accent focus:outline-none"
         >
           <option value="RADIO">RADIO</option>
@@ -316,7 +455,14 @@ export default function ImportReviewModule({
           name={`group_min_select_${index}`}
           type="number"
           value={value || 0}
-          onChange={(e) => updateData('modifierGroups', index, 'min_select', parseInt(e.target.value) || 0)}
+          onChange={(e) =>
+            updateData(
+              'modifierGroups',
+              index,
+              'min_select',
+              parseInt(e.target.value) || 0,
+            )
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -331,7 +477,14 @@ export default function ImportReviewModule({
           name={`group_max_select_${index}`}
           type="number"
           value={value || 1}
-          onChange={(e) => updateData('modifierGroups', index, 'max_select', parseInt(e.target.value) || 1)}
+          onChange={(e) =>
+            updateData(
+              'modifierGroups',
+              index,
+              'max_select',
+              parseInt(e.target.value) || 1,
+            )
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -372,7 +525,9 @@ export default function ImportReviewModule({
         <Input
           name={`modifier_key_${index}`}
           value={value || ''}
-          onChange={(e) => updateData('modifiers', index, 'modifier_key', e.target.value)}
+          onChange={(e) =>
+            updateData('modifiers', index, 'modifier_key', e.target.value)
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -386,7 +541,9 @@ export default function ImportReviewModule({
         <Input
           name={`modifier_name_${index}`}
           value={value || ''}
-          onChange={(e) => updateData('modifiers', index, 'name', e.target.value)}
+          onChange={(e) =>
+            updateData('modifiers', index, 'name', e.target.value)
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -401,7 +558,14 @@ export default function ImportReviewModule({
           name={`modifier_max_quantity_${index}`}
           type="number"
           value={value || ''}
-          onChange={(e) => updateData('modifiers', index, 'max_quantity', parseInt(e.target.value) || undefined)}
+          onChange={(e) =>
+            updateData(
+              'modifiers',
+              index,
+              'max_quantity',
+              parseInt(e.target.value) || undefined,
+            )
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -415,7 +579,9 @@ export default function ImportReviewModule({
         <input
           type="checkbox"
           checked={value || false}
-          onChange={(e) => updateData('modifiers', index, 'is_default', e.target.checked)}
+          onChange={(e) =>
+            updateData('modifiers', index, 'is_default', e.target.checked)
+          }
           className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
         />
       ),
@@ -467,7 +633,14 @@ export default function ImportReviewModule({
           name={`override_max_quantity_${index}`}
           type="number"
           value={value || ''}
-          onChange={(e) => updateData('itemModifierOverrides', index, 'max_quantity', parseInt(e.target.value) || undefined)}
+          onChange={(e) =>
+            updateData(
+              'itemModifierOverrides',
+              index,
+              'max_quantity',
+              parseInt(e.target.value) || undefined,
+            )
+          }
           className="!h-9 !text-sm"
         />
       ),
@@ -481,7 +654,14 @@ export default function ImportReviewModule({
         <input
           type="checkbox"
           checked={value || false}
-          onChange={(e) => updateData('itemModifierOverrides', index, 'is_default', e.target.checked)}
+          onChange={(e) =>
+            updateData(
+              'itemModifierOverrides',
+              index,
+              'is_default',
+              e.target.checked,
+            )
+          }
           className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
         />
       ),
@@ -489,11 +669,32 @@ export default function ImportReviewModule({
   ];
 
   const tabs = [
+    {
+      key: 'categories',
+      label: t('common:categories'),
+      count: editedData.categories?.length || 0,
+    },
     { key: 'items', label: t('common:items'), count: editedData.items.length },
-    { key: 'sizes', label: t('common:sizes'), count: editedData.itemSizes.length },
-    { key: 'groups', label: t('common:modifier-groups'), count: editedData.modifierGroups.length },
-    { key: 'modifiers', label: t('common:modifiers'), count: editedData.modifiers.length },
-    { key: 'overrides', label: t('common:overrides'), count: editedData.itemModifierOverrides.length },
+    {
+      key: 'sizes',
+      label: t('common:sizes'),
+      count: editedData.itemSizes.length,
+    },
+    {
+      key: 'groups',
+      label: t('common:modifier-groups'),
+      count: editedData.modifierGroups.length,
+    },
+    {
+      key: 'modifiers',
+      label: t('common:modifiers'),
+      count: editedData.modifiers.length,
+    },
+    {
+      key: 'overrides',
+      label: t('common:overrides'),
+      count: editedData.itemModifierOverrides.length,
+    },
   ];
 
   return (
@@ -507,9 +708,10 @@ export default function ImportReviewModule({
                 onClick={() => setActiveTab(tab.key as any)}
                 className={`
                   whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium
-                  ${activeTab === tab.key
-                    ? 'border-accent text-accent'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  ${
+                    activeTab === tab.key
+                      ? 'border-accent text-accent'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                   }
                 `}
               >
@@ -521,6 +723,14 @@ export default function ImportReviewModule({
       </div>
 
       <div className="overflow-x-auto">
+        {activeTab === 'categories' && (
+          <Table
+            columns={categoriesColumns}
+            data={editedData.categories || []}
+            rowKey={(record, index) => `category-${index}`}
+            scroll={{ x: 1000 }}
+          />
+        )}
         {activeTab === 'items' && (
           <Table
             columns={itemsColumns}
@@ -568,11 +778,7 @@ export default function ImportReviewModule({
       </div>
 
       <div className="mt-6 flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={isUpdating}
-          loading={isUpdating}
-        >
+        <Button onClick={handleSave} disabled={isUpdating} loading={isUpdating}>
           {t('common:save-changes')}
         </Button>
       </div>

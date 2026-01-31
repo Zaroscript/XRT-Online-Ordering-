@@ -64,12 +64,16 @@ export const useUpdateCategoryMutation = () => {
       const updatedCategory = (data as any)?.data || data;
       // Update individual category query
       queryClient.setQueryData(
-        [API_ENDPOINTS.CATEGORIES, { id: variables.id, language: router.locale }],
+        [
+          API_ENDPOINTS.CATEGORIES,
+          { id: variables.id, language: router.locale },
+        ],
         (old: any) => {
           // Backend structure usually returns { data: Category } or just Category
           // We try to match what useCategoryQuery expects
           return { data: updatedCategory };
-        });
+        },
+      );
       toast.success(t('common:successfully-updated'));
       router.push(Routes.category.list, undefined, {
         locale: Config.defaultLanguage,
@@ -85,8 +89,16 @@ export const useUpdateCategoryMutation = () => {
   });
 };
 
-export const useCategoryQuery = ({ slug, id, language }: GetParams & { id?: string }) => {
-  const { data, error, isPending: isLoading } = useQuery<Category, Error>({
+export const useCategoryQuery = ({
+  slug,
+  id,
+  language,
+}: GetParams & { id?: string }) => {
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<Category, Error>({
     queryKey: [API_ENDPOINTS.CATEGORIES, { slug, id, language }],
     queryFn: () => categoryClient.get({ slug, id, language }),
     enabled: Boolean(id || slug),
@@ -105,7 +117,11 @@ export const useCategoryQuery = ({ slug, id, language }: GetParams & { id?: stri
 };
 
 export const useCategoriesQuery = (options: Partial<CategoryQueryOptions>) => {
-  const { data, error, isPending: isLoading } = useQuery<CategoryPaginator, Error>({
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<CategoryPaginator, Error>({
     queryKey: [API_ENDPOINTS.CATEGORIES, options],
     queryFn: ({ queryKey, pageParam }) =>
       categoryClient.paginated(Object.assign({}, queryKey[1], pageParam)),
@@ -120,4 +136,32 @@ export const useCategoriesQuery = (options: Partial<CategoryQueryOptions>) => {
     error,
     loading: isLoading,
   };
+};
+
+export const useImportCategoriesMutation = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: categoryClient.importCategories,
+    onSuccess: (data: any) => {
+      // Refresh categories list
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.CATEGORIES] });
+      const stats = data?.data || data;
+      toast.success(
+        t('common:category-import-success', {
+          created: stats?.created || 0,
+          updated: stats?.updated || 0,
+          errors: stats?.errors?.length || 0,
+        }),
+      );
+      if (stats?.errors?.length > 0) {
+        console.error('Import errors:', stats.errors);
+        toast.warn(t('common:category-import-partial-error'));
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || t('common:import-failed'));
+    },
+  });
 };

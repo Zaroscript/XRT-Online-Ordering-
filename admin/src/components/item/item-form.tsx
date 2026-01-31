@@ -10,6 +10,7 @@ import Alert from '@/components/ui/alert';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getErrorMessage } from '@/utils/form-error';
 import { useCreateItemMutation, useUpdateItemMutation } from '@/data/item';
+import { useMeQuery } from '@/data/user';
 import StickyFooterPanel from '@/components/ui/sticky-footer-panel';
 import { LongArrowPrev } from '@/components/icons/long-arrow-prev';
 import { EditIcon } from '@/components/icons/edit';
@@ -17,6 +18,11 @@ import { useCategoriesQuery } from '@/data/category';
 import { useModifierGroupsQuery } from '@/data/modifier-group';
 import { useModifiersQuery } from '@/data/modifier';
 import { useItemSizesQuery } from '@/data/item-size';
+import {
+  adminOnly,
+  getAuthCredentials,
+  hasPermission,
+} from '@/utils/auth-utils';
 import {
   Tabs,
   TabList,
@@ -71,7 +77,13 @@ export default function CreateOrUpdateItemForm({
     { slug: router.query.shop as string },
     { enabled: !!router.query.shop },
   );
-  const shopId = (shopData as any)?.id! || initialValues?.business_id;
+  const { data: me } = useMeQuery();
+  const authCredentials = getAuthCredentials();
+  const shopId =
+    (shopData as any)?.id! ||
+    initialValues?.business_id ||
+    me?.managed_shop?.id ||
+    me?.shops?.[0]?.id;
 
   // Form caching
   const {
