@@ -4,6 +4,8 @@ import MiddleNav from './Nav/MiddleNav';
 import SideMenu from './Nav/SideMenu';
 import SubNav from './Nav/SubNav';
 import CartPanel from './Nav/CartPanel';
+import OrderTypeModal from './Nav/OrderTypeModal';
+import DeliveryDetailsModal from './Nav/DeliveryDetailsModal';
 import { useCart } from '../../context/CartContext';
 
 
@@ -23,6 +25,8 @@ const Header = () => {
         <SubNav phone="123-456-7890" />
         <SideMenu open={open} setclosefun={() => setopen(false)} />
         <CartPanel open={cartOpen} setclosefun={() => setCartOpen(false)} />
+        <OrderTypeModal />
+        <DeliveryDetailsModal />
     </header>
   )
 }

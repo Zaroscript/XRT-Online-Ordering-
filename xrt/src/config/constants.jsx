@@ -55,15 +55,8 @@ import topitem5 from "../assets/images/Top_Rated/item5.jpg.webp";
 import Testimonial from "../assets/images/Testimonials/bg_Testimonials.jpg.webp";
 import image1 from "../assets/images/Testimonials/person1.png.webp";
 import image2 from "../assets/images/Testimonials/person2.png.webp";
-import Contact from "../pages/Contact";
-import Home from "../pages/Home";
-import Menu from "../pages/Menu";
-import Customize from "../pages/Customize";
-import Cart from "../pages/Cart";
-
 import footer from "../assets/images/footer/imgi_134_footer_bg.png.webp"
 import payment from "../assets/images/footer/footer_01-2.png.webp"
-import { a } from "framer-motion/client";
 
 export { logo };
 
@@ -83,29 +76,6 @@ export const nav_links = [
     path: "/contact",
     arrow: false,
   },
-];
-
-export const routes = [
-  {
-    path: "/",
-    element: <Home />,
-  },
-  {
-    path: "/contact",
-    element: <Contact />,
-  },
-  {
-    path:"/menu",
-    element:<Menu/>
-  },
-  {
-    path: "/customize",
-    element: <Customize />,
-  },
-  {
-    path: "/cart",
-    element: <Cart />,
-  }
 ];
 
 export const images_slider = [
@@ -207,14 +177,75 @@ export const cards_items = [
   },
 ];
 
+const modifiersList = [
+    {
+      title: "Cheese",
+      type: "single",
+      default: "Lite Cheese",
+      options: [
+        { label: "Extra Cheese", baseExtra: 2 },
+        { label: "Feta Cheese", baseExtra: 3 },
+        { label: "Lite Cheese", baseExtra: 0 },
+        { label: "No Cheese", baseExtra: 0 }
+      ]
+    },
+    {
+      title: "Meats",
+      type: "multiple",
+      default: ["Pepperoni"],
+      options: [
+        { label: "Ham", baseExtra: 2, hasLevel: true, hasPlacement: true },
+        { label: "Bacon", baseExtra: 2, hasLevel: false, hasPlacement: true },
+        { label: "Beef Topping", baseExtra: 3, hasLevel: false, hasPlacement: true },
+        { label: "Salami", baseExtra: 2, hasLevel: false, hasPlacement: true },
+        { label: "Grilled Chicken", baseExtra: 4, hasLevel: false, hasPlacement: false },
+        { label: "Pepperoni", baseExtra: 3, hasLevel: false, hasPlacement: false },
+        { label: "Sausage", baseExtra: 3, hasLevel: false, hasPlacement: false }
+      ]
+    },
+    {
+      title: "Sauces",
+      type: "multiple",
+      default: ["Honey Mustard"],
+      options: [
+        { label: "Extra Sauce", baseExtra: 1 },
+        { label: "Lite Sauce", baseExtra: 0 },
+        { label: "Honey Mustard", baseExtra: 0 },
+        { label: "No Sauce", baseExtra: 0 }
+      ]
+    },
+    {
+      title: "Dressing",
+      type: "multiple",
+      default: [],
+      options: [
+        { label: "Blue Cheese", baseExtra: 1 },
+        { label: "Ranch", baseExtra: 1 }
+      ]
+    },
+    {
+      title: "Kitchen",
+      type: "multiple",
+      default: ["Well Done"],
+      options: [
+        { label: "Crispy", baseExtra: 0 },
+        { label: "Light Done", baseExtra: 0 },
+        { label: "Well Done", baseExtra: 0 },
+        { label: "Oil", baseExtra: 0 },
+        { label: "White Pizza", baseExtra: 0 }
+      ]
+    }
+  ];
+
 // Original products
 export const products = [
   {
     id: 1,
     src: product1,
     name: "Papaya Single",
-    price: "£746.64",
     category: "Fruits",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -222,8 +253,9 @@ export const products = [
     id: 2,
     src: product2,
     name: "Papaya SingleCauliflower Pack 350g",
-    price: "£74.61",
     category: "Fruits",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -231,8 +263,9 @@ export const products = [
     id: 3,
     src: product3,
     name: "Kiwi Fruit Single",
-    price: "£414.14",
     category: "Fruits",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -240,8 +273,9 @@ export const products = [
     id: 4,
     src: product4,
     name: "Large Queen Apple",
-    price: "£284.12",
     category: "Fruits",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -249,8 +283,9 @@ export const products = [
     id: 5,
     src: product5,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "leafy Green",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -258,8 +293,9 @@ export const products = [
     id: 6,
     src: product6,
     name: "Cauliflower Pack 350g",
-    price: "£324.45",
     category: "leafy Green",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -267,8 +303,9 @@ export const products = [
     id: 7,
     src: product7,
     name: "Freshmark Cut Spinach",
-    price: "£411.87",
     category: "leafy Green",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -276,8 +313,9 @@ export const products = [
     id: 8,
     src: product8,
     name: "Steers Tomato Pack 375ml",
-    price: "£64.90",
     category: "leafy Green",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -285,8 +323,9 @@ export const products = [
     id: 9,
     src: product9,
     name: "Kiwi Fruit Single",
-    price: "£414.14",
     category: "Cookies",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -294,8 +333,9 @@ export const products = [
     id: 10,
     src: product10,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Cookies",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -303,8 +343,9 @@ export const products = [
     id: 11,
     src: product11,
     name: "East Coast Small Solo Fish",
-    price: "£814.21",
     category: "Cookies",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -312,8 +353,9 @@ export const products = [
     id: 12,
     src: product12,
     name: "Papaya Single",
-    price: "£204.19",
     category: "Cookies",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -321,8 +363,9 @@ export const products = [
     id: 13,
     src: product13,
     name: "Large Queen Apple",
-    price: "£903.62",
     category: "Cookies",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -330,8 +373,9 @@ export const products = [
     id: 14,
     src: product14,
     name: "Mixed Chillies Pack 500g",
-    price: "£674.89",
     category: "Cookies",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -339,8 +383,9 @@ export const products = [
     id: 15,
     src: product15,
     name: "Freshmark Cut Spinach",
-    price: "£134.60",
     category: "leafy Green",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -348,8 +393,9 @@ export const products = [
     id: 16,
     src: product16,
     name: "Steers Tomato Pack 375ml",
-    price: "£36.26",
     category: "Vegan Cuisine",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -357,8 +403,9 @@ export const products = [
     id: 17,
     src: product17,
     name: "Large Queen Apple",
-    price: "£234.81",
     category: "Vegan Cuisine",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -366,8 +413,9 @@ export const products = [
     id: 18,
     src: product18,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Vegan Cuisine",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -375,8 +423,9 @@ export const products = [
     id: 19,
     src: product19,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Vegan Cuisine",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -384,8 +433,9 @@ export const products = [
     id: 20,
     src: product20,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Vegan Cuisine",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -393,8 +443,9 @@ export const products = [
     id: 21,
     src: product21,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Vegan Cuisine",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -402,8 +453,9 @@ export const products = [
     id: 22,
     src: product22,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Marrow",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -411,8 +463,9 @@ export const products = [
     id: 23,
     src: product23,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Marrow",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -420,8 +473,9 @@ export const products = [
     id: 24,
     src: product24,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Marrow",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -429,8 +483,9 @@ export const products = [
     id: 25,
     src: product25,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Marrow",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -438,8 +493,9 @@ export const products = [
     id: 26,
     src: product26,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Marrow",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -447,8 +503,9 @@ export const products = [
     id: 27,
     src: product27,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Marrow",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -456,8 +513,9 @@ export const products = [
     id: 28,
     src: product28,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Vegan Cuisine",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -465,8 +523,9 @@ export const products = [
     id: 29,
     src: product29,
     name: "Mixed Chillies Pack 500g",
-    price: "£164.53",
     category: "Marrow",
+    basePrice: 15, sizes: [{ label: "Small", multiplier: 1 }, { label: "Medium", multiplier: 1.3 }, { label: "Large", multiplier: 1.6 }],
+    modifiers: modifiersList,
     description:
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Replace this text with product description from your data.",
   },
@@ -482,55 +541,55 @@ export const Top_Rated_Items = [
   {
     src: topitem1,
     name: "Soup & Stew Mix Pack 1.5kg",
-    price: "£746.64",
+    basePrice: 15,
     offer: "£546.64",
   },
   {
     src: topitem2,
     name: "Kiwi Fruit Single",
-    price: "£746.64",
+    basePrice: 15,
     offer: "£546.64",
   },
   {
     src: topitem3,
     name: "Mixed Chillies Pack 500g",
-    price: "£746.64",
+    basePrice: 15,
     offer: "£546.64",
   },
   {
     src: topitem4,
     name: "Large Queen Apple",
-    price: "£746.64",
+    basePrice: 15,
     offer: "£546.64",
   },
   {
     src: topitem5,
     name: "Papaya Single",
-    price: "£746.64",
+    basePrice: 15,
     offer: "£546.64",
   },
   {
     src: topitem1,
     name: "Soup & Stew Mix Pack 1.5kg",
-    price: "£746.64",
+    basePrice: 15,
     offer: "£546.64",
   },
   {
     src: topitem2,
     name: "Kiwi Fruit Single",
-    price: "£746.64",
+    basePrice: 15,
     offer: "£546.64",
   },
   {
     src: topitem3,
     name: "Mixed Chillies Pack 500g",
-    price: "£746.64",
+    basePrice: 15,
     offer: "£546.64",
   },
   {
     src: topitem4,
     name: "Large Queen Apple",
-    price: "£746.64",
+    basePrice: 15,
     offer: "£546.64",
   },
 ];

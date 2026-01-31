@@ -7,7 +7,19 @@ export function useCart() {
 }
 
 export function CartProvider({ children }) {
+
   const [cartItems, setCartItems] = useState([]);
+  const [orderType, setOrderType] = useState(null); // 'pickup' or 'delivery'
+  const [deliveryDetails, setDeliveryDetails] = useState(null); // { firstName, lastName, address }
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+
+  // Reset orderType when cart becomes empty
+  React.useEffect(() => {
+    if (cartItems.length === 0) {
+      setOrderType(null);
+    }
+  }, [cartItems]);
+
 
   const addToCart = (product, quantity = 1) => {
     setCartItems(prev => {
@@ -33,7 +45,8 @@ export function CartProvider({ children }) {
 
   const cartTotal = useMemo(() => {
     return cartItems.reduce((acc, item) => {
-      const price = parseFloat(item.price.replace(/[^\d.]/g, ''));
+      const p = item.price;
+      const price = typeof p === 'string' ? parseFloat(p.replace(/[^\d.]/g, '')) : parseFloat(p);
       return acc + (price * item.qty);
     }, 0);
   }, [cartItems]);
@@ -55,7 +68,13 @@ export function CartProvider({ children }) {
     removeFromCart,
     updateQuantity,
     cartCount,
-    cartTotal
+    cartTotal,
+    orderType,
+    setOrderType,
+    deliveryDetails,
+    setDeliveryDetails,
+    showDeliveryModal,
+    setShowDeliveryModal
   };
 
   return (

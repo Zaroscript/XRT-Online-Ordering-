@@ -1,16 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { Handbag, Eye, Utensils } from "lucide-react";
+import ProductModal from "../ProductModal";
 import * as Dialog from "@radix-ui/react-dialog";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { COLORS } from "../../config/colors";
 
 export default function ViewItems({ product }) {
-  const navigate = useNavigate();
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const { addToCart } = useCart();
   
   const handleCustomize = () => {
-     navigate('/customize', { state: { product } });
+     setIsCustomizeOpen(true);
   };
 
   const styleVars = {
@@ -55,14 +56,16 @@ export default function ViewItems({ product }) {
 
           <div className="absolute -bottom-5 left-1/2 -translate-x-1/2">
             <div className="flex items-center gap-1 px-4 py-1 rounded-full bg-[var(--primary)] text-white shadow-md">
-              <span className="text-[17px] font-bold">{product.price}</span>
+              <span className="text-[17px] font-bold">${product.basePrice.toFixed(2)}</span>
             </div>
           </div>
         </div>
 
-        <h3 className="mt-8 mb-3 text-[13px] font-[500] text-[var(--text-secondary)] text-center">
-          {product.name}
-        </h3>
+        <Link to={`/product/${product.id}`} className="block mt-8 mb-3 text-center group cursor-pointer">
+          <h3 className="text-[13px] font-[500] text-[var(--text-secondary)] group-hover:text-[var(--primary)] group-hover:underline transition-colors">
+            {product.name}
+          </h3>
+        </Link>
 
         <div className="flex flex-row gap-3 px-4 pb-4 justify-center">
           <div 
@@ -79,7 +82,10 @@ export default function ViewItems({ product }) {
           </div>
 
           <div 
-            onClick={() => addToCart(product)}
+            onClick={() => addToCart({
+               ...product,
+               price: (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2)
+            })}
             className="flex-1 h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
             <Handbag
               strokeWidth={0.8}
@@ -142,7 +148,7 @@ export default function ViewItems({ product }) {
               </Dialog.Title>
 
               <p className="text-[var(--primary)] text-2xl font-bold">
-                {product.price}
+                ${product.basePrice.toFixed(2)}
               </p>
 
               <p className="text-sm text-gray-600 leading-relaxed">
@@ -199,7 +205,10 @@ export default function ViewItems({ product }) {
                     onClick={() => {
                         const input = document.getElementById(`qty-${product.id}`);
                         const qty = Number(input.value) || 1;
-                        addToCart(product, qty);
+                        addToCart({
+                           ...product,
+                           price: (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2)
+                        }, qty);
                     }}
                     className="w-full md:flex-1 h-[48px] md:h-[45px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-green-700 duration-300 cursor-pointer bg-[var(--primary)] transition-colors">
                     <Handbag
@@ -217,6 +226,11 @@ export default function ViewItems({ product }) {
           </div>
         </Dialog.Content>
       </Dialog.Portal>
+      <ProductModal 
+        isOpen={isCustomizeOpen} 
+        onClose={() => setIsCustomizeOpen(false)} 
+        product={product} 
+      />
     </Dialog.Root>
   );
 }

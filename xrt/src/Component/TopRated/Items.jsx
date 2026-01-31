@@ -20,7 +20,7 @@ export default function Items({item}) {
             </span>
             <div className="">
               <span className="line-through text-gray-500 text-[15px] ">
-                {item.price}
+                {item.basePrice ? `$${item.basePrice.toFixed(2)}` : item.price}
               </span>
               <span className="pl-3 text-[var(--primary)] font-semibold text-[18px]">
                 {item.offer}

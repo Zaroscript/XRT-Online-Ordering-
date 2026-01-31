@@ -6,9 +6,10 @@ import { useCart } from '../../../context/CartContext';
 import { COLORS } from '../../../config/colors';
 import { products } from '../../../config/constants';
 
+
 export default function CartPanel({ open, setclosefun }) {
   const navigate = useNavigate();
-  const { cartItems, removeFromCart, updateQuantity, addToCart, cartTotal } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, addToCart, cartTotal, orderType } = useCart();
   const scrollContainerRef = useRef(null);
 
   const scroll = (direction) => {
@@ -39,6 +40,9 @@ export default function CartPanel({ open, setclosefun }) {
     visible: { opacity: 0.4, pointerEvents: 'auto', transition: { duration: 0.3 } },
     exit: { opacity: 0, pointerEvents: 'none', transition: { duration: 0.2 } }
   };
+
+
+
 
   return (
     <AnimatePresence>
@@ -78,60 +82,66 @@ export default function CartPanel({ open, setclosefun }) {
               </button>
             </div>
 
+
+
+
+
             {/* Items List */}
             <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
               {cartItems.length > 0 ? (
                 <div className="flex flex-col gap-6">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="flex gap-4 items-start">
-                      <div className="w-20 h-20 bg-gray-50 rounded-lg p-2 flex-shrink-0 border border-gray-100">
-                        <img 
-                          src={item.src} 
-                          alt={item.name} 
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 leading-tight mb-1">
-                          {item.name}
-                        </h4>
-                        <div className="text-sm text-gray-500 mb-2">
-                          Price: {item.price}
+
+                    {cartItems.map((item) => (
+                        <div key={item.id} className="flex gap-4 items-start">
+                        <div className="w-20 h-20 bg-gray-50 rounded-lg p-2 flex-shrink-0 border border-gray-100">
+                            <img 
+                            src={item.src} 
+                            alt={item.name} 
+                            className="w-full h-full object-contain"
+                            />
                         </div>
-                        <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                          <button 
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="p-1 hover:bg-white rounded-md transition-colors text-gray-600 hover:text-[var(--primary)]"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="text-sm font-semibold w-6 text-center">{item.qty}</span>
-                          <button 
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="p-1 hover:bg-white rounded-md transition-colors text-gray-600 hover:text-[var(--primary)]"
-                          >
-                            <Plus size={14} />
-                          </button>
+                        <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 leading-tight mb-1">
+                            {item.name}
+                            </h4>
+                            <div className="text-sm text-gray-500 mb-2">
+                            Price: {item.price}
+                            </div>
+                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                            <button 
+                                onClick={() => updateQuantity(item.id, -1)}
+                                className="p-1 hover:bg-white rounded-md transition-colors text-gray-600 hover:text-[var(--primary)]"
+                            >
+                                <Minus size={14} />
+                            </button>
+                            <span className="text-sm font-semibold w-6 text-center">{item.qty}</span>
+                            <button 
+                                onClick={() => updateQuantity(item.id, 1)}
+                                className="p-1 hover:bg-white rounded-md transition-colors text-gray-600 hover:text-[var(--primary)]"
+                            >
+                                <Plus size={14} />
+                            </button>
+                            </div>
+                            </div>
                         </div>
+                        <button 
+                            onClick={() => removeFromCart(item.id)}
+                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                        >
+                            <X size={16} />
+                        </button>
                         </div>
-                      </div>
-                      <button 
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                      >
-                        <X size={16} />
-                      </button>
+                    ))}
                     </div>
-                  ))}
+                ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-2">
+                    <ShoppingBag size={48} className="text-gray-200" />
+                    <p>Your cart is empty</p>
+                    </div>
+                )}
                 </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-2">
-                   <ShoppingBag size={48} className="text-gray-200" />
-                   <p>Your cart is empty</p>
-                </div>
-              )}
-            </div>
+
 
             {/* Cross Selling Section */}
             {suggestedProducts.length > 0 && (
@@ -153,32 +163,34 @@ export default function CartPanel({ open, setclosefun }) {
                     ref={scrollContainerRef}
                     className="flex gap-3 overflow-x-hidden scroll-smooth pb-2 px-1"
                   >
-                    {suggestedProducts.map((product) => (
-                      <div 
-                        key={product.id} 
-                        className="flex-shrink-0 w-[140px] bg-white rounded-xl p-2 border border-gray-100 shadow-sm hover:shadow-md transition-all group"
-                      >
-                        <div className="relative h-24 mb-2 bg-gray-50 rounded-lg overflow-hidden">
-                          <img 
-                            src={product.src} 
-                            alt={product.name} 
-                            className="w-full h-full object-contain mix-blend-multiply p-1 group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <button
-                            onClick={() => addToCart(product)}
-                            className="absolute bottom-1 right-1 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white transition-colors"
+                      {suggestedProducts.map((product) => {
+                         const displayPrice = (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2);
+                         return (
+                          <div 
+                            key={product.id} 
+                            className="flex-shrink-0 w-[140px] bg-white rounded-xl p-2 border border-gray-100 shadow-sm hover:shadow-md transition-all group"
                           >
-                            <Plus size={16} />
-                          </button>
-                        </div>
-                        <h4 className="text-xs font-medium text-gray-700 line-clamp-1 mb-1" title={product.name}>
-                          {product.name}
-                        </h4>
-                        <div className="text-xs font-bold text-[var(--primary)]">
-                          {product.price}
-                        </div>
-                      </div>
-                    ))}
+                            <div className="relative h-24 mb-2 bg-gray-50 rounded-lg overflow-hidden">
+                              <img 
+                                src={product.src} 
+                                alt={product.name} 
+                                className="w-full h-full object-contain mix-blend-multiply p-1 group-hover:scale-105 transition-transform duration-300"
+                              />
+                              <button
+                                onClick={() => addToCart({ ...product, price: displayPrice })}
+                                className="absolute bottom-1 right-1 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white transition-colors"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </div>
+                            <h4 className="text-xs font-medium text-gray-700 line-clamp-1 mb-1" title={product.name}>
+                              {product.name}
+                            </h4>
+                            <div className="text-xs font-bold text-[var(--primary)]">
+                              ${displayPrice}
+                            </div>
+                          </div>
+                      )})}
                   </div>
 
                   <button 
@@ -219,3 +231,4 @@ export default function CartPanel({ open, setclosefun }) {
     </AnimatePresence>
   );
 }
+
