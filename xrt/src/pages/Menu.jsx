@@ -13,12 +13,13 @@ export default function Menu() {
 
   useEffect(() => {
     if (location.state?.selectedCategory) {
-      setActiveCategory(location.state.selectedCategory);
       setTimeout(() => {
+        setActiveCategory(location.state.selectedCategory);
+        // Scroll after state update
         if (menuListRef.current) {
           menuListRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-      }, 100);
+      }, 0);
     }
   }, [location.state]);
 

@@ -12,20 +12,20 @@ export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [product, setProduct] = useState(null);
+  // Load product data - derived synchronously since products is a constant
   const [qty, setQty] = useState(1);
-
-  // Load product data
-  useEffect(() => {
+  const product = React.useMemo(() => {
     if (id) {
-      const foundProduct = products.find((p) => p.id === parseInt(id));
-      if (foundProduct) {
-        setProduct(foundProduct);
-      } else {
-        console.warn("Product not found");
-      }
+       return products.find((p) => p.id === parseInt(id)) || null;
     }
-  }, [id, navigate]);
+    return null;
+  }, [id]);
+
+  useEffect(() => {
+    if (id && !product) {
+       console.warn("Product not found");
+    }
+  }, [id, product]);
 
   // Use the shared hook
   const {

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../../context/CartContext';
 import { COLORS } from '../../../config/colors';
 
 export default function DeliveryDetailsModal() {
-  const { cartItems, orderType, deliveryDetails, setDeliveryDetails, setOrderType, showDeliveryModal, setShowDeliveryModal } = useCart();
+  const { setDeliveryDetails, setOrderType, showDeliveryModal, setShowDeliveryModal } = useCart();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',

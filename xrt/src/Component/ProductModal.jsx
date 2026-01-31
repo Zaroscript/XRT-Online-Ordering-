@@ -24,7 +24,9 @@ export default function ProductModal({ isOpen, onClose, product }) {
 
   // Reset qty when opening logic
   useEffect(() => {
-    if (isOpen) setQty(1);
+    if (isOpen) {
+      setTimeout(() => setQty(1), 0);
+    }
   }, [isOpen]);
 
   if (!product) return null;

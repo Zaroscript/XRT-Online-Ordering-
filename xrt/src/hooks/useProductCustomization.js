@@ -9,54 +9,58 @@ export function useProductCustomization(product) {
 
   // Initialize defaults
   useEffect(() => {
-    if (product) {
-      // 1. Set Default Size
-      if (product.sizes?.length > 0) {
-        setSelectedSize(product.sizes[0]);
+    // Wrap in setTimeout to avoid synchronous state update warning (set-state-in-effect)
+    const timer = setTimeout(() => {
+      if (product) {
+        // 1. Set Default Size
+        if (product.sizes?.length > 0) {
+          setSelectedSize(product.sizes[0]);
+        }
+        
+        // 2. Set Default Modifiers
+        const defaults = {};
+        if (product.modifiers) {
+          product.modifiers.forEach(section => {
+            if (section.default) {
+               // For complex or single, direct mapping might vary, assuming simple label match for defaults for now
+               // If complex logic needed for defaults (e.g. default object with placement), we'd parse it here.
+               // Given the current constants structure, 'default' is a string or array of strings.
+               
+               if (section.type === "single") {
+                  defaults[section.title] = section.default;
+               } else {
+                   // Multiple
+                   const defArray = Array.isArray(section.default) ? section.default : [section.default];
+                   
+                   // If section is complex, we need to init as Objects
+                   // But for now, let's assume defaults are simple "Presence" (true) or simple strings.
+                   // If complex logic is required for defaults, we'd need to map to the structure { label: { level: 'Normal', ... } }
+                   const isComplex = section.options.some(opt => opt.hasLevel || opt.hasPlacement);
+                   
+                   if (isComplex) {
+                      const complexObj = {};
+                      defArray.forEach(label => {
+                          const opt = section.options.find(o => o.label === label);
+                          if (opt) {
+                               let val = true;
+                               if (opt.hasLevel && opt.hasPlacement) val = { level: "Normal", placement: "Whole" };
+                               else if (opt.hasLevel) val = "Normal";
+                               else if (opt.hasPlacement) val = { placement: "Whole" };
+                               complexObj[label] = val;
+                          }
+                      });
+                      defaults[section.title] = complexObj;
+                   } else {
+                      defaults[section.title] = defArray;
+                   }
+               }
+            }
+          });
+        }
+        setSelectedModifiers(defaults);
       }
-      
-      // 2. Set Default Modifiers
-      const defaults = {};
-      if (product.modifiers) {
-        product.modifiers.forEach(section => {
-          if (section.default) {
-             // For complex or single, direct mapping might vary, assuming simple label match for defaults for now
-             // If complex logic needed for defaults (e.g. default object with placement), we'd parse it here.
-             // Given the current constants structure, 'default' is a string or array of strings.
-             
-             if (section.type === "single") {
-                defaults[section.title] = section.default;
-             } else {
-                 // Multiple
-                 const defArray = Array.isArray(section.default) ? section.default : [section.default];
-                 
-                 // If section is complex, we need to init as Objects
-                 // But for now, let's assume defaults are simple "Presence" (true) or simple strings.
-                 // If complex logic is required for defaults, we'd need to map to the structure { label: { level: 'Normal', ... } }
-                 const isComplex = section.options.some(opt => opt.hasLevel || opt.hasPlacement);
-                 
-                 if (isComplex) {
-                    const complexObj = {};
-                    defArray.forEach(label => {
-                        const opt = section.options.find(o => o.label === label);
-                        if (opt) {
-                             let val = true;
-                             if (opt.hasLevel && opt.hasPlacement) val = { level: "Normal", placement: "Whole" };
-                             else if (opt.hasLevel) val = "Normal";
-                             else if (opt.hasPlacement) val = { placement: "Whole" };
-                             complexObj[label] = val;
-                        }
-                    });
-                    defaults[section.title] = complexObj;
-                 } else {
-                    defaults[section.title] = defArray;
-                 }
-             }
-          }
-        });
-      }
-      setSelectedModifiers(defaults);
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [product]);
 
   /* 
