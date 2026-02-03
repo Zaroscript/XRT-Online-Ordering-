@@ -13,8 +13,8 @@ export default function Menulist({
  
   hideFilter = false, 
   products: customProducts = null, 
+  // eslint-disable-next-line no-unused-vars
   ItemComponent = ViewItems, 
-  hideCountText = false,
   categories = [] 
 }) {
   const navigate = useNavigate();
