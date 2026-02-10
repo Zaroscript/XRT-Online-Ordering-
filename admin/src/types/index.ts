@@ -528,7 +528,7 @@ export interface UpdateUser {
   role?: string;
   customRole?: string;
 }
-  export interface Profile {
+export interface Profile {
   id: string;
   avatar?: Attachment;
   bio?: string;
@@ -1415,6 +1415,7 @@ export interface HeroSlide {
   title: string;
   subtitle: string;
   subtitleTwo?: string;
+  offer?: string;
   btnText: string;
   btnLink: string;
 }

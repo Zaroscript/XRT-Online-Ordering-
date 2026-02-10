@@ -29,6 +29,8 @@ import importRoutes from './application/routes/import.routes';
 import permissionRoutes from './application/routes/permission.routes';
 import priceRoutes from './application/routes/price.routes';
 import kitchenSectionRoutes from './application/routes/kitchen-section.routes';
+import taxRoutes from './application/routes/tax.routes';
+import shippingRoutes from './application/routes/shipping.routes';
 import { env } from './shared/config/env';
 import { logger } from './shared/utils/logger';
 // Import swagger config - using relative path from src to config directory
@@ -144,6 +146,8 @@ app.use(`${env.API_BASE_URL}/kitchen-sections`, kitchenSectionRoutes);
 app.use(`${env.API_BASE_URL}`, modifierRoutes);
 app.use(`${env.API_BASE_URL}/prices`, priceRoutes);
 app.use(`${env.API_BASE_URL}`, mockRoutes);
+app.use(`${env.API_BASE_URL}/taxes`, taxRoutes);
+app.use(`${env.API_BASE_URL}/shippings`, shippingRoutes);
 
 // 404 handler
 app.use((req, res) => {

@@ -26,7 +26,11 @@ export default function Information() {
           />
           <h3 className="font-bold text-[#2F3E30] text-[20px]">Address</h3>
           <p className="text-[#656766] w-[250px] py-2">
-            {contactDetails?.location?.formattedAddress || contactDetails?.location?.street_address}
+            {[
+              contactDetails?.location?.street_address,
+              contactDetails?.location?.city,
+              contactDetails?.location?.state
+            ].filter(Boolean).join(", ")}
           </p>
         </div>
 

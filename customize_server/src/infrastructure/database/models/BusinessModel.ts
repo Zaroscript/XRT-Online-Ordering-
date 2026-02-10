@@ -94,10 +94,7 @@ const BusinessSchema = new Schema<BusinessDocument>(
       type: String,
       trim: true,
     },
-    footer_text: {
-      type: String,
-      trim: true,
-    },
+
     messages: {
       closed_message: { type: String, trim: true },
       not_accepting_orders_message: { type: String, trim: true },
@@ -128,4 +125,3 @@ BusinessSchema.pre(/^find/, function (next) {
 });
 
 export const BusinessModel = mongoose.model<BusinessDocument>('Business', BusinessSchema);
-

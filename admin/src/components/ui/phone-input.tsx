@@ -18,6 +18,8 @@ export interface Props extends InputHTMLAttributes<HTMLInputElement> {
   showLabel?: boolean;
   required?: boolean;
   control: any;
+  country?: string;
+  onlyCountries?: string[];
 }
 
 const PhoneNumberInput = React.forwardRef<any, Props>(
@@ -34,6 +36,8 @@ const PhoneNumberInput = React.forwardRef<any, Props>(
       note,
       name,
       control,
+      country = 'us',
+      onlyCountries = ['us'],
       ...rest
     },
     ref,
@@ -54,6 +58,8 @@ const PhoneNumberInput = React.forwardRef<any, Props>(
                 ''
               )}
               <PhoneInput
+                country={country}
+                onlyCountries={onlyCountries}
                 value={value}
                 onChange={onChange}
                 inputClass={twMerge(

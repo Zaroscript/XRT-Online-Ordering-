@@ -22,17 +22,12 @@ import Loader from '@/components/ui/loader/loader';
 import { useModalAction } from '@/components/ui/modal/modal.context';
 import PaymentSelect from '@/components/ui/payment-select';
 import SelectInput from '@/components/ui/select-input';
+import PhoneNumberInput from '@/components/ui/phone-input';
 import SwitchInput from '@/components/ui/switch-input';
 import TextArea from '@/components/ui/text-area';
 import { useUpdateSettingsMutation } from '@/data/settings';
 import { siteSettings } from '@/settings/site.settings';
-import {
-  ServerInfo,
-  Settings,
-  Shipping,
-  ShopSocialInput,
-  Tax,
-} from '@/types';
+import { ServerInfo, Settings, Shipping, ShopSocialInput, Tax } from '@/types';
 
 import { getIcon } from '@/utils/get-icon';
 import { formatPrice } from '@/utils/use-price';
@@ -161,13 +156,14 @@ export default function SettingsForm({
       // @ts-ignore
       shippingClass: !!shippingClasses?.length
         ? shippingClasses?.find(
-          (shipping: Shipping) => shipping.id == options?.shippingClass,
-        )
+            (shipping: Shipping) => shipping.id == options?.shippingClass,
+          )
         : '',
       footer_text: options?.footer_text ?? '',
       messages: {
         closed_message: options?.messages?.closed_message ?? '',
-        not_accepting_orders_message: options?.messages?.not_accepting_orders_message ?? '',
+        not_accepting_orders_message:
+          options?.messages?.not_accepting_orders_message ?? '',
       },
       maximumQuestionLimit: options?.maximumQuestionLimit ?? 0,
       heroSlides: options?.heroSlides ?? [],
@@ -186,7 +182,6 @@ export default function SettingsForm({
   const { openModal } = useModalAction();
 
   const enableFreeShipping = watch('freeShipping');
-
 
   // const upload_max_filesize = options?.server_info?.upload_max_filesize! / 1024;
   const max_fileSize = options?.server_info?.upload_max_filesize! * 1000;
@@ -225,13 +220,12 @@ export default function SettingsForm({
         heroSlides: values?.heroSlides ?? options?.heroSlides ?? [],
         messages: {
           closed_message: values.messages.closed_message,
-          not_accepting_orders_message: values.messages.not_accepting_orders_message,
+          not_accepting_orders_message:
+            values.messages.not_accepting_orders_message,
         },
       },
     });
   }
-
-
 
   return (
     <form onSubmit={handleSubmit(onSubmit as any)}>
@@ -242,13 +236,8 @@ export default function SettingsForm({
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
 
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <FileInput
-            name="logo"
-            control={control}
-            multiple={false}
-            maxSize={max_fileSize}
-          />
+        <Card className="w-full logo-field-area sm:w-8/12 md:w-2/3">
+          <FileInput name="logo" control={control} multiple={false} />
         </Card>
       </div>
 
@@ -256,7 +245,9 @@ export default function SettingsForm({
       <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
         <Description
           title={t('Hero Slider')}
-          details={t('Manage homepage banner slides with images, titles, and buttons')}
+          details={t(
+            'Manage homepage banner slides with images, titles, and buttons',
+          )}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
 
@@ -297,9 +288,13 @@ export default function SettingsForm({
                   variant="outline"
                 />
                 <Input
-                  label={t('Subtitle')}
-                  toolTipText={t('Secondary text below the title')}
                   {...register(`heroSlides.${index}.subtitle`)}
+                  variant="outline"
+                />
+                <Input
+                  label={t('Offer Text')}
+                  toolTipText={t('Promotional text e.g. "Sale 30% Off"')}
+                  {...register(`heroSlides.${index}.offer`)}
                   variant="outline"
                 />
                 <Input
@@ -368,7 +363,7 @@ export default function SettingsForm({
             error={t(errors.minimumOrderAmount?.message!)}
             variant="outline"
             className="mb-5"
-          // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
           />
           <Input
             label={t('Wallet Currency Ratio')}
@@ -377,7 +372,7 @@ export default function SettingsForm({
             error={t(errors.currencyToWalletRatio?.message!)}
             variant="outline"
             className="mb-5"
-          // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
           />
           <Input
             label={t('Signup Points')}
@@ -386,9 +381,18 @@ export default function SettingsForm({
             error={t(errors.signupPoints?.message!)}
             variant="outline"
             className="mb-5"
-          // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
           />
 
+          <div className="mb-5">
+            <PhoneNumberInput
+              label={t('form:form-input-label-contact')}
+              toolTipText={t('form:form-input-tip-contact')}
+              name="contactDetails.contact"
+              control={control}
+              className="mb-5"
+            />
+          </div>
 
           <div className="mb-5">
             <TextArea
@@ -403,7 +407,9 @@ export default function SettingsForm({
           <div className="mb-5">
             <TextArea
               label={t('Closed Message')}
-              toolTipText={t('Message displayed when your restaurant is closed')}
+              toolTipText={t(
+                'Message displayed when your restaurant is closed',
+              )}
               {...register('messages.closed_message')}
               variant="outline"
               className="mb-5"
@@ -413,7 +419,9 @@ export default function SettingsForm({
           <div className="mb-5">
             <TextArea
               label={t('Not Accepting Orders Message')}
-              toolTipText={t('Message displayed when you are not accepting orders')}
+              toolTipText={t(
+                'Message displayed when you are not accepting orders',
+              )}
               {...register('messages.not_accepting_orders_message')}
               variant="outline"
               className="mb-5"
@@ -427,17 +435,19 @@ export default function SettingsForm({
             error={t(errors.maximumQuestionLimit?.message!)}
             variant="outline"
             className="mb-5"
-          // disabled={isNotDefaultSettingsPage}
+            // disabled={isNotDefaultSettingsPage}
           />
 
           <div className="mb-5">
             <div className="flex items-center gap-x-4">
               <SwitchInput
                 name="useOtp"
-                label={t("Enable OTP")}
-                toolTipText={t("Enable one-time password verification for login")}
+                label={t('Enable OTP')}
+                toolTipText={t(
+                  'Enable one-time password verification for login',
+                )}
                 control={control}
-              // disabled={isNotDefaultSettingsPage}
+                // disabled={isNotDefaultSettingsPage}
               />
             </div>
           </div>
@@ -446,10 +456,10 @@ export default function SettingsForm({
             <div className="flex items-center gap-x-4">
               <SwitchInput
                 name="useMustVerifyEmail"
-                label={t("Require Email Verification")}
-                toolTipText={t("Require users to verify their email address")}
+                label={t('Require Email Verification')}
+                toolTipText={t('Require users to verify their email address')}
                 control={control}
-              // disabled={isNotDefaultSettingsPage}
+                // disabled={isNotDefaultSettingsPage}
               />
             </div>
           </div>
@@ -458,10 +468,12 @@ export default function SettingsForm({
             <div className="flex items-center gap-x-4">
               <SwitchInput
                 name="useAi"
-                label={t("Enable AI Features")}
-                toolTipText={t("Enable AI-powered product description generation")}
+                label={t('Enable AI Features')}
+                toolTipText={t(
+                  'Enable AI-powered product description generation',
+                )}
                 control={control}
-              // disabled={isNotDefaultSettingsPage}
+                // disabled={isNotDefaultSettingsPage}
               />
             </div>
           </div>
@@ -469,12 +481,14 @@ export default function SettingsForm({
             <SelectInput
               name="defaultAi"
               label={t('Select AI Provider')}
-              toolTipText={t('Choose your AI service provider for product descriptions')}
+              toolTipText={t(
+                'Choose your AI service provider for product descriptions',
+              )}
               control={control}
               getOptionLabel={(option: any) => option.name}
               getOptionValue={(option: any) => option.value}
               options={AI}
-            // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
@@ -487,7 +501,7 @@ export default function SettingsForm({
               getOptionLabel={(option: any) => option.name}
               getOptionValue={(option: any) => option.id}
               options={taxClasses!}
-            // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
@@ -500,17 +514,19 @@ export default function SettingsForm({
               getOptionLabel={(option: any) => option.name}
               getOptionValue={(option: any) => option.id}
               options={shippingClasses!}
-            // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
             />
           </div>
           <div className="mb-5">
             <div className="flex items-center gap-x-4">
               <SwitchInput
                 name="guestCheckout"
-                label={t("Allow Guest Checkout")}
-                toolTipText={t("Allow customers to checkout without creating an account")}
+                label={t('Allow Guest Checkout')}
+                toolTipText={t(
+                  'Allow customers to checkout without creating an account',
+                )}
                 control={control}
-              // disabled={isNotDefaultSettingsPage}
+                // disabled={isNotDefaultSettingsPage}
               />
             </div>
           </div>
@@ -518,31 +534,32 @@ export default function SettingsForm({
           <div className="flex items-center gap-x-4">
             <SwitchInput
               name="freeShipping"
-              label={t("Enable Free Shipping")}
-              toolTipText={t("Enable free shipping for orders over a certain amount")}
+              label={t('Enable Free Shipping')}
+              toolTipText={t(
+                'Enable free shipping for orders over a certain amount',
+              )}
               control={control}
               checked={enableFreeShipping}
-            // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
             />
           </div>
 
           {enableFreeShipping && (
             <Input
               label={t('Free Shipping Amount')}
-              toolTipText={t('Minimum order amount to qualify for free shipping')}
+              toolTipText={t(
+                'Minimum order amount to qualify for free shipping',
+              )}
               {...register('freeShippingAmount')}
               error={t(errors.freeShippingAmount?.message!)}
               variant="outline"
               type="number"
               className="mt-5"
-            // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
             />
           )}
         </Card>
       </div>
-
-
-
 
       <div className="text-end">
         <Button
@@ -553,6 +570,6 @@ export default function SettingsForm({
           {t('form:button-label-save-settings')}
         </Button>
       </div>
-    </form >
+    </form>
   );
 }

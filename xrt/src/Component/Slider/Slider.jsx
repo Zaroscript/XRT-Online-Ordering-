@@ -33,7 +33,7 @@ export default function Sliderfun() {
         title: slide.subtitle ?? "",
         description: slide.title ?? "",
         subtitleTwo: slide.subtitleTwo ?? "",
-        offer: "",
+        offer: slide.offer ?? "",
         btnText: slide.btnText ?? "Order Now",
         btnLink: slide.btnLink ?? "",
       };

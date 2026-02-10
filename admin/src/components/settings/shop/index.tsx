@@ -26,8 +26,6 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import SelectInput from '@/components/ui/select-input';
-import Uploader from '@/components/common/uploader';
-import { Attachment } from '@/types';
 
 const DAYS = [
   'Monday',
@@ -42,65 +40,66 @@ const DAYS = [
 type ShopFormValues = {
   // Business Information
   siteTitle: string;
-  siteSubtitle: string;
-  timezone: string;
-  currency: string;
-  currencyOptions: {
-    formation: string;
-    fractions: number;
+  siteSubtitle?: string;
+  timezone?: string;
+  currency?: string;
+  currencyOptions?: {
+    formation?: string;
+    fractions?: number;
   };
   // Shop Settings
-  isProductReview: boolean;
-  enableTerms: boolean;
-  enableCoupons: boolean;
-  enableEmailForDigitalProduct: boolean;
-  useGoogleMap: boolean;
-  enableReviewPopup: boolean;
-  maxShopDistance: number;
-  contactDetails: ContactDetailsInput;
-  google: {
-    isEnable: boolean;
-    tagManagerId: string;
+  isProductReview?: boolean;
+  enableTerms?: boolean;
+  enableCoupons?: boolean;
+  enableEmailForDigitalProduct?: boolean;
+  useGoogleMap?: boolean;
+  enableReviewPopup?: boolean;
+  maxShopDistance?: number;
+  contactDetails: ContactDetailsInput & { contact: string };
+  google?: {
+    isEnable?: boolean;
+    tagManagerId?: string;
   };
-  facebook: {
-    isEnable: boolean;
-    appId: string;
-    pageId: string;
+  facebook?: {
+    isEnable?: boolean;
+    appId?: string;
+    pageId?: string;
   };
-  reviewSystem: string;
-  orders: {
-    accept_orders: boolean;
-    allowScheduleOrder: boolean;
-    maxDays: number;
-    deliveredOrderTime: number;
+  reviewSystem?: string;
+  orders?: {
+    accept_orders?: boolean;
+    allowScheduleOrder?: boolean;
+    maxDays?: number;
+    deliveredOrderTime?: number;
   };
-  delivery: {
-    enabled: boolean;
+  delivery?: {
+    enabled?: boolean;
     radius: number;
     fee: number;
     min_order: number;
   };
-  fees: {
-    service_fee: number;
-    tip_options: number[];
+  fees?: {
+    service_fee?: number;
+    tip_options?: number[];
   };
-  taxes: {
+  taxes?: {
     sales_tax: number;
   };
-  operating_hours: {
-    auto_close: boolean;
-    schedule: {
+  operating_hours?: {
+    auto_close?: boolean;
+    schedule?: {
       day: string;
       open_time: string;
       close_time: string;
-      is_closed: boolean;
+      is_closed?: boolean;
     }[];
   };
   // Company Information fields
-  siteLink: string;
-  copyrightText: string;
-  externalText: string;
-  externalLink: string;
+  siteLink?: string;
+  copyrightText?: string;
+  footer_text?: string;
+  externalText?: string;
+  externalLink?: string;
 };
 
 export const updatedIcons = socialIcon.map((item: any) => {
@@ -141,7 +140,7 @@ export default function SettingsForm({ settings }: IProps) {
     formState: { errors, isDirty },
   } = useForm<ShopFormValues>({
     shouldUnregister: true,
-    //@ts-ignore
+    // @ts-ignore
     resolver: yupResolver(shopValidationSchema),
     defaultValues: {
       ...options,
@@ -156,6 +155,7 @@ export default function SettingsForm({ settings }: IProps) {
       },
       contactDetails: {
         ...options?.contactDetails,
+        contact: options?.contactDetails?.contact ?? '',
         socials: options?.contactDetails?.socials
           ? options?.contactDetails?.socials.map((social: any) => ({
               icon: updatedIcons?.find((icon) => icon?.value === social?.icon),
@@ -198,7 +198,8 @@ export default function SettingsForm({ settings }: IProps) {
       },
       // Company Information defaults
       siteLink: options?.siteLink ?? '',
-      copyrightText: options?.copyrightText ?? '',
+      copyrightText: options?.copyrightText ?? 'Powered by XRT',
+      footer_text: options?.footer_text ?? '',
       externalText: options?.externalText ?? '',
       externalLink: options?.externalLink ?? '',
     },
@@ -213,24 +214,20 @@ export default function SettingsForm({ settings }: IProps) {
   const allowScheduleOrder = watch('orders.allowScheduleOrder');
 
   async function onSubmit(values: ShopFormValues) {
-
     const {
       contactDetails: { location, contact, website, emailAddress },
       // ... rest of destructuring
     } = values;
 
-
     // Process contactDetails with location formatting
     const contactDetails = {
       ...values?.contactDetails,
-      location: useGoogleMap
-        ? { ...omit(values?.contactDetails?.location, '__typename') }
-        : {
-            ...values?.contactDetails?.location,
-            formattedAddress: formatAddress(
-              values?.contactDetails?.location as UserAddress,
-            ),
-          },
+      location: {
+        ...values?.contactDetails?.location,
+        formattedAddress: formatAddress(
+          values?.contactDetails?.location as UserAddress,
+        ),
+      },
       socials: options?.contactDetails?.socials,
     };
 
@@ -242,24 +239,24 @@ export default function SettingsForm({ settings }: IProps) {
         ...values,
         contactDetails,
         maxShopDistance: Number(
-          values.maxShopDistance || values?.delivery?.radius,
+          values.maxShopDistance || values?.delivery?.radius || 0,
         ),
-        useGoogleMap: values?.useGoogleMap,
+        useGoogleMap: false,
         delivery: {
           ...values?.delivery,
-          radius: Number(values?.delivery?.radius),
-          fee: Number(values?.delivery?.fee),
-          min_order: Number(values?.delivery?.min_order),
+          radius: Number(values?.delivery?.radius ?? 0),
+          fee: Number(values?.delivery?.fee ?? 0),
+          min_order: Number(values?.delivery?.min_order ?? 0),
         },
         fees: {
           ...values?.fees,
-          service_fee: Number(values?.fees?.service_fee),
+          service_fee: Number(values?.fees?.service_fee ?? 0),
           tip_options:
             values?.fees?.tip_options?.map((t: number) => Number(t)) ?? [],
         },
         taxes: {
           ...values?.taxes,
-          sales_tax: Number(values?.taxes?.sales_tax),
+          sales_tax: Number(values?.taxes?.sales_tax ?? 0),
         },
         operating_hours: {
           ...values?.operating_hours,
@@ -271,8 +268,10 @@ export default function SettingsForm({ settings }: IProps) {
         reviewSystem: values?.reviewSystem,
         orders: {
           ...options?.orders,
-          deliveredOrderTime: Number(values?.orders?.deliveredOrderTime),
+          deliveredOrderTime: Number(values?.orders?.deliveredOrderTime ?? 0),
         },
+        footer_text: values?.footer_text,
+        copyrightText: values?.copyrightText,
       },
     };
     updateSettingsMutation(payload);
@@ -280,13 +279,7 @@ export default function SettingsForm({ settings }: IProps) {
   }
   useConfirmRedirectIfDirty({ isDirty });
   return (
-    <form
-      onSubmit={
-        handleSubmit(onSubmit, (errors) =>
-
-        ) as any
-      }
-    >
+    <form onSubmit={handleSubmit(onSubmit as any)}>
       {/* Business Settings Section */}
       <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
         <Description
@@ -310,6 +303,7 @@ export default function SettingsForm({ settings }: IProps) {
             className="mb-5"
             toolTipText={t('form:form-input-tip-business-description')}
           />
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
             <Input
               label={t('form:form-input-label-timezone')}
@@ -348,59 +342,43 @@ export default function SettingsForm({ settings }: IProps) {
         />
 
         <Card className="w-full sm:w-8/12 md:w-2/3">
-          {useGoogleMap ? (
-            <div className="mb-5">
-              <Label>{t('form:input-label-autocomplete')}</Label>
-              <Controller
-                control={control}
-                name="contactDetails.location"
-                render={({ field: { onChange } }) => (
-                  <GooglePlacesAutocomplete
-                    onChange={onChange}
-                    data={getValues('contactDetails.location')!}
-                  />
-                )}
-              />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-              <Input
-                label={t('text-city')}
-                toolTipText={t('City where your business is located')}
-                {...register('contactDetails.location.city')}
-                variant="outline"
-              />
-              <Input
-                label={t('text-country')}
-                toolTipText={t('Country where your business operates')}
-                {...register('contactDetails.location.country')}
-                variant="outline"
-              />
-              <Input
-                label={t('text-state')}
-                toolTipText={t('State or province of your business')}
-                {...register('contactDetails.location.state')}
-                variant="outline"
-              />
-              <Input
-                label={t('text-zip')}
-                toolTipText={t('Postal or ZIP code')}
-                {...register('contactDetails.location.zip')}
-                variant="outline"
-              />
-              <TextArea
-                label={t('text-street-address')}
-                toolTipText={t('Full street address of your business')}
-                {...register('contactDetails.location.street_address')}
-                variant="outline"
-                className="col-span-full"
-              />
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+            <Input
+              label={t('text-city')}
+              toolTipText={t('City where your business is located')}
+              {...register('contactDetails.location.city')}
+              variant="outline"
+            />
+            <Input
+              label={t('text-country')}
+              toolTipText={t('Country where your business operates')}
+              {...register('contactDetails.location.country')}
+              variant="outline"
+            />
+            <Input
+              label={t('text-state')}
+              toolTipText={t('State or province of your business')}
+              {...register('contactDetails.location.state')}
+              variant="outline"
+            />
+            <Input
+              label={t('text-zip')}
+              toolTipText={t('Postal or ZIP code')}
+              {...register('contactDetails.location.zip')}
+              variant="outline"
+            />
+            <TextArea
+              label={t('text-street-address')}
+              toolTipText={t('Full street address of your business')}
+              {...register('contactDetails.location.street_address')}
+              variant="outline"
+              className="col-span-full"
+            />
+          </div>
           <PhoneNumberInput
             label={t('form:form-input-label-contact')}
             toolTipText={t('form:form-input-tip-contact')}
-            {...register('contactDetails.contact')}
+            name="contactDetails.contact"
             control={control}
           />
           <Input
@@ -626,28 +604,7 @@ export default function SettingsForm({ settings }: IProps) {
               // disabled={isNotDefaultSettingsPage}
             />
           </div>
-          <div className="mt-6 mb-5">
-            <SwitchInput
-              name="useGoogleMap"
-              control={control}
-              label={t('form:input-label-use-google-map-service')}
-              toolTipText={t('form:input-tooltip-shop-enable-google-map')}
-              // disabled={isNotDefaultSettingsPage}
-            />
-          </div>
-          {useGoogleMap ? (
-            <Input
-              label={t('text-max-search-location-distance')}
-              {...register('maxShopDistance')}
-              type="number"
-              error={t(errors.maxShopDistance?.message!)}
-              variant="outline"
-              className="my-5"
-              // disabled={isNotDefaultSettingsPage}
-            />
-          ) : (
-            ''
-          )}
+
           <div className="mt-6 mb-5">
             <SwitchInput
               name="enableTerms"
@@ -718,6 +675,15 @@ export default function SettingsForm({ settings }: IProps) {
         />
 
         <Card className="w-full sm:w-8/12 md:w-2/3">
+          <TextArea
+            label={t('Footer Description')}
+            toolTipText={t(
+              'Text displayed as a description in the website footer',
+            )}
+            {...register('footer_text')}
+            variant="outline"
+            className="mb-5"
+          />
           <Input
             label={t('Site Link')}
             toolTipText={t('URL link to your website displayed in footer')}

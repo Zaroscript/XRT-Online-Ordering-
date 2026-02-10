@@ -6,7 +6,18 @@ import AppRoutes from "./routes/AppRoutes.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import AdsPopup from "./Component/Ads/AdsPopup.jsx";
 
+import { useEffect } from "react";
+import { useSiteSettingsQuery } from "./api/hooks/useSiteSettings";
+
 function App() {
+  const { siteTitle } = useSiteSettingsQuery();
+
+  useEffect(() => {
+    if (siteTitle) {
+      document.title = siteTitle;
+    }
+  }, [siteTitle]);
+
   return (
     <CartProvider>
       <AdsPopup />

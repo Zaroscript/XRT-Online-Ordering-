@@ -28,6 +28,7 @@ const getDefaultOptions = () => ({
   isPromoPopUp: false,
   reviewSystem: 'default',
   footer_text: '',
+  copyrightText: 'Powered by XRT',
   isUnderMaintenance: false,
   maintenance: {
     isEnable: false,
@@ -169,7 +170,11 @@ export class SettingsController {
       });
     }
     const { id: _sid, business: _b, created_at: _c, updated_at: _u, ...rest } = settings as any;
-    const options = { ...defaultOptions, ...rest, heroSlides: settings.heroSlides ?? defaultOptions.heroSlides };
+    const options = {
+      ...defaultOptions,
+      ...rest,
+      heroSlides: settings.heroSlides ?? defaultOptions.heroSlides,
+    };
 
     return sendSuccess(res, 'Settings retrieved successfully', {
       id: settings?.id ?? '1',
@@ -197,22 +202,38 @@ export class SettingsController {
     );
     const business = await getOrCreateUseCase.execute(userId);
 
+    const settingsData = req.body.options ? req.body.options : req.body;
+
     const existing = await businessSettingsRepository.findByBusinessId(business.id);
     if (!existing) {
       const created = await businessSettingsRepository.create({
         business: business.id,
-        ...req.body,
+        ...settingsData,
       });
       return sendSuccess(res, 'Settings updated successfully', {
         id: created.id,
-        options: { ...getDefaultOptions(), ...req.body, heroSlides: created.heroSlides ?? req.body.heroSlides },
+        options: {
+          ...getDefaultOptions(),
+          ...settingsData,
+          heroSlides: created.heroSlides ?? settingsData.heroSlides,
+        },
       });
     }
 
-    const updated = await businessSettingsRepository.update(business.id, req.body);
+    const updated = await businessSettingsRepository.update(business.id, settingsData);
     const defaultOptions = getDefaultOptions();
-    const { id: _uid, business: _ub, created_at: _uc, updated_at: _uu, ...updatedRest } = updated as any;
-    const options = { ...defaultOptions, ...updatedRest, heroSlides: updated.heroSlides ?? defaultOptions.heroSlides };
+    const {
+      id: _uid,
+      business: _ub,
+      created_at: _uc,
+      updated_at: _uu,
+      ...updatedRest
+    } = updated as any;
+    const options = {
+      ...defaultOptions,
+      ...updatedRest,
+      heroSlides: updated.heroSlides ?? defaultOptions.heroSlides,
+    };
 
     return sendSuccess(res, 'Settings updated successfully', {
       id: updated.id,
@@ -220,4 +241,3 @@ export class SettingsController {
     });
   });
 }
-

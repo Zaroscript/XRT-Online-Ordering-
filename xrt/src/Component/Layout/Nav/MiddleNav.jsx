@@ -1,9 +1,14 @@
-
-import { logo } from "@/config/constants";
+import { useState } from "react";
+import { useSiteSettingsQuery } from "@/api/hooks/useSiteSettings";
+import { logo as defaultLogo } from "@/config/constants";
 import { Menu } from "lucide-react";
 import { COLORS } from "../../../config/colors";
 
 const MiddleNav = ({ count, total, link, setclickfun, onCartClick }) => {
+  const { logo: settingsLogo } = useSiteSettingsQuery();
+  const logoSrc = settingsLogo?.original;
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   return (
     <div 
       className=" py-[30px] flex header-container"
@@ -15,13 +20,26 @@ const MiddleNav = ({ count, total, link, setclickfun, onCartClick }) => {
         onClick={() => setclickfun()}
       />
 
-      <a href={link} className="">
-        <img
-          src={logo}
-          className="w-[120px] md:w-[150px] "
-          loading="lazy"
-          alt="system logo"
-        />
+      <a href={link} className="relative block w-[120px] md:w-[150px]">
+        {!settingsLogo && (
+           <div className="w-full h-[40px] bg-gray-200 animate-pulse rounded"></div>
+        )}
+        {logoSrc && (
+          <>
+            <img
+              src={logoSrc}
+              className={`w-full transition-opacity duration-500 ${
+                imageLoaded ? "opacity-100" : "opacity-0 absolute top-0 left-0"
+              }`}
+              loading="eager"
+              alt="system logo"
+              onLoad={() => setImageLoaded(true)}
+            />
+            {!imageLoaded && (
+              <div className="w-full h-[40px] bg-gray-200 animate-pulse rounded absolute top-0 left-0"></div>
+            )}
+          </>
+        )}
       </a>
       <div onClick={onCartClick} className="flex cursor-pointer -translate-y-1 group">
         <i className="fa-thin fa-bag-shopping cursor-pointer text-gray-600 mt-[15px] text-[30px] group-hover:text-[var(--primary-hover)] duration-200 "></i>

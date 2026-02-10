@@ -4,7 +4,10 @@ import {
   CreateBusinessSettingsDTO,
   UpdateBusinessSettingsDTO,
 } from '../../domain/entities/BusinessSettings';
-import { BusinessSettingsModel, BusinessSettingsDocument } from '../database/models/BusinessSettingsModel';
+import {
+  BusinessSettingsModel,
+  BusinessSettingsDocument,
+} from '../database/models/BusinessSettingsModel';
 import { NotFoundError } from '../../shared/errors/AppError';
 
 export class BusinessSettingsRepository implements IBusinessSettingsRepository {
@@ -30,6 +33,7 @@ export class BusinessSettingsRepository implements IBusinessSettingsRepository {
       isUnderMaintenance: document.isUnderMaintenance,
       maintenance: document.maintenance,
       footer_text: document.footer_text,
+      copyrightText: document.copyrightText,
       messages: document.messages,
       promoPopup: document.promoPopup,
       created_at: document.created_at,
@@ -75,4 +79,3 @@ export class BusinessSettingsRepository implements IBusinessSettingsRepository {
     }
   }
 }
-

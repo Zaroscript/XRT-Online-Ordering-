@@ -12,7 +12,6 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
       ref: 'Business',
       required: [true, 'Settings must belong to a business'],
       unique: true,
-      index: true,
     },
     operating_hours: {
       auto_close: {
@@ -109,6 +108,7 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
         title: { type: String, default: '' },
         subtitle: { type: String, default: '' },
         subtitleTwo: { type: String, default: '' },
+        offer: { type: String, default: '' },
         btnText: { type: String, default: '' },
         btnLink: { type: String, default: '' },
       },
@@ -163,6 +163,7 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
       contactUsTitle: { type: String, default: '' },
     },
     footer_text: { type: String, default: '' },
+    copyrightText: { type: String, default: '' },
     messages: {
       closed_message: { type: String, default: '' },
       not_accepting_orders_message: { type: String, default: '' },
@@ -203,8 +204,6 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
   }
 );
-
-BusinessSettingsSchema.index({ business: 1 });
 
 export const BusinessSettingsModel = mongoose.model<BusinessSettingsDocument>(
   'BusinessSettings',

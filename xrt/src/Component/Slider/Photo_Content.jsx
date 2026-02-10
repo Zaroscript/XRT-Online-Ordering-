@@ -62,7 +62,7 @@ export default function Content(props) {
         ) : null}
 
         {description ? (
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#ffb300] leading-tight">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
             {description}
           </h2>
         ) : null}
@@ -74,7 +74,7 @@ export default function Content(props) {
         ) : null}
 
         {offer ? (
-          <h3 className="text-2xl font-semibold text-[#ffb300]">
+          <h3 className="text-3xl font-bold text-[#ffb300]">
             {offer}
           </h3>
         ) : null}

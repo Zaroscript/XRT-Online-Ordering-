@@ -1,5 +1,9 @@
 {
   "form-title-permission": "Permission",
+  "form-title-unsaved-changes": "Unsaved Changes",
+  "form-description-unsaved-changes": "You have unsaved changes. Are you sure you want to leave?",
+  "button-label-stay": "Stay",
+  "button-label-leave": "Leave",
   "error-base-price-required": "Base price is required for non-sizeable items",
   
   "input-placeholder-modifier-group-name": "e.g., Toppings, Sizes, Extras",
@@ -424,6 +428,10 @@
   "error-expire-date-required": "You must set an expire date",
   "error-active-date-required": "You must set an active date",
   "error-color-required": "Color is required",
+  "Not Accepting Orders Message": "Not Accepting Orders Message",
+  "Message displayed when you are not accepting orders": "Message displayed when you are not accepting orders",
+  "Closed Message": "Closed Message",
+  "Message displayed when your restaurant is closed": "Message displayed when your restaurant is closed",
   "error-product-type-required": "Product type is required",
   "error-sku-required": "SKU is required",
   "error-price-must-number": "Price must be a number",

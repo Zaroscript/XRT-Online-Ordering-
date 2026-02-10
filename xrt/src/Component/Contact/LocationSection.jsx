@@ -1,4 +1,19 @@
+import { useSiteSettingsQuery } from "../../api";
+
 export default function LocationSection() {
+  const { data: settings } = useSiteSettingsQuery();
+  const contactDetails = settings?.contactDetails;
+  
+  const address = [
+    contactDetails?.location?.street_address,
+    contactDetails?.location?.city,
+    contactDetails?.location?.state,
+    contactDetails?.location?.zip, 
+    contactDetails?.location?.country
+  ].filter(Boolean).join(", ");
+
+  const encodedAddress = encodeURIComponent(address || "Franklin, MA");
+
   return (
     <section className="py-16 bg-white transition-colors duration-300 ">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,15 +38,15 @@ export default function LocationSection() {
         >
           <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] rounded-t-2xl overflow-hidden">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d23668.88642766028!2d-71.43857895000001!3d42.0827645!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e4b5d3c4b3b3b3%3A0x123456789abcdef!2sFranklin%2C%20MA%2002038!5e0!3m2!1sen!2sus!4v1703123456789"
+              src={`https://maps.google.com/maps?q=${encodedAddress}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
               width="100%"
               height="100%"
               style={{ border: 0 }}
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              aria-label="Interactive map showing XRT Tech Headquarters location in Franklin, MA 02038"
-              title="XRT Tech Headquarters Location - Franklin, MA 02038"
+              aria-label={`Interactive map showing location in ${address}`}
+              title={`Location - ${address}`}
               className="w-full h-full"
             />
             <noscript>
@@ -39,7 +54,7 @@ export default function LocationSection() {
                 <p className="text-gray-600 dark:text-gray-400 text-center px-4">
                   Interactive map requires JavaScript. Please enable JavaScript to view the map, or 
                   <a 
-                    href="https://maps.google.com?q=Franklin+MA+02038" 
+                    href={`https://maps.google.com?q=${encodedAddress}`}
                     className="text-secondary hover:underline ml-1"
                     target="_blank"
                     rel="noopener noreferrer"

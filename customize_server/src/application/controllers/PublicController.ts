@@ -67,6 +67,11 @@ export class PublicController {
       siteSubtitle: settings.siteSubtitle ?? '',
       logo: settings.logo ?? null,
       promoPopup: settings.promoPopup ?? null,
+      contactDetails: settings.contactDetails ?? null,
+      footer_text: settings.footer_text ?? '',
+      copyrightText: settings.copyrightText ?? 'Powered by XRT',
+      orders: settings.orders ?? null,
+      messages: settings.messages ?? null,
     };
 
     return sendSuccess(res, 'Site settings retrieved', publicSettings);

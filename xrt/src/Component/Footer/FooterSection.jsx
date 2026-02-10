@@ -1,11 +1,14 @@
-import React from "react";
+import { COLORS } from "../../config/colors";
 import { footer_image } from "../../config/constants";
 import Location from "./Location";
 import My_Account from './My_Account';
 import Categories from "./Categories_Footer";
 import Categories_2 from "./Categories_Footer_2";
 
+import { useSiteSettingsQuery } from "../../api/hooks/useSiteSettings";
+
 export default function FooterSection() {
+  const { data: settings } = useSiteSettingsQuery();
   return (
     <>
       <div
@@ -17,7 +20,12 @@ export default function FooterSection() {
           backgroundRepeat: "no-repeat",
         }}
       >
-        <div>
+        <div className="text-[#E1E1E1]">
+          {settings?.footer_text && (
+             <p className="mb-4 text-2xl font-medium leading-7" style={{ color: COLORS.offerYellow }}>
+               {settings?.footer_text}
+             </p>
+          )}
           <span className="font-bold text-[#FFA900] text-[17px] hidden">STORE LOCATION</span>
           <ul className="pt-2">
             <Location />
@@ -43,7 +51,13 @@ export default function FooterSection() {
         </div>
       </div>
       <div className="bg-[#315234] flex justify-between items-center h-[60px] px-[70px]">
-        <h2 className="text-[#E1E1E1] text-[16px]">Copyright © 2025 <a src="" className="text-[#559963] cursor-pointer">XRT</a>. All Rights Reserved.</h2>
+        <h2 className="text-[#E1E1E1] text-[16px]">
+          {(() => {
+            const text = settings?.copyrightText;
+            if (!text) return "Powered by XRT";
+            return text.includes("Powered by XRT") ? text : `${text} Powered by XRT`;
+          })()}
+        </h2>
         <img src={footer_image.pay} alt="" />
       </div>
     </>

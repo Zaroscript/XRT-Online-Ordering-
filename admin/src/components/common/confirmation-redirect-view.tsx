@@ -21,10 +21,10 @@ const ConfirmationRedirectView = () => {
     <ConfirmationCard
       onCancel={closeModal}
       onDelete={handleConfirm}
-      title="form:form-title-unsaved-changes"
-      description="form:form-description-unsaved-changes"
-      deleteBtnText="form:button-label-leave"
-      cancelBtnText="form:button-label-stay"
+      title="form-title-unsaved-changes"
+      description="form-description-unsaved-changes"
+      deleteBtnText="button-label-leave"
+      cancelBtnText="button-label-stay"
       deleteBtnClassName="!bg-accent hover:!bg-accent-hover focus:!bg-accent-hover"
       cancelBtnClassName="!bg-red-600 hover:!bg-red-700 focus:!bg-red-700"
       icon={

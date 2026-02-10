@@ -98,6 +98,7 @@ export interface BusinessSettings {
     contactUsTitle?: string;
   };
   footer_text?: string;
+  copyrightText?: string;
   messages?: {
     closed_message?: string;
     not_accepting_orders_message?: string;
@@ -139,6 +140,7 @@ export interface CreateBusinessSettingsDTO {
   isUnderMaintenance?: boolean;
   maintenance?: BusinessSettings['maintenance'];
   footer_text?: string;
+  copyrightText?: string;
   messages?: BusinessSettings['messages'];
   promoPopup?: BusinessSettings['promoPopup'];
 }
@@ -162,6 +164,7 @@ export interface UpdateBusinessSettingsDTO {
   isUnderMaintenance?: boolean;
   maintenance?: BusinessSettings['maintenance'];
   footer_text?: string;
+  copyrightText?: string;
   messages?: BusinessSettings['messages'];
   promoPopup?: BusinessSettings['promoPopup'];
 }
