@@ -21,6 +21,8 @@ export const transformModifierAssignment = (
   const modifierPricesBySizeAndQuantity =
     (values.modifier_assignment as any).modifier_prices_by_size_and_quantity ||
     {};
+  const modifierPricesByQuantity =
+    (values.modifier_assignment as any).modifier_prices_by_quantity || {};
   const pricingMode = (values.modifier_assignment as any).pricing_mode || {};
 
   if (selectedGroups.length === 0) return undefined;
@@ -127,13 +129,14 @@ export const transformModifierAssignment = (
           }
         }
 
-        // Build quantity_levels array
+        // Build quantity_levels array (Sizeable)
         if (
           hasQuantityPricing &&
           values.is_sizeable &&
           itemSizes &&
           itemSizes.length > 0
         ) {
+          // ... (existing sizeable logic) ...
           const qtyPriceData = modifierPricesBySizeAndQuantity[modifierId];
           const quantitiesDataMap = new Map<
             number,
@@ -189,7 +192,36 @@ export const transformModifierAssignment = (
                 quantity: quantity,
                 name: qtyLevel.name,
                 prices_by_size: pricesBySize,
-                // Note: We are NOT setting a base 'price' here anymore as it's size specific
+              });
+            }
+          });
+
+          if (quantityLevels.length > 0) {
+            override.quantity_levels = quantityLevels;
+          }
+        }
+        // Build quantity_levels array (Non-Sizeable)
+        else if (modifierPricesByQuantity[modifierId]) {
+          const qtyPrices = modifierPricesByQuantity[modifierId];
+          const quantityLevels: any[] = [];
+
+          Object.keys(qtyPrices).forEach((qty) => {
+            const price = qtyPrices[qty];
+            const quantity = Number(qty);
+            const qtyLevel = DEFAULT_QUANTITY_LEVELS.find(
+              (q) => q.quantity === quantity,
+            );
+
+            if (
+              qtyLevel &&
+              price !== undefined &&
+              price !== null &&
+              price !== ''
+            ) {
+              quantityLevels.push({
+                quantity: quantity,
+                name: qtyLevel.name,
+                price: Number(price),
               });
             }
           });

@@ -1,4 +1,5 @@
 import express, { Express } from 'express';
+import path from 'path';
 import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { connectDatabase } from './infrastructure/database/connection';
@@ -14,6 +15,7 @@ import authRoutes from './application/routes/auth.routes';
 import businessRoutes from './application/routes/business.routes';
 import categoryRoutes from './application/routes/category.routes';
 import settingsRoutes from './application/routes/settings.routes';
+import publicRoutes from './application/routes/public.routes';
 import roleRoutes from './application/routes/role.routes';
 import withdrawRoutes from './application/routes/withdraw.routes';
 import attachmentRoutes from './application/routes/attachment.routes';
@@ -33,6 +35,7 @@ import { logger } from './shared/utils/logger';
 import { specs } from './swagger';
 
 const app: Express = express();
+// Trigger restart for helmet config change
 
 // Database connection
 // Database connection will be established in startServer function
@@ -64,6 +67,9 @@ app.use(securityMiddleware);
 app.use(compressionMiddleware);
 app.use(rateLimitMiddleware);
 app.use(requestLogger);
+
+// Serve uploaded files (when using disk storage for attachments)
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -118,6 +124,7 @@ app.use(`${env.API_BASE_URL}/auth`, authRoutes);
 app.use(`${env.API_BASE_URL}/businesses`, businessRoutes);
 app.use(`${env.API_BASE_URL}/categories`, categoryRoutes);
 app.use(`${env.API_BASE_URL}/settings`, settingsRoutes);
+app.use(`${env.API_BASE_URL}/public`, publicRoutes);
 app.use(`${env.API_BASE_URL}/roles`, roleRoutes);
 app.use(`${env.API_BASE_URL}/permissions`, permissionRoutes);
 app.use(`${env.API_BASE_URL}/withdraws`, withdrawRoutes);

@@ -20,6 +20,9 @@ yarn-error.log*
 # Coverage
 coverage/
 
+# Local uploads (disk storage when Cloudinary not configured)
+uploads/
+
 # IDE
 .vscode/
 .idea/

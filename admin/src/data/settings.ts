@@ -9,7 +9,6 @@ import {
   getMaintenanceDetails,
   setMaintenanceDetails,
 } from '@/utils/maintenance-utils';
-import { mockSettings } from './mock-data';
 import { getAuthCredentials } from '@/utils/auth-utils';
 
 import { useRouter } from 'next/router';
@@ -23,7 +22,7 @@ export const useUpdateSettingsMutation = () => {
     mutationFn: (data: any) => settingsClient.update(data),
     onError: (error) => {},
     onSuccess: (data: any) => {
-      updateSettings(data?.options || data); // Handle flat response
+      updateSettings(data?.options || data);
       setMaintenanceDetails(
         data?.options?.maintenance?.isUnderMaintenance ||
           (data as any)?.maintenance?.isUnderMaintenance,
@@ -31,13 +30,17 @@ export const useUpdateSettingsMutation = () => {
       );
       toast.success(t('common:successfully-updated'));
     },
-    // Always refetch after error or success:
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.SETTINGS] });
     },
   });
 };
 
+/**
+ * Fetches settings from the custom server (GET /settings).
+ * No mock or placeholder data - only real data from the database.
+ * Requires token; when disabled, settings is undefined.
+ */
 export const useSettingsQuery = ({ language }: { language: string }) => {
   const { query } = useRouter();
   const { token } = getAuthCredentials();
@@ -51,14 +54,11 @@ export const useSettingsQuery = ({ language }: { language: string }) => {
     queryFn: () => settingsClient.all({ language }),
     retry: false,
     refetchOnWindowFocus: false,
-    enabled: !!token, // Only fetch settings when authenticated
-    // Return mock settings if query fails or is disabled
-    placeholderData: mockSettings as any,
+    enabled: !!token,
   });
-  const settings = data || (!isLoading && !token ? mockSettings : null);
 
   return {
-    settings: settings as Settings | undefined,
+    settings: (data ?? null) as Settings | undefined | null,
     error:
       error &&
       (error as any)?.response?.status !== 401 &&

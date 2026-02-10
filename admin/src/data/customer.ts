@@ -1,6 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_ENDPOINTS } from './client/api-endpoints';
-import { CustomerPaginator, Customer, MappedPaginatorInfo, SortOrder } from '@/types';
+import {
+  CustomerPaginator,
+  Customer,
+  MappedPaginatorInfo,
+  SortOrder,
+} from '@/types';
 import { customerClient } from './client/customer';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'next-i18next';
@@ -20,17 +25,26 @@ export const useCustomersQuery = ({
   sortedBy?: 'DESC' | 'ASC';
   isActive?: boolean;
 }) => {
-  const { data, error, isPending: isLoading } = useQuery<any, Error>({
-    queryKey: [API_ENDPOINTS.CUSTOMERS, { limit, page, search, orderBy, sortedBy, isActive }],
-    queryFn: () => customerClient.fetchCustomers({
-      limit,
-      page,
-      search,
-      orderBy,
-      sortedBy: sortedBy.toLowerCase() as SortOrder,
-      isActive,
-    }),
-    placeholderData: (previousData: CustomerPaginator | undefined) => previousData,
+  const {
+    data,
+    error,
+    isPending: isLoading,
+  } = useQuery<any, Error>({
+    queryKey: [
+      API_ENDPOINTS.CUSTOMERS,
+      { limit, page, search, orderBy, sortedBy, isActive },
+    ],
+    queryFn: () =>
+      customerClient.fetchCustomers({
+        limit,
+        page,
+        search,
+        orderBy,
+        sortedBy: sortedBy.toLowerCase() as SortOrder,
+        isActive,
+      }),
+    placeholderData: (previousData: CustomerPaginator | undefined) =>
+      previousData,
     staleTime: 60 * 1000, // 1 minute
   });
 
@@ -66,7 +80,7 @@ export const useCustomersQuery = ({
     data: transformedData,
     error,
     isLoading,
-    refetch: () => { },
+    refetch: () => {},
   };
 };
 
@@ -79,8 +93,7 @@ export const useCustomerQuery = (id: string) => {
       // Handle backend response format
       return data?.data?.customer || data?.data || data;
     },
-  },
-  );
+  });
 };
 
 export const useCreateCustomerMutation = () => {
@@ -106,7 +119,8 @@ export const useUpdateCustomerMutation = () => {
   const { t } = useTranslation();
 
   return useMutation<any, Error, { id: string; variables: any }>({
-    mutationFn: ({ id, variables }) => customerClient.update({ id, input: variables }),
+    mutationFn: ({ id, variables }) =>
+      customerClient.update({ id, input: variables }),
     onSuccess: () => {
       toast.success(t('common:successfully-updated'));
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.CUSTOMERS] });
@@ -139,11 +153,7 @@ export const useImportCustomersMutation = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
-  return useMutation<
-    any,
-    Error,
-    { customers: any[] }
-  >({
+  return useMutation<any, Error, { customers: any[] }>({
     mutationFn: async (variables) => {
       // Import customers by creating them one by one (can be optimized later)
       const results = [];
@@ -157,9 +167,7 @@ export const useImportCustomersMutation = () => {
             notes: customer.notes,
           });
           results.push(result);
-        } catch (error) {
-          console.error('Failed to import customer:', customer, error);
-        }
+        } catch (error) {}
       }
       return { imported: results.length, data: results };
     },
@@ -175,11 +183,7 @@ export const useImportCustomersMutation = () => {
 export const useExportCustomersMutation = () => {
   const { t } = useTranslation();
 
-  return useMutation<
-    any,
-    Error,
-    { format?: string }
-  >({
+  return useMutation<any, Error, { format?: string }>({
     mutationFn: async (variables) => {
       // Fetch all customers
       const response = await customerClient.fetchCustomers({
@@ -199,7 +203,9 @@ export const useExportCustomersMutation = () => {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map((row: string[]) => row.map((cell: string) => `"${cell}"`).join(','))
+        ...rows.map((row: string[]) =>
+          row.map((cell: string) => `"${cell}"`).join(','),
+        ),
       ].join('\n');
 
       // Return as blob-like object
@@ -210,4 +216,3 @@ export const useExportCustomersMutation = () => {
     },
   });
 };
-

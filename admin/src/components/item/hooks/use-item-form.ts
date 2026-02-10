@@ -117,6 +117,7 @@ export const transformInitialModifierAssignment = (
   const defaultModifierIds: string[] = [];
   const pricingData: any = {
     modifier_prices: {},
+    modifier_prices_by_quantity: {},
     modifier_prices_by_size: {},
     modifier_prices_by_size_and_quantity: {},
     pricing_mode: {},
@@ -194,7 +195,16 @@ export const transformInitialModifierAssignment = (
                 }
               });
             }
-            // Handle legacy structure (if any) or fallback
+            // Handle direct price usage (non-sizeable quantity pricing)
+            else if (qtyLevel.price !== undefined) {
+              if (!pricingData.modifier_prices_by_quantity[modifierId]) {
+                pricingData.modifier_prices_by_quantity[modifierId] = {};
+              }
+              pricingData.modifier_prices_by_quantity[modifierId][
+                qtyLevel.quantity
+              ] = qtyLevel.price;
+            }
+            // Handle legacy structure/fallback (only if needed, but prioritize direct price)
             else {
               const sizeCode = qtyLevel.sizeCode || 'M'; // Fallback
               if (!qtyPrices[sizeCode]) {
@@ -227,6 +237,7 @@ export const transformInitialModifierAssignment = (
     assignment_scope: 'ITEM' as const,
     modifier_prices: pricingData.modifier_prices,
     modifier_prices_by_size: pricingData.modifier_prices_by_size,
+    modifier_prices_by_quantity: pricingData.modifier_prices_by_quantity,
     modifier_prices_by_size_and_quantity:
       pricingData.modifier_prices_by_size_and_quantity,
     pricing_mode: pricingData.pricing_mode,

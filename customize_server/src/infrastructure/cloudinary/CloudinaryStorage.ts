@@ -42,6 +42,8 @@ export const storage = createCloudinaryStorage({
         'tags',
         'users',
         'auth',
+        'attachments',
+        'settings',
       ];
       section = pathSegments.find((segment: string) => knownEntities.includes(segment)) || 'misc';
     }
@@ -60,6 +62,8 @@ export const storage = createCloudinaryStorage({
       folder += '/icons';
     } else if (fieldName === 'gallery') {
       folder += '/gallery';
+    } else if (typeof fieldName === 'string' && fieldName.includes('heroSlides')) {
+      folder += '/hero-slides';
     }
 
     // Use 'auto' to let Cloudinary automatically detect the resource type

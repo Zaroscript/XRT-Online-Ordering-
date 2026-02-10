@@ -1,26 +1,37 @@
 import * as yup from 'yup';
 
 export const shopValidationSchema = yup.object().shape({
+  contactDetails: yup.object().shape({
+    location: yup.object().optional(),
+    contact: yup.string().required('form:error-contact-required'),
+    website: yup.string().optional(),
+    emailAddress: yup.string().email('form:error-email-format').optional(),
+  }),
+
   deliveryTime: yup
     .array()
     .min(1, 'form:error-add-at-least-one-delivery-time')
     .of(
       yup.object().shape({
         title: yup.string().required('form:error-title-required'),
-      })
+      }),
     ),
   orders: yup.object().shape({
     allowScheduleOrder: yup.boolean(),
-    maxDays: yup.number().when('allowScheduleOrder', ([allowScheduleOrder], schema) => {
-      return allowScheduleOrder
-        ? schema.min(0, 'Must be positive').required('Required')
-        : schema.nullable();
-    }),
-    deliveredOrderTime: yup.number().when('allowScheduleOrder', ([allowScheduleOrder], schema) => {
-      return allowScheduleOrder
-        ? schema.min(0, 'Must be positive').required('Required')
-        : schema.nullable();
-    }),
+    maxDays: yup
+      .number()
+      .when('allowScheduleOrder', ([allowScheduleOrder], schema) => {
+        return allowScheduleOrder
+          ? schema.min(0, 'Must be positive').required('Required')
+          : schema.nullable();
+      }),
+    deliveredOrderTime: yup
+      .number()
+      .when('allowScheduleOrder', ([allowScheduleOrder], schema) => {
+        return allowScheduleOrder
+          ? schema.min(0, 'Must be positive').required('Required')
+          : schema.nullable();
+      }),
   }),
   delivery: yup.object().shape({
     enabled: yup.boolean(),
@@ -44,7 +55,7 @@ export const shopValidationSchema = yup.object().shape({
         open_time: yup.string().required('Required'),
         close_time: yup.string().required('Required'),
         is_closed: yup.boolean(),
-      })
+      }),
     ),
   }),
 });

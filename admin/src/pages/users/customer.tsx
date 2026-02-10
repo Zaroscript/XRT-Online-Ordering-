@@ -66,21 +66,21 @@ export default function CustomersPage() {
   const customers = customerData?.data || [];
   const paginatorInfo: MappedPaginatorInfo | null = customerData
     ? {
-      currentPage: customerData.current_page || page,
-      total: customerData.total || 0,
-      perPage: customerData.per_page || 20,
-      lastPage: customerData.last_page || 1,
-      hasMorePages:
-        (customerData.current_page || page) < (customerData.last_page || 1),
-      firstPageUrl: '',
-      from: 0,
-      lastPageUrl: '',
-      links: [],
-      nextPageUrl: null,
-      path: '',
-      prevPageUrl: null,
-      to: 0,
-    }
+        currentPage: customerData.current_page || page,
+        total: customerData.total || 0,
+        perPage: customerData.per_page || 20,
+        lastPage: customerData.last_page || 1,
+        hasMorePages:
+          (customerData.current_page || page) < (customerData.last_page || 1),
+        firstPageUrl: '',
+        from: 0,
+        lastPageUrl: '',
+        links: [],
+        nextPageUrl: null,
+        path: '',
+        prevPageUrl: null,
+        to: 0,
+      }
     : null;
 
   const importMutation = useImportCustomersMutation();
@@ -258,7 +258,6 @@ export default function CustomersPage() {
               );
             }
           } catch (err) {
-            console.error('Export processing error:', err);
             toast.error('Failed to process export data');
           }
         },

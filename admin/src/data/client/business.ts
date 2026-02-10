@@ -33,31 +33,40 @@ export interface UpdateBusinessInput extends Partial<CreateBusinessInput> {
   isActive?: boolean;
 }
 
+/**
+ * Single-tenant: one business only. GET returns { data: { business } }, no :id in paths.
+ */
 export const businessClient = {
+  /** Returns the single business as an array of one (for compatibility with list UIs) */
   getAll: async () => {
     const response = await HttpClient.get<any>(API_ENDPOINTS.BUSINESSES);
-    // Handle backend response format: { success: true, data: { businesses: [...] } }
-    return response?.data?.businesses || response?.data || response || [];
+    const data = response?.data?.data ?? response?.data;
+    const business = data?.business;
+    return Array.isArray(business) ? business : business ? [business] : [];
   },
-  get: async ({ id }: { id: string }) => {
-    const response = await HttpClient.get<any>(`${API_ENDPOINTS.BUSINESSES}/${id}`);
-    // Handle backend response format: { success: true, data: { business: {...} } }
-    return response?.data?.business || response?.data || response;
+  /** Returns the single business (id param ignored in single-tenant) */
+  get: async ({ id: _id }: { id: string }) => {
+    const response = await HttpClient.get<any>(API_ENDPOINTS.BUSINESSES);
+    const data = response?.data?.data ?? response?.data;
+    return data?.business ?? data ?? null;
   },
-  create: async (input: CreateBusinessInput) => {
-    const response = await HttpClient.post<any>(API_ENDPOINTS.BUSINESSES, input);
-    return response?.data?.business || response?.data || response;
+  /** Single-tenant: creating is disabled; this just returns the existing business (for UI compatibility) */
+  create: async (_input: CreateBusinessInput) => {
+    const response = await HttpClient.get<any>(API_ENDPOINTS.BUSINESSES);
+    const data = response?.data?.data ?? response?.data;
+    return data?.business ?? data ?? null;
   },
-  update: async ({ id, ...input }: UpdateBusinessInput & { id: string }) => {
-    const response = await HttpClient.patch<any>(
-      `${API_ENDPOINTS.BUSINESSES}/${id}`,
-      input
+  /** Updates the single business (no :id in URL) */
+  update: async ({ id: _id, ...input }: UpdateBusinessInput & { id: string }) => {
+    const response = await HttpClient.patch<any>(API_ENDPOINTS.BUSINESSES, input);
+    const data = response?.data?.data ?? response?.data;
+    return data?.business ?? data ?? null;
+  },
+  /** Single-tenant: deleting the only business is disabled */
+  delete: async (_params: { id: string }) => {
+    return Promise.reject(
+      new Error('Single-tenant: you cannot delete the only business.')
     );
-    return response?.data?.business || response?.data || response;
-  },
-  delete: async ({ id }: { id: string }) => {
-    const response = await HttpClient.delete<any>(`${API_ENDPOINTS.BUSINESSES}/${id}`);
-    return response?.data || response;
   },
 };
 

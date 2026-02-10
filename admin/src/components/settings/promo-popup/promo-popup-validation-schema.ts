@@ -7,12 +7,12 @@ export const promoPopupValidationSchema = yup.object().shape({
       yup.object().shape({
         title: yup.string().required('form:error-title-required'),
         description: yup.string().required('form:error-description-required'),
-        popUpDelay: yup
+        popupDelay: yup
           .number()
           .transform((value) => (isNaN(value) ? undefined : value))
-          .min(1000, 'form:error-popup-delay-min')
+          .min(0, 'form:error-popup-delay-min')
           .required('form:error-popup-delay'),
-        popUpExpiredIn: yup
+        popupExpiredIn: yup
           .number()
           .transform((value) => (isNaN(value) ? undefined : value))
           .min(1, 'form:error-popup-expired-min')
@@ -23,18 +23,7 @@ export const promoPopupValidationSchema = yup.object().shape({
           }
           return false;
         }),
-        popUpNotShow: yup.object().when('isPopUpNotShow', {
-          is: (value: boolean) => value,
-          then: () =>
-            yup.object().shape({
-              title: yup.string().required('form:error-title-required'),
-              popUpExpiredIn: yup
-                .number()
-                .transform((value) => (isNaN(value) ? undefined : value))
-                .min(1, 'form:error-popup-expired-min')
-                .required('form:error-popup-expired'),
-            }),
-        }),
+        isNotShowAgain: yup.boolean(),
       }),
   }),
 });

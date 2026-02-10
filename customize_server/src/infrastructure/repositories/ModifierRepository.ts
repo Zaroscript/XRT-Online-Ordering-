@@ -12,7 +12,7 @@ import { ModifierModel, ModifierDocument } from '../database/models/ModifierMode
 import { NotFoundError } from '../../shared/errors/AppError';
 
 export class ModifierRepository implements IModifierRepository {
-  private toDomain(document: ModifierDocument): Modifier {
+  public toDomain(document: ModifierDocument): Modifier {
     return {
       id: document._id.toString(),
       modifier_group_id: (document.modifier_group_id as any)._id
@@ -57,7 +57,7 @@ export class ModifierRepository implements IModifierRepository {
     if (modifier_group_id) {
       query.modifier_group_id = modifier_group_id;
     }
-    const modifierDoc = await ModifierModel.findOne(query);
+    const modifierDoc = await ModifierModel.findOne(query).populate('modifier_group_id', 'name');
     return modifierDoc ? this.toDomain(modifierDoc) : null;
   }
 
@@ -66,7 +66,7 @@ export class ModifierRepository implements IModifierRepository {
     if (modifier_group_id) {
       query.modifier_group_id = modifier_group_id;
     }
-    const modifierDoc = await ModifierModel.findOne(query);
+    const modifierDoc = await ModifierModel.findOne(query).populate('modifier_group_id', 'name');
     return modifierDoc ? this.toDomain(modifierDoc) : null;
   }
 

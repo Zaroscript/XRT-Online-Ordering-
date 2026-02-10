@@ -21,13 +21,6 @@ export default function FilePreview({
       {files.map((file, idx) => {
         const isImage = isImageFile(file);
         const { filename, fileType } = extractFileInfo(file);
-        console.log(`FilePreview [${idx}]:`, {
-          filename,
-          fileType,
-          isImage,
-          thumbnail: file.thumbnail,
-          original: file.original,
-        });
 
         return (
           <div

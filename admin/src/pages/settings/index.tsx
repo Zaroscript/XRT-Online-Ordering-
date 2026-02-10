@@ -28,6 +28,10 @@ export default function Settings() {
   if (loading || shippingLoading || taxLoading)
     return <Loader text={t('common:text-loading')} />;
   if (error) return <ErrorMessage message={error.message} />;
+  if (!settings)
+    return (
+      <ErrorMessage message={t('common:error-load-data') ?? 'Failed to load settings from server.'} />
+    );
 
   return (
     <>

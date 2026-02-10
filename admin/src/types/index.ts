@@ -527,14 +527,13 @@ export interface UpdateUser {
   address?: UserAddressUpsertInput[];
   role?: string;
   customRole?: string;
-  permissions?: string[];
 }
-
-export interface Profile {
+  export interface Profile {
   id: string;
   avatar?: Attachment;
   bio?: string;
   contact?: string;
+  emailAddress?: string;
   socials?: Social[];
   customer?: User;
 }
@@ -1415,6 +1414,7 @@ export interface HeroSlide {
   bgImage?: AttachmentInput;
   title: string;
   subtitle: string;
+  subtitleTwo?: string;
   btnText: string;
   btnLink: string;
 }

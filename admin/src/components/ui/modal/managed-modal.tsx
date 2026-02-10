@@ -232,8 +232,19 @@ const ViewDetailsModal = dynamic(
   () => import('@/components/common/view-details-modal'),
 );
 
+const ConfirmationRedirectView = dynamic(
+  () => import('@/components/common/confirmation-redirect-view'),
+);
+const ConfirmationModalView = dynamic(
+  () => import('@/components/common/confirmation-modal-view'),
+);
+
 function renderModal(view: MODAL_VIEWS | undefined, data: any) {
   switch (view) {
+    case 'CONFIRM_ACTION':
+      return <ConfirmationModalView />;
+    case 'CONFIRM_REDIRECT':
+      return <ConfirmationRedirectView />;
     case 'DELETE_PRODUCT':
       return <ProductDeleteView />;
     case 'DELETE_TYPE':

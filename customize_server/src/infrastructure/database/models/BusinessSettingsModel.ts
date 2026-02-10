@@ -100,6 +100,7 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
         },
       ],
       website: { type: String, default: '' },
+      emailAddress: { type: String, default: '' },
     },
     currency: { type: String, default: 'USD' },
     heroSlides: [
@@ -107,6 +108,7 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
         bgImage: { type: Object, default: {} },
         title: { type: String, default: '' },
         subtitle: { type: String, default: '' },
+        subtitleTwo: { type: String, default: '' },
         btnText: { type: String, default: '' },
         btnLink: { type: String, default: '' },
       },
@@ -208,4 +210,3 @@ export const BusinessSettingsModel = mongoose.model<BusinessSettingsDocument>(
   'BusinessSettings',
   BusinessSettingsSchema
 );
-

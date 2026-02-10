@@ -16,7 +16,12 @@ export class ItemRepository implements IItemRepository {
         ? document.sizes
             .filter((s: any) => s && s.size_id) // Filter out invalid entries
             .map((s: any) => ({
-              size_id: s.size_id.toString(),
+              size_id:
+                typeof s.size_id === 'string'
+                  ? s.size_id
+                  : (s.size_id?._id || s.size_id).toString(),
+              name: s.size_id && typeof s.size_id === 'object' ? s.size_id.name : undefined,
+              code: s.size_id && typeof s.size_id === 'object' ? s.size_id.code : undefined,
               price: s.price,
               is_default: s.is_default,
               is_active: s.is_active,
@@ -76,7 +81,7 @@ export class ItemRepository implements IItemRepository {
             const groupModifiers = allModifiers
               .filter((m: any) => {
                 const mGroupId =
-                  typeof m.modifier_group_id === 'object'
+                  typeof m.modifier_group_id === 'object' && m.modifier_group_id._id
                     ? m.modifier_group_id._id.toString()
                     : m.modifier_group_id.toString();
                 return mGroupId === groupId;
@@ -140,6 +145,7 @@ export class ItemRepository implements IItemRepository {
     const query: any = { _id: id };
     const itemDoc = await ItemModel.findOne(query)
       .populate('category_id')
+      .populate('sizes.size_id')
       .populate('default_size_id')
       .populate('modifier_groups.modifier_group_id')
       .populate('modifier_groups.modifier_overrides.modifier_id');
@@ -198,7 +204,9 @@ export class ItemRepository implements IItemRepository {
         .sort({ [orderBy]: sortedBy })
         .skip(skip)
         .limit(limit)
+        .limit(limit)
         .populate('category_id')
+        .populate('sizes.size_id')
         .populate('default_size_id')
         .populate('modifier_groups.modifier_group_id')
         .populate('modifier_groups.modifier_overrides.modifier_id'),
@@ -243,6 +251,7 @@ export class ItemRepository implements IItemRepository {
       runValidators: true,
     })
       .populate('category_id')
+      .populate('sizes.size_id')
       .populate('default_size_id')
       .populate('modifier_groups.modifier_group_id')
       .populate('modifier_groups.modifier_overrides.modifier_id');

@@ -566,18 +566,42 @@ export default function CreateOrUpdateModifierForm({
                         {t('form:no-quantity-levels')}
                       </p>
                     ) : (
-                      <div className="space-y-4">
-                        {quantityLevelFields.map((field, index) => (
-                          <QuantityLevelField
-                            key={field.id}
-                            index={index}
-                            remove={() => removeQuantityLevel(index)}
-                            control={control}
-                            errors={errors}
-                            globalSizes={itemSizes}
-                          />
-                        ))}
-                      </div>
+                      <>
+                        {/* Desktop Header Row */}
+                        <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-4 py-3 bg-gray-100/50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider rounded-t-lg">
+                          <div className="lg:col-span-1">
+                            {t('form:input-label-quantity') || 'Quantity'}
+                          </div>
+                          <div className="lg:col-span-4">
+                            {t('form:input-label-name') || 'Name'}
+                          </div>
+                          <div className="lg:col-span-1">
+                            {t('form:input-label-display-order') || 'Order'}
+                          </div>
+                          <div className="lg:col-span-2 text-center">
+                            {t('form:input-label-price') || 'Price'}
+                          </div>
+                          <div className="lg:col-span-3 text-center">
+                            {t('form:input-label-settings') || 'Settings'}
+                          </div>
+                          <div className="lg:col-span-1 text-end">
+                            {t('form:input-label-actions') || 'Actions'}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4 lg:space-y-0 lg:border lg:border-gray-200 lg:border-t-0 lg:rounded-b-lg lg:divide-y lg:divide-gray-100 mb-6">
+                          {quantityLevelFields.map((field, index) => (
+                            <QuantityLevelField
+                              key={field.id}
+                              index={index}
+                              remove={() => removeQuantityLevel(index)}
+                              control={control}
+                              errors={errors}
+                              globalSizes={itemSizes}
+                            />
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 )}

@@ -48,6 +48,7 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
     resolver: yupResolver(promoPopupValidationSchema),
     defaultValues: {
       ...options,
+      isPromoPopUp: options?.promoPopup?.isEnable ?? false,
     },
   });
 
@@ -57,6 +58,11 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
       options: {
         ...options,
         ...values,
+        promoPopup: {
+          ...options?.promoPopup,
+          ...values.promoPopup,
+          isEnable: values.isPromoPopUp,
+        },
       },
     });
     reset(values, { keepValues: true });
@@ -72,7 +78,7 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
 
   const isPromoPopUp = watch('isPromoPopUp');
 
-  const isPopUpNotShow = watch('promoPopup.isPopUpNotShow');
+  const isNotShowAgain = watch('promoPopup.isNotShowAgain');
 
   return (
     <form onSubmit={handleSubmit(onSubmit as any)}>
@@ -163,8 +169,8 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
           <Input
             label={t('form:title-popup-delay')}
             toolTipText={t('form:input-tooltip-promo-delay')}
-            {...register('promoPopup.popUpDelay')}
-            error={t(errors?.promoPopup?.popUpDelay?.message!)}
+            {...register('promoPopup.popupDelay')}
+            error={t(errors?.promoPopup?.popupDelay?.message!)}
             variant="outline"
             className="mb-5"
             type="number"
@@ -177,8 +183,8 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
           <Input
             label={t('form:title-popup-expired-in')}
             toolTipText={t('form:input-tooltip-promo-expired')}
-            {...register('promoPopup.popUpExpiredIn')}
-            error={t(errors?.promoPopup?.popUpExpiredIn?.message!)}
+            {...register('promoPopup.popupExpiredIn')}
+            error={t(errors?.promoPopup?.popupExpiredIn?.message!)}
             variant="outline"
             className="mb-5"
             type="number"
@@ -191,43 +197,14 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
           />
           <div className="mb-5">
             <SwitchInput
-              name="promoPopup.isPopUpNotShow"
+              name="promoPopup.isNotShowAgain"
               disabled={!isPromoPopUp}
               control={control}
               label={t('form:title-popup-checkbox')}
               toolTipText={t('form:input-tooltip-promo-not-show')}
-              error={t(errors?.promoPopup?.isPopUpNotShow?.message)}
+              error={t(errors?.promoPopup?.isNotShowAgain?.message)}
             />
           </div>
-          <Input
-            label={t('form:input-label-title')}
-            toolTipText={t('form:input-tooltip-promo-not-show-title')}
-            {...register('promoPopup.popUpNotShow.title')}
-            error={t(errors?.promoPopup?.popUpNotShow?.title?.message)}
-            variant="outline"
-            className="mb-5"
-            {...(isPromoPopUp &&
-              isPopUpNotShow && {
-              required: true,
-            })}
-            disabled={!isPromoPopUp || !isPopUpNotShow}
-          />
-          <Input
-            label={t('form:title-popup-expired-in')}
-            toolTipText={t('form:input-tooltip-promo-not-show-expired')}
-            {...register('promoPopup.popUpNotShow.popUpExpiredIn')}
-            error={t(errors?.promoPopup?.popUpNotShow?.popUpExpiredIn?.message)}
-            variant="outline"
-            className="mb-5"
-            type="number"
-            {...(isPromoPopUp &&
-              isPopUpNotShow && {
-              required: true,
-            })}
-            disabled={!isPromoPopUp || !isPopUpNotShow}
-            min="1"
-            note={t('form:title-popup-expired-in-info')}
-          />
         </Card>
       </div>
 

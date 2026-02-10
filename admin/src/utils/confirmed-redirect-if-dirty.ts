@@ -1,5 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useModalAction } from '@/components/ui/modal/modal.context';
 import { useRouter } from 'next/router';
+import { useCallback, useEffect, useRef } from 'react';
 
 interface ConfirmRedirectIfDirtyProps {
   isDirty: boolean;
@@ -11,6 +12,7 @@ export function useConfirmRedirectIfDirty({
   message = 'You have unsaved changes - are you sure you wish to leave this page?',
 }: ConfirmRedirectIfDirtyProps) {
   const router = useRouter();
+  const { openModal } = useModalAction();
   // use refs to store the values
   const isDirtyRef = useRef(isDirty);
   const messageRef = useRef(message);
@@ -31,12 +33,21 @@ export function useConfirmRedirectIfDirty({
     return (e.returnValue = messageRef.current);
   }, []);
 
-  const handleBrowseAway = useCallback(() => {
-    if (!isDirtyRef.current) return;
-    if (window.confirm(messageRef.current)) return;
-    router.events.emit('routeChangeError');
-    throw 'routeChange aborted.';
-  }, []);
+  const handleBrowseAway = useCallback(
+    (url: string) => {
+      if (!isDirtyRef.current) return;
+      openModal('CONFIRM_REDIRECT', {
+        onConfirm: async () => {
+          isDirtyRef.current = false;
+          await router.push(url);
+        },
+      });
+      router.events.emit('routeChangeError');
+      throw 'routeChange aborted.';
+    },
+    [router, openModal],
+  );
+  // ...
 
   // use the memoized functions as dependencies
   useEffect(() => {

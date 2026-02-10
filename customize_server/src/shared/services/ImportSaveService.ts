@@ -183,6 +183,7 @@ export class ImportSaveService {
             prices_by_size: groupData.prices_by_size
               ?.map((p) => ({
                 size_id: sizeCodeToId.get(p.sizeCode)!,
+                sizeCode: p.sizeCode,
                 priceDelta: p.priceDelta,
               }))
               .filter((p) => p.size_id),
@@ -201,6 +202,7 @@ export class ImportSaveService {
             prices_by_size: groupData.prices_by_size
               ?.map((p) => ({
                 size_id: sizeCodeToId.get(p.sizeCode)!,
+                sizeCode: p.sizeCode,
                 priceDelta: p.priceDelta,
               }))
               .filter((p) => p.size_id),
@@ -409,6 +411,7 @@ export class ImportSaveService {
 
                 return {
                   modifier_id: modifierId,
+                  sizeCode: override.sizeCode,
                   prices_by_size: override.prices_by_size,
                   quantity_levels: override.quantity_levels,
                 };

@@ -1,5 +1,6 @@
 import { BecomeSellerFormProps } from '@/components/become-seller/type';
 import Card from '@/components/common/card';
+import { useModalAction } from '@/components/ui/modal/modal.context';
 import Accordion from '@/components/ui/accordion';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
@@ -21,6 +22,7 @@ const UserStory = ({
   watch,
 }: BecomeSellerFormProps) => {
   const { t } = useTranslation();
+  const { openModal } = useModalAction();
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'page_options.userStories',
@@ -142,13 +144,13 @@ const UserStory = ({
                     </div>
                     <div className="sm:col-span-1 sm:mt-4 sm:text-right">
                       <button
-                        onClick={() => {
-                          if (
-                            window.confirm(t('form:remove-item-confirmation'))
-                          ) {
-                            remove(index);
-                          }
-                        }}
+                        onClick={() =>
+                          openModal('CONFIRM_ACTION', {
+                            title: t('form:remove-item-confirmation'),
+                            description: t('form:remove-item-confirmation'),
+                            onConfirm: () => remove(index),
+                          })
+                        }
                         type="button"
                         className="text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none"
                       >

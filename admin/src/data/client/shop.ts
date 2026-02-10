@@ -79,12 +79,11 @@ export const shopClient = {
     if ((input as any).description) businessInput.description = (input as any).description;
     if ((input as any).website) businessInput.website = (input as any).website;
     if ((input as any).is_active !== undefined) businessInput.isActive = (input as any).is_active;
-    
     const business = await businessClient.update({ id, ...businessInput });
     return {
       ...business,
-      slug: business.id,
-      is_active: business.isActive,
+      slug: business?.id ?? id,
+      is_active: business?.isActive ?? true,
     };
   },
   delete: async ({ id }: { id: string }) => {

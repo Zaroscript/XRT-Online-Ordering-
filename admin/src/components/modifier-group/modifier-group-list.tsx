@@ -128,7 +128,6 @@ const ModifierGroupList = ({
       toast.success(t('common:successfully-updated'));
     },
     onError: (error) => {
-      console.error('Failed to update sort order', error);
       toast.error(t('common:update-failed'));
     },
   });

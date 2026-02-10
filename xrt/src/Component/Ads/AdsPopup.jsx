@@ -1,26 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { adsPopup } from '../../config/constants';
+import { useSiteSettingsQuery } from '@/api';
+import { API_BASE_URL } from '@/config/api';
+
+/** Resolve image URL */
+function resolveImageUrl(url) {
+  if (!url || typeof url !== "string") return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  const base = API_BASE_URL.replace(/\/api\/v\d+$/, ""); // server origin
+  return url.startsWith("/") ? `${base}${url}` : `${base}/${url}`;
+}
 
 const AdsPopup = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { data, isLoading } = useSiteSettingsQuery();
+  const settings = data?.promoPopup;
 
   useEffect(() => {
-    // Check if configuration allows viewing
-    if (!adsPopup.view) return;
+    if (isLoading || !settings) return;
 
-    // Check if already seen in this session
+    // Check if configuration allows viewing
+    if (!settings.isEnable) return;
+
+    // Check if already seen in this session (or handled via cookie/local storage if isNotShowAgain is true)
+    // For now, adhering to session storage request
     const hasSeen = sessionStorage.getItem('hasSeenAdsPopup');
     if (!hasSeen) {
-      setIsOpen(true);
-      sessionStorage.setItem('hasSeenAdsPopup', 'true');
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+        sessionStorage.setItem('hasSeenAdsPopup', 'true');
+      }, (settings.popupDelay || 0) * 1000);
+      
+      return () => clearTimeout(timer);
     }
-  }, []);
+  }, [settings, isLoading]);
 
   const handleClose = () => {
     setIsOpen(false);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !settings) return null;
+
+  const imageUrl = settings.image ? resolveImageUrl(settings.image.original || settings.image.thumbnail || settings.image) : '';
 
   return (
     <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-[10000] p-4 animate-fade-in" onClick={handleClose}>
@@ -37,9 +57,9 @@ const AdsPopup = () => {
         </button>
         
         <div className="mt-6">
-          {adsPopup.image ? (
+          {imageUrl ? (
             <img 
-              src={adsPopup.image} 
+              src={imageUrl} 
               alt="Promotion" 
               className="w-full max-h-[300px] object-cover rounded-xl mb-4 shadow-sm" 
             />
@@ -50,8 +70,8 @@ const AdsPopup = () => {
           )}
           
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-3 text-gray-800">{adsPopup.title}</h2>
-            <p className="text-gray-600 leading-relaxed text-base">{adsPopup.description}</p>
+            <h2 className="text-2xl font-bold mb-3 text-gray-800">{settings.title}</h2>
+            <p className="text-gray-600 leading-relaxed text-base">{settings.description}</p>
           </div>
         </div>
       </div>

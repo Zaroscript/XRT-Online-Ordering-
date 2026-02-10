@@ -1,4 +1,4 @@
-{
+  {
   "text-guest": "Guest",
   "text-sizes": "Sizes",
   "text-read-more": "Read more",
@@ -741,5 +741,16 @@
   "row-has-warnings": "This row has warnings",
   "import-error-locations": "Where to fix",
   "row": "Row",
-  "go-to-tab": "Go to tab"
+  "go-to-tab": "Go to tab",
+  "Main": "Main",
+  "Price Updates": "Price Updates",
+  "Import / Export": "Import / Export",
+  "Become a seller Page": "Become a seller Page",
+  "Roles": "Roles",
+  "Vendor requests": "Vendor requests",
+  "Social Settings": "Social Settings",
+  "Loading...": "Loading...",
+  "Request failed with status code 500": "Request failed with status code 500",
+  "clear-history": "Clear History",
+  "rollback": "Rollback"
 }

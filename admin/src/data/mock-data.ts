@@ -188,6 +188,7 @@ export const mockDashboardStats = {
 };
 
 export const mockSettings = {
+  id: '1',
   options: {
     siteTitle: 'XRT Restaurant System',
     isUnderMaintenance: false,
@@ -207,8 +208,11 @@ export const mockSettings = {
       allowScheduleOrder: false,
       maxDays: 7,
       deliveredOrderTime: 120
-    }
-  }
+    },
+    heroSlides: [] as Array<{ bgImage?: any; title?: string; subtitle?: string; btnText?: string; btnLink?: string }>
+  },
+  language: 'en',
+  translated_languages: ['en']
 };
 
 export const mockShop = {

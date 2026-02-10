@@ -310,29 +310,44 @@ export default function ModifiersSection({
                                     });
                                   } else {
                                     // Non-sizeable population
-                                    const defaultQtyLevel =
-                                      modifier.quantity_levels?.find(
-                                        (ql: any) => ql.quantity === 1,
-                                      ) || modifier.quantity_levels?.[0];
+                                    DEFAULT_QUANTITY_LEVELS.forEach((qty) => {
+                                      // Get modifier quantity level price or fallbacks
+                                      const modQtyLevel =
+                                        modifier.quantity_levels?.find(
+                                          (ql: any) =>
+                                            ql.quantity === qty.quantity,
+                                        ) ||
+                                        // Fallback to qty 1 if specific qty missing
+                                        modifier.quantity_levels?.find(
+                                          (ql: any) => ql.quantity === 1,
+                                        ) ||
+                                        modifier.quantity_levels?.[0];
 
-                                    const groupDefaultQtyLevel =
-                                      fullGroupData.quantity_levels?.find(
-                                        (ql: any) => ql.quantity === 1,
-                                      ) || fullGroupData.quantity_levels?.[0];
+                                      const groupQtyLevel =
+                                        fullGroupData.quantity_levels?.find(
+                                          (ql: any) =>
+                                            ql.quantity === qty.quantity,
+                                        ) ||
+                                        // Fallback to qty 1
+                                        fullGroupData.quantity_levels?.find(
+                                          (ql: any) => ql.quantity === 1,
+                                        ) ||
+                                        fullGroupData.quantity_levels?.[0];
 
-                                    const modPrice =
-                                      defaultQtyLevel?.price ??
-                                      groupDefaultQtyLevel?.price ??
-                                      modifier.prices_by_size?.[0]
-                                        ?.priceDelta ??
-                                      fullGroupData.prices_by_size?.[0]
-                                        ?.priceDelta ??
-                                      0;
+                                      const modPrice =
+                                        modQtyLevel?.price ??
+                                        groupQtyLevel?.price ??
+                                        modifier.prices_by_size?.[0]
+                                          ?.priceDelta ??
+                                        fullGroupData.prices_by_size?.[0]
+                                          ?.priceDelta ??
+                                        0;
 
-                                    setValue(
-                                      `modifier_assignment.modifier_prices.${modifier.id}` as any,
-                                      modPrice,
-                                    );
+                                      setValue(
+                                        `modifier_assignment.modifier_prices_by_quantity.${modifier.id}.${qty.quantity}` as any,
+                                        modPrice,
+                                      );
+                                    });
                                   }
                                 });
                               }
@@ -367,109 +382,139 @@ export default function ModifiersSection({
                         <div className="space-y-4">
                           {isSizeable &&
                           activeItemSizes &&
-                          activeItemSizes.length > 0 ? (
-                            // Show pricing table by size and quantity
-                            groupModifiers.map((modifier: any) => (
-                              <div
-                                key={modifier.id}
-                                className="border border-gray-100 rounded-lg overflow-hidden"
-                              >
-                                <div className="bg-gray-50 px-3 py-2 border-b border-gray-100">
-                                  <span className="text-sm font-medium">
-                                    {modifier.name}
-                                  </span>
-                                </div>
-                                <div className="overflow-x-auto">
-                                  <table className="w-full text-sm">
-                                    <thead className="bg-gray-50">
-                                      <tr>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                                          {t('form:input-label-quantity-level')}
-                                        </th>
-                                        {activeItemSizes.map((size: any) => (
-                                          <th
-                                            key={size.code || size.name}
-                                            className="px-3 py-2 text-center text-xs font-medium text-gray-500"
-                                          >
-                                            {size.name || size.code}
-                                          </th>
-                                        ))}
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {DEFAULT_QUANTITY_LEVELS.map(
-                                        (qtyLevel) => (
-                                          <tr
-                                            key={qtyLevel.quantity}
-                                            className="border-t border-gray-100"
-                                          >
-                                            <td className="px-3 py-2 font-medium text-gray-700">
-                                              {t(
-                                                `form:quantity-level-${qtyLevel.name.toLowerCase()}`,
-                                              )}{' '}
-                                              ({qtyLevel.quantity})
-                                            </td>
-                                            {activeItemSizes.map(
-                                              (size: any) => (
-                                                <td
-                                                  key={size.code || size.name}
-                                                  className="px-3 py-2"
-                                                >
-                                                  <Input
-                                                    {...register(
-                                                      `modifier_assignment.modifier_prices_by_size_and_quantity.${modifier.id}.${size.code || size.name}.${qtyLevel.quantity}` as any,
-                                                      { valueAsNumber: true },
-                                                    )}
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    placeholder="0.00"
-                                                    className="w-20 text-center text-sm"
-                                                    variant="outline"
-                                                  />
-                                                </td>
-                                              ),
-                                            )}
-                                          </tr>
-                                        ),
-                                      )}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            // Non-sizeable or no active sizes
-                            <div className="grid grid-cols-2 gap-4">
-                              {groupModifiers.map((modifier: any) => (
+                          activeItemSizes.length > 0
+                            ? // Show pricing table by size and quantity
+                              groupModifiers.map((modifier: any) => (
                                 <div
                                   key={modifier.id}
-                                  className="flex items-center gap-3"
+                                  className="border border-gray-100 rounded-lg overflow-hidden"
                                 >
-                                  <Label className="flex-1 text-sm">
-                                    {modifier.name}
-                                  </Label>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-500 font-medium">
-                                      {t('form:input-label-price') || 'Price'}:
+                                  <div className="bg-gray-50 px-3 py-2 border-b border-gray-100">
+                                    <span className="text-sm font-medium">
+                                      {modifier.name}
                                     </span>
-                                    <Input
-                                      {...register(
-                                        `modifier_assignment.modifier_prices.${modifier.id}` as any,
-                                        { valueAsNumber: true },
-                                      )}
-                                      type="number"
-                                      step="0.01"
-                                      min="0"
-                                      placeholder="0.00"
-                                      className="w-24 text-sm"
-                                      variant="outline"
-                                    />
+                                  </div>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                      <thead className="bg-gray-50">
+                                        <tr>
+                                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                                            {t(
+                                              'form:input-label-quantity-level',
+                                            )}
+                                          </th>
+                                          {activeItemSizes.map((size: any) => (
+                                            <th
+                                              key={size.code || size.name}
+                                              className="px-3 py-2 text-center text-xs font-medium text-gray-500"
+                                            >
+                                              {size.name || size.code}
+                                            </th>
+                                          ))}
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {DEFAULT_QUANTITY_LEVELS.map(
+                                          (qtyLevel) => (
+                                            <tr
+                                              key={qtyLevel.quantity}
+                                              className="border-t border-gray-100"
+                                            >
+                                              <td className="px-3 py-2 font-medium text-gray-700">
+                                                {t(
+                                                  `form:quantity-level-${qtyLevel.name.toLowerCase()}`,
+                                                )}{' '}
+                                                ({qtyLevel.quantity})
+                                              </td>
+                                              {activeItemSizes.map(
+                                                (size: any) => (
+                                                  <td
+                                                    key={size.code || size.name}
+                                                    className="px-3 py-2"
+                                                  >
+                                                    <Input
+                                                      {...register(
+                                                        `modifier_assignment.modifier_prices_by_size_and_quantity.${modifier.id}.${size.code || size.name}.${qtyLevel.quantity}` as any,
+                                                        { valueAsNumber: true },
+                                                      )}
+                                                      type="number"
+                                                      step="0.01"
+                                                      min="0"
+                                                      placeholder="0.00"
+                                                      className="w-20 text-center text-sm"
+                                                      variant="outline"
+                                                    />
+                                                  </td>
+                                                ),
+                                              )}
+                                            </tr>
+                                          ),
+                                        )}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              ))
+                            : // Non-sizeable or no active sizes
+                              groupModifiers.map((modifier: any) => (
+                                <div
+                                  key={modifier.id}
+                                  className="border border-gray-100 rounded-lg overflow-hidden"
+                                >
+                                  <div className="bg-gray-50 px-3 py-2 border-b border-gray-100">
+                                    <span className="text-sm font-medium">
+                                      {modifier.name}
+                                    </span>
+                                  </div>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                      <thead className="bg-gray-50">
+                                        <tr>
+                                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 w-1/2">
+                                            {t(
+                                              'form:input-label-quantity-level',
+                                            )}
+                                          </th>
+                                          <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 w-1/2">
+                                            {t('form:input-label-price')}
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {DEFAULT_QUANTITY_LEVELS.map(
+                                          (qtyLevel) => (
+                                            <tr
+                                              key={qtyLevel.quantity}
+                                              className="border-t border-gray-100"
+                                            >
+                                              <td className="px-3 py-2 font-medium text-gray-700">
+                                                {t(
+                                                  `form:quantity-level-${qtyLevel.name.toLowerCase()}`,
+                                                )}{' '}
+                                                ({qtyLevel.quantity})
+                                              </td>
+                                              <td className="px-3 py-2 text-center">
+                                                <Input
+                                                  {...register(
+                                                    `modifier_assignment.modifier_prices_by_quantity.${modifier.id}.${qtyLevel.quantity}` as any,
+                                                    { valueAsNumber: true },
+                                                  )}
+                                                  type="number"
+                                                  step="0.01"
+                                                  min="0"
+                                                  placeholder="0.00"
+                                                  className="w-24 text-center text-sm mx-auto"
+                                                  variant="outline"
+                                                />
+                                              </td>
+                                            </tr>
+                                          ),
+                                        )}
+                                      </tbody>
+                                    </table>
                                   </div>
                                 </div>
                               ))}
-                            </div>
-                          )}
                         </div>
                       )}
                     </div>
@@ -551,42 +596,83 @@ export default function ModifiersSection({
                           </div>
                         ))
                       ) : (
-                        // Non-sizeable: show flat inherited price
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                          {groupModifiers.map((modifier: any) => {
-                            // Get modifier's base price from quantity level 1 (default) or first pbs
-                            const defaultQtyLevel =
-                              modifier.quantity_levels?.find(
-                                (ql: any) => ql.quantity === 1,
-                              ) || modifier.quantity_levels?.[0];
+                        // Non-sizeable: show inherited pricing table
+                        groupModifiers.map((modifier: any) => (
+                          <div
+                            key={modifier.id}
+                            className="border border-gray-100 rounded-lg overflow-hidden mb-3"
+                          >
+                            <div className="bg-gray-50 px-3 py-2 border-b border-gray-100">
+                              <span className="text-sm font-medium">
+                                {modifier.name}
+                              </span>
+                            </div>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 w-1/2">
+                                      {t('form:input-label-quantity-level')}
+                                    </th>
+                                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 w-1/2">
+                                      {t('form:price')}
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {DEFAULT_QUANTITY_LEVELS.map((qtyLevel) => {
+                                    // Calculate inherited price for this quantity level
+                                    const defaultQtyLevel =
+                                      modifier.quantity_levels?.find(
+                                        (ql: any) =>
+                                          ql.quantity === qtyLevel.quantity,
+                                      ) ||
+                                      modifier.quantity_levels?.find(
+                                        (ql: any) => ql.quantity === 1,
+                                      ) ||
+                                      modifier.quantity_levels?.[0];
 
-                            const groupDefaultQtyLevel =
-                              fullGroupData.quantity_levels?.find(
-                                (ql: any) => ql.quantity === 1,
-                              ) || fullGroupData.quantity_levels?.[0];
+                                    const groupDefaultQtyLevel =
+                                      fullGroupData.quantity_levels?.find(
+                                        (ql: any) =>
+                                          ql.quantity === qtyLevel.quantity,
+                                      ) ||
+                                      fullGroupData.quantity_levels?.find(
+                                        (ql: any) => ql.quantity === 1,
+                                      ) ||
+                                      fullGroupData.quantity_levels?.[0];
 
-                            const modPrice =
-                              defaultQtyLevel?.price ??
-                              groupDefaultQtyLevel?.price ??
-                              modifier.prices_by_size?.[0]?.priceDelta ??
-                              fullGroupData.prices_by_size?.[0]?.priceDelta ??
-                              0;
+                                    const modPrice =
+                                      defaultQtyLevel?.price ??
+                                      groupDefaultQtyLevel?.price ??
+                                      modifier.prices_by_size?.[0]
+                                        ?.priceDelta ??
+                                      fullGroupData.prices_by_size?.[0]
+                                        ?.priceDelta ??
+                                      0;
 
-                            return (
-                              <div
-                                key={modifier.id}
-                                className="flex items-center justify-between p-2 rounded bg-gray-50/50 border border-gray-100"
-                              >
-                                <span className="text-sm font-medium text-gray-700">
-                                  {modifier.name}
-                                </span>
-                                <span className="text-sm font-bold text-accent">
-                                  ${modPrice.toFixed(2)}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                                    return (
+                                      <tr
+                                        key={qtyLevel.quantity}
+                                        className="border-t border-gray-100"
+                                      >
+                                        <td className="px-3 py-2 font-medium text-gray-700">
+                                          {t(
+                                            `form:quantity-level-${qtyLevel.name.toLowerCase()}`,
+                                          )}{' '}
+                                          ({qtyLevel.quantity})
+                                        </td>
+                                        <td className="px-3 py-2 text-center text-gray-600">
+                                          ${modPrice.toFixed(2)}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        ))
                       )}
                     </div>
                   )}

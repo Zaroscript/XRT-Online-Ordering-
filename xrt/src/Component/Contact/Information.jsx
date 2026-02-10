@@ -1,9 +1,12 @@
 import { Mail, MapPinned, PhoneCall } from "lucide-react";
 import React from "react";
-import { CONTACT_INFO } from "../../config/constants";
-
+import { useSiteSettingsQuery } from "../../api";
 
 export default function Information() {
+  const { data: settings } = useSiteSettingsQuery();
+  const contactDetails = settings?.contactDetails;
+  const schedule = settings?.operating_hours?.schedule;
+
   return (
     <>
       <div className="text-center flex flex-col items-center justify-center py-8">
@@ -11,9 +14,7 @@ export default function Information() {
           Keep in touch with us
         </h3>
         <p className="w-[700px] text-[#656766]">
-          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Expedita
-          quaerat unde quam dolor culpa veritatis inventore, aut commodi eum
-          veniam vel
+          {settings?.siteSubtitle || 'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Expedita quaerat unde quam dolor culpa veritatis inventore, aut commodi eum veniam vel'}
         </p>
       </div>
       <div className="grid grid-cols-3 gap-x-[200px] px-[200px] py-[50px]">
@@ -25,7 +26,7 @@ export default function Information() {
           />
           <h3 className="font-bold text-[#2F3E30] text-[20px]">Address</h3>
           <p className="text-[#656766] w-[250px] py-2">
-            {CONTACT_INFO.address}
+            {contactDetails?.location?.formattedAddress || contactDetails?.location?.street_address}
           </p>
         </div>
 
@@ -37,13 +38,12 @@ export default function Information() {
           />
           <h3 className="font-bold text-[#2F3E30] text-[20px]">Contact</h3>
           <p className="text-[#656766] w-[250px] py-2">
-            Mobile : <span className="font-bold">{CONTACT_INFO.phone}</span>
+            Mobile : <span className="font-bold">{contactDetails?.contact}</span>
             <br />
-            Hotline : <span className="font-bold">
-              {CONTACT_INFO.hotline}
-            </span>{" "}
+            {/* Hotline can be added if available in settings, otherwise hidden or using a second contact */}
+             
             <br />
-            E-mail : <a href={`mailto:${CONTACT_INFO.email}`} className="font-[500] text-[#528959]">{CONTACT_INFO.email}</a>
+            E-mail : <a href={`mailto:${contactDetails?.emailAddress}`} className="font-[500] text-[#528959]">{contactDetails?.emailAddress}</a>
           </p>
         </div>
 
@@ -54,10 +54,16 @@ export default function Information() {
             className="absolute left-[-60px] text-[#5D9063]"
           />
           <h3 className="font-bold text-[#2F3E30] text-[20px]">Hour of operation</h3>
-          <p className="text-[#656766] w-[250px] py-2">
-            {CONTACT_INFO.working_time[0]}<br />
-            {CONTACT_INFO.working_time[1]}
-          </p>
+          <div className="text-[#656766] w-[250px] py-2">
+            {schedule?.map((item, index) => (
+                !item.is_closed && (
+                    <div key={index} className="mb-1">
+                        <span className="font-semibold">{item.day}:</span> {item.open_time} - {item.close_time}
+                    </div>
+                )
+            ))}
+            {(!schedule || schedule.every(s => s.is_closed)) && <p>Closed</p>}
+          </div>
         </div>
       </div>
     </>

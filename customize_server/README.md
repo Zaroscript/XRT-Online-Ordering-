@@ -182,10 +182,12 @@ src/
    EMAIL_FROM=noreply@yourcompany.com
    EMAIL_FROM_NAME=XRT System
 
-   # Cloudinary (Optional - for image uploads)
+   # Cloudinary (optional; hero slides, logos, etc. use local uploads/ by default)
+   # Set ATTACHMENT_STORAGE=cloudinary to upload images to Cloudinary instead.
    CLOUDINARY_NAME=your_cloud_name
    CLOUDINARY_API_KEY=your_api_key
    CLOUDINARY_API_SECRET=your_api_secret
+   # ATTACHMENT_STORAGE=disk   (default: local uploads folder)
    ```
 
 4. **Seed initial data (optional)**

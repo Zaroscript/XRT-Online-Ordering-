@@ -15,7 +15,10 @@ import { ApproveUserUseCase } from '../../domain/usecases/users/ApproveUserUseCa
 import { BanUserUseCase } from '../../domain/usecases/users/BanUserUseCase';
 import { UpdateUserPermissionsUseCase } from '../../domain/usecases/users/UpdateUserPermissionsUseCase';
 import { GetUserPermissionsUseCase } from '../../domain/usecases/users/GetUserPermissionsUseCase';
+import { GetOrCreateDefaultBusinessUseCase } from '../../domain/usecases/businesses/GetOrCreateDefaultBusinessUseCase';
 import { UserRepository } from '../../infrastructure/repositories/UserRepository';
+import { BusinessRepository } from '../../infrastructure/repositories/BusinessRepository';
+import { BusinessSettingsRepository } from '../../infrastructure/repositories/BusinessSettingsRepository';
 import { EmailService } from '../../infrastructure/services/EmailService';
 import { generateToken } from '../../infrastructure/auth/jwt';
 import { sendSuccess } from '../../shared/utils/response';
@@ -150,7 +153,32 @@ export class AuthController {
   });
 
   getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
-    return sendSuccess(res, 'User retrieved successfully', { user: req.user });
+    const userDoc = req.user as any;
+    const userObj = userDoc?.toObject ? userDoc.toObject() : { ...userDoc };
+
+    // Single-tenant: attach the one business as shops so dashboard "My Shops" shows it
+    try {
+      const businessRepository = new BusinessRepository();
+      const businessSettingsRepository = new BusinessSettingsRepository();
+      const getOrCreateUseCase = new GetOrCreateDefaultBusinessUseCase(
+        businessRepository,
+        businessSettingsRepository
+      );
+      const business = await getOrCreateUseCase.execute(userDoc.id);
+      userObj.shops = [
+        {
+          id: business.id,
+          slug: business.id,
+          is_active: business.isActive ?? true,
+          name: business.name,
+          ...business,
+        },
+      ];
+    } catch {
+      userObj.shops = [];
+    }
+
+    return sendSuccess(res, 'User retrieved successfully', { user: userObj });
   });
 
   getAllUsers = asyncHandler(async (req: Request, res: Response) => {

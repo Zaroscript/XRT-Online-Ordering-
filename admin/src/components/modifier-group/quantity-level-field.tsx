@@ -59,7 +59,7 @@ export default function QuantityLevelField({
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 lg:gap-4 lg:items-center">
         {/* Quantity */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-1">
           <Input
             label={t('form:input-label-quantity') || 'Quantity'}
             labelClassName="lg:sr-only"
@@ -94,7 +94,7 @@ export default function QuantityLevelField({
         </div>
 
         {/* Display Order */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-1">
           <Input
             label={t('form:input-label-display-order') || 'Order'}
             labelClassName="lg:sr-only"

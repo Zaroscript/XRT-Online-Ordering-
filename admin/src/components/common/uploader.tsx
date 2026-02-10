@@ -69,12 +69,6 @@ export default function Uploader({
 
   // Sync state with props
   useEffect(() => {
-    console.log('Uploader: useEffect sync', {
-      value,
-      type: typeof value,
-      isArray: Array.isArray(value),
-      instanceOfFile: value instanceof File,
-    });
     if (value instanceof File) {
       // Prevent infinite loop by checking if files are already same as value
       if (
@@ -190,7 +184,6 @@ export default function Uploader({
               : [];
 
           if (filesData.length === 0) {
-            console.warn('Upload response had no attachment data:', data);
             return;
           }
 
@@ -206,7 +199,6 @@ export default function Uploader({
           onChange(mergedData);
         },
         onError: (error: any) => {
-          console.error('Upload error:', error);
           const errorMessage =
             error?.response?.data?.message ||
             error?.message ||

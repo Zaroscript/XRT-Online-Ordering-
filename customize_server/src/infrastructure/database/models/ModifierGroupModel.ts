@@ -14,8 +14,11 @@ const PricesBySizeSchema = new Schema(
   {
     sizeCode: {
       type: String,
-      enum: ['S', 'M', 'L', 'XL', 'XXL'],
-      required: true,
+      required: false,
+    },
+    size_id: {
+      type: String,
+      required: false,
     },
     priceDelta: {
       type: Number,

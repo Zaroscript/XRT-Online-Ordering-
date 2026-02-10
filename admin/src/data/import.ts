@@ -27,7 +27,6 @@ export const useParseImportMutation = () => {
       Router.push(`${Routes.import.review.replace(':id', session.id)}`);
     },
     onError: (error: any) => {
-      console.error('❌ Parse Import Error:', error);
       toast.error(error?.response?.data?.message || t('common:create-failed'));
     },
   });

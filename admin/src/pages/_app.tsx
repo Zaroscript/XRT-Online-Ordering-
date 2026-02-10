@@ -31,7 +31,7 @@ import DefaultSeo from '@/components/ui/default-seo';
 import ManagedModal from '@/components/ui/modal/managed-modal';
 import { CartProvider } from '@/contexts/quick-cart/cart.context';
 import { AppLoadingProvider } from '@/contexts/app-loading.context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { NextPageWithLayout } from '@/types';
 import { useRouter } from 'next/router';
 import PrivateRoute from '@/utils/private-route';
@@ -43,12 +43,22 @@ const Noop: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
   <>{children}</>
 );
 
+/**
+ * Defers auth/settings-dependent UI until after mount so server and client
+ * initial render match (avoids hydration error from token/cookies differing).
+ */
 const AppSettings: React.FC<{ children?: React.ReactNode }> = (props) => {
-  const { query, locale, pathname } = useRouter();
+  const { pathname, locale } = useRouter();
+  const [mounted, setMounted] = useState(false);
   const { token } = getAuthCredentials();
-  const { settings, loading, error } = useSettingsQuery({ language: locale! });
+  const { settings, loading, error } = useSettingsQuery({
+    language: locale!,
+  });
 
-  // Check if we're on an auth page
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const isAuthPage =
     pathname === Routes.login ||
     pathname === Routes.register ||
@@ -59,31 +69,32 @@ const AppSettings: React.FC<{ children?: React.ReactNode }> = (props) => {
     pathname?.includes('/forgot-password') ||
     pathname?.includes('/reset-password');
 
-  // On auth pages, don't wait for settings or show errors
+  // Before mount: render same as server (no token-dependent branching) to avoid hydration mismatch
+  if (!mounted) {
+    // @ts-ignore
+    return <SettingsProvider initialValue={null} {...props} />;
+  }
+
   if (isAuthPage) {
     // @ts-ignore
     return <SettingsProvider initialValue={null} {...props} />;
   }
 
-  // If not authenticated and not on auth page, settings will be disabled anyway
   if (!token) {
     // @ts-ignore
     return <SettingsProvider initialValue={null} {...props} />;
   }
 
-  // Only show loading/error for authenticated users on non-auth pages
-  // Don't show errors for 400/401 on auth pages - they're expected
   if (loading) return <PageLoader />;
-  if (error && !isAuthPage) {
+  if (error) {
     const errorStatus = (error as any)?.response?.status;
     if (errorStatus !== 400 && errorStatus !== 401) {
       return <ErrorMessage message={error.message} />;
     }
   }
 
-  // TODO: fix it
   // @ts-ignore
-  return <SettingsProvider initialValue={settings?.options} {...props} />;
+  return <SettingsProvider initialValue={settings?.options ?? null} {...props} />;
 };
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;

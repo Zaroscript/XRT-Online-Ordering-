@@ -20,10 +20,16 @@ export const corsMiddleware = cors({
     }
 
     // Check if allowedOrigins is defined and is an array
-    if (!env.ALLOWED_ORIGINS || !Array.isArray(env.ALLOWED_ORIGINS) || env.ALLOWED_ORIGINS.length === 0) {
+    if (
+      !env.ALLOWED_ORIGINS ||
+      !Array.isArray(env.ALLOWED_ORIGINS) ||
+      env.ALLOWED_ORIGINS.length === 0
+    ) {
       // In production, if ALLOWED_ORIGINS is not set, we should probably still allow all or a default
       // to avoid breaking things, but it's better to log it.
-      console.warn('CORS: env.ALLOWED_ORIGINS is not set properly, allowing all origins as fallback');
+      console.warn(
+        'CORS: env.ALLOWED_ORIGINS is not set properly, allowing all origins as fallback'
+      );
       return callback(null, true);
     }
 
@@ -43,7 +49,9 @@ export const corsMiddleware = cors({
 
 // Security middleware
 export const securityMiddleware = [
-  helmet(),
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }),
   mongoSanitize(),
   hpp(),
 ];
@@ -59,11 +67,7 @@ export const rateLimitMiddleware = rateLimit({
 });
 
 // Request logging (basic)
-export const requestLogger = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const requestLogger = (req: Request, res: Response, next: NextFunction): void => {
   if (env.NODE_ENV === 'development') {
     console.log(`${req.method} ${req.path}`);
   }
@@ -72,4 +76,3 @@ export const requestLogger = (
 
 // Error handler (must be last)
 export { errorHandler };
-

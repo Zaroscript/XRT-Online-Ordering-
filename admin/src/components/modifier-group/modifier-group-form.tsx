@@ -447,16 +447,19 @@ export default function CreateOrUpdateModifierGroupForm({
                 <>
                   {/* Desktop Header Row */}
                   <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-4 py-3 bg-gray-100/50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider rounded-t-lg">
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-1">
                       {t('form:input-label-quantity') || 'Quantity'}
                     </div>
                     <div className="lg:col-span-4">
                       {t('form:input-label-name') || 'Name'}
                     </div>
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-1">
                       {t('form:input-label-display-order') || 'Order'}
                     </div>
-                    <div className="lg:col-span-3">
+                    <div className="lg:col-span-2 text-center">
+                      {t('form:input-label-price') || 'Price'}
+                    </div>
+                    <div className="lg:col-span-3 text-center">
                       {t('form:input-label-settings') || 'Settings'}
                     </div>
                     <div className="lg:col-span-1 text-end">

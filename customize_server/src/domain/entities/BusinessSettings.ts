@@ -47,6 +47,7 @@ export interface BusinessSettings {
     bgImage?: any;
     title?: string;
     subtitle?: string;
+    subtitleTwo?: string;
     btnText?: string;
     btnLink?: string;
   }>;
@@ -164,4 +165,3 @@ export interface UpdateBusinessSettingsDTO {
   messages?: BusinessSettings['messages'];
   promoPopup?: BusinessSettings['promoPopup'];
 }
-

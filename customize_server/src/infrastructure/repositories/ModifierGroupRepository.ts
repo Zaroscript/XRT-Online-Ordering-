@@ -10,10 +10,12 @@ import {
 } from '../../domain/entities/ModifierGroup';
 import { ModifierGroupModel, ModifierGroupDocument } from '../database/models/ModifierGroupModel';
 import { ItemModel } from '../database/models/ItemModel';
+import { ModifierModel } from '../database/models/ModifierModel';
 import { NotFoundError } from '../../shared/errors/AppError';
+import { ModifierRepository } from './ModifierRepository';
 
 export class ModifierGroupRepository implements IModifierGroupRepository {
-  private toDomain(document: ModifierGroupDocument): ModifierGroup {
+  private toDomain(document: ModifierGroupDocument, modifiers?: any[]): ModifierGroup {
     return {
       id: document._id.toString(),
       business_id: document.business_id,
@@ -23,6 +25,7 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
       min_select: document.min_select,
       max_select: document.max_select,
       quantity_levels: document.quantity_levels || [],
+      modifiers: modifiers || (document as any).modifiers || [],
       is_active: document.is_active,
       sort_order: document.sort_order,
       created_at: document.created_at,
@@ -47,7 +50,11 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
       query.business_id = business_id;
     }
     const modifierGroupDoc = await ModifierGroupModel.findOne(query);
-    return modifierGroupDoc ? this.toDomain(modifierGroupDoc) : null;
+    if (!modifierGroupDoc) return null;
+
+    const modifierRepo = new ModifierRepository();
+    const modifiers = await modifierRepo.findByGroupId(id);
+    return this.toDomain(modifierGroupDoc, modifiers);
   }
 
   async findActiveById(id: string, business_id?: string): Promise<ModifierGroup | null> {
@@ -56,7 +63,11 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
       query.business_id = business_id;
     }
     const modifierGroupDoc = await ModifierGroupModel.findOne(query);
-    return modifierGroupDoc ? this.toDomain(modifierGroupDoc) : null;
+    if (!modifierGroupDoc) return null;
+
+    const modifierRepo = new ModifierRepository();
+    const modifiers = await modifierRepo.findByGroupId(id);
+    return this.toDomain(modifierGroupDoc, modifiers);
   }
 
   async findAll(filters: ModifierGroupFilters): Promise<PaginatedModifierGroups> {
@@ -91,7 +102,24 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
       ModifierGroupModel.countDocuments(query),
     ]);
 
-    const modifierGroups = modifierGroupDocs.map((doc) => this.toDomain(doc));
+    // Fetch modifiers for all groups in this page
+    const groupIds = modifierGroupDocs.map((doc) => doc._id);
+    const modifiersList = await ModifierModel.find({
+      modifier_group_id: { $in: groupIds },
+      deleted_at: null,
+    }).sort({ display_order: 1, created_at: 1 });
+
+    // Map modifiers to their groups
+    const modifierRepo = new ModifierRepository();
+    const domainModifiers = modifiersList.map((m) => modifierRepo.toDomain(m));
+
+    const modifierGroups = modifierGroupDocs.map((doc) => {
+      const groupModifiers = domainModifiers.filter(
+        (m) => m.modifier_group_id === doc._id.toString()
+      );
+      return this.toDomain(doc, groupModifiers);
+    });
+
     const totalPages = Math.ceil(total / limit);
 
     return {

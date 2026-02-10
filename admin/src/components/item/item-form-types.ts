@@ -36,6 +36,13 @@ export type FormValues = {
   sizes?: ItemSizeConfig[]; // Updated to match Item structure
   modifier_groups?: ItemModifierGroupAssignment[]; // Updated to match backend
   modifier_assignment?: ItemModifierAssignment & {
+    modifier_prices?: Record<string, number>;
+    modifier_prices_by_quantity?: Record<string, Record<string, number>>;
+    modifier_prices_by_size?: Record<string, Record<string, number>>;
+    modifier_prices_by_size_and_quantity?: Record<
+      string,
+      Record<string, Record<string, number>>
+    >;
     // Per-group pricing mode: 'inherit' uses group config, 'override' allows custom pricing
     pricing_mode?: { [groupId: string]: 'inherit' | 'override' };
   };

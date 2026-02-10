@@ -26,6 +26,8 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import SelectInput from '@/components/ui/select-input';
+import Uploader from '@/components/common/uploader';
+import { Attachment } from '@/types';
 
 const DAYS = [
   'Monday',
@@ -156,9 +158,9 @@ export default function SettingsForm({ settings }: IProps) {
         ...options?.contactDetails,
         socials: options?.contactDetails?.socials
           ? options?.contactDetails?.socials.map((social: any) => ({
-            icon: updatedIcons?.find((icon) => icon?.value === social?.icon),
-            url: social?.url,
-          }))
+              icon: updatedIcons?.find((icon) => icon?.value === social?.icon),
+              url: social?.url,
+            }))
           : [],
       },
       reviewSystem: options?.reviewSystem
@@ -188,11 +190,11 @@ export default function SettingsForm({ settings }: IProps) {
         schedule: options?.operating_hours?.schedule?.length
           ? options.operating_hours.schedule
           : DAYS.map((day) => ({
-            day,
-            open_time: '09:00',
-            close_time: '18:00',
-            is_closed: false,
-          })),
+              day,
+              open_time: '09:00',
+              close_time: '18:00',
+              is_closed: false,
+            })),
       },
       // Company Information defaults
       siteLink: options?.siteLink ?? '',
@@ -202,9 +204,7 @@ export default function SettingsForm({ settings }: IProps) {
     },
   });
 
-  const {
-    fields: scheduleFields,
-  } = useFieldArray({
+  const { fields: scheduleFields } = useFieldArray({
     control,
     name: 'operating_hours.schedule',
   });
@@ -213,28 +213,37 @@ export default function SettingsForm({ settings }: IProps) {
   const allowScheduleOrder = watch('orders.allowScheduleOrder');
 
   async function onSubmit(values: ShopFormValues) {
+
+    const {
+      contactDetails: { location, contact, website, emailAddress },
+      // ... rest of destructuring
+    } = values;
+
+
     // Process contactDetails with location formatting
     const contactDetails = {
       ...values?.contactDetails,
       location: useGoogleMap
         ? { ...omit(values?.contactDetails?.location, '__typename') }
         : {
-          ...values?.contactDetails?.location,
-          formattedAddress: formatAddress(
-            values?.contactDetails?.location as UserAddress,
-          ),
-        },
+            ...values?.contactDetails?.location,
+            formattedAddress: formatAddress(
+              values?.contactDetails?.location as UserAddress,
+            ),
+          },
       socials: options?.contactDetails?.socials,
     };
 
-    updateSettingsMutation({
+    const payload = {
       language: locale,
       // @ts-ignore
       options: {
         ...options,
         ...values,
         contactDetails,
-        maxShopDistance: Number(values.maxShopDistance || values?.delivery?.radius),
+        maxShopDistance: Number(
+          values.maxShopDistance || values?.delivery?.radius,
+        ),
         useGoogleMap: values?.useGoogleMap,
         delivery: {
           ...values?.delivery,
@@ -245,7 +254,8 @@ export default function SettingsForm({ settings }: IProps) {
         fees: {
           ...values?.fees,
           service_fee: Number(values?.fees?.service_fee),
-          tip_options: values?.fees?.tip_options?.map((t: number) => Number(t)) ?? [],
+          tip_options:
+            values?.fees?.tip_options?.map((t: number) => Number(t)) ?? [],
         },
         taxes: {
           ...values?.taxes,
@@ -261,69 +271,70 @@ export default function SettingsForm({ settings }: IProps) {
         reviewSystem: values?.reviewSystem,
         orders: {
           ...options?.orders,
-          ...values?.orders,
-          maxDays: Number(values?.orders?.maxDays),
           deliveredOrderTime: Number(values?.orders?.deliveredOrderTime),
         },
       },
-    });
+    };
+    updateSettingsMutation(payload);
     reset(values, { keepValues: true });
   }
   useConfirmRedirectIfDirty({ isDirty });
   return (
-    <form onSubmit={handleSubmit(onSubmit as any)}>
+    <form
+      onSubmit={
+        handleSubmit(onSubmit, (errors) =>
+
+        ) as any
+      }
+    >
       {/* Business Settings Section */}
       <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
         <Description
-          title={t('Business Info')}
-          details={t('Configure your business information and branding')}
+          title={t('form:form-title-business-info')}
+          details={t('form:form-description-business-info')}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
 
         <Card className="w-full sm:w-8/12 md:w-2/3">
           <Input
-            label={t('Business Name')}
+            label={t('form:form-input-label-business-name')}
             {...register('siteTitle')}
             variant="outline"
             className="mb-5"
-            toolTipText={t('Your business name displayed on the storefront')}
+            toolTipText={t('form:form-input-tip-business-name')}
           />
           <TextArea
-            label={t('Business Description')}
+            label={t('form:form-input-label-business-description')}
             {...register('siteSubtitle')}
             variant="outline"
             className="mb-5"
-            toolTipText={t('A brief description of your business')}
+            toolTipText={t('form:form-input-tip-business-description')}
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
             <Input
-              label={t('Timezone')}
+              label={t('form:form-input-label-timezone')}
               {...register('timezone')}
               variant="outline"
-
-              toolTipText={t('Your business timezone for operating hours')}
+              toolTipText={t('form:form-input-tip-timezone')}
             />
             <Input
-              label={t('Currency')}
+              label={t('form:form-input-label-currency')}
               {...register('currency')}
               variant="outline"
-
-              toolTipText={t('Primary currency for pricing')}
+              toolTipText={t('form:form-input-tip-currency')}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <Input
-              label={t('Currency Format')}
+              label={t('form:form-input-label-currency-format')}
               {...register('currencyOptions.formation')}
               variant="outline"
-
             />
             <Input
-              label={t('Decimal Places')}
+              label={t('form:form-input-label-decimal-places')}
               {...register('currencyOptions.fractions')}
               type="number"
               variant="outline"
-
             />
           </div>
         </Card>
@@ -387,21 +398,21 @@ export default function SettingsForm({ settings }: IProps) {
             </div>
           )}
           <PhoneNumberInput
-            label={t('form:input-label-contact')}
-            toolTipText={t('Primary phone number for customer contact')}
+            label={t('form:form-input-label-contact')}
+            toolTipText={t('form:form-input-tip-contact')}
             {...register('contactDetails.contact')}
             control={control}
           />
           <Input
-            label={t('form:input-label-website')}
-            toolTipText={t('Your business website URL')}
+            label={t('form:form-input-label-website')}
+            toolTipText={t('form:form-input-tip-website')}
             {...register('contactDetails.website')}
             variant="outline"
             className="mb-5"
           />
           <Input
-            label={t('form:input-label-email')}
-            toolTipText={t('Business email for customer inquiries')}
+            label={t('form:form-input-label-email')}
+            toolTipText={t('form:form-input-tip-email')}
             {...register('contactDetails.emailAddress')}
             variant="outline"
             className="mb-5"
@@ -411,32 +422,32 @@ export default function SettingsForm({ settings }: IProps) {
 
       <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
         <Description
-          title={t('Fees & Taxes')}
-          details={t('Configure service fees and tax rates')}
+          title={t('form:form-title-fees-taxes')}
+          details={t('form:form-description-fees-taxes')}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
 
         <Card className="w-full sm:w-8/12 md:w-2/3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
             <Input
-              label={t('Service Fee')}
-              toolTipText={t('Fixed service fee added to each order')}
+              label={t('form:form-input-label-service-fee')}
+              toolTipText={t('form:form-input-tip-service-fee')}
               {...register('fees.service_fee')}
               type="number"
               variant="outline"
               error={t(errors.fees?.service_fee?.message!)}
             />
             <Input
-              label={t('Tip Options')}
-              toolTipText={t('Tip percentages for customers to choose from, e.g. 10, 15, 20')}
+              label={t('form:form-input-label-tip-options')}
+              toolTipText={t('form:form-input-tip-tip-options')}
               {...register('fees.tip_options')}
               variant="outline"
               placeholder="10, 15, 20"
             />
           </div>
           <Input
-            label={t('Sales Tax')}
-            toolTipText={t('Sales tax percentage applied to orders')}
+            label={t('form:form-input-label-sales-tax')}
+            toolTipText={t('form:form-input-tip-sales-tax')}
             {...register('taxes.sales_tax')}
             type="number"
             variant="outline"
@@ -448,8 +459,8 @@ export default function SettingsForm({ settings }: IProps) {
 
       <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
         <Description
-          title={t('Delivery Details')}
-          details={t('Configure delivery settings like radius, fee and minimum order')}
+          title={t('form:form-title-delivery-details')}
+          details={t('form:form-description-delivery-details')}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
 
@@ -458,45 +469,42 @@ export default function SettingsForm({ settings }: IProps) {
             <SwitchInput
               name="delivery.enabled"
               control={control}
-              label={t('Enable Delivery')}
-              toolTipText={t('Enable or disable delivery service for your business')}
+              label={t('form:form-input-label-enable-delivery')}
+              toolTipText={t('form:form-input-tip-enable-delivery')}
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
             <Input
-              label={t('Radius (Miles)')}
+              label={t('form:form-input-label-delivery-radius')}
               {...register('delivery.radius')}
               type="number"
               variant="outline"
-              className="my-5"
               error={t(errors.delivery?.radius?.message!)}
             />
             <Input
-              label={t('Delivery Fee')}
-              toolTipText={t('Fee charged for delivery service')}
+              label={t('form:form-input-label-delivery-fee')}
+              toolTipText={t('form:form-input-tip-delivery-fee')}
               {...register('delivery.fee')}
               type="number"
               variant="outline"
-              className="my-5"
               error={t(errors.delivery?.fee?.message!)}
             />
+            <Input
+              label={t('form:form-input-label-min-order')}
+              toolTipText={t('form:form-input-tip-min-order')}
+              {...register('delivery.min_order')}
+              type="number"
+              variant="outline"
+              error={t(errors.delivery?.min_order?.message!)}
+            />
           </div>
-          <Input
-            label={t('Minimum Order')}
-            toolTipText={t('Minimum order amount required for delivery')}
-            {...register('delivery.min_order')}
-            type="number"
-            variant="outline"
-            className="mb-5"
-            error={t(errors.delivery?.min_order?.message!)}
-          />
         </Card>
       </div>
 
       <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
         <Description
-          title={t('Order Settings')}
-          details={t('Configure order related settings used in the shop')}
+          title={t('form:form-title-order-settings')}
+          details={t('form:form-description-order-settings')}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
 
@@ -505,15 +513,15 @@ export default function SettingsForm({ settings }: IProps) {
             <SwitchInput
               name="orders.allowScheduleOrder"
               control={control}
-              label={t('Allow Schedule Order')}
-              toolTipText={t('Allow customers to schedule orders for later')}
+              label={t('form:form-input-label-allow-schedule-order')}
+              toolTipText={t('form:form-input-tip-allow-schedule-order')}
             />
           </div>
           {allowScheduleOrder && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Input
-                label={t('Max Days')}
-                toolTipText={t('Maximum days ahead customers can schedule orders')}
+                label={t('form:form-input-label-max-days')}
+                toolTipText={t('form:form-input-tip-max-days')}
                 {...register('orders.maxDays')}
                 type="number"
                 variant="outline"
@@ -521,8 +529,8 @@ export default function SettingsForm({ settings }: IProps) {
                 error={t(errors.orders?.maxDays?.message!)}
               />
               <Input
-                label={t('Notification Time')}
-                toolTipText={t('Minutes before order to receive notification')}
+                label={t('form:form-input-label-notification-time')}
+                toolTipText={t('form:form-input-tip-notification-time')}
                 {...register('orders.deliveredOrderTime')}
                 type="number"
                 variant="outline"
@@ -536,8 +544,8 @@ export default function SettingsForm({ settings }: IProps) {
 
       <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
         <Description
-          title={t('Operating Hours')}
-          details={t('Configure your shop operating hours and schedule')}
+          title={t('form:form-title-operating-hours')}
+          details={t('form:form-description-operating-hours')}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
         />
 
@@ -546,15 +554,16 @@ export default function SettingsForm({ settings }: IProps) {
             <SwitchInput
               name="operating_hours.auto_close"
               control={control}
-              label={t('Auto Close')}
-              toolTipText={t('Automatically close the shop based on schedule')}
+              label={t('form:form-input-label-auto-close')}
+              toolTipText={t('form:form-input-tip-auto-close')}
             />
           </div>
 
-          <Label className="mb-5 underline decoration-dashed uppercase text-sm font-bold text-gray-400">{t('Weekly Schedule')}</Label>
+          <Label className="mb-5 underline decoration-dashed uppercase text-sm font-bold text-gray-400">
+            {t('form:form-title-weekly-schedule')}
+          </Label>
           <div className="space-y-4">
             <div className="hidden md:grid grid-cols-4 gap-4 mb-2 text-xs font-bold text-gray-500 uppercase">
-              <div>Day</div>
               <div>Open</div>
               <div>Close</div>
               <div className="text-center">Closed</div>
@@ -566,19 +575,26 @@ export default function SettingsForm({ settings }: IProps) {
               >
                 <div className="font-semibold text-sm text-heading lowercase capitalize">
                   {t(item.day)}
-                  <input type="hidden" {...register(`operating_hours.schedule.${index}.day`)} />
+                  <input
+                    type="hidden"
+                    {...register(`operating_hours.schedule.${index}.day`)}
+                  />
                 </div>
                 <Input
                   {...register(`operating_hours.schedule.${index}.open_time`)}
                   type="time"
                   variant="outline"
-                  disabled={watch(`operating_hours.schedule.${index}.is_closed`)}
+                  disabled={watch(
+                    `operating_hours.schedule.${index}.is_closed`,
+                  )}
                 />
                 <Input
                   {...register(`operating_hours.schedule.${index}.close_time`)}
                   type="time"
                   variant="outline"
-                  disabled={watch(`operating_hours.schedule.${index}.is_closed`)}
+                  disabled={watch(
+                    `operating_hours.schedule.${index}.is_closed`,
+                  )}
                 />
                 <div className="flex justify-start md:justify-center">
                   <SwitchInput
@@ -607,7 +623,7 @@ export default function SettingsForm({ settings }: IProps) {
               control={control}
               label={t('form:input-label-product-for-review')}
               toolTipText={t('form:input-tooltip-shop-product-review')}
-            // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
             />
           </div>
           <div className="mt-6 mb-5">
@@ -616,7 +632,7 @@ export default function SettingsForm({ settings }: IProps) {
               control={control}
               label={t('form:input-label-use-google-map-service')}
               toolTipText={t('form:input-tooltip-shop-enable-google-map')}
-            // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
             />
           </div>
           {useGoogleMap ? (
@@ -627,7 +643,7 @@ export default function SettingsForm({ settings }: IProps) {
               error={t(errors.maxShopDistance?.message!)}
               variant="outline"
               className="my-5"
-            // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
             />
           ) : (
             ''
@@ -638,7 +654,7 @@ export default function SettingsForm({ settings }: IProps) {
               control={control}
               label={t('form:input-label-terms-conditions-vendors')}
               toolTipText={t('form:input-tooltip-shop-enable-terms')}
-            // disabled={isNotDefaultSettingsPage}
+              // disabled={isNotDefaultSettingsPage}
             />
           </div>
           <div className="mt-6 mb-5">
@@ -733,11 +749,10 @@ export default function SettingsForm({ settings }: IProps) {
         </Card>
       </div>
 
-
       <StickyFooterPanel className="z-0">
         <Button
           loading={loading}
-          disabled={loading || !Boolean(isDirty)}
+          disabled={loading}
           className="text-sm md:text-base"
         >
           <SaveIcon className="relative w-6 h-6 top-px shrink-0 ltr:mr-2 rtl:pl-2" />

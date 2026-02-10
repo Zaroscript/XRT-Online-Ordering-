@@ -386,7 +386,6 @@ export default function CreateOrUpdateItemForm({
   };
 
   const onError = (errors: any) => {
-    console.error('Validation Errors:', errors);
     const errorMsg = t('form:error-check-inputs');
     setErrorMessage(errorMsg);
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -1,3 +1,5 @@
+import { Modifier } from './Modifier';
+
 export type ModifierDisplayType = 'RADIO' | 'CHECKBOX';
 
 export interface QuantityLevel {
@@ -11,7 +13,8 @@ export interface QuantityLevel {
 }
 
 export interface PricesBySize {
-  size_id: string; // Reference to ItemSize.id
+  size_id?: string; // Reference to ItemSize.id (legacy)
+  sizeCode?: string; // S, M, L, XL, XXL
   priceDelta: number;
 }
 
@@ -25,6 +28,7 @@ export interface ModifierGroup {
   max_select: number;
 
   quantity_levels?: QuantityLevel[];
+  modifiers?: Modifier[];
   is_active: boolean;
   sort_order: number;
   created_at: Date;

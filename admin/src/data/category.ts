@@ -27,7 +27,6 @@ export const useCreateCategoryMutation = () => {
       toast.success(t('common:successfully-created'));
     },
     onError: (error: any) => {
-      console.error('❌ Create Category Error:', error);
       toast.error(error?.response?.data?.message || t('common:create-failed'));
     },
     // Always refetch after error or success:
@@ -80,9 +79,6 @@ export const useUpdateCategoryMutation = () => {
       });
     },
     onError: (error: any) => {
-      console.error('❌ Update Category Error:', error);
-      console.error('❌ Error Response:', error?.response);
-      console.error('❌ Error Data:', error?.response?.data);
       toast.error(error?.response?.data?.message || t('common:update-failed'));
     },
     // Always refetch after error or success to ensure data consistency
@@ -159,7 +155,6 @@ export const useImportCategoriesMutation = () => {
         }),
       );
       if (stats?.errors?.length > 0) {
-        console.error('Import errors:', stats.errors);
         toast.warn(t('common:category-import-partial-error'));
       }
     },

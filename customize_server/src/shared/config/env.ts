@@ -20,21 +20,24 @@ export const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRE || '30d',
   JWT_COOKIE_EXPIRE: parseInt(process.env.JWT_COOKIE_EXPIRE || '30'),
 
-  // Cloudinary
+  // Cloudinary (optional; used only for attachments if ATTACHMENT_STORAGE=cloudinary)
   CLOUDINARY_NAME: process.env.CLOUDINARY_NAME || '',
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
+  /** Attachments (hero slides, logos, etc.): 'disk' = local uploads/ folder (default). 'cloudinary' = Cloudinary. */
+  ATTACHMENT_STORAGE: (process.env.ATTACHMENT_STORAGE as 'cloudinary' | 'disk') || 'disk',
 
   // CORS
   CORS_ORIGIN:
     process.env.CORS_ORIGIN ||
-    'http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8000',
+    'http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:5173,http://localhost:8000',
   ALLOWED_ORIGINS: process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
     : [
         'http://localhost:3000',
         'http://localhost:3001',
         'http://localhost:3002',
+        'http://localhost:5173',
         'http://localhost:8000',
       ],
 

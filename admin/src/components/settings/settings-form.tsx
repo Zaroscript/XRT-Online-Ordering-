@@ -222,6 +222,7 @@ export default function SettingsForm({
         shippingClass: values?.shippingClass?.id,
         logo: values?.logo,
         footer_text: values.footer_text,
+        heroSlides: values?.heroSlides ?? options?.heroSlides ?? [],
         messages: {
           closed_message: values.messages.closed_message,
           not_accepting_orders_message: values.messages.not_accepting_orders_message,

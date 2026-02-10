@@ -1,4 +1,5 @@
 import "./App.css";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import Header from "./Component/Layout/Header.jsx";
 import Footer from "./Component/Footer/FooterSection.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
@@ -11,7 +12,8 @@ function App() {
       <AdsPopup />
       <Header />
       <AppRoutes />
-      <Footer/>
+      <Footer />
+      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
     </CartProvider>
   );
 }
