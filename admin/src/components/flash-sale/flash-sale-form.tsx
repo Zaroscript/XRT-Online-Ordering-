@@ -84,12 +84,10 @@ export default function CreateOrUpdateFlashSaleForm({ initialValues }: IProps) {
   const { data: user, isPending: loading, error } = useMeQuery();
   const { currency } = useSettings();
   const { openModal } = useModalAction();
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+  const options = settings?.options;
   const { data: shopData } = useShopQuery(
     { slug: router.query.shop as string },
     {
@@ -123,25 +121,25 @@ export default function CreateOrUpdateFlashSaleForm({ initialValues }: IProps) {
     // @ts-ignore
     defaultValues: initialValues
       ? {
-        ...initialValues,
-        start_date: new Date(initialValues.start_date!),
-        end_date: new Date(initialValues?.end_date!),
-        image: initialValues?.image,
-        cover_image: initialValues?.cover_image,
-        type: initialValues?.type,
-        rate: initialValues?.rate,
-        sale_status: initialValues?.sale_status,
-        sale_builder: initialValues?.sale_builder
-          ? initialValues?.sale_builder
-          : [],
-      }
+          ...initialValues,
+          start_date: new Date(initialValues.start_date!),
+          end_date: new Date(initialValues?.end_date!),
+          image: initialValues?.image,
+          cover_image: initialValues?.cover_image,
+          type: initialValues?.type,
+          rate: initialValues?.rate,
+          sale_status: initialValues?.sale_status,
+          sale_builder: initialValues?.sale_builder
+            ? initialValues?.sale_builder
+            : [],
+        }
       : {
-        start_date: new Date(),
-        type: FlashSaleType.PERCENTAGE,
-        sale_builder: {
-          data_type: 'handpicked_products',
+          start_date: new Date(),
+          type: FlashSaleType.PERCENTAGE,
+          sale_builder: {
+            data_type: 'handpicked_products',
+          },
         },
-      },
     //@ts-ignore
     resolver: yupResolver(flashSaleValidationSchema),
   });
@@ -310,10 +308,11 @@ export default function CreateOrUpdateFlashSaleForm({ initialValues }: IProps) {
       <div className="flex flex-wrap my-5 sm:my-8">
         <Description
           title={t('form:input-label-description')}
-          details={`${initialValues
+          details={`${
+            initialValues
               ? t('form:item-description-edit')
               : t('form:item-description-add')
-            } campaign here.`}
+          } campaign here.`}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5 "
         />
 
@@ -597,7 +596,8 @@ export default function CreateOrUpdateFlashSaleForm({ initialValues }: IProps) {
                 name="products"
                 control={control}
                 getOptionLabel={(option: any) =>
-                  `${option.name} ${option?.price ? `- ${currency} ${option?.price}` : ''
+                  `${option.name} ${
+                    option?.price ? `- ${currency} ${option?.price}` : ''
                   }`
                 }
                 getOptionValue={(option: any) => option.id}

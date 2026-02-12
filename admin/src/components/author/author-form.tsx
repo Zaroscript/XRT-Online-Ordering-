@@ -138,12 +138,10 @@ export default function CreateOrUpdateAuthorForm({ initialValues }: IProps) {
 
   const { openModal } = useModalAction();
   const slugAutoSuggest = formatSlug(watch('name'));
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+  const options = settings?.options;
 
   const generateName = watch('name');
   const authorBioSuggestionList = useMemo(() => {

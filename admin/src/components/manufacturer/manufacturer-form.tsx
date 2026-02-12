@@ -119,12 +119,10 @@ export default function CreateOrUpdateManufacturerForm({
   const isNewTranslation = router?.query?.action === 'translate';
   const { locale } = router;
 
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+  const options = settings?.options;
   const { openModal } = useModalAction();
 
   const {

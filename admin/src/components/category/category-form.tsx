@@ -111,7 +111,6 @@ export default function CreateOrUpdateCategoriesForm({
   const { settings } = useSettingsQuery({
     language: locale!,
   });
-
   const options = settings?.options;
 
   const { groups: modifierGroups, loading: loadingModifierGroups } =

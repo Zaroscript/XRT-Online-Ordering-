@@ -36,12 +36,10 @@ export default function CreateOrUpdateFaqsForm({ initialValues }: IProps) {
   const { permissions } = getAuthCredentials();
   const { data: user, isPending: loading, error } = useMeQuery();
   const { locale } = router;
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+  const options = settings?.options;
   const { openModal } = useModalAction();
 
   const { data: shopData } = useShopQuery(

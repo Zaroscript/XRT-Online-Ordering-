@@ -118,16 +118,16 @@ export default function CreateOrUpdateTagForm({ initialValues }: IProps) {
     //@ts-ignore
     defaultValues: initialValues
       ? {
-        ...initialValues,
-        icon: initialValues?.icon
-          ? tagIcons.find(
-            (singleIcon) => singleIcon.value === initialValues?.icon!,
-          )
-          : '',
-        ...(isNewTranslation && {
-          type: null,
-        }),
-      }
+          ...initialValues,
+          icon: initialValues?.icon
+            ? tagIcons.find(
+                (singleIcon) => singleIcon.value === initialValues?.icon!,
+              )
+            : '',
+          ...(isNewTranslation && {
+            type: null,
+          }),
+        }
       : defaultValues,
     //@ts-ignore
     resolver: yupResolver(tagValidationSchema),
@@ -135,12 +135,10 @@ export default function CreateOrUpdateTagForm({ initialValues }: IProps) {
 
   const { openModal } = useModalAction();
   const { locale } = router;
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+  const options = settings?.options;
 
   const generateName = watch('name');
   const tagDetailSuggestionLists = useMemo(() => {
@@ -212,10 +210,11 @@ export default function CreateOrUpdateTagForm({ initialValues }: IProps) {
       <div className="flex flex-wrap my-5 sm:my-8">
         <Description
           title={t('form:input-label-description')}
-          details={`${initialValues
-            ? t('form:item-description-edit')
-            : t('form:item-description-add')
-            } ${t('form:tag-description-helper-text')}`}
+          details={`${
+            initialValues
+              ? t('form:item-description-edit')
+              : t('form:item-description-add')
+          } ${t('form:tag-description-helper-text')}`}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5 "
         />
 

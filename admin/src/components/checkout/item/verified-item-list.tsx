@@ -36,34 +36,32 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
   const [discount] = useAtom(discountAtom);
   const [payableAmount] = useAtom(payableAmountAtom);
   const [use_wallet] = useAtom(walletAtom);
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+  const options = settings?.options;
 
   const available_items = items?.filter(
-    (item) => !verifiedResponse?.unavailable_products?.includes(item.id)
+    (item) => !verifiedResponse?.unavailable_products?.includes(item.id),
   );
 
   const { price: tax } = usePrice(
     verifiedResponse && {
       amount: verifiedResponse.total_tax ?? 0,
-    }
+    },
   );
 
   const { price: shipping } = usePrice(
     verifiedResponse && {
       amount: verifiedResponse.shipping_charge ?? 0,
-    }
+    },
   );
 
   const base_amount = calculateTotal(available_items);
   const { price: sub_total } = usePrice(
     verifiedResponse && {
       amount: base_amount,
-    }
+    },
   );
 
   const { price: serviceFee } = usePrice({
@@ -73,7 +71,7 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
   const { price: tipPrice } = usePrice({
     amount:
       options?.fees?.tip_type === 'fixed'
-        ? options?.fees?.tip
+        ? (options?.fees?.tip ?? 0)
         : (base_amount * (options?.fees?.tip ?? 0)) / 100,
   });
 
@@ -97,27 +95,27 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
     //@ts-ignore
     discount && {
       amount: Number(calculateDiscount),
-    }
+    },
   );
   let freeShippings =
     options?.freeShipping && Number(options?.freeShippingAmount) <= base_amount;
   const totalPrice = verifiedResponse
     ? calculatePaidTotal(
-      {
-        totalAmount: base_amount,
-        tax: verifiedResponse?.total_tax,
-        shipping_charge: verifiedResponse?.shipping_charge,
-        service_fee: options?.fees?.service_fee,
-        tip: options?.fees?.tip,
-        tip_type: options?.fees?.tip_type,
-      },
-      Number(calculateDiscount)
-    )
+        {
+          totalAmount: base_amount,
+          tax: verifiedResponse?.total_tax,
+          shipping_charge: verifiedResponse?.shipping_charge,
+          service_fee: options?.fees?.service_fee,
+          tip: options?.fees?.tip,
+          tip_type: options?.fees?.tip_type,
+        },
+        Number(calculateDiscount),
+      )
     : 0;
   const { price: total } = usePrice(
     verifiedResponse && {
       amount: totalPrice <= 0 ? 0 : totalPrice,
-    }
+    },
   );
   return (
     <div className={className}>
@@ -130,7 +128,7 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
         {!isEmptyCart ? (
           items?.map((item) => {
             const notAvailable = verifiedResponse?.unavailable_products?.find(
-              (d: any) => d === item.id
+              (d: any) => d === item.id,
             );
             return (
               <ItemCard
@@ -148,10 +146,14 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
       <div className="mt-4 space-y-2">
         <ItemInfoRow title={t('text-sub-total')} value={sub_total} />
         <ItemInfoRow title={t('text-tax')} value={tax} />
-        <ItemInfoRow title={t('form:input-label-service-fee')} value={serviceFee} />
         <ItemInfoRow
-          title={`${t('form:input-label-tip')} (${options?.fees?.tip_type === 'fixed' ? t('Fixed') : '%'
-            })`}
+          title={t('form:input-label-service-fee')}
+          value={serviceFee}
+        />
+        <ItemInfoRow
+          title={`${t('form:input-label-tip')} (${
+            options?.fees?.tip_type === 'fixed' ? t('Fixed') : '%'
+          })`}
           value={tipPrice}
         />
         <div className="flex justify-between">

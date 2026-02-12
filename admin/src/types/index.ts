@@ -1399,6 +1399,8 @@ export interface SettingsOptions {
   fees?: {
     service_fee?: number;
     tip_options?: number[];
+    tip?: number;
+    tip_type?: string;
   };
   taxes?: {
     sales_tax?: number;

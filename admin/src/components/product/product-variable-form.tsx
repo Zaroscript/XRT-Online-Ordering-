@@ -16,7 +16,7 @@ import Title from '@/components/ui/title';
 import Checkbox from '@/components/ui/checkbox/checkbox';
 import SelectInput from '@/components/ui/select-input';
 import { useEffect } from 'react';
-import { Product, Settings } from '@/types';
+import { Product, SettingsOptions } from '@/types';
 import { useTranslation } from 'next-i18next';
 import { useAttributesQuery } from '@/data/attributes';
 import FileInput from '@/components/ui/file-input';
@@ -32,7 +32,7 @@ import TextArea from '@/components/ui/text-area';
 type IProps = {
   initialValues?: Product | null;
   shopId: string | undefined;
-  settings: Settings | undefined;
+  settings: SettingsOptions | undefined;
   name: string;
   fields: FieldArrayWithId<FieldValues, FieldArrayPath<FieldValues>, 'id'>[];
   append: (
@@ -55,13 +55,8 @@ export default function ProductVariableForm({
 }: IProps) {
   const { t } = useTranslation();
   const { locale } = useRouter();
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
-    language: locale!,
-  });
-  const upload_max_filesize = options?.server_info?.upload_max_filesize / 1024;
+  const options = settings;
+  const upload_max_filesize = (options?.server_info?.upload_max_filesize ?? 0) / 1024;
 
   const { attributes, loading } = useAttributesQuery({
     shop_id: initialValues ? initialValues?.shop_id : shopId,

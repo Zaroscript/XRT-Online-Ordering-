@@ -69,12 +69,10 @@ export default function CreateOrUpdateProductForm({
 }: ProductFormProps) {
   const router = useRouter();
   const { query, locale } = router;
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+  const options = settings?.options;
   const [isSlugDisable, setIsSlugDisable] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { t } = useTranslation();
@@ -124,7 +122,7 @@ export default function CreateOrUpdateProductForm({
     formState: { errors },
   } = methods;
 
-  const upload_max_filesize = options?.server_info?.upload_max_filesize / 1024;
+  const upload_max_filesize = (options?.server_info?.upload_max_filesize ?? 0) / 1024;
 
   const { mutate: createProduct, isPending: creating } =
     useCreateProductMutation();
