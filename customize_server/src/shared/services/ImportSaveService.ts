@@ -411,7 +411,7 @@ export class ImportSaveService {
 
                 return {
                   modifier_id: modifierId,
-                  sizeCode: override.sizeCode,
+                  // sizeCode: override.sizeCode, // Removed as it doesn't exist on interface
                   prices_by_size: override.prices_by_size,
                   quantity_levels: override.quantity_levels,
                 };

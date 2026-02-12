@@ -12,6 +12,7 @@ import { EditIcon } from '@/components/icons/edit';
 import { StarIcon } from '@/components/icons/star-icon';
 import Link from '@/components/ui/link';
 import { Routes } from '@/config/routes';
+import { resolveImageUrl } from '@/utils/resolve-image-url';
 import { useRouter } from 'next/router';
 import { useItemQuery } from '@/data/item';
 import { useItemSizesQuery } from '@/data/item-size';
@@ -261,6 +262,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
     displayData.image?.thumbnail ?? displayData.image ?? displayData.thumbnail;
   const mainImageSrc =
     typeof mainImage === 'string' ? mainImage : mainImage?.thumbnail;
+  const resolvedMainImageSrc = mainImageSrc ? resolveImageUrl(mainImageSrc) : '';
 
   const isActive = displayData.is_active;
   const isAvailable = displayData.is_available; // Might only exist on items
@@ -580,10 +582,10 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
       <div className="flex flex-col md:grid md:grid-cols-2 flex-1 min-h-0">
         {/* Left Column: Media */}
         <div className="relative w-full h-64 md:h-full bg-gray-50 border-b md:border-b-0 md:border-r border-gray-100 flex items-center justify-center p-8">
-          {mainImageSrc ? (
+          {resolvedMainImageSrc ? (
             <div className="relative w-full h-full max-h-[400px] aspect-square rounded-2xl overflow-hidden shadow-lg border border-white bg-white">
               <Image
-                src={mainImageSrc}
+                src={resolvedMainImageSrc}
                 alt={displayName}
                 fill
                 className="object-cover"

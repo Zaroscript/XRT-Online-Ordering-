@@ -123,10 +123,6 @@ const BusinessSchema = new mongoose_1.Schema({
         type: String,
         trim: true,
     },
-    footer_text: {
-        type: String,
-        trim: true,
-    },
     messages: {
         closed_message: { type: String, trim: true },
         not_accepting_orders_message: { type: String, trim: true },

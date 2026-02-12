@@ -16,7 +16,11 @@ class ItemRepository {
                 ? document.sizes
                     .filter((s) => s && s.size_id) // Filter out invalid entries
                     .map((s) => ({
-                    size_id: s.size_id.toString(),
+                    size_id: typeof s.size_id === 'string'
+                        ? s.size_id
+                        : (s.size_id?._id || s.size_id).toString(),
+                    name: s.size_id && typeof s.size_id === 'object' ? s.size_id.name : undefined,
+                    code: s.size_id && typeof s.size_id === 'object' ? s.size_id.code : undefined,
                     price: s.price,
                     is_default: s.is_default,
                     is_active: s.is_active,
@@ -71,7 +75,7 @@ class ItemRepository {
                     // Find modifiers for this group
                     const groupModifiers = allModifiers
                         .filter((m) => {
-                        const mGroupId = typeof m.modifier_group_id === 'object'
+                        const mGroupId = typeof m.modifier_group_id === 'object' && m.modifier_group_id._id
                             ? m.modifier_group_id._id.toString()
                             : m.modifier_group_id.toString();
                         return mGroupId === groupId;
@@ -127,6 +131,7 @@ class ItemRepository {
         const query = { _id: id };
         const itemDoc = await ItemModel_1.ItemModel.findOne(query)
             .populate('category_id')
+            .populate('sizes.size_id')
             .populate('default_size_id')
             .populate('modifier_groups.modifier_group_id')
             .populate('modifier_groups.modifier_overrides.modifier_id');
@@ -173,7 +178,9 @@ class ItemRepository {
                 .sort({ [orderBy]: sortedBy })
                 .skip(skip)
                 .limit(limit)
+                .limit(limit)
                 .populate('category_id')
+                .populate('sizes.size_id')
                 .populate('default_size_id')
                 .populate('modifier_groups.modifier_group_id')
                 .populate('modifier_groups.modifier_overrides.modifier_id'),
@@ -213,6 +220,7 @@ class ItemRepository {
             runValidators: true,
         })
             .populate('category_id')
+            .populate('sizes.size_id')
             .populate('default_size_id')
             .populate('modifier_groups.modifier_group_id')
             .populate('modifier_groups.modifier_overrides.modifier_id');

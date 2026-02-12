@@ -109,6 +109,8 @@ export interface ParsedCategoryData {
   description?: string;
   sort_order?: number;
   is_active?: boolean;
+  kitchen_section_name?: string;
+  modifier_groups?: string;
 }
 
 export interface ParsedImportData {

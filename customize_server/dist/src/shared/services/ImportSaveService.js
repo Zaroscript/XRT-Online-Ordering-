@@ -159,6 +159,7 @@ class ImportSaveService {
                         prices_by_size: groupData.prices_by_size
                             ?.map((p) => ({
                             size_id: sizeCodeToId.get(p.sizeCode),
+                            sizeCode: p.sizeCode,
                             priceDelta: p.priceDelta,
                         }))
                             .filter((p) => p.size_id),
@@ -178,6 +179,7 @@ class ImportSaveService {
                         prices_by_size: groupData.prices_by_size
                             ?.map((p) => ({
                             size_id: sizeCodeToId.get(p.sizeCode),
+                            sizeCode: p.sizeCode,
                             priceDelta: p.priceDelta,
                         }))
                             .filter((p) => p.size_id),
@@ -356,6 +358,7 @@ class ImportSaveService {
                             return null;
                         return {
                             modifier_id: modifierId,
+                            // sizeCode: override.sizeCode, // Removed as it doesn't exist on interface
                             prices_by_size: override.prices_by_size,
                             quantity_levels: override.quantity_levels,
                         };

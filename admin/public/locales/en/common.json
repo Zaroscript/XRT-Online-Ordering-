@@ -74,6 +74,7 @@
   "kitchen-section-desserts": "Desserts",
   "kitchen-section-beverages": "Beverages",
   "table-item-kitchen-section": "Kitchen Section",
+  "kitchen-section": "Kitchen Section",
   "attribute": "Attribute",
   "attribute-values": "Attribute Values",
   "pixel": "Pixel",
@@ -172,6 +173,9 @@
   "text-disabled": "Disabled",
   "text-active": "Active",
   "text-inactive": "Inactive",
+  "Enable Category": "Enable Category",
+  "Are you sure you want to enable this category?": "Are you sure you want to enable this category?",
+  "Enable": "Enable",
 
   "is-active": "Active",
   "text-available": "Available",

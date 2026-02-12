@@ -8,9 +8,11 @@ const sync_1 = require("csv-parse/sync");
 const adm_zip_1 = __importDefault(require("adm-zip"));
 class CSVParser {
     /**
-     * Parse CSV file or ZIP containing CSV files
+     * Parse CSV file or ZIP containing CSV files.
+     * @param entityType – When provided, forces all rows to be parsed as that entity
+     *                     instead of auto-detecting from filename/headers.
      */
-    static async parseUpload(file) {
+    static async parseUpload(file, entityType) {
         const files = [];
         let parsedData = {
             categories: [],
@@ -32,7 +34,7 @@ class CSVParser {
                     if (entry.entryName.endsWith('.csv') && !entry.isDirectory) {
                         files.push(entry.entryName);
                         const csvContent = entry.getData().toString('utf-8');
-                        const fileData = this.parseCSVContent(csvContent, entry.entryName);
+                        const fileData = this.parseCSVContent(csvContent, entry.entryName, entityType);
                         parsedData = this.mergeParsedData(parsedData, fileData);
                     }
                 }
@@ -51,7 +53,7 @@ class CSVParser {
                     parsedData = this.parseGenericCSV(csvContent, file.originalname || 'import.csv');
                 }
                 else {
-                    const fileData = this.parseCSVContent(csvContent, file.originalname || 'import.csv');
+                    const fileData = this.parseCSVContent(csvContent, file.originalname || 'import.csv', entityType);
                     parsedData = this.mergeParsedData(parsedData, fileData);
                 }
             }
@@ -83,9 +85,9 @@ class CSVParser {
     /**
      * Parse CSV content and identify entity type by filename or headers
      */
-    static parseCSVContent(content, filename) {
+    static parseCSVContent(content, filename, forcedEntityType) {
         const records = (0, sync_1.parse)(content, {
-            columns: true,
+            columns: (headers) => headers.map((h) => h.toLowerCase().trim()),
             skip_empty_lines: true,
             trim: true,
             cast: (value, context) => {
@@ -124,8 +126,8 @@ class CSVParser {
             modifiers: [],
             itemModifierOverrides: [],
         };
-        // Use filename to determine which data type this file belongs to (validates and routes rows)
-        const entityFromFilename = this.getEntityTypeFromFilename(filename);
+        // Use explicit entity type if provided, otherwise fall back to filename detection
+        const entityFromFilename = forcedEntityType || this.getEntityTypeFromFilename(filename);
         const looksLikeModifierGroup = (r) => this.rowLooksLikeModifierGroup(r);
         const looksLikeModifierItem = (r) => this.rowLooksLikeModifierItem(r);
         for (const record of records) {
@@ -163,13 +165,14 @@ class CSVParser {
                 continue;
             }
             if (entityFromFilename === 'sizes') {
-                const hasItemRef = !!(record.item_name ?? record.item_key ?? record.itemKey ?? '')
+                const hasSizeCode = !!(record.size_code ??
+                    record.sizeCode ??
+                    record.code ??
+                    record.name ??
+                    '')
                     .toString()
                     .trim();
-                const hasSizeCode = !!(record.size_code ?? record.sizeCode ?? record.name ?? '')
-                    .toString()
-                    .trim();
-                if (hasItemRef && hasSizeCode) {
+                if (hasSizeCode) {
                     result.itemSizes.push(this.parseItemSize(record));
                 }
                 continue;
@@ -181,17 +184,25 @@ class CSVParser {
                 continue;
             }
             // No entity from filename: auto-detect by column presence
-            if (record.name && !record.size_code && !record.group_key) {
-                result.items.push(this.parseItem(record));
+            // Priority 1: Sizes (Check code/size_code first as they are specific to sizes)
+            if (record.code || record.size_code || record.sizecode) {
+                result.itemSizes.push(this.parseItemSize(record));
             }
+            // Priority 2: Modifier Groups
             else if (looksLikeModifierGroup(record) && !looksLikeModifierItem(record)) {
                 result.modifierGroups.push(this.parseModifierGroup(record));
             }
+            // Priority 3: Modifier Items
             else if (looksLikeModifierItem(record)) {
                 result.modifiers.push(this.parseModifier(record));
             }
+            // Priority 4: Items
+            else if (record.name && !record.group_key) {
+                result.items.push(this.parseItem(record));
+            }
+            // Priority 5: Categories (Generic fallback for rows with name but no other indicators)
             else if (record.name && String(record.name).trim()) {
-                const groupKeyVal = record.group_key ?? record.groupKey ?? record['group key'] ?? '';
+                const groupKeyVal = record.group_key ?? record.groupkey ?? '';
                 const hasGroupKey = !!String(groupKeyVal).trim();
                 if (hasGroupKey) {
                     result.modifierGroups.push(this.parseModifierGroup(record));
@@ -212,7 +223,7 @@ class CSVParser {
     }
     static parseGenericCSV(content, filename) {
         const records = (0, sync_1.parse)(content, {
-            columns: true,
+            columns: (headers) => headers.map((h) => h.toLowerCase().trim()),
             skip_empty_lines: true,
             trim: true,
             cast: (value, context) => {
@@ -282,16 +293,14 @@ class CSVParser {
                 });
             }
             if (type === 'SIZE') {
-                if (parent) {
-                    result.itemSizes.push({
-                        item_name: parent,
-                        size_code: name,
-                        name: name,
-                        price: record.price || record.value,
-                        is_active: record.active !== undefined ? record.active : true,
-                        is_default: record.is_default,
-                    });
-                }
+                result.itemSizes.push({
+                    item_name: parent || '',
+                    size_code: name,
+                    name: name,
+                    price: record.price || record.value,
+                    is_active: record.active !== undefined ? record.active : true,
+                    is_default: record.is_default,
+                });
             }
             if (type === 'MOD_GROUP') {
                 result.modifierGroups.push({
@@ -322,23 +331,25 @@ class CSVParser {
     }
     static parseCategory(record) {
         return {
-            business_id: record.business_id || record.businessId || '',
+            business_id: record.business_id || record.businessid || '',
             name: record.name || '',
             description: record.description,
             sort_order: record.sort_order ? parseInt(record.sort_order) : 0,
             is_active: record.is_active !== undefined
                 ? record.is_active === true || record.is_active === 'true'
                 : true,
+            kitchen_section_name: record.kitchen_section_name,
+            modifier_groups: record.modifier_groups,
         };
     }
     static parseItem(record) {
         return {
-            business_id: record.business_id || record.businessId || '',
+            business_id: record.business_id || record.businessid || '',
             name: record.name || '',
             description: record.description,
             base_price: record.base_price !== undefined ? parseFloat(record.base_price) : undefined,
-            category_id: record.category_id || record.categoryId,
-            category_name: record.category_name || record.categoryName,
+            category_id: record.category_id || record.categoryid,
+            category_name: record.category_name || record.categoryname,
             is_sizeable: record.is_sizeable === true || record.is_sizeable === 'true' || record.is_sizeable === '1',
             is_customizable: record.is_customizable !== undefined
                 ? record.is_customizable === true || record.is_customizable === 'true'
@@ -354,15 +365,18 @@ class CSVParser {
                 record.is_signature === '1',
             max_per_order: record.max_per_order ? parseInt(record.max_per_order) : undefined,
             sort_order: record.sort_order ? parseInt(record.sort_order) : 0,
-            default_size_code: record.default_size_code || record.defaultSizeCode,
+            default_size_code: record.default_size_code ||
+                record.defaultsizecode ||
+                record.default_size ||
+                record.defaultsize,
         };
     }
     static parseItemSize(record) {
         return {
-            item_name: record.item_name || record.itemName || record.item_key || record.itemKey || '',
-            item_category_name: record.item_category_name || record.itemCategoryName || undefined,
-            size_code: record.size_code || record.sizeCode || '',
-            name: record.name || '',
+            item_name: record.item_name || record.itemname || record.item_key || record.itemkey || '',
+            item_category_name: record.item_category_name || record.itemcategoryname || undefined,
+            size_code: record.size_code || record.sizecode || record.code || '',
+            name: record.name || record.code || record.sizeCode || '',
             price: parseFloat(record.price) || 0,
             display_order: record.display_order ? parseInt(record.display_order) : 0,
             is_active: record.is_active !== undefined
@@ -373,22 +387,25 @@ class CSVParser {
     }
     /** Row has group_key, name, and display_type (or min/max_select) and no modifier_key */
     static rowLooksLikeModifierGroup(record) {
-        const hasGroupKey = !!(record.group_key || record.groupKey);
+        const hasGroupKey = !!(record.group_key || record.groupkey || record['group key']);
         const hasName = !!(record.name && String(record.name).trim());
         const hasDisplayType = !!(record.display_type ||
-            record.displayType ||
+            record.displaytype ||
+            record['display type'] ||
             record.min_select !== undefined ||
-            record.minSelect !== undefined ||
+            record.minselect !== undefined ||
             record.max_select !== undefined ||
-            record.maxSelect !== undefined);
+            record.maxselect !== undefined);
         return !!(hasGroupKey && hasName && hasDisplayType);
     }
     /** Row has group_key (or modifier_group_name), name, and modifier_key or max_quantity */
     static rowLooksLikeModifierItem(record) {
         const hasGroupRef = !!(record.group_key ||
-            record.groupKey ||
+            record.groupkey ||
+            record['group key'] ||
             record.modifier_group_name ||
-            record.modifierGroupName);
+            record.modifiergroupname ||
+            record['modifier group name']);
         const hasName = !!(record.name && String(record.name).trim());
         // Only consider it a modifier if there's a non-empty modifier_key OR a positive max_quantity
         const modifierKeyVal = record.modifier_key || record.modifierKey || '';
@@ -399,33 +416,46 @@ class CSVParser {
         return !!(hasGroupRef && hasName && hasModifierKeyOrQty);
     }
     static parseModifierGroup(record) {
-        const groupKey = record.group_key ?? record.groupKey ?? record['group key'] ?? record['Group Key'] ?? '';
-        const name = record.name ?? record.Name ?? '';
+        const groupKey = record.group_key || record.groupkey || record['group key'] || record.name || '';
+        const name = record.name || '';
         return {
             group_key: String(groupKey).trim(),
-            business_id: record.business_id || record.businessId || '',
+            business_id: record.business_id || record.businessid || '',
             name: String(name).trim(),
-            display_name: record.display_name || record.displayName || undefined,
-            display_type: (record.display_type || record.displayType || 'RADIO').toUpperCase(),
-            min_select: parseInt(record.min_select || record.minSelect || '0'),
-            max_select: parseInt(record.max_select || record.maxSelect || '1'),
-            applies_per_quantity: record.applies_per_quantity === true || record.applies_per_quantity === 'true',
+            display_name: record.display_name || record.displayname || record['display name'] || undefined,
+            display_type: (record.display_type ||
+                record.displaytype ||
+                record['display type'] ||
+                'RADIO').toUpperCase(),
+            min_select: parseInt(record.min_select || record.minselect || record['min select'] || '0'),
+            max_select: parseInt(record.max_select || record.maxselect || record['max select'] || '1'),
+            applies_per_quantity: record.applies_per_quantity === true ||
+                record.applies_per_quantity === 'true' ||
+                record.appliesperquantity === true,
             is_active: record.is_active !== undefined
                 ? record.is_active === true || record.is_active === 'true'
                 : true,
-            sort_order: record.sort_order ? parseInt(record.sort_order) : 0,
-            quantity_levels: record.quantity_levels ? JSON.parse(record.quantity_levels) : undefined,
-            prices_by_size: record.prices_by_size ? JSON.parse(record.prices_by_size) : undefined,
+            sort_order: record.sort_order || record.sortorder || record['sort order']
+                ? parseInt(record.sort_order || record.sortorder || record['sort order'])
+                : 0,
+            quantity_levels: record.quantity_levels || record.quantitylevels
+                ? JSON.parse(record.quantity_levels || record.quantitylevels)
+                : undefined,
+            prices_by_size: record.prices_by_size || record.pricesbysize
+                ? JSON.parse(record.prices_by_size || record.pricesbysize)
+                : undefined,
         };
     }
     static parseModifier(record) {
         return {
             group_key: record.group_key ||
-                record.groupKey ||
+                record.groupkey ||
+                record['group key'] ||
                 record.modifier_group_name ||
-                record.modifierGroupName ||
+                record.modifiergroupname ||
+                record['modifier group name'] ||
                 '',
-            modifier_key: record.modifier_key || record.modifierKey || record.name || '',
+            modifier_key: record.modifier_key || record.modifierkey || record['modifier key'] || record.name || '',
             name: record.name || '',
             is_default: record.is_default === true || record.is_default === 'true' || record.is_default === '1',
             max_quantity: record.max_quantity ? parseInt(record.max_quantity) : undefined,

@@ -4,16 +4,8 @@ import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import { useSiteSettingsQuery } from "@/api";
-import { API_BASE_URL } from "@/config/api";
+import { resolveImageUrl } from "@/utils/resolveImageUrl";
 import Content from "./Photo_Content";
-
-/** Resolve image URL: use as-is if absolute, else prepend API base for relative paths */
-function resolveImageUrl(url) {
-  if (!url || typeof url !== "string") return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  const base = API_BASE_URL.replace(/\/api\/v\d+$/, ""); // server origin
-  return url.startsWith("/") ? `${base}${url}` : `${base}/${url}`;
-}
 
 export default function Sliderfun() {
   const sliderHeight = 650;

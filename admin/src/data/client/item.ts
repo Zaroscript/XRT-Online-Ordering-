@@ -10,6 +10,45 @@ import { API_ENDPOINTS } from './api-endpoints';
 import { crudFactory } from './curd-factory';
 import { HttpClient } from './http-client';
 
+/** Normalize form image value to URL + optional public_id, or File for multipart */
+function getItemImagePayload(value: unknown): {
+  imageUrl?: string;
+  imagePublicId?: string;
+  imageFile?: File;
+} {
+  if (value == null) return {};
+  const single = Array.isArray(value) ? value[0] : value;
+  if (single instanceof File) {
+    return { imageFile: single };
+  }
+  if (single && typeof single === 'object' && 'original' in single) {
+    const obj = single as { original?: string; thumbnail?: string; id?: string };
+    const url = obj.original || obj.thumbnail;
+    return url ? { imageUrl: url, imagePublicId: obj.id } : {};
+  }
+  if (typeof single === 'string' && single.trim()) {
+    return { imageUrl: single.trim() };
+  }
+  return {};
+}
+
+function appendItemImageToFormData(
+  formData: FormData,
+  value: unknown,
+  fieldImage = 'image',
+  fieldPublicId = 'image_public_id',
+): void {
+  const { imageUrl, imagePublicId, imageFile } = getItemImagePayload(value);
+  if (imageFile) {
+    formData.append(fieldImage, imageFile);
+  } else if (imageUrl) {
+    formData.append(fieldImage, imageUrl);
+    if (imagePublicId) formData.append(fieldPublicId, imagePublicId);
+  } else {
+    formData.append(fieldImage, '');
+  }
+}
+
 export const itemClient = {
   ...crudFactory<Item, ItemQueryOptions, CreateItemInput>(API_ENDPOINTS.ITEMS),
   get: async ({
@@ -49,75 +88,61 @@ export const itemClient = {
   },
   updateItem: async (data: UpdateItemInput) => {
     const formData = new FormData();
-    const { id, ...input } = data;
+    const { id, image, image_public_id, modifier_groups, is_sizeable, default_size_id, ...rest } = data;
 
-    Object.keys(input).forEach((key) => {
-      const value = input[key as keyof typeof input];
+    appendItemImageToFormData(formData, image);
 
-      if (key === 'image' && value) {
-        // Handle image file
-        if (value instanceof File) {
-          formData.append('image', value);
-        } else if (typeof value === 'string') {
-          // If it's a URL string, don't append (backend will handle it)
-          // Only append if it's actually a file
-        }
-      } else if (key === 'modifier_groups' && value) {
-        // Serialize modifier_groups as JSON string for backend
-        formData.append('modifier_groups', JSON.stringify(value));
-      } else if (value !== undefined && value !== null) {
-        // Convert other values to strings
-        if (typeof value === 'boolean') {
-          formData.append(key, value ? 'true' : 'false');
-        } else if (typeof value === 'object') {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, String(value));
-        }
+    if (modifier_groups !== undefined) {
+      formData.append('modifier_groups', JSON.stringify(modifier_groups));
+    }
+    // When turning is_sizeable off, send default_size_id as empty so backend clears it (otherwise validation fails)
+    if (is_sizeable !== undefined) {
+      formData.append('is_sizeable', is_sizeable ? 'true' : 'false');
+    }
+    if (default_size_id !== undefined || is_sizeable === false) {
+      formData.append('default_size_id', default_size_id ?? '');
+    }
+    Object.entries(rest).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (typeof value === 'boolean') {
+        formData.append(key, value ? 'true' : 'false');
+      } else if (typeof value === 'object') {
+        formData.append(key, JSON.stringify(value));
+      } else {
+        formData.append(key, String(value));
       }
     });
 
     const response = await HttpClient.put<any>(
       `${API_ENDPOINTS.ITEMS}/${id}`,
       formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      },
+      { headers: {} as any },
     );
     // Handle backend response format: { success: true, data: { item: {...} } }
     return response?.data?.item || response?.data || response;
   },
   create: async (variables: CreateItemInput) => {
     const formData = new FormData();
+    const { image, image_public_id, modifier_groups, ...rest } = variables;
 
-    Object.keys(variables).forEach((key) => {
-      const value = variables[key as keyof CreateItemInput];
+    appendItemImageToFormData(formData, image);
 
-      if (key === 'image' && value) {
-        // Handle image file
-        if (value instanceof File) {
-          formData.append('image', value);
-        } else if (typeof value === 'string') {
-          // If it's a URL string, don't append (backend will handle it)
-          // Only append if it's actually a file
-        }
-      } else if (key === 'modifier_groups' && value) {
-        // Serialize modifier_groups as JSON string for backend
-        formData.append('modifier_groups', JSON.stringify(value));
-      } else if (value !== undefined && value !== null) {
-        // Convert other values to strings
-        if (typeof value === 'boolean') {
-          formData.append(key, value ? 'true' : 'false');
-        } else if (typeof value === 'object') {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, String(value));
-        }
+    if (modifier_groups !== undefined) {
+      formData.append('modifier_groups', JSON.stringify(modifier_groups));
+    }
+    Object.entries(rest).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (typeof value === 'boolean') {
+        formData.append(key, value ? 'true' : 'false');
+      } else if (typeof value === 'object') {
+        formData.append(key, JSON.stringify(value));
+      } else {
+        formData.append(key, String(value));
       }
     });
 
     const response = await HttpClient.post<any>(API_ENDPOINTS.ITEMS, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: {} as any,
     });
     // Handle backend response format: { success: true, data: { item: {...} } }
     return response?.data?.item || response?.data || response;

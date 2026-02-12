@@ -41,7 +41,6 @@ const BusinessSettingsSchema = new mongoose_1.Schema({
         ref: 'Business',
         required: [true, 'Settings must belong to a business'],
         unique: true,
-        index: true,
     },
     operating_hours: {
         auto_close: {
@@ -118,6 +117,10 @@ const BusinessSettingsSchema = new mongoose_1.Schema({
         type: Object,
         default: {},
     },
+    collapseLogo: {
+        type: Object,
+        default: {},
+    },
     contactDetails: {
         location: { type: Object, default: {} },
         contact: { type: String, default: '' },
@@ -129,6 +132,7 @@ const BusinessSettingsSchema = new mongoose_1.Schema({
             },
         ],
         website: { type: String, default: '' },
+        emailAddress: { type: String, default: '' },
     },
     currency: { type: String, default: 'USD' },
     heroSlides: [
@@ -136,6 +140,8 @@ const BusinessSettingsSchema = new mongoose_1.Schema({
             bgImage: { type: Object, default: {} },
             title: { type: String, default: '' },
             subtitle: { type: String, default: '' },
+            subtitleTwo: { type: String, default: '' },
+            offer: { type: String, default: '' },
             btnText: { type: String, default: '' },
             btnLink: { type: String, default: '' },
         },
@@ -190,6 +196,7 @@ const BusinessSettingsSchema = new mongoose_1.Schema({
         contactUsTitle: { type: String, default: '' },
     },
     footer_text: { type: String, default: '' },
+    copyrightText: { type: String, default: '' },
     messages: {
         closed_message: { type: String, default: '' },
         not_accepting_orders_message: { type: String, default: '' },
@@ -228,5 +235,4 @@ const BusinessSettingsSchema = new mongoose_1.Schema({
 }, {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
 });
-BusinessSettingsSchema.index({ business: 1 });
 exports.BusinessSettingsModel = mongoose_1.default.model('BusinessSettings', BusinessSettingsSchema);

@@ -249,6 +249,15 @@ export const transformModifierAssignment = (
 };
 
 /**
+ * Normalize image from form: can be array (from FileInput) or single attachment/string.
+ */
+function normalizeImageValue(image: any): any {
+  if (image == null) return image;
+  if (Array.isArray(image)) return image.length ? image[0] : undefined;
+  return image;
+}
+
+/**
  * Build CreateItemInput from form values
  */
 export const buildCreateItemInput = (
@@ -257,6 +266,7 @@ export const buildCreateItemInput = (
   basePrice: number,
   modifierGroupsForBackend: any[] | undefined,
 ): CreateItemInput => {
+  const imageValue = normalizeImageValue(values.image);
   return {
     name: values.name,
     description: values.description,
@@ -277,7 +287,7 @@ export const buildCreateItemInput = (
         ? (values.sizes as any)
         : undefined,
     modifier_groups: modifierGroupsForBackend || values.modifier_groups,
-    image: values.image,
+    image: imageValue,
     business_id: shopId,
   };
 };

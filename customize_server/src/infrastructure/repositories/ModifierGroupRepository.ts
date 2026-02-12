@@ -46,9 +46,9 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
 
   async findById(id: string, business_id?: string): Promise<ModifierGroup | null> {
     const query: any = { _id: id, deleted_at: null };
-    if (business_id) {
-      query.business_id = business_id;
-    }
+    // if (business_id) {
+    //   query.business_id = business_id;
+    // }
     const modifierGroupDoc = await ModifierGroupModel.findOne(query);
     if (!modifierGroupDoc) return null;
 
@@ -59,9 +59,9 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
 
   async findActiveById(id: string, business_id?: string): Promise<ModifierGroup | null> {
     const query: any = { _id: id, is_active: true, deleted_at: null };
-    if (business_id) {
-      query.business_id = business_id;
-    }
+    // if (business_id) {
+    //   query.business_id = business_id;
+    // }
     const modifierGroupDoc = await ModifierGroupModel.findOne(query);
     if (!modifierGroupDoc) return null;
 
@@ -73,9 +73,9 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
   async findAll(filters: ModifierGroupFilters): Promise<PaginatedModifierGroups> {
     const query: any = { deleted_at: null };
 
-    if (filters.business_id) {
-      query.business_id = filters.business_id;
-    }
+    // if (filters.business_id) {
+    //   query.business_id = filters.business_id;
+    // }
 
     if (filters.name) {
       query.name = { $regex: filters.name, $options: 'i' };
@@ -137,7 +137,7 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
     data: UpdateModifierGroupDTO
   ): Promise<ModifierGroup> {
     const modifierGroupDoc = await ModifierGroupModel.findOneAndUpdate(
-      { _id: id, business_id, deleted_at: null },
+      { _id: id, deleted_at: null },
       data,
       {
         new: true,
@@ -155,7 +155,7 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
   async delete(id: string, business_id: string): Promise<void> {
     // Soft delete - set deleted_at timestamp
     const modifierGroupDoc = await ModifierGroupModel.findOneAndUpdate(
-      { _id: id, business_id, deleted_at: null },
+      { _id: id, deleted_at: null },
       { deleted_at: new Date() },
       { new: true }
     );

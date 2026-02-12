@@ -150,21 +150,29 @@ export class UpdateItemUseCase {
       }
     }
 
-    let imageUrl: string | undefined = existingItem.image;
-    let imagePublicId: string | undefined = existingItem.image_public_id;
+    let imageUrl: string | undefined;
+    let imagePublicId: string | undefined;
 
-    if (files && files['image'] && files['image'][0]) {
-      // Delete old image if exists
+    if (files?.['image']?.[0]) {
+      // New file in multipart: upload to Cloudinary and use new URL
       if (existingItem.image_public_id) {
         await this.imageStorage.deleteImage(existingItem.image_public_id);
       }
-
       const uploadResult = await this.imageStorage.uploadImage(
         files['image'][0],
         `xrttech/items/global`
       );
       imageUrl = uploadResult.secure_url;
       imagePublicId = uploadResult.public_id;
+    } else if (itemData.image !== undefined) {
+      // No file: use body (URL to set, or empty string to clear)
+      const bodyImage = itemData.image === '' || itemData.image === null ? undefined : (itemData.image as string);
+      imageUrl = bodyImage;
+      imagePublicId = bodyImage ? ((itemData.image_public_id as string) || undefined) : undefined;
+    } else {
+      // No file and no image in body: keep existing
+      imageUrl = existingItem.image;
+      imagePublicId = existingItem.image_public_id;
     }
 
     const updateData: any = {

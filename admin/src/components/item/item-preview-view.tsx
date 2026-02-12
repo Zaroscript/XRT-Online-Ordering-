@@ -6,6 +6,7 @@ import ErrorMessage from '@/components/ui/error-message';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { siteSettings } from '@/settings/site.settings';
+import { resolveImageUrl } from '@/utils/resolve-image-url';
 import usePrice, { formatPrice } from '@/utils/use-price';
 import { CloseIcon } from '@/components/icons/close-icon';
 import { useModalAction } from '@/components/ui/modal/modal.context';
@@ -63,7 +64,8 @@ const ItemPreviewView = () => {
         return imageObj?.original || imageObj?.thumbnail || siteSettings.product.placeholder;
     };
 
-    const imageSrc = getImageSrc();
+    const rawSrc = getImageSrc();
+    const imageSrc = rawSrc === siteSettings.product.placeholder ? rawSrc : resolveImageUrl(rawSrc) || rawSrc;
     const isSVG = imageSrc?.toLowerCase().endsWith('.svg') || imageSrc?.includes('.svg') || imageSrc?.includes('image/svg');
 
     return (

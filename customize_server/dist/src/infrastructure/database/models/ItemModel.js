@@ -152,6 +152,10 @@ const ItemSchema = new mongoose_1.Schema({
                                     message: 'Size codes must be unique within prices_by_size.',
                                 },
                             },
+                            is_default: {
+                                type: Boolean,
+                                default: false,
+                            },
                             quantity_levels: {
                                 type: [
                                     {

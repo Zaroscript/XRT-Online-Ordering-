@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const path_1 = __importDefault(require("path"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const connection_1 = require("./infrastructure/database/connection");
@@ -12,6 +13,7 @@ const auth_routes_1 = __importDefault(require("./application/routes/auth.routes"
 const business_routes_1 = __importDefault(require("./application/routes/business.routes"));
 const category_routes_1 = __importDefault(require("./application/routes/category.routes"));
 const settings_routes_1 = __importDefault(require("./application/routes/settings.routes"));
+const public_routes_1 = __importDefault(require("./application/routes/public.routes"));
 const role_routes_1 = __importDefault(require("./application/routes/role.routes"));
 const withdraw_routes_1 = __importDefault(require("./application/routes/withdraw.routes"));
 const attachment_routes_1 = __importDefault(require("./application/routes/attachment.routes"));
@@ -25,11 +27,16 @@ const import_routes_1 = __importDefault(require("./application/routes/import.rou
 const permission_routes_1 = __importDefault(require("./application/routes/permission.routes"));
 const price_routes_1 = __importDefault(require("./application/routes/price.routes"));
 const kitchen_section_routes_1 = __importDefault(require("./application/routes/kitchen-section.routes"));
+const tax_routes_1 = __importDefault(require("./application/routes/tax.routes"));
+const shipping_routes_1 = __importDefault(require("./application/routes/shipping.routes"));
+const coupon_routes_1 = __importDefault(require("./application/routes/coupon.routes"));
+const testimonial_routes_1 = __importDefault(require("./application/routes/testimonial.routes"));
 const env_1 = require("./shared/config/env");
 const logger_1 = require("./shared/utils/logger");
 // Import swagger config - using relative path from src to config directory
 const swagger_1 = require("./swagger");
 const app = (0, express_1.default)();
+// Trigger restart for helmet config change
 // Database connection
 // Database connection will be established in startServer function
 // Global middlewares
@@ -56,6 +63,8 @@ app.use(middlewares_1.securityMiddleware);
 app.use(middlewares_1.compressionMiddleware);
 app.use(middlewares_1.rateLimitMiddleware);
 app.use(middlewares_1.requestLogger);
+// Serve uploaded files (when using disk storage for attachments)
+app.use('/uploads', express_1.default.static(path_1.default.join(process.cwd(), 'uploads')));
 // Health check
 app.get('/health', (req, res) => {
     res.json({
@@ -101,6 +110,7 @@ app.use(`${env_1.env.API_BASE_URL}/auth`, auth_routes_1.default);
 app.use(`${env_1.env.API_BASE_URL}/businesses`, business_routes_1.default);
 app.use(`${env_1.env.API_BASE_URL}/categories`, category_routes_1.default);
 app.use(`${env_1.env.API_BASE_URL}/settings`, settings_routes_1.default);
+app.use(`${env_1.env.API_BASE_URL}/public`, public_routes_1.default);
 app.use(`${env_1.env.API_BASE_URL}/roles`, role_routes_1.default);
 app.use(`${env_1.env.API_BASE_URL}/permissions`, permission_routes_1.default);
 app.use(`${env_1.env.API_BASE_URL}/withdraws`, withdraw_routes_1.default);
@@ -116,6 +126,10 @@ app.use(`${env_1.env.API_BASE_URL}/kitchen-sections`, kitchen_section_routes_1.d
 app.use(`${env_1.env.API_BASE_URL}`, modifier_routes_1.default);
 app.use(`${env_1.env.API_BASE_URL}/prices`, price_routes_1.default);
 app.use(`${env_1.env.API_BASE_URL}`, mock_routes_1.default);
+app.use(`${env_1.env.API_BASE_URL}/taxes`, tax_routes_1.default);
+app.use(`${env_1.env.API_BASE_URL}/shippings`, shipping_routes_1.default);
+app.use(`${env_1.env.API_BASE_URL}/coupons`, coupon_routes_1.default);
+app.use(`${env_1.env.API_BASE_URL}/testimonials`, testimonial_routes_1.default);
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({

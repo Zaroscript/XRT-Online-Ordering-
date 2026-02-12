@@ -11,6 +11,7 @@ import { Table } from '@/components/ui/table';
 import { Item, MappedPaginatorInfo, SortOrder } from '@/types';
 import TitleWithSort from '@/components/ui/title-with-sort';
 import { siteSettings } from '@/settings/site.settings';
+import { resolveImageUrl } from '@/utils/resolve-image-url';
 import { NoDataFound } from '@/components/icons/no-data-found';
 import { useUpdateItemMutation } from '@/data/item';
 import Link from '@/components/ui/link';
@@ -193,7 +194,7 @@ const ItemList = ({
         <div className="flex items-center">
           <div className="relative aspect-square h-10 w-10 shrink-0 overflow-hidden rounded border border-border-200/80 bg-gray-100 me-2.5">
             <img
-              src={image?.thumbnail ?? siteSettings.product.placeholder}
+              src={resolveImageUrl(image?.thumbnail ?? image) || siteSettings.product.placeholder}
               alt={name}
               className="h-full w-full object-cover"
             />
@@ -480,7 +481,7 @@ const ItemList = ({
                     <div className="flex items-start gap-3">
                       <div className="relative aspect-square h-16 w-16 shrink-0 overflow-hidden rounded border border-border-200/80 bg-gray-100">
                         <img
-                          src={item.image ?? siteSettings.product.placeholder}
+                          src={resolveImageUrl(item.image) || siteSettings.product.placeholder}
                           alt={item.name}
                           className="h-full w-full object-cover"
                         />

@@ -8,13 +8,13 @@ class AppendImportFileUseCase {
     constructor(importSessionRepository) {
         this.importSessionRepository = importSessionRepository;
     }
-    async execute(sessionId, file, user_id) {
+    async execute(sessionId, file, user_id, entity_type) {
         const session = await this.importSessionRepository.findById(sessionId, user_id);
         if (!session) {
             throw new AppError_1.AppError('Import session not found', 404);
         }
         // Parse new file
-        const { data: newData, files: newFiles } = await csvParser_1.CSVParser.parseUpload(file);
+        const { data: newData, files: newFiles } = await csvParser_1.CSVParser.parseUpload(file, entity_type);
         // Merge data
         const mergedData = {
             categories: [...(session.parsedData.categories || []), ...(newData.categories || [])],

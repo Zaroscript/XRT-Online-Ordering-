@@ -76,11 +76,16 @@ export class AuthController {
     // Set cookies
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
 
-    return sendSuccess(res, 'Registration successful', {
-      user: result.user,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-    }, 201);
+    return sendSuccess(
+      res,
+      'Registration successful',
+      {
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      },
+      201
+    );
   });
 
   login = asyncHandler(async (req: Request, res: Response) => {
@@ -167,11 +172,11 @@ export class AuthController {
       const business = await getOrCreateUseCase.execute(userDoc.id);
       userObj.shops = [
         {
+          ...business,
           id: business.id,
           slug: business.id,
           is_active: business.isActive ?? true,
           name: business.name,
-          ...business,
         },
       ];
     } catch {
@@ -298,7 +303,9 @@ export class AuthController {
 
   private setAuthCookies(res: Response, accessToken: string, refreshToken: string): void {
     const cookieOptions = {
-      expires: new Date(Date.now() + Number(process.env.JWT_COOKIE_EXPIRE || 30) * 24 * 60 * 60 * 1000),
+      expires: new Date(
+        Date.now() + Number(process.env.JWT_COOKIE_EXPIRE || 30) * 24 * 60 * 60 * 1000
+      ),
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict' as const,
@@ -315,4 +322,3 @@ export class AuthController {
     });
   }
 }
-

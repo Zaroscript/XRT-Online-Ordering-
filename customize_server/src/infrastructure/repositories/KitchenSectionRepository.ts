@@ -28,7 +28,7 @@ export class KitchenSectionRepository implements IKitchenSectionRepository {
 
   async findAll(filters: KitchenSectionFilters): Promise<KitchenSection[]> {
     const query: any = {};
-    if (filters.business_id) query.business_id = filters.business_id;
+    // if (filters.business_id) query.business_id = filters.business_id;
     if (filters.name) query.name = new RegExp(`^${filters.name}$`, 'i'); // Case insensitive exact match
 
     const docs = await KitchenSectionModel.find(query);
@@ -37,7 +37,7 @@ export class KitchenSectionRepository implements IKitchenSectionRepository {
 
   async findByName(name: string, business_id: string): Promise<KitchenSection | null> {
     const doc = await KitchenSectionModel.findOne({
-      business_id,
+      // business_id,
       name: { $regex: new RegExp(`^${name}$`, 'i') },
     });
     return doc ? this.toDomain(doc) : null;

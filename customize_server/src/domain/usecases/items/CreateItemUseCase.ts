@@ -121,19 +121,24 @@ export class CreateItemUseCase {
     let imageUrl: string | undefined;
     let imagePublicId: string | undefined;
 
-    if (files && files['image'] && files['image'][0]) {
+    if (files?.['image']?.[0]) {
+      // File in multipart: upload to Cloudinary
       const uploadResult = await this.imageStorage.uploadImage(
         files['image'][0],
         `xrttech/items/global`
       );
       imageUrl = uploadResult.secure_url;
       imagePublicId = uploadResult.public_id;
+    } else if (itemData.image !== undefined && itemData.image !== null && itemData.image !== '') {
+      // No file: use URL from body (admin uploaded via POST /attachments first, then sent URL)
+      imageUrl = itemData.image as string;
+      imagePublicId = (itemData.image_public_id as string) || undefined;
     }
 
     const finalItemData: any = {
       ...itemData,
-      image: imageUrl || itemData.image,
-      image_public_id: imagePublicId || itemData.image_public_id,
+      image: imageUrl ?? itemData.image,
+      image_public_id: imagePublicId ?? itemData.image_public_id,
       sort_order: itemData.sort_order ?? 0,
       is_active: itemData.is_active ?? true,
       is_available: itemData.is_available ?? true,

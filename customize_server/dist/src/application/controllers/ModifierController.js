@@ -124,15 +124,51 @@ class ModifierController {
                 is_active: req.query.is_active !== undefined ? req.query.is_active === 'true' : undefined,
             };
             const modifiers = await this.modifierRepository.findAll(filters);
+            // Helper to safely stringify values for CSV
+            const safeString = (val) => `"${(val || '').toString().replace(/"/g, '""')}"`;
+            // Helpers for formatting
+            const formatSidesConfig = (config) => {
+                if (!config || !config.enabled)
+                    return 'Disabled';
+                const sides = (config.allowed_sides || []).join(', ');
+                return `Enabled (${sides})`;
+            };
+            const formatQuantityLevels = (levels) => {
+                if (!levels || !Array.isArray(levels))
+                    return '';
+                return levels
+                    .map((ql) => {
+                    const qty = ql.quantity;
+                    const price = ql.price !== undefined ? `$${ql.price}` : '';
+                    const name = ql.name ? ` (${ql.name})` : '';
+                    return `${qty}x${name}: ${price}`;
+                })
+                    .join('; ');
+            };
+            const formatPricesBySize = (prices) => {
+                if (!prices || !Array.isArray(prices))
+                    return '';
+                return prices.map((p) => `${p.sizeCode}: +$${p.priceDelta}`).join('; ');
+            };
             // Convert to CSV
             const csvRows = [
-                ['modifier_group_name', 'name', 'display_order', 'is_active', 'max_quantity'].join(','),
+                [
+                    'modifier_group_name',
+                    'name',
+                    'display_order',
+                    'is_active',
+                    'sides_config',
+                    'quantity_levels',
+                    'prices_by_size',
+                ].join(','),
                 ...modifiers.map((mod) => [
-                    `"${(mod.modifier_group?.name || '').replace(/"/g, '""')}"`,
-                    `"${(mod.name || '').replace(/"/g, '""')}"`,
+                    safeString(mod.modifier_group?.name),
+                    safeString(mod.name),
                     mod.display_order,
                     mod.is_active,
-                    mod.max_quantity || 0,
+                    safeString(formatSidesConfig(mod.sides_config)),
+                    safeString(formatQuantityLevels(mod.quantity_levels)),
+                    safeString(formatPricesBySize(mod.prices_by_size)),
                 ].join(',')),
             ];
             const csvContent = csvRows.join('\n');

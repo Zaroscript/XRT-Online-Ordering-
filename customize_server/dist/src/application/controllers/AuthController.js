@@ -16,7 +16,10 @@ const ApproveUserUseCase_1 = require("../../domain/usecases/users/ApproveUserUse
 const BanUserUseCase_1 = require("../../domain/usecases/users/BanUserUseCase");
 const UpdateUserPermissionsUseCase_1 = require("../../domain/usecases/users/UpdateUserPermissionsUseCase");
 const GetUserPermissionsUseCase_1 = require("../../domain/usecases/users/GetUserPermissionsUseCase");
+const GetOrCreateDefaultBusinessUseCase_1 = require("../../domain/usecases/businesses/GetOrCreateDefaultBusinessUseCase");
 const UserRepository_1 = require("../../infrastructure/repositories/UserRepository");
+const BusinessRepository_1 = require("../../infrastructure/repositories/BusinessRepository");
+const BusinessSettingsRepository_1 = require("../../infrastructure/repositories/BusinessSettingsRepository");
 const EmailService_1 = require("../../infrastructure/services/EmailService");
 const jwt_1 = require("../../infrastructure/auth/jwt");
 const response_1 = require("../../shared/utils/response");
@@ -92,7 +95,28 @@ class AuthController {
             return (0, response_1.sendSuccess)(res, 'Logged out successfully');
         });
         this.getMe = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
-            return (0, response_1.sendSuccess)(res, 'User retrieved successfully', { user: req.user });
+            const userDoc = req.user;
+            const userObj = userDoc?.toObject ? userDoc.toObject() : { ...userDoc };
+            // Single-tenant: attach the one business as shops so dashboard "My Shops" shows it
+            try {
+                const businessRepository = new BusinessRepository_1.BusinessRepository();
+                const businessSettingsRepository = new BusinessSettingsRepository_1.BusinessSettingsRepository();
+                const getOrCreateUseCase = new GetOrCreateDefaultBusinessUseCase_1.GetOrCreateDefaultBusinessUseCase(businessRepository, businessSettingsRepository);
+                const business = await getOrCreateUseCase.execute(userDoc.id);
+                userObj.shops = [
+                    {
+                        ...business,
+                        id: business.id,
+                        slug: business.id,
+                        is_active: business.isActive ?? true,
+                        name: business.name,
+                    },
+                ];
+            }
+            catch {
+                userObj.shops = [];
+            }
+            return (0, response_1.sendSuccess)(res, 'User retrieved successfully', { user: userObj });
         });
         this.getAllUsers = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
             const { page = 1, limit = 10, orderBy = 'created_at', sortedBy = 'desc', search, role, is_active, } = req.query;

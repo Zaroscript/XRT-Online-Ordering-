@@ -18,6 +18,7 @@ export interface Category {
   icon_public_id?: string;
   translated_languages: string[];
   modifier_groups?: ItemModifierGroupAssignment[]; // Using ItemModifierGroupAssignment from Item entity
+  products_count?: number;
   created_at: Date;
   updated_at: Date;
 }

@@ -42,6 +42,8 @@ exports.storage = (0, multer_storage_cloudinary_1.default)({
                 'tags',
                 'users',
                 'auth',
+                'attachments',
+                'settings',
             ];
             section = pathSegments.find((segment) => knownEntities.includes(segment)) || 'misc';
         }
@@ -57,6 +59,9 @@ exports.storage = (0, multer_storage_cloudinary_1.default)({
         }
         else if (fieldName === 'gallery') {
             folder += '/gallery';
+        }
+        else if (typeof fieldName === 'string' && fieldName.includes('heroSlides')) {
+            folder += '/hero-slides';
         }
         // Use 'auto' to let Cloudinary automatically detect the resource type
         // This works correctly for SVG files and other image types

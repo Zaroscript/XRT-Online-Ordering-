@@ -8,15 +8,18 @@ class UpdateCategoryUseCase {
         this.imageStorage = imageStorage;
         this.itemRepository = itemRepository;
     }
-    async execute(id, business_id, categoryData, files) {
-        console.log(`[UpdateCategoryUseCase] Executing for ID: ${id}`);
+    async execute(id, business_id, // Allow undefined for super admins
+    categoryData, files) {
+        console.log(`[UpdateCategoryUseCase] Executing for ID: ${id}, Business ID: ${business_id || 'Any'}`);
         const existingCategory = await this.categoryRepository.findById(id, business_id);
         if (!existingCategory) {
             throw new AppError_1.NotFoundError('Category');
         }
+        // Resolve robust business_id for update
+        const targetBusinessId = business_id || existingCategory.business_id;
         // Check if name is being updated and if it already exists
         if (categoryData.name && categoryData.name !== existingCategory.name) {
-            const nameExists = await this.categoryRepository.exists(categoryData.name, business_id);
+            const nameExists = await this.categoryRepository.exists(categoryData.name, targetBusinessId);
             if (nameExists) {
                 throw new AppError_1.ValidationError('Category name already exists for this business');
             }
@@ -35,7 +38,7 @@ class UpdateCategoryUseCase {
                     .catch((err) => console.error('Background delete failed for image:', err));
             }
             console.log('[UpdateCategory] Uploading new image');
-            const uploadResult = await this.imageStorage.uploadImage(files['image'][0], `xrttech/categories/${business_id}`);
+            const uploadResult = await this.imageStorage.uploadImage(files['image'][0], `xrttech/categories/${targetBusinessId}`);
             imageUrl = uploadResult.secure_url;
             imagePublicId = uploadResult.public_id;
         }
@@ -49,7 +52,7 @@ class UpdateCategoryUseCase {
                     .catch((err) => console.error('Background delete failed for icon:', err));
             }
             console.log('[UpdateCategory] Uploading new icon');
-            const uploadResult = await this.imageStorage.uploadImage(files['icon'][0], `xrttech/categories/${business_id}/icons`);
+            const uploadResult = await this.imageStorage.uploadImage(files['icon'][0], `xrttech/categories/${targetBusinessId}/icons`);
             iconUrl = uploadResult.secure_url;
             iconPublicId = uploadResult.public_id;
         }
@@ -86,7 +89,7 @@ class UpdateCategoryUseCase {
         }
         else {
         }
-        return await this.categoryRepository.update(id, business_id, finalCategoryData);
+        return await this.categoryRepository.update(id, targetBusinessId, finalCategoryData);
     }
 }
 exports.UpdateCategoryUseCase = UpdateCategoryUseCase;

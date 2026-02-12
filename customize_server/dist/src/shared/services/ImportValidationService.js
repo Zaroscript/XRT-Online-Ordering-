@@ -145,30 +145,23 @@ class ImportValidationService {
         const defaultSizes = new Map(); // item composite key -> count of default sizes
         data.itemSizes.forEach((size, index) => {
             const row = index + 2;
-            if (!size.item_name || size.item_name.trim() === '') {
-                errors.push({
-                    file: filename,
-                    row,
-                    entity: 'ItemSize',
-                    field: 'item_name',
-                    message: 'Item name required',
-                    value: size.item_name,
-                });
-                return;
-            }
-            const sizeItemKey = itemCompositeKey(size.item_name, size.item_category_name);
-            // Optionally warn if no matching item in items list
-            const matchingItem = data.items.find((i) => itemCompositeKey(i.name, i.category_name) === sizeItemKey);
-            if (!matchingItem) {
-                errors.push({
-                    file: filename,
-                    row,
-                    entity: 'ItemSize',
-                    field: 'item_name',
-                    message: 'Item not found',
-                    value: size.item_name,
-                });
-                return;
+            const sizeItemKey = size.item_name && size.item_name.trim() !== ''
+                ? itemCompositeKey(size.item_name, size.item_category_name)
+                : null;
+            // Only perform item cross-checks if item_name is provided (Global sizes are valid without it)
+            if (sizeItemKey) {
+                const matchingItem = data.items.find((i) => itemCompositeKey(i.name, i.category_name) === sizeItemKey);
+                if (!matchingItem) {
+                    errors.push({
+                        file: filename,
+                        row,
+                        entity: 'ItemSize',
+                        field: 'item_name',
+                        message: 'Item not found',
+                        value: size.item_name,
+                    });
+                    return;
+                }
             }
             if (!size.size_code) {
                 errors.push({
@@ -181,11 +174,12 @@ class ImportValidationService {
                 });
                 return;
             }
-            // size_code unique per item
-            if (!sizeKeys.has(sizeItemKey)) {
-                sizeKeys.set(sizeItemKey, new Set());
+            // size_code unique per item (or globally if no item_name)
+            const contextKey = sizeItemKey || 'GLOBAL_SITES';
+            if (!sizeKeys.has(contextKey)) {
+                sizeKeys.set(contextKey, new Set());
             }
-            const itemSizeCodes = sizeKeys.get(sizeItemKey);
+            const itemSizeCodes = sizeKeys.get(contextKey);
             if (itemSizeCodes.has(size.size_code)) {
                 errors.push({
                     file: filename,
@@ -199,8 +193,8 @@ class ImportValidationService {
             else {
                 itemSizeCodes.add(size.size_code);
             }
-            // price > 0
-            if (!size.price || size.price <= 0) {
+            // price > 0 (Only required if item_name is provided, as Global Sizes in export don't have price)
+            if (sizeItemKey && (!size.price || size.price <= 0)) {
                 errors.push({
                     file: filename,
                     row,
@@ -210,8 +204,8 @@ class ImportValidationService {
                     value: size.price,
                 });
             }
-            // name required
-            if (!size.name || size.name.trim() === '') {
+            // name required (Only if item_name provided; if Global, size_code acts as name)
+            if (sizeItemKey && (!size.name || size.name.trim() === '')) {
                 errors.push({
                     file: filename,
                     row,
@@ -222,7 +216,7 @@ class ImportValidationService {
                 });
             }
             // Track default sizes
-            if (size.is_default) {
+            if (sizeItemKey && size.is_default) {
                 const count = defaultSizes.get(sizeItemKey) || 0;
                 defaultSizes.set(sizeItemKey, count + 1);
             }

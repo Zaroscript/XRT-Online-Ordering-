@@ -385,6 +385,8 @@ export class CSVParser {
         record.is_active !== undefined
           ? record.is_active === true || record.is_active === 'true'
           : true,
+      kitchen_section_name: record.kitchen_section_name,
+      modifier_groups: record.modifier_groups,
     };
   }
 

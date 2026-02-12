@@ -21,7 +21,12 @@ export default function ImageSection({ control }: ImageSectionProps) {
       />
 
       <Card className="w-full sm:w-8/12 md:w-2/3">
-        <FileInput name="image" control={control} multiple={false} />
+        <FileInput
+          name="image"
+          control={control}
+          multiple={false}
+          section="items"
+        />
       </Card>
     </div>
   );

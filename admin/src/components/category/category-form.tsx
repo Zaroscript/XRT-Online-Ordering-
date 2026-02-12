@@ -389,7 +389,6 @@ export default function CreateOrUpdateCategoriesForm({
                 control={control as any}
                 multiple={false}
                 section="categories"
-                skipImmediateUpload
               />
             </div>
           </Card>
@@ -408,7 +407,6 @@ export default function CreateOrUpdateCategoriesForm({
                 accept="image/*"
                 helperText={t('form:upload-image-help-text')}
                 section="categories"
-                skipImmediateUpload
               />
             </div>
           </Card>

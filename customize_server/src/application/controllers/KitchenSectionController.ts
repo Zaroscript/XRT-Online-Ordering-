@@ -16,11 +16,11 @@ export class KitchenSectionController {
   }
 
   getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const business_id = req.user?.business_id || req.query.business_id;
+    const business_id = req.user?.business_id || req.query.business_id || 'default';
 
-    if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
-      throw new ValidationError('business_id is required');
-    }
+    // if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
+    //   throw new ValidationError('business_id is required');
+    // }
 
     // Allow looking up by specific business_id if provided, otherwise fail or restricted?
     // Using cast for simplicity as repository handles string

@@ -38,8 +38,11 @@ const mongoose_1 = __importStar(require("mongoose"));
 const PricesBySizeSchema = new mongoose_1.Schema({
     sizeCode: {
         type: String,
-        enum: ['S', 'M', 'L', 'XL', 'XXL'],
-        required: true,
+        required: false,
+    },
+    size_id: {
+        type: String,
+        required: false,
     },
     priceDelta: {
         type: Number,

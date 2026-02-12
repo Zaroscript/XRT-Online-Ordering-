@@ -60,9 +60,10 @@ class CategoryRepository {
     }
     async findById(id, business_id) {
         const query = { _id: id };
-        if (business_id) {
-            query.business_id = business_id;
-        }
+        // In single-tenant mode, we ignore business_id filter for ID lookups
+        // if (business_id) {
+        //   query.business_id = business_id;
+        // }
         const categoryDoc = await CategoryModel_1.CategoryModel.findOne(query)
             .populate('kitchen_section_id')
             .populate('modifier_groups.modifier_group_id');
@@ -87,7 +88,8 @@ class CategoryRepository {
         return categoryDocs.map((doc) => this.toDomain(doc));
     }
     async update(id, business_id, categoryData) {
-        const categoryDoc = await CategoryModel_1.CategoryModel.findOneAndUpdate({ _id: id, business_id }, categoryData, {
+        // Remove business_id from update filter
+        const categoryDoc = await CategoryModel_1.CategoryModel.findOneAndUpdate({ _id: id }, categoryData, {
             new: true,
             runValidators: true,
         });
@@ -97,7 +99,8 @@ class CategoryRepository {
         return this.toDomain(categoryDoc);
     }
     async delete(id, business_id) {
-        await CategoryModel_1.CategoryModel.findOneAndDelete({ _id: id, business_id });
+        // Remove business_id from delete filter
+        await CategoryModel_1.CategoryModel.findOneAndDelete({ _id: id });
     }
     async exists(name, business_id) {
         const count = await CategoryModel_1.CategoryModel.countDocuments({

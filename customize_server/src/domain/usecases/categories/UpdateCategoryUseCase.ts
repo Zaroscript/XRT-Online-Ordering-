@@ -13,20 +13,25 @@ export class UpdateCategoryUseCase {
 
   async execute(
     id: string,
-    business_id: string,
+    business_id: string | undefined, // Allow undefined for super admins
     categoryData: UpdateCategoryDTO,
     files?: { [fieldname: string]: Express.Multer.File[] }
   ): Promise<Category> {
-    console.log(`[UpdateCategoryUseCase] Executing for ID: ${id}`);
+    console.log(
+      `[UpdateCategoryUseCase] Executing for ID: ${id}, Business ID: ${business_id || 'Any'}`
+    );
     const existingCategory = await this.categoryRepository.findById(id, business_id);
 
     if (!existingCategory) {
       throw new NotFoundError('Category');
     }
 
+    // Resolve robust business_id for update
+    const targetBusinessId = business_id || existingCategory.business_id;
+
     // Check if name is being updated and if it already exists
     if (categoryData.name && categoryData.name !== existingCategory.name) {
-      const nameExists = await this.categoryRepository.exists(categoryData.name, business_id);
+      const nameExists = await this.categoryRepository.exists(categoryData.name, targetBusinessId);
       if (nameExists) {
         throw new ValidationError('Category name already exists for this business');
       }
@@ -53,7 +58,7 @@ export class UpdateCategoryUseCase {
       console.log('[UpdateCategory] Uploading new image');
       const uploadResult = await this.imageStorage.uploadImage(
         files['image'][0],
-        `xrttech/categories/${business_id}`
+        `xrttech/categories/${targetBusinessId}`
       );
       imageUrl = uploadResult.secure_url;
       imagePublicId = uploadResult.public_id;
@@ -75,7 +80,7 @@ export class UpdateCategoryUseCase {
       console.log('[UpdateCategory] Uploading new icon');
       const uploadResult = await this.imageStorage.uploadImage(
         files['icon'][0],
-        `xrttech/categories/${business_id}/icons`
+        `xrttech/categories/${targetBusinessId}/icons`
       );
       iconUrl = uploadResult.secure_url;
       iconPublicId = uploadResult.public_id;
@@ -120,6 +125,6 @@ export class UpdateCategoryUseCase {
     } else {
     }
 
-    return await this.categoryRepository.update(id, business_id, finalCategoryData);
+    return await this.categoryRepository.update(id, targetBusinessId, finalCategoryData);
   }
 }

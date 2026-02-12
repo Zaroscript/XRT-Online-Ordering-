@@ -38,7 +38,9 @@ class ImportController {
             if (!req.file) {
                 throw new AppError_1.ValidationError('Please upload a CSV or ZIP file.');
             }
-            const session = await this.parseAndValidateUseCase.execute(req.file, req.user.id, business_id);
+            // Optional: frontend can explicitly specify the entity type for this file
+            const entity_type = req.body.entity_type || null;
+            const session = await this.parseAndValidateUseCase.execute(req.file, req.user.id, business_id, entity_type);
             auditLogger_1.AuditLogger.logImport(auditLogger_1.AuditAction.IMPORT_PARSE, req.user.id, business_id, session.id, {
                 files: session.originalFiles,
                 errors: session.validationErrors.length,
@@ -51,8 +53,9 @@ class ImportController {
             if (!req.file) {
                 throw new AppError_1.ValidationError('Please upload a CSV or ZIP file.');
             }
+            const entity_type = req.body.entity_type || null;
             const appendUseCase = new AppendImportFileUseCase_1.AppendImportFileUseCase(new ImportSessionRepository_1.ImportSessionRepository());
-            const session = await appendUseCase.execute(id, req.file, req.user.id);
+            const session = await appendUseCase.execute(id, req.file, req.user.id, entity_type);
             return (0, response_1.sendSuccess)(res, 'File appended successfully', session);
         });
         this.getSession = (0, asyncHandler_1.asyncHandler)(async (req, res) => {

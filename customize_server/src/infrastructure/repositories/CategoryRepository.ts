@@ -71,9 +71,10 @@ export class CategoryRepository implements ICategoryRepository {
 
   async findById(id: string, business_id?: string): Promise<Category | null> {
     const query: any = { _id: id };
-    if (business_id) {
-      query.business_id = business_id;
-    }
+    // In single-tenant mode, we ignore business_id filter for ID lookups
+    // if (business_id) {
+    //   query.business_id = business_id;
+    // }
     const categoryDoc = await CategoryModel.findOne(query)
       .populate('kitchen_section_id')
       .populate('modifier_groups.modifier_group_id');
@@ -84,9 +85,9 @@ export class CategoryRepository implements ICategoryRepository {
     const query: any = {};
 
     // Only filter by business_id if provided (for super admins, this might be undefined)
-    if (filters.business_id) {
-      query.business_id = filters.business_id;
-    }
+    // if (filters.business_id) {
+    //   query.business_id = filters.business_id;
+    // }
 
     if (filters.is_active !== undefined) {
       query.is_active = filters.is_active;
@@ -100,7 +101,33 @@ export class CategoryRepository implements ICategoryRepository {
       .populate('kitchen_section_id')
       .populate('modifier_groups.modifier_group_id')
       .sort({ sort_order: 1 });
-    return categoryDocs.map((doc) => this.toDomain(doc));
+
+    // Fetch product counts for these categories
+    const categoryIds = categoryDocs.map((doc) => doc._id);
+    const itemCounts = await import('../database/models/ItemModel').then(({ ItemModel }) =>
+      ItemModel.aggregate([
+        {
+          $match: {
+            category_id: { $in: categoryIds },
+            is_active: true,
+          },
+        },
+        {
+          $group: {
+            _id: '$category_id',
+            count: { $sum: 1 },
+          },
+        },
+      ])
+    );
+
+    const countMap = new Map(itemCounts.map((c) => [c._id.toString(), c.count]));
+
+    return categoryDocs.map((doc) => {
+      const category = this.toDomain(doc);
+      category.products_count = countMap.get(doc._id.toString()) || 0;
+      return category;
+    });
   }
 
   async update(
@@ -108,14 +135,11 @@ export class CategoryRepository implements ICategoryRepository {
     business_id: string,
     categoryData: UpdateCategoryDTO
   ): Promise<Category> {
-    const categoryDoc = await CategoryModel.findOneAndUpdate(
-      { _id: id, business_id },
-      categoryData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    // Remove business_id from update filter
+    const categoryDoc = await CategoryModel.findOneAndUpdate({ _id: id }, categoryData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!categoryDoc) {
       throw new Error('Category not found');
@@ -125,7 +149,8 @@ export class CategoryRepository implements ICategoryRepository {
   }
 
   async delete(id: string, business_id: string): Promise<void> {
-    await CategoryModel.findOneAndDelete({ _id: id, business_id });
+    // Remove business_id from delete filter
+    await CategoryModel.findOneAndDelete({ _id: id });
   }
 
   async exists(name: string, business_id: string): Promise<boolean> {

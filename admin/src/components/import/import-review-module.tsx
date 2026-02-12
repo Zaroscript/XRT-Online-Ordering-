@@ -265,6 +265,49 @@ export default function ImportReviewModule({
       ),
     },
     {
+      title: t('common:kitchen-section'),
+      dataIndex: 'kitchen_section_name',
+      key: 'kitchen_section_name',
+      width: 200,
+      render: (value: string, record: any, index: number) => (
+        <Input
+          name={`category_kitchen_section_${index}`}
+          value={value || ''}
+          onChange={(e) =>
+            updateData(
+              'categories' as any,
+              index,
+              'kitchen_section_name',
+              e.target.value,
+            )
+          }
+          className="text-sm"
+        />
+      ),
+    },
+    {
+      title: t('common:modifier-groups'),
+      dataIndex: 'modifier_groups',
+      key: 'modifier_groups',
+      width: 300,
+      render: (value: string, record: any, index: number) => (
+        <Input
+          name={`category_modifier_groups_${index}`}
+          value={value || ''}
+          onChange={(e) =>
+            updateData(
+              'categories' as any,
+              index,
+              'modifier_groups',
+              e.target.value,
+            )
+          }
+          className="text-sm"
+          placeholder="Name (Min:0 Max:1); ..."
+        />
+      ),
+    },
+    {
       title: t('common:active'),
       dataIndex: 'is_active',
       key: 'is_active',

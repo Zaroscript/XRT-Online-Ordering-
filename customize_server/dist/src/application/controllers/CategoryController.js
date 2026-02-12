@@ -10,6 +10,7 @@ const DeleteCategoryUseCase_1 = require("../../domain/usecases/categories/Delete
 const CategoryRepository_1 = require("../../infrastructure/repositories/CategoryRepository");
 const ItemRepository_1 = require("../../infrastructure/repositories/ItemRepository");
 const KitchenSectionRepository_1 = require("../../infrastructure/repositories/KitchenSectionRepository");
+const ModifierGroupRepository_1 = require("../../infrastructure/repositories/ModifierGroupRepository");
 const CloudinaryStorage_1 = require("../../infrastructure/cloudinary/CloudinaryStorage");
 const response_1 = require("../../shared/utils/response");
 const asyncHandler_1 = require("../../shared/utils/asyncHandler");
@@ -164,20 +165,42 @@ class CategoryController {
                 filters.business_id = business_id;
             }
             // Use default limit of 1000 for export to get all/most categories
-            // Or we should modify GetCategoriesUseCase to accept 'limit: -1' or similar for no limit.
-            // For now, let's assume pagination and just get a large number.
             filters.limit = 1000;
             filters.page = 1;
             const result = await this.getCategoriesUseCase.execute(filters);
             const categories = result.data || result; // Handle both paginated and non-paginated responses
+            // Helper to safely stringify values for CSV
+            const safeString = (val) => `"${(val || '').toString().replace(/"/g, '""')}"`;
+            // Helper to format modifier groups comfortably
+            const formatModifierGroups = (groups) => {
+                if (!groups || !Array.isArray(groups))
+                    return '';
+                return groups
+                    .map((g) => {
+                    const name = g.modifier_group?.name || 'Unknown Group';
+                    // We can also show overrides summary if needed, e.g. Max Qty
+                    // For now, just the group name is a good start, or name + overrides count
+                    return name;
+                })
+                    .join('; ');
+            };
             // Convert to CSV
             const csvRows = [
-                ['name', 'description', 'is_active', 'sort_order'].join(','),
+                [
+                    'name',
+                    'description',
+                    'is_active',
+                    'sort_order',
+                    'kitchen_section_name',
+                    'modifier_groups',
+                ].join(','),
                 ...categories.map((cat) => [
-                    `"${(cat.name || '').replace(/"/g, '""')}"`,
-                    `"${(cat.description || '').replace(/"/g, '""')}"`,
+                    safeString(cat.name),
+                    safeString(cat.description),
                     cat.is_active,
                     cat.sort_order,
+                    safeString(cat.kitchen_section_data?.name || ''),
+                    safeString(formatModifierGroups(cat.modifier_groups)),
                 ].join(',')),
             ];
             const csvContent = csvRows.join('\n');
@@ -224,6 +247,56 @@ class CategoryController {
                         is_active: record.is_active === 'true' || record.is_active === true || record.is_active === '1',
                         sort_order: parseInt(record.sort_order || '0'),
                     };
+                    // Handle Kitchen Section lookup by name
+                    if (record.kitchen_section_name) {
+                        try {
+                            const section = await this.kitchenSectionRepository.findByName(record.kitchen_section_name, business_id);
+                            if (section) {
+                                categoryData.kitchen_section_id = section.id;
+                            }
+                        }
+                        catch (err) {
+                            // Ignore lookup errors
+                        }
+                    }
+                    // Handle Modifier Groups parsing
+                    if (record.modifier_groups) {
+                        const groupStrings = record.modifier_groups
+                            .split(';')
+                            .map((s) => s.trim())
+                            .filter((s) => s);
+                        const modifierGroupsList = [];
+                        for (const groupStr of groupStrings) {
+                            // Parse "Name (Min:X Max:Y)"
+                            const match = groupStr.match(/^(.*?)(?:\s*\(Min:\s*(\d+)\s*Max:\s*(\d+)\))?$/i);
+                            if (match) {
+                                const name = match[1].trim();
+                                // Lookup group by name
+                                try {
+                                    // Escape regex characters to ensure literal match
+                                    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                    const groupsFound = await this.modifierGroupRepository.findAll({
+                                        business_id: business_id,
+                                        name: `^${escapedName}$`, // Exact match regex
+                                    });
+                                    if (groupsFound.modifierGroups.length > 0) {
+                                        const group = groupsFound.modifierGroups[0];
+                                        modifierGroupsList.push({
+                                            modifier_group_id: group.id,
+                                            display_order: modifierGroupsList.length,
+                                            modifier_overrides: [],
+                                        });
+                                    }
+                                }
+                                catch (err) {
+                                    // Ignore lookup errors
+                                }
+                            }
+                        }
+                        if (modifierGroupsList.length > 0) {
+                            categoryData.modifier_groups = modifierGroupsList;
+                        }
+                    }
                     const existingCategory = existingCategories.find((c) => c.name.toLowerCase() === record.name.toLowerCase());
                     if (existingCategory) {
                         // Update
@@ -248,6 +321,7 @@ class CategoryController {
         const itemRepository = new ItemRepository_1.ItemRepository();
         const imageStorage = new CloudinaryStorage_1.CloudinaryStorage();
         this.kitchenSectionRepository = new KitchenSectionRepository_1.KitchenSectionRepository();
+        this.modifierGroupRepository = new ModifierGroupRepository_1.ModifierGroupRepository();
         this.createCategoryUseCase = new CreateCategoryUseCase_1.CreateCategoryUseCase(categoryRepository, imageStorage);
         this.getCategoriesUseCase = new GetCategoriesUseCase_1.GetCategoriesUseCase(categoryRepository);
         this.updateCategoryUseCase = new UpdateCategoryUseCase_1.UpdateCategoryUseCase(categoryRepository, imageStorage, itemRepository);

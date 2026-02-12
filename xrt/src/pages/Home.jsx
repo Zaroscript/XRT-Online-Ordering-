@@ -6,31 +6,38 @@ import TopRated from "../Component/TopRated/TopRated";
 import Testimonials from "../Component/Testimonials/Testimonials";
 import { Categories_items, products as defaultProducts } from "../config/constants";
 import { useMemo } from "react";
+import useCategories from "../hooks/useCategories";
+import useProducts from "../hooks/useProducts";
 
 const Home = () => {
-  const menuProducts = defaultProducts;
+  const { categories, loading: categoriesLoading } = useCategories();
+  const { products, loading: productsLoading } = useProducts();
   
-  const uniqueMenuProducts = useMemo(() => {
-    return menuProducts.map((item, index) => ({
-      ...item,
-      id: `${item.id}-${index}`
-    }));
-  }, [menuProducts]);
+  const loading = categoriesLoading || productsLoading;
   
-  const homeCategories = Categories_items.slice(0, 5).map(item => item.name);
-  const initialCategory = homeCategories[0];
+  // Use fetched products, or empty array if loading
+  const menuProducts = products || [];
+  
+  // We can skip the ID re-generation if IDs are stable from DB
+  const uniqueMenuProducts = menuProducts;
+  
+  // Use fetched categories if available, otherwise fallback (or empty)
+  const categoryNames = categories.map(item => item.name);
+  const initialCategory = categoryNames.length > 0 ? categoryNames[0] : "Pizza"; // Fallback to Pizza if empty
+
+  if (loading) return null; // Or a loading spinner for the whole page
 
   return (
     <>
       <Sliderfun />
-      <Categories />
+      <Categories categories={categories} />
       <AdsList />
       <Menulist 
         variant="home" 
         initialCategory={initialCategory} 
         limit={8} 
         products={uniqueMenuProducts}
-        categories={homeCategories}
+        categories={categoryNames}
       />
       <TopRated />
       <Testimonials />

@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSiteSettingsQuery } from '@/api';
-import { API_BASE_URL } from '@/config/api';
-
-/** Resolve image URL */
-function resolveImageUrl(url) {
-  if (!url || typeof url !== "string") return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  const base = API_BASE_URL.replace(/\/api\/v\d+$/, ""); // server origin
-  return url.startsWith("/") ? `${base}${url}` : `${base}/${url}`;
-}
+import { resolveImageUrl } from '@/utils/resolveImageUrl';
 
 const AdsPopup = () => {
   const [isOpen, setIsOpen] = useState(false);

@@ -9,11 +9,11 @@ class ParseAndValidateImportUseCase {
         this.importSessionRepository = importSessionRepository;
         this.kitchenSectionRepository = kitchenSectionRepository;
     }
-    async execute(file, user_id, business_id) {
+    async execute(file, user_id, business_id, entity_type) {
         let data;
         let files;
         try {
-            const result = await csvParser_1.CSVParser.parseUpload(file);
+            const result = await csvParser_1.CSVParser.parseUpload(file, entity_type);
             data = result.data;
             files = result.files;
         }

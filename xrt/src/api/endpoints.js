@@ -6,4 +6,6 @@ export const API_ENDPOINTS = {
   PUBLIC_SITE_SETTINGS: "public/site-settings",
   /* Active testimonials - no auth */
   TESTIMONIALS_ALL: "public/testimonials",
+  CATEGORIES: "public/categories",
+  PRODUCTS: "public/products",
 };

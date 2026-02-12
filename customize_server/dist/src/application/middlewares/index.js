@@ -24,7 +24,9 @@ exports.corsMiddleware = (0, cors_1.default)({
             return callback(null, true);
         }
         // Check if allowedOrigins is defined and is an array
-        if (!env_1.env.ALLOWED_ORIGINS || !Array.isArray(env_1.env.ALLOWED_ORIGINS) || env_1.env.ALLOWED_ORIGINS.length === 0) {
+        if (!env_1.env.ALLOWED_ORIGINS ||
+            !Array.isArray(env_1.env.ALLOWED_ORIGINS) ||
+            env_1.env.ALLOWED_ORIGINS.length === 0) {
             // In production, if ALLOWED_ORIGINS is not set, we should probably still allow all or a default
             // to avoid breaking things, but it's better to log it.
             console.warn('CORS: env.ALLOWED_ORIGINS is not set properly, allowing all origins as fallback');
@@ -46,7 +48,9 @@ exports.corsMiddleware = (0, cors_1.default)({
 });
 // Security middleware
 exports.securityMiddleware = [
-    (0, helmet_1.default)(),
+    (0, helmet_1.default)({
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
     (0, express_mongo_sanitize_1.default)(),
     (0, hpp_1.default)(),
 ];

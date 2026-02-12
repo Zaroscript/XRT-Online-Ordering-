@@ -58,11 +58,11 @@ export class CategoryController {
       language,
       modifier_groups,
     } = req.body;
-    const business_id = req.user?.business_id || req.body.business_id;
+    const business_id = req.user?.business_id || req.body.business_id || 'default';
 
-    if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
-      throw new ValidationError('business_id is required');
-    }
+    // if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
+    //   throw new ValidationError('business_id is required');
+    // }
 
     // Parse modifier_groups if it's a string (common in form data)
     let parsedModifierGroups = undefined;
@@ -105,13 +105,11 @@ export class CategoryController {
   });
 
   getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const business_id = req.user?.business_id || req.query.business_id;
+    const business_id = req.user?.business_id || req.query.business_id || 'default';
 
-    // For super admins, allow getting all categories if no business_id is provided
-    // For other users, business_id is required
-    if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
-      throw new ValidationError('business_id is required');
-    }
+    // if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
+    //   throw new ValidationError('business_id is required');
+    // }
 
     const filters: any = {
       is_active: req.query.is_active ? req.query.is_active === 'true' : undefined,
@@ -154,11 +152,11 @@ export class CategoryController {
     console.log('Apply to Items Flag (Raw):', req.body.apply_modifier_groups_to_items);
     console.log('-------------------------------');
 
-    const business_id = req.user?.business_id || req.body.business_id;
+    const business_id = req.user?.business_id || req.body.business_id || 'default';
 
-    if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
-      throw new ValidationError('business_id is required');
-    }
+    // if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
+    //   throw new ValidationError('business_id is required');
+    // }
 
     // Parse modifier_groups if it's a string (common in form data)
     let parsedModifierGroups = undefined;
@@ -202,9 +200,9 @@ export class CategoryController {
     let business_id = req.user?.business_id || req.query.business_id;
 
     // For super admins, if no business_id, they can get any category
-    if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
-      throw new ValidationError('business_id is required');
-    }
+    // if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
+    //   throw new ValidationError('business_id is required');
+    // }
 
     if (!business_id && req.user?.role === UserRole.SUPER_ADMIN) {
       business_id = undefined;
@@ -222,9 +220,9 @@ export class CategoryController {
     const { id } = req.params;
     const business_id = req.user?.business_id || req.query.business_id;
 
-    if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
-      throw new ValidationError('business_id is required');
-    }
+    // if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
+    //   throw new ValidationError('business_id is required');
+    // }
 
     await this.deleteCategoryUseCase.execute(id, business_id as string);
 
@@ -247,9 +245,9 @@ export class CategoryController {
   exportCategories = asyncHandler(async (req: AuthRequest, res: Response) => {
     const business_id = req.user?.business_id || req.query.business_id;
 
-    if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
-      throw new ValidationError('business_id is required');
-    }
+    // if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
+    //   throw new ValidationError('business_id is required');
+    // }
 
     const filters: any = {
       is_active: req.query.is_active ? req.query.is_active === 'true' : undefined,
@@ -317,11 +315,12 @@ export class CategoryController {
       throw new ValidationError('CSV file is required');
     }
 
-    const business_id = req.user?.business_id || req.body.business_id;
+    // Single-tenant: use default if not provided
+    const business_id = req.user?.business_id || req.body.business_id || 'default';
 
-    if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
-      throw new ValidationError('business_id is required');
-    }
+    // if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
+    //   throw new ValidationError('business_id is required');
+    // }
 
     const csvContent = req.file.buffer.toString('utf-8');
     const records = parse(csvContent, {

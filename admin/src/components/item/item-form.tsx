@@ -136,6 +136,11 @@ export default function CreateOrUpdateItemForm({
     name: 'default_size_id',
     defaultValue: null,
   });
+  const sizesValue = useWatch({
+    control,
+    name: 'sizes',
+    defaultValue: [],
+  });
   const selectedModifierGroups =
     useWatch({
       control,
@@ -184,31 +189,40 @@ export default function CreateOrUpdateItemForm({
 
     const subscription = watch((formValues) => {
       if (!formValues || !Object.keys(formValues).length) return;
+      const img = formValues.image;
+      const cacheableImage =
+        img == null
+          ? undefined
+          : typeof img === 'string'
+            ? img
+            : typeof img === 'object' && (img as any).original
+              ? { original: (img as any).original, thumbnail: (img as any).thumbnail ?? (img as any).original, id: (img as any).id }
+              : undefined;
       const cacheableData: Partial<FormValues> = {
         ...(formValues as any),
-        image: formValues.image
-          ? typeof formValues.image === 'string'
-            ? formValues.image
-            : ''
-          : undefined,
-        // Cast sizes to satisfy ItemSizeConfig[] type (watch returns deeply partial types)
+        image: cacheableImage,
         sizes: formValues.sizes as ItemSizeConfig[] | undefined,
       };
-      if (formValues.image && typeof formValues.image !== 'string') {
-        imageFileRef.current = formValues.image as File;
-      }
       setCachedFormData(cacheableData as FormValues);
     });
 
     return () => subscription.unsubscribe();
   }, [isInitialized, watch, setCachedFormData, imageFileRef]);
 
-  // Auto-set is_sizeable
+  // When sizeable: keep base_price in sync with the default size's price
   useEffect(() => {
-    if (initialValues?.default_size_id && !isSizeable) {
-      setValue('is_sizeable', true, { shouldValidate: false });
-    }
-  }, [initialValues?.id, initialValues?.default_size_id, isSizeable]);
+    if (!isSizeable) return;
+    const sizesList = Array.isArray(sizesValue) ? sizesValue : [];
+    const defId = defaultSizeId ?? getValues('default_size_id');
+    const defaultConfig = sizesList.find(
+      (s: any) => s.size_id === defId || s.is_default
+    );
+    const price =
+      defaultConfig?.price != null && defaultConfig.price >= 0
+        ? Number(defaultConfig.price)
+        : 0;
+    setValue('base_price', price, { shouldValidate: false });
+  }, [isSizeable, defaultSizeId, sizesValue, getValues, setValue]);
 
   // Switch to sizes tab when is_sizeable is enabled - REMOVED to prevent auto-switching on load
   /*
@@ -345,7 +359,6 @@ export default function CreateOrUpdateItemForm({
         return;
       }
     } else {
-      basePrice = 0;
       if (!values.default_size_id) {
         setError('default_size_id', {
           type: 'manual',
@@ -353,6 +366,15 @@ export default function CreateOrUpdateItemForm({
         });
         return;
       }
+      // Use the default size's price as base_price when sizeable
+      const sizesList = values.sizes ?? [];
+      const defaultSizeConfig = sizesList.find(
+        (s: any) => s.size_id === values.default_size_id || s.is_default
+      );
+      basePrice =
+        defaultSizeConfig?.price != null && defaultSizeConfig.price >= 0
+          ? Number(defaultSizeConfig.price)
+          : 0;
     }
 
     const modifierGroupsForBackend = transformModifierAssignment(

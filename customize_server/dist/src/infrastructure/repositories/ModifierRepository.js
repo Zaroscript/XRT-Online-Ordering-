@@ -47,7 +47,7 @@ class ModifierRepository {
         if (modifier_group_id) {
             query.modifier_group_id = modifier_group_id;
         }
-        const modifierDoc = await ModifierModel_1.ModifierModel.findOne(query);
+        const modifierDoc = await ModifierModel_1.ModifierModel.findOne(query).populate('modifier_group_id', 'name');
         return modifierDoc ? this.toDomain(modifierDoc) : null;
     }
     async findActiveById(id, modifier_group_id) {
@@ -55,7 +55,7 @@ class ModifierRepository {
         if (modifier_group_id) {
             query.modifier_group_id = modifier_group_id;
         }
-        const modifierDoc = await ModifierModel_1.ModifierModel.findOne(query);
+        const modifierDoc = await ModifierModel_1.ModifierModel.findOne(query).populate('modifier_group_id', 'name');
         return modifierDoc ? this.toDomain(modifierDoc) : null;
     }
     async findAll(filters) {

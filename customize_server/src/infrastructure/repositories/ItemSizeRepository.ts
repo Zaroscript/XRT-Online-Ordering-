@@ -36,9 +36,9 @@ export class ItemSizeRepository implements IItemSizeRepository {
   async findAll(filters: ItemSizeFilters): Promise<ItemSize[]> {
     const query: any = {};
 
-    if (filters.business_id) {
-      query.business_id = filters.business_id;
-    }
+    // if (filters.business_id) {
+    //   query.business_id = filters.business_id;
+    // }
 
     if (filters.is_active !== undefined) {
       query.is_active = filters.is_active;
