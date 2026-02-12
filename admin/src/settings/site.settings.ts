@@ -332,8 +332,8 @@ export const siteSettings = {
         icon: 'SettingsIcon',
         childMenu: [
           {
-            href: Routes.reviews.list,
-            label: 'sidebar-nav-item-reviews',
+            href: Routes.testimonials.list,
+            label: 'sidebar-nav-item-testimonials',
             icon: 'ReviewIcon',
           },
           {

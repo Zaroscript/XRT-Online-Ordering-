@@ -26,6 +26,7 @@ export default function Content(props) {
     cursor-pointer
     inline-block
     text-center
+    capitalize
   `;
 
   const buttonContent = <span>{btnText}</span>;
@@ -56,13 +57,13 @@ export default function Content(props) {
         space-y-4
       ">
         {title ? (
-          <h5 className="tracking-[0.25em] text-white font-semibold">
+          <h5 className="tracking-[0.25em] text-white font-semibold uppercase">
             {title}
           </h5>
         ) : null}
 
         {description ? (
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight capitalize">
             {description}
           </h2>
         ) : null}
@@ -74,7 +75,7 @@ export default function Content(props) {
         ) : null}
 
         {offer ? (
-          <h3 className="text-3xl font-bold text-[#ffb300]">
+          <h3 className="text-3xl font-bold text-[#ffb300] capitalize">
             {offer}
           </h3>
         ) : null}

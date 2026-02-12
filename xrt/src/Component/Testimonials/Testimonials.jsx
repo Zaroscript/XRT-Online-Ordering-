@@ -1,17 +1,39 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
-
-import {
-  Testimonials_bg,
-  Testimonials_content,
-} from "./../../config/constants";
+import { Testimonials_bg, Testimonials_content } from "./../../config/constants";
 import ViewTestimonials from "./ViewTestimonials";
+import { apiClient } from "@/api";
 
 export default function Testimonials() {
+  const [testimonials, setTestimonials] = useState(Testimonials_content);
+
+  useEffect(() => {
+    apiClient
+      .get("/testimonials/all", { params: { active: "true" } })
+      .then((res) => {
+        const data = res.data?.data;
+        if (Array.isArray(data) && data.length > 0) {
+          setTestimonials(
+            data.map((t) => ({
+              name: t.name,
+              feedback: t.feedback,
+              image: t.image || "",
+              Role: t.role,
+            }))
+          );
+        }
+      })
+      .catch(() => {
+        // Fallback to hardcoded constants on error
+      });
+  }, []);
+
+  if (testimonials.length === 0) return null;
+
   return (
     <div
       className="relative w-full h-[500px] bg-cover bg-center py-[80px]  flex justify-center"
@@ -70,7 +92,7 @@ export default function Testimonials() {
             prevEl: ".custom-prev",
           }}
         >
-          {Testimonials_content.map((item, idx) => (
+          {testimonials.map((item, idx) => (
             <SwiperSlide key={idx} className="flex items-center justify-center">
               <ViewTestimonials item={item} />
             </SwiperSlide>

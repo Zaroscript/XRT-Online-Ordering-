@@ -197,6 +197,12 @@
   "input-label-order-status": "Order Status",
   "input-label-serial": "Serial",
   "input-label-code": "Code",
+  "input-label-code-prefix": "Code Prefix",
+  "label-bulk-generate": "Bulk Generate",
+  "button-label-generate-code": "Generate Code",
+  "input-label-max-uses": "Max Uses (Optional)",
+  "input-tooltip-max-uses": "Maximum number of times this coupon can be used. Leave empty for unlimited uses.",
+
   "input-label-amount": "Amount",
   "input-label-minimum-cart-amount": "Minimum cart amount",
   "input-label-serial-help-text": "The order status should follow(ex: 1-[9])",
@@ -901,7 +907,7 @@
   "input-label-role": "Role",
   "input-label-modifier-groups": "Modifier Groups",
   "input-label-apply-modifier-groups-recursive": "Apply to All Items in Category",
-  "input-label-modifiers": "Modifiers",
+
   "input-label-modifier-group": "Modifier Group",
   "input-label-modifier-group-details": "Modifier Group Details",
   "input-label-modifiers-count": "Modifiers Count",
@@ -977,7 +983,7 @@
   "input-placeholder-quantity-level-name": "e.g., Light, Normal, Extra",
   "button-label-add-quantity-level": "Add Quantity Level",
   "no-quantity-levels-action": "Click \"Add Quantity Level\" to add quantity levels with custom prices.",
-  "button-label-cancel": "Cancel",
+
   "button-label-update-modifier": "Update Modifier",
   "button-label-add-modifier": "Add Modifier",
   "form-title-create-modifier": "Create Modifier",
@@ -1047,13 +1053,10 @@
   "input-label-availability": "Available",
   "form-title-bulk-price-update": "Bulk Price Update",
   "form-description-bulk-price-update": "Update all item prices at once. Choose to increase or decrease by a percentage or fixed amount.",
-  "input-label-operation-type": "Operation Type",
   "input-label-increase": "Increase",
   "input-label-decrease": "Decrease",
-  "input-label-value-type": "Value Type",
-  "input-label-percentage": "Percentage (%)",
   "input-label-fixed-amount": "Fixed Amount ($)",
-  "input-label-value": "Value",
+
   "input-note-price-update-value": "Enter the amount to adjust prices by",
   "button-label-update-prices": "Update All Prices",
   "button-label-cancel": "Cancel",
@@ -1110,5 +1113,15 @@
   "form-input-label-external-text": "External Text",
   "form-input-tip-external-text": "Text for external link displayed in footer",
   "form-input-label-external-link": "External Link",
-  "form-input-tip-external-link": "External URL displayed in footer"
+  "form-input-tip-external-link": "External URL displayed in footer",
+  "form-title-testimonial-info": "Testimonial Information",
+  "form-description-testimonial-info": "Add testimonial details such as name, feedback, and role.",
+  "input-label-testimonial-name": "Name",
+  "input-label-testimonial-role": "Role / Company",
+  "input-label-testimonial-feedback": "Feedback",
+  "input-label-testimonial-image": "Avatar Image",
+  "form-title-create-testimonial": "Create Testimonial",
+  "form-title-edit-testimonial": "Edit Testimonial",
+  "button-label-add-testimonial": "Add Testimonial",
+  "button-label-update-testimonial": "Update Testimonial"
 }

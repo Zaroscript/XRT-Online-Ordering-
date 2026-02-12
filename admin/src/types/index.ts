@@ -560,7 +560,7 @@ export interface Coupon {
   translated_languages: string[];
   orders: Order[];
   type: string;
-  image: string;
+
   amount: number;
   active_from: string;
   expire_at: string;
@@ -569,6 +569,7 @@ export interface Coupon {
   target?: boolean;
   shop_id?: string;
   is_approve?: boolean;
+  max_conversions?: number;
 }
 
 export interface CouponInput {
@@ -577,11 +578,14 @@ export interface CouponInput {
   amount: number;
   minimum_cart_amount: number;
   description?: string;
-  image?: AttachmentInput;
+
   active_from: string;
   expire_at: string;
   language?: string;
   shop_id?: string;
+  is_bulk?: boolean;
+  quantity?: number;
+  max_conversions?: number;
 }
 
 export interface StoreNotice {

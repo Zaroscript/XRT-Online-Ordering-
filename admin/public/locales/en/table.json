@@ -110,5 +110,7 @@
   "table-item-date": "Date",
   "table-item-operation": "Operation",
   "table-item-admin": "Admin",
-  "table-item-affected-items": "Affected Items"
+  "table-item-affected-items": "Affected Items",
+  "table-item-feedback": "Feedback",
+  "table-item-name": "Name"
 }

@@ -32,6 +32,7 @@ export interface BusinessSettings {
   siteTitle?: string;
   siteSubtitle?: string;
   logo?: any;
+  collapseLogo?: any;
   contactDetails?: {
     location?: any;
     contact?: string;
@@ -130,6 +131,7 @@ export interface CreateBusinessSettingsDTO {
   siteTitle?: string;
   siteSubtitle?: string;
   logo?: any;
+  collapseLogo?: any;
   contactDetails?: BusinessSettings['contactDetails'];
   currency?: string;
   heroSlides?: BusinessSettings['heroSlides'];
@@ -154,6 +156,7 @@ export interface UpdateBusinessSettingsDTO {
   siteTitle?: string;
   siteSubtitle?: string;
   logo?: any;
+  collapseLogo?: any;
   contactDetails?: BusinessSettings['contactDetails'];
   currency?: string;
   heroSlides?: BusinessSettings['heroSlides'];

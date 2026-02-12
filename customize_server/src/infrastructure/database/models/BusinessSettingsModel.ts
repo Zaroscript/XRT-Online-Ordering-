@@ -88,6 +88,10 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
       type: Object,
       default: {},
     },
+    collapseLogo: {
+      type: Object,
+      default: {},
+    },
     contactDetails: {
       location: { type: Object, default: {} },
       contact: { type: String, default: '' },

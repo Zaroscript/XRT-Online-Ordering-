@@ -57,6 +57,7 @@ export class PublicController {
         subtitleTwo: slide?.subtitleTwo ?? '',
         btnText: slide?.btnText ?? '',
         btnLink: slide?.btnLink ?? '',
+        offer: slide?.offer ?? '',
         bgImage: url ? { original: url, thumbnail: url } : {},
       };
     });

@@ -24,6 +24,32 @@ dayjs.extend(relativeTime);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const CouponAmountCell = ({
+  record,
+  amount,
+}: {
+  record: any;
+  amount: number;
+}) => {
+  const { price } = usePrice({
+    amount: amount,
+  });
+  if (record.type === 'free_shipping') {
+    return <span className="font-semibold text-heading">Free Shipping</span>;
+  }
+  if (record.type === 'percentage') {
+    return <span>{amount}%</span>;
+  }
+  return <span>{price}</span>;
+};
+
+const PriceCell = ({ amount }: { amount: number }) => {
+  const { price } = usePrice({
+    amount: amount,
+  });
+  return <span>{price}</span>;
+};
+
 type IProps = {
   // coupons: CouponPaginator | null | undefined;
   coupons: Coupon[] | undefined;
@@ -75,39 +101,6 @@ const CouponList = ({
     {
       title: (
         <TitleWithSort
-          title={t('table:table-item-id')}
-          ascending={
-            sortingObj.sort === SortOrder.Asc && sortingObj.column === 'id'
-          }
-          isActive={sortingObj.column === 'id'}
-        />
-      ),
-      className: 'cursor-pointer',
-      dataIndex: 'id',
-      key: 'id',
-      align: alignLeft,
-      width: 120,
-      onHeaderCell: () => onHeaderClick('id'),
-      render: (id: number) => `#${t('table:table-item-id')}: ${id}`,
-    },
-    {
-      title: t('table:table-item-banner'),
-      dataIndex: 'image',
-      key: 'image',
-      width: 74,
-      render: (image: Attachment) => (
-        <Image
-          src={image?.thumbnail ?? siteSettings.product.placeholder}
-          alt="coupon banner"
-          width={42}
-          height={42}
-          className="overflow-hidden rounded"
-        />
-      ),
-    },
-    {
-      title: (
-        <TitleWithSort
           title={t('table:table-item-code')}
           ascending={
             sortingObj.sort === SortOrder.Asc && sortingObj.column === 'code'
@@ -140,15 +133,9 @@ const CouponList = ({
       align: 'center',
       width: 150,
       onHeaderCell: () => onHeaderClick('amount'),
-      render: function Render(amount: number, record: any) {
-        const { price } = usePrice({
-          amount: amount,
-        });
-        if (record.type === 'PERCENTAGE_COUPON') {
-          return <span>{amount}%</span>;
-        }
-        return <span>{price}</span>;
-      },
+      render: (amount: number, record: any) => (
+        <CouponAmountCell record={record} amount={amount} />
+      ),
     },
     {
       title: (
@@ -167,12 +154,9 @@ const CouponList = ({
       align: 'center',
       width: 150,
       onHeaderCell: () => onHeaderClick('minimum_cart_amount'),
-      render: function Render(minimum_cart_amount: number) {
-        const { price } = usePrice({
-          amount: minimum_cart_amount,
-        });
-        return <span>{price}</span>;
-      },
+      render: (minimum_cart_amount: number) => (
+        <PriceCell amount={minimum_cart_amount} />
+      ),
     },
     {
       title: (
@@ -212,11 +196,16 @@ const CouponList = ({
       key: 'expire_at',
       align: 'center',
       onHeaderCell: () => onHeaderClick('expire_at'),
-      render: (expired_date: string) => (
-        <span className="whitespace-nowrap">
-          {dayjs().to(dayjs.utc(expired_date).tz(dayjs.tz.guess()))}
-        </span>
-      ),
+      render: (expired_date: string) => {
+        const isExpired = dayjs().isAfter(dayjs.utc(expired_date));
+        return (
+          <span
+            className={`whitespace-nowrap font-semibold ${isExpired ? 'text-red-500' : 'text-green-500'}`}
+          >
+            {dayjs().to(dayjs.utc(expired_date).tz(dayjs.tz.guess()))}
+          </span>
+        );
+      },
     },
     {
       title: (

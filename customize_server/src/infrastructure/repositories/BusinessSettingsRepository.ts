@@ -23,6 +23,7 @@ export class BusinessSettingsRepository implements IBusinessSettingsRepository {
       siteTitle: document.siteTitle,
       siteSubtitle: document.siteSubtitle,
       logo: document.logo,
+      collapseLogo: document.collapseLogo,
       contactDetails: document.contactDetails,
       currency: document.currency,
       heroSlides: document.heroSlides,

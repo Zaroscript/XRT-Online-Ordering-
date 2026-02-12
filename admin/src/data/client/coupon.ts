@@ -14,34 +14,34 @@ export const couponClient = {
   get({ code, language }: { code: string; language: string }) {
     return HttpClient.get<Coupon>(`${API_ENDPOINTS.COUPONS}/${code}`, {
       language,
-    });
+    }).then((response: any) => response?.data ?? response);
   },
   paginated: ({ code, ...params }: Partial<CouponQueryOptions>) => {
     return HttpClient.get<CouponPaginator>(API_ENDPOINTS.COUPONS, {
       searchJoin: 'and',
       ...params,
       search: HttpClient.formatSearchParams({ code }),
-    });
+    }).then((response: any) => response?.data ?? response);
   },
 
   verify: (input: VerifyCouponInputType) => {
     {
       return HttpClient.post<VerifyCouponResponse>(
         API_ENDPOINTS.VERIFY_COUPONS,
-        input
+        input,
       );
     }
   },
   approve: (variables: { id: string }) => {
     return HttpClient.post<{ id: string }>(
       API_ENDPOINTS.APPROVE_COUPON,
-      variables
+      variables,
     );
   },
   disapprove: (variables: { id: string }) => {
     return HttpClient.post<{ id: string }>(
       API_ENDPOINTS.DISAPPROVE_COUPON,
-      variables
+      variables,
     );
   },
 };

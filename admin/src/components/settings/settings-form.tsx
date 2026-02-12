@@ -45,18 +45,13 @@ type FormValues = {
   siteSubtitle: string;
   minimumOrderAmount: number;
   logo: any;
+  collapseLogo: any;
   useOtp: boolean;
   useAi: boolean;
   defaultAi: any;
-  useMustVerifyEmail: boolean;
   freeShipping: boolean;
   freeShippingAmount: number;
-  taxClass: Tax;
-  shippingClass: Shipping;
-  signupPoints: number;
   maximumQuestionLimit: number;
-  currencyToWalletRatio: number;
-  guestCheckout: boolean;
   messages: {
     closed_message: string;
     not_accepting_orders_message: string;
@@ -64,6 +59,7 @@ type FormValues = {
   server_info: ServerInfo;
   footer_text: string;
   heroSlides: HeroSlide[];
+  copyrightText: string;
 };
 
 type paymentGatewayOption = {
@@ -144,21 +140,7 @@ export default function SettingsForm({
       server_info: serverInfo,
 
       logo: options?.logo ?? '',
-      guestCheckout: options?.guestCheckout ?? true,
-      defaultAi: options?.defaultAi
-        ? AI.find((item) => item.value == options?.defaultAi)
-        : 'openai',
-
-      // @ts-ignore
-      taxClass: !!taxClasses?.length
-        ? taxClasses?.find((tax: Tax) => tax.id == options?.taxClass)
-        : '',
-      // @ts-ignore
-      shippingClass: !!shippingClasses?.length
-        ? shippingClasses?.find(
-            (shipping: Shipping) => shipping.id == options?.shippingClass,
-          )
-        : '',
+      collapseLogo: options?.collapseLogo ?? '',
       footer_text: options?.footer_text ?? '',
       messages: {
         closed_message: options?.messages?.closed_message ?? '',
@@ -167,6 +149,7 @@ export default function SettingsForm({
       },
       maximumQuestionLimit: options?.maximumQuestionLimit ?? 0,
       heroSlides: options?.heroSlides ?? [],
+      copyrightText: options?.copyrightText ?? '',
     },
   });
 
@@ -207,22 +190,22 @@ export default function SettingsForm({
         ...options,
         ...values,
         server_info: serverInfo,
-        signupPoints: Number(values.signupPoints),
-        currencyToWalletRatio: Number(values.currencyToWalletRatio),
-        minimumOrderAmount: Number(values.minimumOrderAmount),
         freeShippingAmount: Number(values.freeShippingAmount),
-        guestCheckout: values?.guestCheckout,
         defaultAi: values?.defaultAi?.value,
-        taxClass: values?.taxClass?.id,
-        shippingClass: values?.shippingClass?.id,
         logo: values?.logo,
+        collapseLogo: values?.collapseLogo,
         footer_text: values.footer_text,
+        contactDetails: {
+          ...options?.contactDetails,
+          ...values.contactDetails,
+        },
         heroSlides: values?.heroSlides ?? options?.heroSlides ?? [],
         messages: {
           closed_message: values.messages.closed_message,
           not_accepting_orders_message:
             values.messages.not_accepting_orders_message,
         },
+        copyrightText: values.copyrightText,
       },
     });
   }
@@ -238,6 +221,13 @@ export default function SettingsForm({
 
         <Card className="w-full logo-field-area sm:w-8/12 md:w-2/3">
           <FileInput name="logo" control={control} multiple={false} />
+
+          <div className="mt-5">
+            <span className="block mb-2 text-sm text-body">
+              {t('Collapsed Logo')}
+            </span>
+            <FileInput name="collapseLogo" control={control} multiple={false} />
+          </div>
         </Card>
       </div>
 
@@ -365,24 +355,6 @@ export default function SettingsForm({
             className="mb-5"
             // disabled={isNotDefaultSettingsPage}
           />
-          <Input
-            label={t('Wallet Currency Ratio')}
-            {...register('currencyToWalletRatio')}
-            type="number"
-            error={t(errors.currencyToWalletRatio?.message!)}
-            variant="outline"
-            className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
-          />
-          <Input
-            label={t('Signup Points')}
-            {...register('signupPoints')}
-            type="number"
-            error={t(errors.signupPoints?.message!)}
-            variant="outline"
-            className="mb-5"
-            // disabled={isNotDefaultSettingsPage}
-          />
 
           <div className="mb-5">
             <PhoneNumberInput
@@ -455,18 +427,6 @@ export default function SettingsForm({
           <div className="mb-5">
             <div className="flex items-center gap-x-4">
               <SwitchInput
-                name="useMustVerifyEmail"
-                label={t('Require Email Verification')}
-                toolTipText={t('Require users to verify their email address')}
-                control={control}
-                // disabled={isNotDefaultSettingsPage}
-              />
-            </div>
-          </div>
-
-          <div className="mb-5">
-            <div className="flex items-center gap-x-4">
-              <SwitchInput
                 name="useAi"
                 label={t('Enable AI Features')}
                 toolTipText={t(
@@ -490,45 +450,6 @@ export default function SettingsForm({
               options={AI}
               // disabled={isNotDefaultSettingsPage}
             />
-          </div>
-
-          <div className="mb-5">
-            <SelectInput
-              name="taxClass"
-              label={t('Tax Class')}
-              toolTipText={t('Default tax class to apply to products')}
-              control={control}
-              getOptionLabel={(option: any) => option.name}
-              getOptionValue={(option: any) => option.id}
-              options={taxClasses!}
-              // disabled={isNotDefaultSettingsPage}
-            />
-          </div>
-
-          <div className="mb-5">
-            <SelectInput
-              name="shippingClass"
-              label={t('Shipping Class')}
-              toolTipText={t('Default shipping class for orders')}
-              control={control}
-              getOptionLabel={(option: any) => option.name}
-              getOptionValue={(option: any) => option.id}
-              options={shippingClasses!}
-              // disabled={isNotDefaultSettingsPage}
-            />
-          </div>
-          <div className="mb-5">
-            <div className="flex items-center gap-x-4">
-              <SwitchInput
-                name="guestCheckout"
-                label={t('Allow Guest Checkout')}
-                toolTipText={t(
-                  'Allow customers to checkout without creating an account',
-                )}
-                control={control}
-                // disabled={isNotDefaultSettingsPage}
-              />
-            </div>
           </div>
 
           <div className="flex items-center gap-x-4">

@@ -27,4 +27,5 @@ export const settingsValidationSchema = yup.object().shape({
     closed_message: yup.string(),
     not_accepting_orders_message: yup.string(),
   }),
+  collapseLogo: yup.object().nullable(),
 });

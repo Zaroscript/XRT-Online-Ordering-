@@ -9,6 +9,18 @@ export const couponValidationSchema = yup.object().shape({
       /^[a-zA-Z0-9@_-]+$/,
       'form:error-coupon-code-cannot-contain-white-space',
     ),
+  is_bulk: yup.boolean(),
+  quantity: yup.number().when('is_bulk', {
+    is: true,
+    then: () =>
+      yup
+        .number()
+        .typeError('form:error-quantity-must-be-number')
+        .positive('form:error-quantity-must-be-positive')
+        .integer('form:error-quantity-must-be-integer')
+        .min(1, 'form:error-quantity-must-be-at-least-1')
+        .required('form:error-quantity-required'),
+  }),
   type: yup
     .string()
     .oneOf([CouponType.FIXED, CouponType.PERCENTAGE, CouponType.FREE_SHIPPING])
@@ -35,4 +47,10 @@ export const couponValidationSchema = yup.object().shape({
     .date()
     .required('form:error-expire-date-required')
     .min(yup.ref('active_from'), 'form:error-expire-and-active-date'),
+  max_conversions: yup
+    .number()
+    .positive('form:error-quantity-must-be-positive')
+    .integer('form:error-quantity-must-be-integer')
+    .nullable()
+    .transform((value) => (isNaN(value) ? null : value)),
 });

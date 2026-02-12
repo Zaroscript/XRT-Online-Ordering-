@@ -77,6 +77,7 @@ export type MODAL_VIEWS =
   | 'CLEAR_IMPORT_HISTORY'
   | 'CONFIRM_REDIRECT'
   | 'CONFIRM_ACTION'
+  | 'DELETE_TESTIMONIAL'
   | 'VIEW_DETAILS';
 
 interface State {

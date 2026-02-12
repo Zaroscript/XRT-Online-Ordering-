@@ -24,7 +24,7 @@ import { getErrorMessage } from '@/utils/form-error';
 import { Config } from '@/config';
 import { useModalAction } from '@/components/ui/modal/modal.context';
 import { useSettingsQuery } from '@/data/settings';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import OpenAIButton from '@/components/openAI/openAI.button';
 import StickyFooterPanel from '@/components/ui/sticky-footer-panel';
 import { CouponDescriptionSuggestion } from '@/components/coupon/coupon-ai-prompt';
@@ -37,19 +37,24 @@ type FormValues = {
   description: string;
   amount: number;
   minimum_cart_amount: number;
-  image: AttachmentInput;
-  active_from: string;
-  expire_at: string;
+  active_from: string | Date;
+  expire_at: string | Date;
   target: boolean;
+  is_bulk: boolean;
+  quantity: number;
+  max_conversions: number;
 };
 
 const defaultValues = {
-  image: '',
   type: CouponType.FIXED,
   amount: 0,
   target: 0,
   minimum_cart_amount: 0,
-  active_from: new Date(),
+  active_from: '',
+  expire_at: '',
+  is_bulk: false,
+  quantity: 1,
+  max_conversions: null,
 };
 
 type IProps = {
@@ -80,10 +85,10 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
     // @ts-ignore
     defaultValues: initialValues
       ? {
-        ...initialValues,
-        active_from: new Date(initialValues.active_from!),
-        expire_at: new Date(initialValues.expire_at!),
-      }
+          ...initialValues,
+          active_from: new Date(initialValues.active_from!),
+          expire_at: new Date(initialValues.expire_at!),
+        }
       : defaultValues,
     //@ts-ignore
     resolver: yupResolver(couponValidationSchema),
@@ -95,12 +100,10 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
     useUpdateCouponMutation();
 
   const { openModal } = useModalAction();
-  const {
-    // @ts-ignore
-    settings: { options },
-  } = useSettingsQuery({
+  const { settings } = useSettingsQuery({
     language: locale!,
   });
+  const options = settings?.options;
 
   const generateName = watch('code');
   const couponDescriptionSuggestionLists = useMemo(() => {
@@ -117,8 +120,22 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
     });
   }, [generateName]);
 
+  useEffect(() => {
+    if (!initialValues) {
+      setValue('active_from', new Date());
+      setValue('expire_at', new Date());
+    }
+  }, [initialValues, setValue]);
+
   const [active_from, expire_at] = watch(['active_from', 'expire_at']);
   const couponType = watch('type');
+  const isBulk = watch('is_bulk');
+
+  useEffect(() => {
+    if (couponType === CouponType.FREE_SHIPPING) {
+      setValue('amount', 0);
+    }
+  }, [couponType, setValue]);
 
   const isTranslateCoupon = router.locale !== Config.defaultLanguage;
 
@@ -130,24 +147,17 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
       description: values.description,
       amount: values.amount,
       minimum_cart_amount: values.minimum_cart_amount,
+      quantity: values.is_bulk ? values.quantity : 1,
       active_from: new Date(values.active_from).toISOString(),
       expire_at: new Date(values.expire_at).toISOString(),
-      image: {
-        thumbnail: values?.image?.thumbnail,
-        original: values?.image?.original,
-        id: values?.image?.id,
-      },
+      max_conversions: values.max_conversions,
     };
 
     try {
-      if (
-        !initialValues ||
-        !initialValues.translated_languages.includes(router.locale!)
-      ) {
+      if (!initialValues) {
         createCoupon({
           ...input,
           code: values.code,
-          ...(initialValues?.code && { code: initialValues.code }),
           shop_id: shopId,
         });
       } else {
@@ -160,48 +170,102 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
       }
     } catch (error) {
       const serverErrors = getErrorMessage(error);
-      Object.keys(serverErrors?.validation).forEach((field: any) => {
-        setError(field.split('.')[1], {
-          type: 'manual',
-          message: serverErrors?.validation[field][0],
+      if (serverErrors?.validation) {
+        Object.keys(serverErrors.validation).forEach((field: any) => {
+          setError(field.split('.')[1], {
+            type: 'manual',
+            message: serverErrors.validation[field][0],
+          });
         });
-      });
+      }
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit as any)}>
-      <div className="flex flex-wrap pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
-        <Description
-          title={t('form:input-label-image')}
-          details={t('form:coupon-image-helper-text')}
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
-        />
-
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <FileInput name="image" control={control as any} multiple={false} />
-        </Card>
-      </div>
-
       <div className="flex flex-wrap my-5 sm:my-8">
         <Description
           title={t('form:input-label-description')}
-          details={`${initialValues
-            ? t('form:item-description-edit')
-            : t('form:item-description-add')
-            } ${t('form:coupon-form-info-help-text')}`}
+          details={`${
+            initialValues
+              ? t('form:item-description-edit')
+              : t('form:item-description-add')
+          } ${t('form:coupon-form-info-help-text')}`}
           className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5 "
         />
 
         <Card className="w-full sm:w-8/12 md:w-2/3">
+          <div className="relative">
+            <Input
+              label={
+                isBulk
+                  ? t('form:input-label-code-prefix')
+                  : t('form:input-label-code')
+              }
+              {...register('code')}
+              error={t(errors.code?.message!)}
+              variant="outline"
+              className="mb-5"
+              disabled={isTranslateCoupon}
+              required
+            />
+            {!isBulk && (
+              <div className="absolute right-0 top-0 mb-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="small"
+                  onClick={() => {
+                    const randomCode =
+                      'COUPON-' +
+                      Math.random().toString(36).substring(2, 8).toUpperCase();
+                    setValue('code', randomCode);
+                  }}
+                  className="mb-5"
+                  disabled={isTranslateCoupon}
+                >
+                  {t('form:button-label-generate-code')}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {!initialValues && (
+            <>
+              <div className="mb-5">
+                <div className="flex items-center gap-x-4">
+                  <SwitchInput name="is_bulk" control={control} />
+                  <Label className="mb-0">
+                    {t('form:label-bulk-generate')}
+                  </Label>
+                </div>
+              </div>
+
+              {isBulk && (
+                <Input
+                  label={t('form:input-label-quantity')}
+                  type="number"
+                  {...register('quantity')}
+                  error={t(errors.quantity?.message!)}
+                  variant="outline"
+                  className="mb-5"
+                  disabled={isTranslateCoupon}
+                />
+              )}
+            </>
+          )}
+
           <Input
-            label={t('form:input-label-code')}
-            {...register('code')}
-            error={t(errors.code?.message!)}
+            label={t('Max Uses (Optional)')}
+            toolTipText={t(
+              'Maximum number of times this coupon can be used. Leave empty for unlimited uses.',
+            )}
+            type="number"
+            {...register('max_conversions')}
+            error={t((errors as any).max_conversions?.message!)}
             variant="outline"
             className="mb-5"
             disabled={isTranslateCoupon}
-            required
           />
 
           <div className="relative">
@@ -285,9 +349,9 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
                 name="active_from"
                 dateFormat="dd/MM/yyyy"
                 minDate={new Date()}
-                maxDate={new Date(expire_at)}
-                startDate={new Date(active_from)}
-                endDate={new Date(expire_at)}
+                maxDate={expire_at ? new Date(expire_at) : undefined}
+                startDate={active_from ? new Date(active_from) : new Date()}
+                endDate={expire_at ? new Date(expire_at) : undefined}
                 label={t('form:coupon-active-from')}
                 className="border border-border-base"
                 disabled={isTranslateCoupon}
@@ -300,9 +364,9 @@ export default function CreateOrUpdateCouponForm({ initialValues }: IProps) {
                 name="expire_at"
                 dateFormat="dd/MM/yyyy"
                 control={control as any}
-                startDate={new Date(active_from)}
-                endDate={new Date(expire_at)}
-                minDate={new Date(active_from)}
+                startDate={active_from ? new Date(active_from) : new Date()}
+                endDate={expire_at ? new Date(expire_at) : undefined}
+                minDate={active_from ? new Date(active_from) : new Date()}
                 className="border border-border-base"
                 disabled={isTranslateCoupon}
                 error={t(errors.expire_at?.message!)}

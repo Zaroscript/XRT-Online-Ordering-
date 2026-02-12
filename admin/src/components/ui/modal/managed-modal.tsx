@@ -6,6 +6,9 @@ import { MODAL_VIEWS, useModalAction, useModalState } from './modal.context';
 const FlashSaleDeleteView = dynamic(
   () => import('@/components/flash-sale/flash-sale-delete-view'),
 );
+const TestimonialDeleteView = dynamic(
+  () => import('@/components/testimonials/testimonial-delete-view'),
+);
 const FaqsDeleteView = dynamic(
   () => import('@/components/faqs/faq-delete-view'),
 );
@@ -335,6 +338,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <QuestionDeleteView />;
     case 'DELETE_REVIEW':
       return <ReviewDeleteView />;
+    case 'DELETE_TESTIMONIAL':
+      return <TestimonialDeleteView />;
     case 'ACCEPT_ABUSE_REPORT':
       return <AcceptAbuseReportView />;
     case 'DECLINE_ABUSE_REPORT':
@@ -369,6 +374,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <ApproveCouponView />;
     case 'COUPON_DISAPPROVE_VIEW':
       return <DisApproveCouponView />;
+    case 'DELETE_COUPON':
+      return <CouponDeleteView />;
     case 'DELETE_FLASH_SALE_REQUEST':
       return <FlashSaleRequestDeleteView />;
     case 'VENDOR_FS_REQUEST_APPROVE_VIEW':

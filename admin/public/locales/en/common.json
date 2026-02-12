@@ -30,7 +30,7 @@
   "text-less": "Less",
   "text-or": "Or",
   "text-nav-menu": "Menu",
-  "description": "Track Order",
+
   "error-heading": "Error code: 404",
   "nav-menu-track-order": "Track Order",
   "nav-menu-offer": "Offers",
@@ -172,7 +172,7 @@
   "text-disabled": "Disabled",
   "text-active": "Active",
   "text-inactive": "Inactive",
-  "is-default": "Default",
+
   "is-active": "Active",
   "text-available": "Available",
   "text-products": "Products",
@@ -778,8 +778,7 @@
   "Request failed with status code 500": "Request failed with status code 500",
   "clear-history": "Clear History",
   "rollback": "Rollback",
-  "Footer Text": "Footer Text",
-  "Text displayed in the website footer": "Text displayed in the website footer",
+
   "Hero Slider": "Hero Slider",
   "Manage homepage banner slides with images, titles, and buttons": "Manage homepage banner slides with images, titles, and buttons",
   "Slide": "Slide",
@@ -823,8 +822,11 @@
   "Allow customers to checkout without creating an account": "Allow customers to checkout without creating an account",
   "Enable Free Shipping": "Enable Free Shipping",
   "Enable free shipping for orders over a certain amount": "Enable free shipping for orders over a certain amount",
-  "form-title-unsaved-changes": "Unsaved Changes",
-  "form-description-unsaved-changes": "You have unsaved changes. Are you sure you want to leave?",
+
   "button-label-stay": "Stay",
-  "button-label-leave": "Leave"
+  "button-label-leave": "Leave",
+  "Offer": "Offer",
+  "Approved": "Approved",
+  "Request failed with status code 400": "Request failed with status code 400",
+  "sidebar-nav-item-testimonials": "Testimonials"
 }

@@ -50,6 +50,9 @@ export const Routes = {
   reviews: {
     ...routesFactory('/reviews'),
   },
+  testimonials: {
+    ...routesFactory('/testimonials'),
+  },
   abuseReviews: {
     ...routesFactory('/abusive_reports'),
   },

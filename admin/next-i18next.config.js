@@ -32,7 +32,7 @@ module.exports = {
   debug: true,
   saveMissing: true,
   localePath: path.resolve('./public/locales'),
-  reloadOnPrerender: false,
+  reloadOnPrerender: process.env.NODE_ENV === 'development',
   react: {
     useSuspense: false,
   },

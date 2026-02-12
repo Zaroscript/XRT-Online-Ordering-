@@ -9,8 +9,7 @@ export type IFooterProp = {
 
 const Footer: React.FC<IFooterProp> = ({ className }) => {
   const { t } = useTranslation();
-  const { siteTitle, siteLink, copyrightText, externalText, externalLink } =
-    useSettings();
+  const { siteTitle, siteLink, copyrightText } = useSettings();
   const date = new Date();
 
   return (

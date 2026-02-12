@@ -112,6 +112,7 @@ export const API_ENDPOINTS = {
   GROUPS: 'groups',
   QUESTIONS: 'questions',
   REVIEWS: 'reviews',
+  TESTIMONIALS: 'testimonials',
   FLASH_SALE: 'flash-sale',
   REFUNDS: 'refunds',
   ORDER_STATUS: 'order-status',
