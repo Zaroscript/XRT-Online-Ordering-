@@ -77,7 +77,6 @@ export const storage = createCloudinaryStorage({
 
 export class CloudinaryStorage implements IImageStorage {
   async uploadImage(file: Express.Multer.File, folder?: string): Promise<ImageUploadResult> {
-    console.log(`[Cloudinary] Starting upload for ${file.originalname}`);
     if ((file as any).path) {
       return {
         url: (file as any).path,
@@ -109,7 +108,6 @@ export class CloudinaryStorage implements IImageStorage {
           return reject(new Error('Upload failed: No result from Cloudinary'));
         }
 
-        console.log(`[Cloudinary] Upload success for ${file.originalname}: ${result.public_id}`);
         resolve({
           url: result.url,
           public_id: result.public_id,
@@ -129,9 +127,7 @@ export class CloudinaryStorage implements IImageStorage {
 
   async deleteImage(public_id: string): Promise<void> {
     try {
-      console.log(`[Cloudinary] Deleting image ${public_id}`);
       await cloudinary.uploader.destroy(public_id);
-      console.log(`[Cloudinary] Deleted image ${public_id}`);
     } catch (error) {
       console.error('Error deleting image from Cloudinary:', error);
       // Do not throw error to avoid blocking flow

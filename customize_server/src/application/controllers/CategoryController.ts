@@ -144,14 +144,6 @@ export class CategoryController {
       delete_icon, // Extract flag
     } = req.body;
 
-    console.log('--- UPDATE CATEGORY REQUEST ---');
-    console.log('Payload Body Keys:', Object.keys(req.body));
-    console.log('Files:', req.files);
-    console.log('Modifier Groups (Raw):', modifier_groups);
-    // @ts-ignore
-    console.log('Apply to Items Flag (Raw):', req.body.apply_modifier_groups_to_items);
-    console.log('-------------------------------');
-
     const business_id = req.user?.business_id || req.body.business_id || 'default';
 
     // if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {

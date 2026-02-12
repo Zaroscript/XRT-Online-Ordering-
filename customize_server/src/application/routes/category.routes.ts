@@ -35,19 +35,16 @@ router.post(
   '/',
   requirePermission('categories:create'),
   (req, res, next) => {
-    console.log(`[Category Create] Starting upload`); // Adjusted log for POST /
     uploadImage.fields([
       { name: 'image', maxCount: 1 },
       { name: 'icon', maxCount: 1 },
     ])(req, res, (err) => {
       if (err) {
-        console.error('[Category Create] Multer Error:', err); // Adjusted log for POST /
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res.status(400).json({ success: false, message: 'File too large (Max 5MB)' });
         }
         return res.status(400).json({ success: false, message: err.message || 'Upload failed' });
       }
-      console.log('[Category Create] Upload completed'); // Adjusted log for POST /
       next();
     });
   },

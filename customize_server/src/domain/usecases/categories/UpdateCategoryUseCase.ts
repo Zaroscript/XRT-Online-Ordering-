@@ -17,9 +17,6 @@ export class UpdateCategoryUseCase {
     categoryData: UpdateCategoryDTO,
     files?: { [fieldname: string]: Express.Multer.File[] }
   ): Promise<Category> {
-    console.log(
-      `[UpdateCategoryUseCase] Executing for ID: ${id}, Business ID: ${business_id || 'Any'}`
-    );
     const existingCategory = await this.categoryRepository.findById(id, business_id);
 
     if (!existingCategory) {
@@ -46,16 +43,11 @@ export class UpdateCategoryUseCase {
       // Delete old image if exists
       if (existingCategory.image_public_id) {
         // Fire and forget delete
-        console.log(
-          '[UpdateCategory] Triggering delete for old image:',
-          existingCategory.image_public_id
-        );
         this.imageStorage
           .deleteImage(existingCategory.image_public_id)
           .catch((err) => console.error('Background delete failed for image:', err));
       }
 
-      console.log('[UpdateCategory] Uploading new image');
       const uploadResult = await this.imageStorage.uploadImage(
         files['image'][0],
         `xrttech/categories/${targetBusinessId}`
@@ -68,16 +60,11 @@ export class UpdateCategoryUseCase {
       // Delete old icon if exists
       if (existingCategory.icon_public_id) {
         // Fire and forget delete
-        console.log(
-          '[UpdateCategory] Triggering delete for old icon:',
-          existingCategory.icon_public_id
-        );
         this.imageStorage
           .deleteImage(existingCategory.icon_public_id)
           .catch((err) => console.error('Background delete failed for icon:', err));
       }
 
-      console.log('[UpdateCategory] Uploading new icon');
       const uploadResult = await this.imageStorage.uploadImage(
         files['icon'][0],
         `xrttech/categories/${targetBusinessId}/icons`
@@ -87,10 +74,6 @@ export class UpdateCategoryUseCase {
     } else if ((categoryData as any).delete_icon) {
       // Explicit deletion requested
       if (existingCategory.icon_public_id) {
-        console.log(
-          '[UpdateCategory] Explicit delete requested for icon:',
-          existingCategory.icon_public_id
-        );
         this.imageStorage
           .deleteImage(existingCategory.icon_public_id)
           .catch((err) => console.error('Background delete failed for icon:', err));
