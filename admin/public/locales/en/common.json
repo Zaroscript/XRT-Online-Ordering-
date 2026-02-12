@@ -828,5 +828,18 @@
   "Offer": "Offer",
   "Approved": "Approved",
   "Request failed with status code 400": "Request failed with status code 400",
-  "sidebar-nav-item-testimonials": "Testimonials"
+  "sidebar-nav-item-testimonials": "Testimonials",
+  "import-select-entity-type": "Select Data Type",
+  "import-add-another-file": "Add Another File",
+  "import-file-slot": "File #{{number}}",
+  "import-upload-summary": "Upload Summary",
+  "import-total-files": "file(s) ready",
+  "import-no-files-selected": "Please add at least one file to upload.",
+  "import-multi-upload-description": "Select the data type for each file and upload one or more CSV files at once.",
+  "import-type-desc-categories": "Menu categories",
+  "import-type-desc-items": "Menu items and products",
+  "import-type-desc-modifier-groups": "Modifier groups configuration",
+  "import-type-desc-modifiers": "Individual modifier options",
+  "import-type-desc-sizes": "Item size variations and pricing",
+  "upload-success": "Uploaded"
 }

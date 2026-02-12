@@ -77,4 +77,16 @@ export class PublicController {
 
     return sendSuccess(res, 'Site settings retrieved', publicSettings);
   });
+
+  getTestimonials = asyncHandler(async (_req: Request, res: Response) => {
+    const { TestimonialRepository } = await import(
+      '../../infrastructure/repositories/TestimonialRepository'
+    );
+    const testimonialRepository = new TestimonialRepository();
+
+    // Fetch only active testimonials
+    const testimonials = await testimonialRepository.findAll({ is_active: true });
+
+    return sendSuccess(res, 'Testimonials retrieved successfully', testimonials);
+  });
 }

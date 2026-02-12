@@ -37,8 +37,20 @@ export const useAppendImportFileMutation = () => {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: ({ id, file }: { id: string; file: File }) =>
-      importClient.appendFile(id, file),
+    mutationFn: ({
+      id,
+      file,
+      entity_type,
+    }: {
+      id: string;
+      file: File;
+      entity_type?:
+        | 'categories'
+        | 'items'
+        | 'sizes'
+        | 'modifierGroups'
+        | 'modifiers';
+    }) => importClient.appendFile(id, file, entity_type),
     onSuccess: (data, variables) => {
       const session = (data as any)?.data || data;
       queryClient.setQueryData(

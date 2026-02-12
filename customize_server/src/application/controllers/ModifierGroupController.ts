@@ -212,6 +212,22 @@ export class ModifierGroupController {
       modifierGroups = [];
     }
 
+    // Helper to safely stringify values for CSV
+    const safeString = (val: any) => `"${(val || '').toString().replace(/"/g, '""')}"`;
+
+    // Helper to format quantity levels
+    const formatQuantityLevels = (levels: any[]) => {
+      if (!levels || !Array.isArray(levels)) return '';
+      return levels
+        .map((ql) => {
+          const qty = ql.quantity;
+          const price = ql.price !== undefined ? `$${ql.price}` : '';
+          const name = ql.name ? ` (${ql.name})` : '';
+          return `${qty}x${name}: ${price}`;
+        })
+        .join('; ');
+    };
+
     // Convert to CSV
     const csvRows = [
       [
@@ -223,17 +239,19 @@ export class ModifierGroupController {
         'max_select',
         'is_active',
         'sort_order',
+        'quantity_levels',
       ].join(','),
       ...modifierGroups.map((group: any) =>
         [
-          `"${(group.name || '').replace(/"/g, '""')}"`,
-          `"${(group.name || '').replace(/"/g, '""')}"`,
-          `"${(group.display_name || '').replace(/"/g, '""')}"`,
+          safeString(group.name), // Using name as group_key for now, if intended
+          safeString(group.name),
+          safeString(group.display_name),
           group.display_type || 'CHECKBOX',
           group.min_select || 0,
           group.max_select || 1,
           group.is_active,
           group.sort_order || 0,
+          safeString(formatQuantityLevels(group.quantity_levels)),
         ].join(',')
       ),
     ];

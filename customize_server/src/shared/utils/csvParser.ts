@@ -12,10 +12,13 @@ import {
 
 export class CSVParser {
   /**
-   * Parse CSV file or ZIP containing CSV files
+   * Parse CSV file or ZIP containing CSV files.
+   * @param entityType – When provided, forces all rows to be parsed as that entity
+   *                     instead of auto-detecting from filename/headers.
    */
   static async parseUpload(
-    file: Express.Multer.File
+    file: Express.Multer.File,
+    entityType?: 'categories' | 'items' | 'sizes' | 'modifierGroups' | 'modifiers' | null
   ): Promise<{ data: ParsedImportData; files: string[] }> {
     const files: string[] = [];
     let parsedData: ParsedImportData = {
@@ -43,7 +46,7 @@ export class CSVParser {
           if (entry.entryName.endsWith('.csv') && !entry.isDirectory) {
             files.push(entry.entryName);
             const csvContent = entry.getData().toString('utf-8');
-            const fileData = this.parseCSVContent(csvContent, entry.entryName);
+            const fileData = this.parseCSVContent(csvContent, entry.entryName, entityType);
             parsedData = this.mergeParsedData(parsedData, fileData);
           }
         }
@@ -59,7 +62,11 @@ export class CSVParser {
         if (this.isTypeBasedCSV(csvContent)) {
           parsedData = this.parseGenericCSV(csvContent, file.originalname || 'import.csv');
         } else {
-          const fileData = this.parseCSVContent(csvContent, file.originalname || 'import.csv');
+          const fileData = this.parseCSVContent(
+            csvContent,
+            file.originalname || 'import.csv',
+            entityType
+          );
           parsedData = this.mergeParsedData(parsedData, fileData);
         }
       } catch (err: any) {
@@ -90,7 +97,11 @@ export class CSVParser {
   /**
    * Parse CSV content and identify entity type by filename or headers
    */
-  private static parseCSVContent(content: string, filename: string): ParsedImportData {
+  private static parseCSVContent(
+    content: string,
+    filename: string,
+    forcedEntityType?: 'categories' | 'items' | 'sizes' | 'modifierGroups' | 'modifiers' | null
+  ): ParsedImportData {
     const records: any[] = parse(content, {
       columns: (headers) => headers.map((h: string) => h.toLowerCase().trim()),
       skip_empty_lines: true,
@@ -139,8 +150,8 @@ export class CSVParser {
       itemModifierOverrides: [],
     };
 
-    // Use filename to determine which data type this file belongs to (validates and routes rows)
-    const entityFromFilename = this.getEntityTypeFromFilename(filename);
+    // Use explicit entity type if provided, otherwise fall back to filename detection
+    const entityFromFilename = forcedEntityType || this.getEntityTypeFromFilename(filename);
     const looksLikeModifierGroup = (r: any) => this.rowLooksLikeModifierGroup(r);
     const looksLikeModifierItem = (r: any) => this.rowLooksLikeModifierItem(r);
 

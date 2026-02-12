@@ -5,4 +5,6 @@
  */
 export { apiClient } from "./client";
 export { getSiteSettings } from "./siteSettings";
+export { getActiveTestimonials } from "./testimonials";
 export { useSiteSettingsQuery } from "./hooks/useSiteSettings";
+export { useTestimonialsQuery } from "./hooks/useTestimonials";

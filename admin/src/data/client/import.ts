@@ -38,6 +38,12 @@ export interface ImportSession {
 export interface ParseImportInput {
   file: File;
   business_id?: string;
+  entity_type?:
+    | 'categories'
+    | 'items'
+    | 'sizes'
+    | 'modifierGroups'
+    | 'modifiers';
 }
 
 export interface UpdateImportSessionInput {
@@ -52,6 +58,9 @@ export const importClient = {
     if (input.business_id) {
       formData.append('business_id', input.business_id);
     }
+    if (input.entity_type) {
+      formData.append('entity_type', input.entity_type);
+    }
     // Content-Type is omitted by http-client when data is FormData so browser sets multipart/form-data with boundary
     const response = await HttpClient.post<{
       success: boolean;
@@ -61,9 +70,21 @@ export const importClient = {
     return response?.data || response;
   },
 
-  appendFile: async (id: string, file: File) => {
+  appendFile: async (
+    id: string,
+    file: File,
+    entity_type?:
+      | 'categories'
+      | 'items'
+      | 'sizes'
+      | 'modifierGroups'
+      | 'modifiers',
+  ) => {
     const formData = new FormData();
     formData.append('file', file);
+    if (entity_type) {
+      formData.append('entity_type', entity_type);
+    }
     const response = await HttpClient.post<{
       success: boolean;
       data: ImportSession;

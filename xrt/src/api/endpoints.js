@@ -4,4 +4,6 @@
 export const API_ENDPOINTS = {
   /** Public site settings (hero slides, site title, logo) - no auth */
   PUBLIC_SITE_SETTINGS: "public/site-settings",
+  /* Active testimonials - no auth */
+  TESTIMONIALS_ALL: "public/testimonials",
 };

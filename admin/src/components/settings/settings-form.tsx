@@ -167,7 +167,8 @@ export default function SettingsForm({
   const enableFreeShipping = watch('freeShipping');
 
   // const upload_max_filesize = options?.server_info?.upload_max_filesize! / 1024;
-  const max_fileSize = options?.server_info?.upload_max_filesize! * 1000;
+  // const upload_max_filesize = options?.server_info?.upload_max_filesize! / 1024;
+  const max_fileSize = options?.server_info?.upload_max_filesize! / 1024;
 
   const logoInformation = (
     <span>

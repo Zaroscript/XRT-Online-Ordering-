@@ -9,6 +9,7 @@ import { DeleteCategoryUseCase } from '../../domain/usecases/categories/DeleteCa
 import { CategoryRepository } from '../../infrastructure/repositories/CategoryRepository';
 import { ItemRepository } from '../../infrastructure/repositories/ItemRepository';
 import { KitchenSectionRepository } from '../../infrastructure/repositories/KitchenSectionRepository';
+import { ModifierGroupRepository } from '../../infrastructure/repositories/ModifierGroupRepository';
 import { CloudinaryStorage } from '../../infrastructure/cloudinary/CloudinaryStorage';
 import { sendSuccess } from '../../shared/utils/response';
 import { asyncHandler } from '../../shared/utils/asyncHandler';
@@ -22,12 +23,14 @@ export class CategoryController {
   private deleteCategoryUseCase: DeleteCategoryUseCase;
   private getCategoryByIdUseCase: GetCategoryByIdUseCase;
   private kitchenSectionRepository: KitchenSectionRepository;
+  private modifierGroupRepository: ModifierGroupRepository;
 
   constructor() {
     const categoryRepository = new CategoryRepository();
     const itemRepository = new ItemRepository();
     const imageStorage = new CloudinaryStorage();
     this.kitchenSectionRepository = new KitchenSectionRepository();
+    this.modifierGroupRepository = new ModifierGroupRepository();
 
     this.createCategoryUseCase = new CreateCategoryUseCase(categoryRepository, imageStorage);
     this.getCategoriesUseCase = new GetCategoriesUseCase(categoryRepository);
@@ -258,23 +261,46 @@ export class CategoryController {
     }
 
     // Use default limit of 1000 for export to get all/most categories
-    // Or we should modify GetCategoriesUseCase to accept 'limit: -1' or similar for no limit.
-    // For now, let's assume pagination and just get a large number.
     filters.limit = 1000;
     filters.page = 1;
 
     const result: any = await this.getCategoriesUseCase.execute(filters);
     const categories = result.data || result; // Handle both paginated and non-paginated responses
 
+    // Helper to safely stringify values for CSV
+    const safeString = (val: any) => `"${(val || '').toString().replace(/"/g, '""')}"`;
+
+    // Helper to format modifier groups comfortably
+    const formatModifierGroups = (groups: any[]) => {
+      if (!groups || !Array.isArray(groups)) return '';
+      return groups
+        .map((g) => {
+          const name = g.modifier_group?.name || 'Unknown Group';
+          // We can also show overrides summary if needed, e.g. Max Qty
+          // For now, just the group name is a good start, or name + overrides count
+          return name;
+        })
+        .join('; ');
+    };
+
     // Convert to CSV
     const csvRows = [
-      ['name', 'description', 'is_active', 'sort_order'].join(','),
+      [
+        'name',
+        'description',
+        'is_active',
+        'sort_order',
+        'kitchen_section_name',
+        'modifier_groups',
+      ].join(','),
       ...categories.map((cat: any) =>
         [
-          `"${(cat.name || '').replace(/"/g, '""')}"`,
-          `"${(cat.description || '').replace(/"/g, '""')}"`,
+          safeString(cat.name),
+          safeString(cat.description),
           cat.is_active,
           cat.sort_order,
+          safeString(cat.kitchen_section_data?.name || ''),
+          safeString(formatModifierGroups(cat.modifier_groups)),
         ].join(',')
       ),
     ];
@@ -325,7 +351,7 @@ export class CategoryController {
           continue;
         }
 
-        const categoryData = {
+        const categoryData: any = {
           business_id: business_id!,
           name: record.name,
           description: record.description,
@@ -333,6 +359,63 @@ export class CategoryController {
             record.is_active === 'true' || record.is_active === true || record.is_active === '1',
           sort_order: parseInt(record.sort_order || '0'),
         };
+
+        // Handle Kitchen Section lookup by name
+        if (record.kitchen_section_name) {
+          try {
+            const section = await this.kitchenSectionRepository.findByName(
+              record.kitchen_section_name,
+              business_id!
+            );
+            if (section) {
+              categoryData.kitchen_section_id = section.id;
+            }
+          } catch (err) {
+            // Ignore lookup errors
+          }
+        }
+
+        // Handle Modifier Groups parsing
+        if (record.modifier_groups) {
+          const groupStrings = record.modifier_groups
+            .split(';')
+            .map((s: string) => s.trim())
+            .filter((s: string) => s);
+          const modifierGroupsList: any[] = [];
+
+          for (const groupStr of groupStrings) {
+            // Parse "Name (Min:X Max:Y)"
+            const match = groupStr.match(/^(.*?)(?:\s*\(Min:\s*(\d+)\s*Max:\s*(\d+)\))?$/i);
+            if (match) {
+              const name = match[1].trim();
+
+              // Lookup group by name
+              try {
+                // Escape regex characters to ensure literal match
+                const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const groupsFound = await this.modifierGroupRepository.findAll({
+                  business_id: business_id!,
+                  name: `^${escapedName}$`, // Exact match regex
+                });
+
+                if (groupsFound.modifierGroups.length > 0) {
+                  const group = groupsFound.modifierGroups[0];
+                  modifierGroupsList.push({
+                    modifier_group_id: group.id,
+                    display_order: modifierGroupsList.length,
+                    modifier_overrides: [],
+                  });
+                }
+              } catch (err) {
+                // Ignore lookup errors
+              }
+            }
+          }
+
+          if (modifierGroupsList.length > 0) {
+            categoryData.modifier_groups = modifierGroupsList;
+          }
+        }
 
         const existingCategory = existingCategories.find(
           (c: any) => c.name.toLowerCase() === record.name.toLowerCase()

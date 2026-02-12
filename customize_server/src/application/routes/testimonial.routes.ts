@@ -4,6 +4,10 @@ import { TestimonialController } from '../controllers/TestimonialController';
 const router = express.Router();
 const testimonialController = new TestimonialController();
 
+router.get('/test', (req, res) => {
+  res.json({ message: 'Test route works' });
+});
+
 router.post('/', testimonialController.create);
 router.get('/', testimonialController.paginated);
 router.get('/all', testimonialController.getAll);

@@ -132,7 +132,7 @@ const getDefaultOptions = () => ({
     phpMaxExecutionTime: null,
     phpMaxInputVars: null,
     maxUploadSize: null,
-    upload_max_filesize: null,
+    upload_max_filesize: 10240, // 10MB in KB
   },
   heroSlides: [] as any[],
 });
@@ -174,6 +174,7 @@ export class SettingsController {
       ...defaultOptions,
       ...rest,
       heroSlides: settings.heroSlides ?? defaultOptions.heroSlides,
+      server_info: defaultOptions.server_info,
     };
 
     return sendSuccess(res, 'Settings retrieved successfully', {
@@ -233,6 +234,7 @@ export class SettingsController {
       ...defaultOptions,
       ...updatedRest,
       heroSlides: updated.heroSlides ?? defaultOptions.heroSlides,
+      server_info: defaultOptions.server_info,
     };
 
     return sendSuccess(res, 'Settings updated successfully', {

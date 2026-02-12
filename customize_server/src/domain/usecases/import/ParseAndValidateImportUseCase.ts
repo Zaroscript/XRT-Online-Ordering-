@@ -14,13 +14,14 @@ export class ParseAndValidateImportUseCase {
   async execute(
     file: Express.Multer.File,
     user_id: string,
-    business_id: string
+    business_id: string,
+    entity_type?: 'categories' | 'items' | 'sizes' | 'modifierGroups' | 'modifiers' | null
   ): Promise<ImportSession> {
     let data: ParsedImportData;
     let files: string[];
 
     try {
-      const result = await CSVParser.parseUpload(file);
+      const result = await CSVParser.parseUpload(file, entity_type);
       data = result.data;
       files = result.files;
     } catch (err: any) {

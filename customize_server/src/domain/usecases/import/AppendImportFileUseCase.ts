@@ -10,7 +10,8 @@ export class AppendImportFileUseCase {
   async execute(
     sessionId: string,
     file: Express.Multer.File,
-    user_id: string
+    user_id: string,
+    entity_type?: 'categories' | 'items' | 'sizes' | 'modifierGroups' | 'modifiers' | null
   ): Promise<ImportSession> {
     const session = await this.importSessionRepository.findById(sessionId, user_id);
     if (!session) {
@@ -18,7 +19,7 @@ export class AppendImportFileUseCase {
     }
 
     // Parse new file
-    const { data: newData, files: newFiles } = await CSVParser.parseUpload(file);
+    const { data: newData, files: newFiles } = await CSVParser.parseUpload(file, entity_type);
 
     // Merge data
     const mergedData: ParsedImportData = {
