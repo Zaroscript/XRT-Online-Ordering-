@@ -18,7 +18,6 @@ interface FileInputProps {
   error?: string;
   accept?: string; // New prop for custom accept types
   section?: string; // New prop for folder organization
-  /** When true, file is stored in form state and sent with form submit (no immediate /attachments upload). Use for category icon. */
   skipImmediateUpload?: boolean;
 }
 

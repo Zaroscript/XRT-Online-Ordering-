@@ -12,10 +12,6 @@ interface EmptyStateProps {
     className?: string;
 }
 
-/**
- * Reusable empty state component with consistent styling.
- * Use this for tables, lists, and search results with no data.
- */
 export default function EmptyState({
     title,
     description,

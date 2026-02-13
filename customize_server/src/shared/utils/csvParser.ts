@@ -11,11 +11,7 @@ import {
 } from '../../domain/entities/ImportSession';
 
 export class CSVParser {
-  /**
-   * Parse CSV file or ZIP containing CSV files.
-   * @param entityType – When provided, forces all rows to be parsed as that entity
-   *                     instead of auto-detecting from filename/headers.
-   */
+  /** CSV or ZIP of CSVs. Optional entityType forces that entity instead of filename detection. */
   static async parseUpload(
     file: Express.Multer.File,
     entityType?: 'categories' | 'items' | 'sizes' | 'modifierGroups' | 'modifiers' | null
@@ -78,10 +74,6 @@ export class CSVParser {
     return { data: parsedData, files };
   }
 
-  /**
-   * Determine which entity type this file belongs to based on filename.
-   * Used to validate and route rows only to the matching data type.
-   */
   private static getEntityTypeFromFilename(
     filename: string
   ): 'categories' | 'items' | 'sizes' | 'modifierGroups' | 'modifiers' | null {
@@ -94,9 +86,6 @@ export class CSVParser {
     return null;
   }
 
-  /**
-   * Parse CSV content and identify entity type by filename or headers
-   */
   private static parseCSVContent(
     content: string,
     filename: string,

@@ -66,10 +66,9 @@ export const rateLimitMiddleware = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
 });
 
-// Request logging (basic) - can be extended with a proper logger if needed
 export const requestLogger = (req: Request, res: Response, next: NextFunction): void => {
   next();
 };
 
-// Error handler (must be last)
+// Keep last
 export { errorHandler };

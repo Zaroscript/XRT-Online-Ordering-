@@ -16,7 +16,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
 
 const memoryStorage = multer.memoryStorage();
 
-/** Disk storage for attachments when Cloudinary is not configured (e.g. local dev). On Vercel, filesystem is read-only except /tmp. */
+// Local disk for attachments when not using Cloudinary. Vercel FS is read-only so we use tmp or skip.
 const uploadsDir = process.env.VERCEL
   ? path.join(process.cwd(), 'tmp', 'uploads')
   : path.join(process.cwd(), 'uploads');
@@ -26,10 +26,9 @@ try {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 } catch {
-  // On Vercel or read-only FS, mkdir may fail. attachmentStorage will use memory or cloudinary below.
+  // mkdir can fail on read-only FS; we fall back to memory/cloudinary below.
 }
 
-/** On Vercel, use Cloudinary or memory for attachments (disk is read-only). Otherwise disk by default. */
 const useDiskStorage = env.ATTACHMENT_STORAGE !== 'cloudinary' && !process.env.VERCEL;
 
 const diskStorage = multer.diskStorage({
@@ -41,7 +40,6 @@ const diskStorage = multer.diskStorage({
   },
 });
 
-/** Attachments: cloudinary if set; on Vercel use memory (disk read-only); else disk. */
 const attachmentStorage =
   env.ATTACHMENT_STORAGE === 'cloudinary'
     ? cloudinaryStorage
@@ -57,7 +55,6 @@ export const uploadImage = multer({
   },
 });
 
-/** Multer for attachment route: Cloudinary or disk so response has thumbnail/original URLs */
 export const uploadAttachment = multer({
   storage: attachmentStorage,
   fileFilter,
@@ -66,7 +63,7 @@ export const uploadAttachment = multer({
   },
 });
 
-// Memory storage for CSV/ZIP imports (no need to save to cloud)
+// CSV/ZIP imports: keep in memory
 
 const importFileFilter = (
   req: Request,

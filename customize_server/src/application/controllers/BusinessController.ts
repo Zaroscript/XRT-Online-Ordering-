@@ -8,9 +8,7 @@ import { sendSuccess } from '../../shared/utils/response';
 import { sendError } from '../../shared/utils/response';
 import { asyncHandler } from '../../shared/utils/asyncHandler';
 
-/**
- * Single-tenant: one business only. No creating or deleting businesses.
- */
+/** Single-tenant: one business; no create/delete. */
 export class BusinessController {
   private getOrCreateDefaultBusinessUseCase: GetOrCreateDefaultBusinessUseCase;
   private updateBusinessUseCase: UpdateBusinessUseCase;

@@ -1,9 +1,7 @@
 import { CreateItemInput } from '@/types';
 import { DEFAULT_QUANTITY_LEVELS, FormValues } from '../item-form-types';
 
-/**
- * Transform modifier assignment data to backend format
- */
+/** Modifier assignment form data -> backend shape. */
 export const transformModifierAssignment = (
   values: FormValues,
   allModifiersList: any[],
@@ -257,9 +255,7 @@ function normalizeImageValue(image: any): any {
   return image;
 }
 
-/**
- * Build CreateItemInput from form values
- */
+/** Form values -> CreateItemInput. */
 export const buildCreateItemInput = (
   values: FormValues,
   shopId: string,

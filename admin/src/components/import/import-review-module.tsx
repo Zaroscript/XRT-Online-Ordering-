@@ -56,11 +56,9 @@ export default function ImportReviewModule({
     );
   };
 
-  /** Short user-friendly display: message only (backend messages are already friendly) */
   const displayMessage = (err: { field?: string; message: string }) =>
     err.message;
 
-  /** Map backend entity name to tab key for "Go to" */
   const entityToTabKey = (entity: string): typeof activeTab => {
     const map: Record<string, typeof activeTab> = {
       Category: 'categories',
@@ -72,7 +70,6 @@ export default function ImportReviewModule({
     return map[entity] ?? 'categories';
   };
 
-  /** Go to the tab and highlight the row with the error (CSV row 1 = header, row 2 = index 0) */
   const goToError = (entity: string, csvRow: number) => {
     const tab = entityToTabKey(entity);
     const tableIndex = Math.max(0, csvRow - 2);

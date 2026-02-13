@@ -90,9 +90,7 @@ export const useItemFormCache = ({
   };
 };
 
-/**
- * Transform initial values from backend to form format
- */
+/** Backend item -> form modifier assignment shape. */
 export const transformInitialModifierAssignment = (
   initialValues: Item,
 ): any => {

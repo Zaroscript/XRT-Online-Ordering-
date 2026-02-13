@@ -10,10 +10,7 @@ interface ResponsiveCardProps {
     isToggling?: boolean;
 }
 
-/**
- * A card component that's used in mobile views to replace table rows.
- * Provides consistent styling and interactive states.
- */
+/** Mobile card replacing table rows; same styling/interactions. */
 export function ResponsiveCard({
     children,
     className,

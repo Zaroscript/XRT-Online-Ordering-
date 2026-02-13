@@ -36,11 +36,7 @@ export const useUpdateSettingsMutation = () => {
   });
 };
 
-/**
- * Fetches settings from the custom server (GET /settings).
- * No mock or placeholder data - only real data from the database.
- * Requires token; when disabled, settings is undefined.
- */
+/** GET /settings; needs token. Disabled => settings undefined. */
 export const useSettingsQuery = ({ language }: { language: string }) => {
   const { query } = useRouter();
   const { token } = getAuthCredentials();

@@ -1,8 +1,4 @@
-/**
- * Resolve image URL for display in the admin.
- * Relative paths (e.g. /uploads/...) are served by the customize server, not the admin origin.
- * Prepends the API server origin so images load correctly (admin on :3002, server on :3001).
- */
+// Relative /uploads/ URLs come from the API server; prepend its origin so they load in admin.
 const API_BASE =
   typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_REST_API_ENDPOINT
     ? process.env.NEXT_PUBLIC_REST_API_ENDPOINT

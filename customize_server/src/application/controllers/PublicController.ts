@@ -4,12 +4,28 @@ import { asyncHandler } from '../../shared/utils/asyncHandler';
 import { BusinessRepository } from '../../infrastructure/repositories/BusinessRepository';
 import { BusinessSettingsRepository } from '../../infrastructure/repositories/BusinessSettingsRepository';
 
-/**
- * Public site settings for the storefront (no auth).
- * Returns hero slides, site title, logo, etc. from BusinessSettings.
- * Hero slides are the single source of truth: only slides added in the admin dashboard
- * (Settings > Hero Slider) are returned; the xrt storefront shows only these.
- */
+/** Rewrite relative or localhost image URLs to the request origin (for deployed frontends). */
+function imageUrlForRequest(url: string | undefined, req: Request): string {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  const baseUrl = `${req.protocol}://${req.get('host') || `localhost:${process.env.PORT || 3001}`}`.replace(
+    /\/$/,
+    ''
+  );
+  if (trimmed.startsWith('/')) return `${baseUrl}${trimmed}`;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+      return `${baseUrl}${parsed.pathname}${parsed.search}`;
+    }
+  } catch {
+    // not a valid URL
+  }
+  return trimmed;
+}
+
+/** Default when no settings in DB. Hero slides = admin Settings > Hero Slider. */
 function getDefaultPublicSiteSettings() {
   return {
     heroSlides: [] as Array<{
@@ -27,7 +43,7 @@ function getDefaultPublicSiteSettings() {
 }
 
 export class PublicController {
-  getSiteSettings = asyncHandler(async (_req: Request, res: Response) => {
+  getSiteSettings = asyncHandler(async (req: Request, res: Response) => {
     const businessRepository = new BusinessRepository();
     const businessSettingsRepository = new BusinessSettingsRepository();
 
@@ -43,7 +59,6 @@ export class PublicController {
       return sendSuccess(res, 'Site settings retrieved', defaults);
     }
 
-    // Normalize heroSlides so each slide has bgImage as { original, thumbnail } for the storefront
     const rawSlides = settings.heroSlides ?? [];
     const heroSlides = rawSlides.map((slide: any) => {
       const bg = slide?.bgImage;
@@ -51,6 +66,7 @@ export class PublicController {
         typeof bg === 'string'
           ? bg
           : ((bg && (typeof bg === 'object' ? (bg.original ?? bg.thumbnail) : undefined)) ?? '');
+      const normalized = imageUrlForRequest(url, req);
       return {
         title: slide?.title ?? '',
         subtitle: slide?.subtitle ?? '',
@@ -58,16 +74,34 @@ export class PublicController {
         btnText: slide?.btnText ?? '',
         btnLink: slide?.btnLink ?? '',
         offer: slide?.offer ?? '',
-        bgImage: url ? { original: url, thumbnail: url } : {},
+        bgImage: normalized ? { original: normalized, thumbnail: normalized } : {},
       };
     });
+
+    const logo = settings.logo;
+    const logoNormalized =
+      logo && typeof logo === 'object' && logo.original
+        ? { ...logo, original: imageUrlForRequest(logo.original, req), thumbnail: imageUrlForRequest((logo as any).thumbnail, req) || imageUrlForRequest(logo.original, req) }
+        : logo;
+    const promoPopup = settings.promoPopup;
+    const promoPopupNormalized =
+      promoPopup && typeof promoPopup === 'object' && (promoPopup as any).image?.original
+        ? {
+            ...promoPopup,
+            image: {
+              ...(promoPopup as any).image,
+              original: imageUrlForRequest((promoPopup as any).image?.original, req),
+              thumbnail: imageUrlForRequest((promoPopup as any).image?.thumbnail, req) || imageUrlForRequest((promoPopup as any).image?.original, req),
+            },
+          }
+        : promoPopup;
 
     const publicSettings = {
       heroSlides,
       siteTitle: settings.siteTitle ?? 'XRT Online Ordering',
       siteSubtitle: settings.siteSubtitle ?? '',
-      logo: settings.logo ?? null,
-      promoPopup: settings.promoPopup ?? null,
+      logo: logoNormalized ?? null,
+      promoPopup: promoPopupNormalized ?? null,
       contactDetails: settings.contactDetails ?? null,
       footer_text: settings.footer_text ?? '',
       copyrightText: settings.copyrightText ?? 'Powered by XRT',
@@ -90,7 +124,7 @@ export class PublicController {
     return sendSuccess(res, 'Testimonials retrieved successfully', testimonials);
   });
 
-  getCategories = asyncHandler(async (_req: Request, res: Response) => {
+  getCategories = asyncHandler(async (req: Request, res: Response) => {
     const { GetCategoriesUseCase } = await import(
       '../../domain/usecases/categories/GetCategoriesUseCase'
     );
@@ -122,8 +156,12 @@ export class PublicController {
 
     const result: any = await getCategoriesUseCase.execute(filters);
 
-    // Handle both paginated and non-paginated responses just in case
-    const categories = result.data || result;
+    const rawCategories = result.data || result;
+    const categories = (Array.isArray(rawCategories) ? rawCategories : []).map((cat: any) => ({
+      ...cat,
+      image: cat?.image ? imageUrlForRequest(cat.image, req) : cat?.image,
+      icon: cat?.icon ? imageUrlForRequest(cat.icon, req) : cat?.icon,
+    }));
 
     return sendSuccess(res, 'Categories retrieved successfully', categories);
   });
@@ -225,17 +263,11 @@ export class PublicController {
 
     const result: any = await getItemsUseCase.execute(queryFilters);
     const rawProducts = result.data || result.items || result;
-    const baseUrl = `${req.protocol}://${req.get('host') || `localhost:${process.env.PORT || 3001}`}`;
-
-    // Return absolute image URLs so the storefront (XRT) can display images without client-side resolution
     const products = (Array.isArray(rawProducts) ? rawProducts : []).map((item: any) => {
       const image = item?.image;
       const imageStr =
         typeof image === 'string' ? image : (image?.original ?? image?.thumbnail ?? '');
-      const absoluteImage =
-        imageStr && typeof imageStr === 'string' && imageStr.startsWith('/')
-          ? `${baseUrl}${imageStr}`
-          : imageStr || item?.image;
+      const absoluteImage = imageUrlForRequest(imageStr || '', req) || imageStr || item?.image;
       return { ...item, image: absoluteImage };
     });
 
