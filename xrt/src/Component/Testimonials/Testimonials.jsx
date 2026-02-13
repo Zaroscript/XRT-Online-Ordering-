@@ -19,20 +19,22 @@ export default function Testimonials() {
         ? [] // Show skeleton while loading
         : Testimonials_content; // Fallback to constants on error or empty
 
-  // Loading skeleton
+  // Loading skeleton (quote, text lines, avatar, name/role)
   if (isLoading) {
     return (
       <div
         className="relative w-full h-[500px] bg-cover bg-center py-[80px] flex justify-center items-center"
         style={{ backgroundImage: `url(${Testimonials_bg.src})` }}
       >
-        <div className="flex flex-col items-center gap-4 animate-pulse">
-          <div className="w-10 h-10 rounded-full bg-white/20" />
-          <div className="w-[400px] h-5 rounded bg-white/20" />
-          <div className="w-[300px] h-5 rounded bg-white/15" />
-          <div className="w-[80px] h-[80px] rounded-full bg-white/20 mt-2" />
-          <div className="w-[150px] h-4 rounded bg-white/20" />
-          <div className="w-[100px] h-3 rounded bg-white/15" />
+        <div className="flex flex-col items-center text-center px-4 animate-pulse">
+          <div className="w-10 h-10 rounded bg-white/25 mb-4" />
+          <div className="w-full max-w-[500px] space-y-2 mb-4">
+            <div className="h-5 bg-white/20 rounded mx-auto w-[90%]" />
+            <div className="h-5 bg-white/15 rounded mx-auto w-[70%]" />
+          </div>
+          <div className="w-[80px] h-[80px] rounded-full bg-white/25 mb-5" />
+          <div className="h-5 w-32 bg-white/20 rounded mb-1" />
+          <div className="h-4 w-24 bg-white/15 rounded" />
         </div>
       </div>
     );

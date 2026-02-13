@@ -2,15 +2,18 @@ import { v2 as cloudinary } from 'cloudinary';
 import createCloudinaryStorage from 'multer-storage-cloudinary';
 import { IImageStorage, ImageUploadResult } from '../../domain/services/IImageStorage';
 import { env } from '../../shared/config/env';
+import { logger } from '../../shared/utils/logger';
 
-cloudinary.config({
-  cloud_name: env.CLOUDINARY_NAME,
-  api_key: env.CLOUDINARY_API_KEY,
-  api_secret: env.CLOUDINARY_API_SECRET,
-});
+if (env.CLOUDINARY_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: env.CLOUDINARY_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+  });
+}
 
 export const storage = createCloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: async (req: any, file: any) => {
     let folder = 'xrttech';
 
@@ -77,6 +80,11 @@ export const storage = createCloudinaryStorage({
 
 export class CloudinaryStorage implements IImageStorage {
   async uploadImage(file: Express.Multer.File, folder?: string): Promise<ImageUploadResult> {
+    if (!env.CLOUDINARY_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
+      throw new Error(
+        'Cloudinary is not configured. Set CLOUDINARY_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in .env'
+      );
+    }
     if ((file as any).path) {
       return {
         url: (file as any).path,
@@ -85,40 +93,50 @@ export class CloudinaryStorage implements IImageStorage {
       };
     }
 
+    if (!file.buffer || !Buffer.isBuffer(file.buffer)) {
+      return Promise.reject(
+        new Error('No file buffer. Ensure the request uses multipart/form-data and body parsing is skipped for this route.')
+      );
+    }
+
+    logger.info('Cloudinary upload start:', file.originalname);
     return new Promise((resolve, reject) => {
       const uploadOptions: any = {
         resource_type: 'image',
         folder: folder ? (folder.startsWith('xrttech') ? folder : `xrttech/${folder}`) : 'xrttech',
       };
 
+      const timeoutMs = 30000;
       const timeoutId = setTimeout(() => {
-        console.error(`[Cloudinary] Upload timed out for ${file.originalname}`);
-        reject(new Error('Cloudinary upload timed out'));
-      }, 10000);
+        reject(new Error(`Cloudinary upload timed out after ${timeoutMs / 1000}s`));
+      }, timeoutMs);
 
-      const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
+      const done = (err: Error | null, result?: any) => {
         clearTimeout(timeoutId);
-        if (error) {
-          console.error(`[Cloudinary] Upload failed for ${file.originalname}:`, error);
-          return reject(error);
+        if (err) {
+          logger.error('Cloudinary upload failed:', file.originalname, err.message);
+          reject(err);
+          return;
         }
-
         if (!result) {
-          console.error(`[Cloudinary] No result for ${file.originalname}`);
-          return reject(new Error('Upload failed: No result from Cloudinary'));
+          logger.error('Cloudinary upload: no result for', file.originalname);
+          reject(new Error('Upload failed: No result from Cloudinary'));
+          return;
         }
-
+        logger.info('Cloudinary upload done:', file.originalname, result.public_id);
         resolve({
           url: result.url,
           public_id: result.public_id,
           secure_url: result.secure_url,
         });
+      };
+
+      const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
+        done(error || null, result);
       });
 
       stream.on('error', (err) => {
-        clearTimeout(timeoutId);
-        console.error(`[Cloudinary] Stream error for ${file.originalname}:`, err);
-        reject(err);
+        done(err);
       });
 
       stream.end(file.buffer);

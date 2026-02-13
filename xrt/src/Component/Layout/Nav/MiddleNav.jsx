@@ -28,7 +28,7 @@ const MiddleNav = ({ count, total, link, setclickfun, onCartClick }) => {
           <>
             <img
               src={logoSrc}
-              className={`w-full transition-opacity duration-500 ${
+              className={`max-w-[100px] transition-opacity duration-500 ${
                 imageLoaded ? "opacity-100" : "opacity-0 absolute top-0 left-0"
               }`}
               loading="eager"

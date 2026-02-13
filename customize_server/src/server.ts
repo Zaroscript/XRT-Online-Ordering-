@@ -45,12 +45,16 @@ const app: Express = express();
 // Database connection will be established in startServer function
 
 // Global middlewares
-// Skip body parsing for attachments and import routes so Multer can handle multipart/form-data
+// Skip body parsing for any route that accepts multipart/form-data so Multer gets the raw stream (otherwise upload hangs)
 const skipBodyParsing = (req: express.Request) =>
   req.path.startsWith('/attachments') ||
   req.originalUrl.includes('/attachments') ||
   req.path.startsWith('/import') ||
-  req.originalUrl.includes('/import');
+  req.originalUrl.includes('/import') ||
+  req.path.startsWith('/items') ||
+  req.originalUrl.includes('/items') ||
+  req.path.startsWith('/categories') ||
+  req.originalUrl.includes('/categories');
 
 app.use((req, res, next) => {
   if (skipBodyParsing(req)) {
@@ -200,6 +204,11 @@ const startServer = async () => {
         logger.info(`🚀 Server running on port ${PORT}`);
         logger.info(`📝 Environment: ${env.NODE_ENV}`);
         logger.info(`📡 API available at http://localhost:${PORT}${env.API_BASE_URL}`);
+        if (env.ATTACHMENT_STORAGE === 'cloudinary' && env.CLOUDINARY_NAME) {
+          logger.info(`☁️ Image uploads: Cloudinary (${env.CLOUDINARY_NAME})`);
+        } else {
+          logger.info(`📁 Image uploads: disk (set CLOUDINARY_* + ATTACHMENT_STORAGE=cloudinary for Cloudinary)`);
+        }
       });
 
       // Handle port already in use error

@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { AttachmentController } from '../controllers/AttachmentController';
 import { uploadAttachment } from '../middlewares/upload';
 import { requireAuth } from '../middlewares/auth';
+import { logger } from '../../shared/utils/logger';
 
 const router = Router();
 const attachmentController = new AttachmentController();
@@ -15,7 +16,7 @@ function uploadTimeout(req: Request, res: Response, next: NextFunction) {
       res.status(504).json({
         success: false,
         message:
-          'Upload timed out after 5 minutes. Try a smaller image or set ATTACHMENT_STORAGE=disk in the server .env to use local storage.',
+          'Upload timed out after 5 minutes. Try a smaller image or check your Cloudinary connection.',
       });
     }
   });
@@ -30,16 +31,18 @@ function uploadTimeout(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-// Use any() to allow dynamic field names (e.g. 'icon', 'image', 'attachment[]') from client
-// uploadAttachment uses Cloudinary or disk storage so we get real URLs for hero slides etc.
 router.post(
   '/',
+  (req, res, next) => {
+    logger.info('Upload request: POST /attachments');
+    next();
+  },
   requireAuth,
   uploadTimeout,
   (req, res, next) => {
     uploadAttachment.any()(req, res, (err) => {
       if (err) {
-        console.error('Multer Upload Error:', err);
+        logger.error('Multer upload error:', err.message || err);
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res.status(400).json({
             success: false,
@@ -53,6 +56,9 @@ router.post(
           error: err.name || 'UploadError',
         });
       }
+      const files = (req as any).files;
+      const count = Array.isArray(files) ? files.length : files && typeof files === 'object' ? Object.values(files).flat().length : 0;
+      logger.info('Multer done for /attachments, files:', count);
       next();
     });
   },

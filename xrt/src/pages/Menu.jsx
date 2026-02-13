@@ -3,12 +3,12 @@ import { useLocation } from "react-router-dom";
 import Menulist from "../Component/Menu_Items/Menulist";
 import ViewItems from "../Component/Menu_Items/ViewItems";
 import MenuCategories from "../Component/Menu_Items/MenuCategories";
-import useCategories from "../hooks/useCategories";
-import useProducts from "../hooks/useProducts";
+import { ProductGridSkeleton } from "../Component/Menu_Items/ProductSkeleton";
+import { useCategoriesQuery, useProductsQuery } from "@/api";
 
 export default function Menu() {
-  const { categories, loading: categoriesLoading } = useCategories();
-  const { products, loading: productsLoading } = useProducts();
+  const { categories, loading: categoriesLoading } = useCategoriesQuery();
+  const { products, loading: productsLoading } = useProductsQuery();
   const [activeCategory, setActiveCategory] = useState("Marrow"); // Default, will be updated when categories load
   const menuListRef = useRef(null);
   const menuProducts = products || [];
@@ -40,14 +40,15 @@ export default function Menu() {
     }
   };
 
-  if (productsLoading) return null; // We can still block on products for now, or handle that skeleton separately
-
   return (
     <div className="min-h-screen bg-gray-50">
       <MenuCategories categories={categories} onCategoryClick={handleCategoryClick} loading={categoriesLoading} />
-      
+
       <div ref={menuListRef} className="scroll-mt-4">
-        <Menulist
+        {productsLoading ? (
+          <ProductGridSkeleton count={12} variant="full" />
+        ) : (
+          <Menulist
           key={activeCategory}
           initialCategory={activeCategory}
           variant="full"
@@ -55,11 +56,8 @@ export default function Menu() {
           products={menuProducts}
           ItemComponent={ViewItems}
           hideCountText={true}
-          // Menulist doesn't need 'categories' prop here because hideFilter={true} hides the tabs. 
-          // But if we wanted tabs, we would pass them.
-          // Wait, Menu page HAS MenuCategories component above Menulist. 
-          // Menulist here is just the list of items.
         />
+        )}
       </div>
     </div>
   );

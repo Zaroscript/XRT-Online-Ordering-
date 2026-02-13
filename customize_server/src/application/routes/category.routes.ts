@@ -3,6 +3,7 @@ import { CategoryController } from '../controllers/CategoryController';
 import { requireAuth } from '../middlewares/auth';
 import { requirePermission } from '../middlewares/authorize';
 import { uploadImage } from '../middlewares/upload';
+import { logger } from '../../shared/utils/logger';
 
 const router = Router();
 const categoryController = new CategoryController();
@@ -35,16 +36,23 @@ router.post(
   '/',
   requirePermission('categories:create'),
   (req, res, next) => {
+    logger.info('Upload request: POST /categories');
+    next();
+  },
+  (req, res, next) => {
     uploadImage.fields([
       { name: 'image', maxCount: 1 },
       { name: 'icon', maxCount: 1 },
     ])(req, res, (err) => {
       if (err) {
+        logger.error('Multer upload error (categories):', err.message || err);
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res.status(400).json({ success: false, message: 'File too large (Max 5MB)' });
         }
         return res.status(400).json({ success: false, message: err.message || 'Upload failed' });
       }
+      const files = (req as any).files;
+      logger.info('Multer done for POST /categories, hasFiles:', !!(files && (files.image?.length || files.icon?.length)));
       next();
     });
   },
@@ -56,11 +64,16 @@ router.put(
   '/:id',
   requirePermission('categories:update'),
   (req, res, next) => {
+    logger.info('Upload request: PUT /categories/:id');
+    next();
+  },
+  (req, res, next) => {
     uploadImage.fields([
       { name: 'image', maxCount: 1 },
       { name: 'icon', maxCount: 1 },
     ])(req, res, (err) => {
       if (err) {
+        logger.error('Multer upload error (categories):', err.message || err);
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res.status(400).json({
             success: false,
@@ -72,6 +85,8 @@ router.put(
           message: err.message || 'Error uploading file',
         });
       }
+      const files = (req as any).files;
+      logger.info('Multer done for PUT /categories, hasFiles:', !!(files && (files.image?.length || files.icon?.length)));
       next();
     });
   },

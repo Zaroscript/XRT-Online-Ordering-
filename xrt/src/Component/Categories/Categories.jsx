@@ -1,11 +1,10 @@
 import React from "react";
 import CatCard from "./CatCard";
-import useCategories from "../../hooks/useCategories";
-
+import { useCategoriesQuery } from "@/api";
 import CategorySkeleton from "./CategorySkeleton";
 
 export default function Categories({ categories: propCategories }) {
-  const { categories: fetchedCategories, loading } = useCategories();
+  const { categories: fetchedCategories, loading } = useCategoriesQuery();
   
   const categories = propCategories || fetchedCategories;
 

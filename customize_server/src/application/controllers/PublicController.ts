@@ -3,16 +3,22 @@ import { sendSuccess } from '../../shared/utils/response';
 import { asyncHandler } from '../../shared/utils/asyncHandler';
 import { BusinessRepository } from '../../infrastructure/repositories/BusinessRepository';
 import { BusinessSettingsRepository } from '../../infrastructure/repositories/BusinessSettingsRepository';
+import { env } from '../../shared/config/env';
 
-/** Rewrite relative or localhost image URLs to the request origin (for deployed frontends). */
+function getBaseUrl(req: Request): string {
+  const fromEnv = (env as any).PUBLIC_ORIGIN;
+  if (fromEnv && typeof fromEnv === 'string' && fromEnv.trim()) {
+    return fromEnv.trim().replace(/\/$/, '');
+  }
+  return `${req.protocol}://${req.get('host') || `localhost:${process.env.PORT || 3001}`}`.replace(/\/$/, '');
+}
+
+/** Rewrite relative or localhost image URLs to the public API origin so disk uploads and frontends load correctly. */
 function imageUrlForRequest(url: string | undefined, req: Request): string {
   if (!url || typeof url !== 'string') return '';
   const trimmed = url.trim();
   if (!trimmed) return '';
-  const baseUrl = `${req.protocol}://${req.get('host') || `localhost:${process.env.PORT || 3001}`}`.replace(
-    /\/$/,
-    ''
-  );
+  const baseUrl = getBaseUrl(req);
   if (trimmed.startsWith('/')) return `${baseUrl}${trimmed}`;
   try {
     const parsed = new URL(trimmed);

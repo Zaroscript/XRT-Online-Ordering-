@@ -35,10 +35,16 @@ export default function Sliderfun() {
   if (isLoading) {
     return (
       <div
-        className="w-full bg-gray-100 animate-pulse"
+        className="w-full bg-gray-100 animate-pulse flex items-center justify-center"
         style={{ height: 650 }}
         aria-hidden
-      />
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-48 bg-gray-200 rounded" />
+          <div className="h-4 w-64 bg-gray-200/80 rounded" />
+          <div className="h-10 w-32 bg-gray-200 rounded-full mt-2" />
+        </div>
+      </div>
     );
   }
 

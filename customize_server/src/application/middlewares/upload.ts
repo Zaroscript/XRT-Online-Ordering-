@@ -40,12 +40,19 @@ const diskStorage = multer.diskStorage({
   },
 });
 
-const attachmentStorage =
-  env.ATTACHMENT_STORAGE === 'cloudinary'
-    ? cloudinaryStorage
-    : useDiskStorage
-      ? diskStorage
-      : memoryStorage;
+// Use Cloudinary for attachments when configured; otherwise disk (or memory on Vercel)
+const useCloudinaryForAttachments =
+  env.ATTACHMENT_STORAGE === 'cloudinary' &&
+  !!env.CLOUDINARY_NAME &&
+  !!env.CLOUDINARY_API_KEY &&
+  !!env.CLOUDINARY_API_SECRET;
+
+// Use memory when Cloudinary configured; upload to Cloudinary in controller (avoids multer-storage-cloudinary hanging)
+const attachmentStorage = useCloudinaryForAttachments
+  ? memoryStorage
+  : useDiskStorage
+    ? diskStorage
+    : memoryStorage;
 
 export const uploadImage = multer({
   storage: memoryStorage,

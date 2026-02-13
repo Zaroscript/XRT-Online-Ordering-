@@ -12,7 +12,7 @@ export function useTestimonialsQuery(options = {}) {
   const query = useQuery({
     queryKey: TESTIMONIALS_QUERY_KEY,
     queryFn: getActiveTestimonials,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0,
     ...options,
   });
 

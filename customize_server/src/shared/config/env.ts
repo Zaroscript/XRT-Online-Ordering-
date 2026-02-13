@@ -8,6 +8,8 @@ export const env = {
   PORT: process.env.PORT || 3001,
   NODE_ENV: process.env.NODE_ENV || 'development',
   API_BASE_URL: process.env.API_BASE_URL || '/api/v1',
+  /** Public base URL for disk upload links (e.g. https://api.example.com). Set when behind a proxy so /uploads/* URLs work. */
+  PUBLIC_ORIGIN: process.env.PUBLIC_ORIGIN || process.env.API_PUBLIC_ORIGIN || '',
 
   // Database
   MONGO_URI: process.env.MONGODB_URI || process.env.MONGO_URI || '',
@@ -20,11 +22,16 @@ export const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRE || '30d',
   JWT_COOKIE_EXPIRE: parseInt(process.env.JWT_COOKIE_EXPIRE || '30'),
 
-  // Cloudinary (optional; used only for attachments if ATTACHMENT_STORAGE=cloudinary)
-  CLOUDINARY_NAME: process.env.CLOUDINARY_NAME || '',
-  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
-  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
-  ATTACHMENT_STORAGE: (process.env.ATTACHMENT_STORAGE as 'cloudinary' | 'disk') || 'disk',
+  // Cloudinary – used for all image uploads (items, categories, attachments) when configured
+  CLOUDINARY_NAME: (process.env.CLOUDINARY_NAME || '').trim(),
+  CLOUDINARY_API_KEY: (process.env.CLOUDINARY_API_KEY || '').trim(),
+  CLOUDINARY_API_SECRET: (process.env.CLOUDINARY_API_SECRET || '').trim(),
+  ATTACHMENT_STORAGE:
+    (process.env.ATTACHMENT_STORAGE || '').trim() === 'disk'
+      ? 'disk'
+      : (process.env.CLOUDINARY_NAME || '').trim()
+        ? 'cloudinary'
+        : 'disk',
 
   // CORS
   CORS_ORIGIN:

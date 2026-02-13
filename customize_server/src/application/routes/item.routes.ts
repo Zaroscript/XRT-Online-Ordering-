@@ -3,9 +3,15 @@ import { ItemController } from '../controllers/ItemController';
 import { requireAuth } from '../middlewares/auth';
 import { requirePermission } from '../middlewares/authorize';
 import { uploadImage } from '../middlewares/upload';
+import { logger } from '../../shared/utils/logger';
 
 const router = Router();
 const itemController = new ItemController();
+
+const logUpload = (method: string) => (req: any, res: any, next: any) => {
+  logger.info('Upload request:', method, '/items');
+  next();
+};
 
 // All item routes require authentication
 router.use(requireAuth);
@@ -26,7 +32,12 @@ router.get('/:id', requirePermission('items:read'), itemController.getById);
 router.post(
   '/',
   requirePermission('items:create'),
+  logUpload('POST'),
   uploadImage.fields([{ name: 'image', maxCount: 1 }]),
+  (req, res, next) => {
+    logger.info('Multer done for POST /items, hasFiles:', !!(req.files && (req.files as any).image?.length));
+    next();
+  },
   itemController.create
 );
 
@@ -34,7 +45,12 @@ router.post(
 router.put(
   '/:id',
   requirePermission('items:update'),
+  logUpload('PUT'),
   uploadImage.fields([{ name: 'image', maxCount: 1 }]),
+  (req, res, next) => {
+    logger.info('Multer done for PUT /items, hasFiles:', !!(req.files && (req.files as any).image?.length));
+    next();
+  },
   itemController.update
 );
 
