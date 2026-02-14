@@ -102,6 +102,16 @@ const ModifierGroupSchema = new Schema<ModifierGroupDocument>(
       type: [QuantityLevelSchema],
       default: [],
     },
+    prices_by_size: {
+      type: [PricesBySizeSchema],
+      default: [],
+    },
+    /** Base price when group has no quantity_levels */
+    price: {
+      type: Number,
+      min: 0,
+      default: undefined,
+    },
     is_active: {
       type: Boolean,
       default: true,

@@ -333,6 +333,8 @@
   "error-sku-required": "SKU ist erforderlich",
   "error-price-must-number": "Der Preis muss eine Zahl sein",
   "error-account-must-number": "Das Konto muss eine Nummer sein",
+  "base-price": "Grundpreis",
+  "used-when-no-quantity-levels": "wird verwendet, wenn keine Mengenstufen vorhanden sind",
   "error-price-must-positive": "Der Preis muss positiv sein",
   "error-price-required": "Preis ist erforderlich",
   "error-sale-price-less-number": "Der Verkaufspreis sollte niedriger sein als",

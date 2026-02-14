@@ -28,6 +28,9 @@ export interface ModifierGroup {
   max_select: number;
 
   quantity_levels?: QuantityLevel[];
+  /** Base price when group/modifier has no quantity_levels */
+  price?: number;
+  prices_by_size?: PricesBySize[];
   modifiers?: Modifier[];
   is_active: boolean;
   sort_order: number;
@@ -44,7 +47,9 @@ export interface CreateModifierGroupDTO {
   min_select: number;
   max_select: number;
   quantity_levels?: QuantityLevel[];
-  prices_by_size?: PricesBySize[]; // Added missing field
+  prices_by_size?: PricesBySize[];
+  /** Base price when no quantity_levels */
+  price?: number;
   is_active?: boolean;
   sort_order?: number;
 }
@@ -56,7 +61,8 @@ export interface UpdateModifierGroupDTO {
   min_select?: number;
   max_select?: number;
   quantity_levels?: QuantityLevel[];
-  prices_by_size?: PricesBySize[]; // Added missing field
+  prices_by_size?: PricesBySize[];
+  price?: number;
   is_active?: boolean;
   sort_order?: number;
 }

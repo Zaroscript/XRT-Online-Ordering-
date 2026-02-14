@@ -7,6 +7,8 @@
   "input-helper-display-name": "اسم سهل الاستخدام لصفحة الهبوط (اختياري)",
   "input-label-actions": "إجراءات",
   "no-quantity-levels-helper": "قم بإنشاء مستويات مثل \"خفيف\"، \"عادي\"، \"زيادة\" للسماح للعملاء بتخصيص طلباتهم.",
+  "base-price": "السعر الأساسي",
+  "used-when-no-quantity-levels": "يُستخدم عندما لا توجد مستويات كمية",
   "error-base-price-required": "السعر الأساسي مطلوب للعناصر غير القابلة للحجم",
   "error-default-size-required": "الحجم الافتراضي مطلوب للعناصر القابلة للحجم",
   "tab-basic-information": "معلومات أساسية",

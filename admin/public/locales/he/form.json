@@ -334,6 +334,8 @@
   "error-sku-required": "מק\"ט נדרש",
   "error-price-must-number": "המחיר חייב להיות מספר",
   "error-account-must-number": "החשבון חייב להיות מספר",
+  "base-price": "מחיר בסיס",
+  "used-when-no-quantity-levels": "משמש כאשר אין רמות כמות",
   "error-price-must-positive": "המחיר חייב להיות חיובי",
   "error-price-required": "מחיר נדרש",
   "error-sale-price-less-number": "מחיר המכירה צריך להיות נמוך מ",

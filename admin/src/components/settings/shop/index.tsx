@@ -26,6 +26,8 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import SelectInput from '@/components/ui/select-input';
+import { CURRENCY } from '@/data/currencies';
+import { CURRENCY_FORMATS } from '@/data/currency-formats';
 
 const DAYS = [
   'Monday',
@@ -41,7 +43,7 @@ type ShopFormValues = {
   // Business Information
   siteTitle: string;
   siteSubtitle?: string;
-  timezone?: string;
+  timezone?: any;
   currency?: string;
   currencyOptions?: {
     formation?: string;
@@ -65,7 +67,7 @@ type ShopFormValues = {
     appId?: string;
     pageId?: string;
   };
-  reviewSystem?: string;
+  reviewSystem?: any;
   orders?: {
     accept_orders?: boolean;
     allowScheduleOrder?: boolean;
@@ -224,7 +226,12 @@ export default function SettingsForm({ settings }: IProps) {
           values?.contactDetails?.location as UserAddress,
         ),
       },
-      socials: options?.contactDetails?.socials,
+      socials: values?.contactDetails?.socials
+        ? values?.contactDetails?.socials.map((social: any) => ({
+            icon: social?.icon?.value ?? social?.icon,
+            url: social?.url,
+          }))
+        : [],
     };
 
     const payload = {
@@ -233,6 +240,16 @@ export default function SettingsForm({ settings }: IProps) {
       options: {
         ...options,
         ...values,
+        timezone: values?.timezone?.value ?? values?.timezone,
+        currency:
+          (values?.currency as { code?: string } | undefined)?.code ??
+          values?.currency,
+        currencyOptions: {
+          ...values?.currencyOptions,
+          formation:
+            (values?.currencyOptions?.formation as { code?: string } | undefined)
+              ?.code ?? values?.currencyOptions?.formation,
+        },
         contactDetails,
         maxShopDistance: Number(
           values.maxShopDistance || values?.delivery?.radius || 0,
@@ -248,7 +265,12 @@ export default function SettingsForm({ settings }: IProps) {
           ...values?.fees,
           service_fee: Number(values?.fees?.service_fee ?? 0),
           tip_options:
-            values?.fees?.tip_options?.map((t: number) => Number(t)) ?? [],
+            typeof values?.fees?.tip_options === 'string'
+              ? (values?.fees?.tip_options as string)
+                  .split(',')
+                  .map((t) => Number(t.trim()))
+              : (values?.fees?.tip_options?.map((t: number) => Number(t)) ??
+                []),
         },
         taxes: {
           ...values?.taxes,
@@ -261,17 +283,49 @@ export default function SettingsForm({ settings }: IProps) {
         enableCoupons: values?.enableCoupons,
         isProductReview: values?.isProductReview,
         enableEmailForDigitalProduct: values?.enableEmailForDigitalProduct,
-        reviewSystem: values?.reviewSystem,
+        reviewSystem: values?.reviewSystem?.value ?? values?.reviewSystem,
         orders: {
           ...options?.orders,
+          allowScheduleOrder: values?.orders?.allowScheduleOrder,
+          maxDays: Number(values?.orders?.maxDays ?? 0),
           deliveredOrderTime: Number(values?.orders?.deliveredOrderTime ?? 0),
         },
         footer_text: values?.footer_text,
         copyrightText: values?.copyrightText,
       },
     };
-    updateSettingsMutation(payload);
-    reset(values, { keepValues: true });
+    updateSettingsMutation(payload, {
+      onSuccess: (data) => {
+        // Reset form with the saved data to ensure isDirty is cleared
+        // and defaultValues match the new state
+        const savedOptions = data?.options || data;
+        reset(
+          {
+            ...savedOptions,
+            // Ensure contactDetails.socials is mapped back correctly for the form
+            contactDetails: {
+              ...savedOptions?.contactDetails,
+              socials: savedOptions?.contactDetails?.socials
+                ? savedOptions?.contactDetails?.socials.map((social: any) => ({
+                    icon: updatedIcons?.find(
+                      (icon) => icon?.value === social?.icon,
+                    ),
+                    url: social?.url,
+                  }))
+                : [],
+            },
+            // Ensure operating_hours is mapped correctly
+            operating_hours: {
+              ...savedOptions?.operating_hours,
+              schedule: savedOptions?.operating_hours?.schedule?.length
+                ? savedOptions.operating_hours.schedule
+                : [],
+            },
+          },
+          { keepValues: false },
+        );
+      },
+    });
   }
   useConfirmRedirectIfDirty({ isDirty });
   return (
@@ -301,24 +355,62 @@ export default function SettingsForm({ settings }: IProps) {
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-            <Input
+            <SelectInput
+              name="timezone"
+              control={control}
+              getOptionLabel={(option: any) => option.name}
+              getOptionValue={(option: any) => option.value}
+              options={[
+                {
+                  name: 'Eastern Time (US & Canada)',
+                  value: 'America/New_York',
+                },
+                {
+                  name: 'Central Time (US & Canada)',
+                  value: 'America/Chicago',
+                },
+                {
+                  name: 'Mountain Time (US & Canada)',
+                  value: 'America/Denver',
+                },
+                {
+                  name: 'Pacific Time (US & Canada)',
+                  value: 'America/Los_Angeles',
+                },
+                { name: 'Alaska', value: 'America/Anchorage' },
+                { name: 'Hawaii', value: 'Pacific/Honolulu' },
+                { name: 'London', value: 'Europe/London' },
+                { name: 'Paris', value: 'Europe/Paris' },
+                { name: 'Berlin', value: 'Europe/Berlin' },
+                { name: 'Tokyo', value: 'Asia/Tokyo' },
+                { name: 'Dubai', value: 'Asia/Dubai' },
+                { name: 'Sydney', value: 'Australia/Sydney' },
+              ]}
               label={t('form:form-input-label-timezone')}
-              {...register('timezone')}
-              variant="outline"
               toolTipText={t('form:form-input-tip-timezone')}
             />
-            <Input
+            <SelectInput
+              name="currency"
+              control={control}
+              getOptionLabel={(option: any) =>
+                `${option.name} (${option.symbol})`
+              }
+              getOptionValue={(option: any) => option.code}
+              options={CURRENCY}
               label={t('form:form-input-label-currency')}
-              {...register('currency')}
-              variant="outline"
               toolTipText={t('form:form-input-tip-currency')}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <Input
+            <SelectInput
+              name="currencyOptions.formation"
+              control={control}
+              getOptionLabel={(option: any) =>
+                `${option.name} (${option.code})`
+              }
+              getOptionValue={(option: any) => option.code}
+              options={CURRENCY_FORMATS}
               label={t('form:form-input-label-currency-format')}
-              {...register('currencyOptions.formation')}
-              variant="outline"
             />
             <Input
               label={t('form:form-input-label-decimal-places')}
@@ -681,8 +773,8 @@ export default function SettingsForm({ settings }: IProps) {
             className="mb-5"
           />
           <Input
-            label={t('Site Link')}
-            toolTipText={t('URL link to your website displayed in footer')}
+            label={t('form:input-label-site-link')}
+            toolTipText={t('form:input-tooltip-site-link')}
             {...register('siteLink')}
             variant="outline"
             className="mb-5"

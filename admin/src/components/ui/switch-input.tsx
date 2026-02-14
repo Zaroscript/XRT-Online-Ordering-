@@ -65,6 +65,7 @@ const SwitchInput = ({
               }`}
               dir="ltr"
               id={name}
+              type="button"
             >
               <span className="sr-only">Enable {label}</span>
               <span

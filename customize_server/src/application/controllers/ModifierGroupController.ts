@@ -43,6 +43,7 @@ export class ModifierGroupController {
       max_select,
       quantity_levels,
       prices_by_size,
+      price,
       is_active,
       sort_order,
     } = req.body;
@@ -61,6 +62,7 @@ export class ModifierGroupController {
       max_select: Number(max_select),
       quantity_levels: quantity_levels || [],
       prices_by_size: prices_by_size || [],
+      price: price != null ? Number(price) : undefined,
       is_active: is_active !== undefined ? is_active === true || is_active === 'true' : true,
       sort_order: sort_order ? Number(sort_order) : 0,
     });
@@ -124,6 +126,7 @@ export class ModifierGroupController {
       max_select,
       quantity_levels,
       prices_by_size,
+      price,
       is_active,
       sort_order,
     } = req.body;
@@ -142,6 +145,7 @@ export class ModifierGroupController {
     if (max_select !== undefined) updateData.max_select = Number(max_select);
     if (quantity_levels !== undefined) updateData.quantity_levels = quantity_levels;
     if (prices_by_size !== undefined) updateData.prices_by_size = prices_by_size;
+    if (price !== undefined) updateData.price = price != null ? Number(price) : undefined;
     if (is_active !== undefined) updateData.is_active = is_active === true || is_active === 'true';
     if (sort_order !== undefined) updateData.sort_order = Number(sort_order);
 
@@ -215,43 +219,18 @@ export class ModifierGroupController {
     // Helper to safely stringify values for CSV
     const safeString = (val: any) => `"${(val || '').toString().replace(/"/g, '""')}"`;
 
-    // Helper to format quantity levels
-    const formatQuantityLevels = (levels: any[]) => {
-      if (!levels || !Array.isArray(levels)) return '';
-      return levels
-        .map((ql) => {
-          const qty = ql.quantity;
-          const price = ql.price !== undefined ? `$${ql.price}` : '';
-          const name = ql.name ? ` (${ql.name})` : '';
-          return `${qty}x${name}: ${price}`;
-        })
-        .join('; ');
-    };
-
-    // Convert to CSV
+    // Basics-only export: name, display_name, display_type, min_select, max_select, sort_order, is_active (no group_key, quantity_levels/pricing)
     const csvRows = [
-      [
-        'group_key',
-        'name',
-        'display_name',
-        'display_type',
-        'min_select',
-        'max_select',
-        'is_active',
-        'sort_order',
-        'quantity_levels',
-      ].join(','),
+      ['name', 'display_name', 'display_type', 'min_select', 'max_select', 'sort_order', 'is_active'].join(','),
       ...modifierGroups.map((group: any) =>
         [
-          safeString(group.name), // Using name as group_key for now, if intended
           safeString(group.name),
           safeString(group.display_name),
           group.display_type || 'CHECKBOX',
           group.min_select || 0,
           group.max_select || 1,
-          group.is_active,
           group.sort_order || 0,
-          safeString(formatQuantityLevels(group.quantity_levels)),
+          group.is_active ?? true,
         ].join(',')
       ),
     ];

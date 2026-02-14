@@ -13,14 +13,17 @@ export function formatPrice({
   fractions: number;
 }) {
   if (!currencyCode) return `${amount}`;
-  const formatCurrency = new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: currencyCode,
-    maximumFractionDigits:
-      fractions > 20 || fractions < 0 || !fractions ? 2 : fractions,
-  });
-
-  return formatCurrency.format(amount);
+  try {
+    const formatCurrency = new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currencyCode,
+      maximumFractionDigits:
+        fractions > 20 || fractions < 0 || !fractions ? 2 : fractions,
+    });
+    return formatCurrency.format(amount);
+  } catch (e) {
+    return `${amount}`;
+  }
 }
 
 export function formatVariantPrice({
@@ -56,7 +59,10 @@ type PriceProps = {
 };
 export default function usePrice(data?: PriceProps | null) {
   const { currency, currencyOptions } = useSettings();
-  const { formation, fractions } = currencyOptions || { formation: siteSettings.defaultLanguage, fractions: 2 };
+  const { formation, fractions } = currencyOptions || {
+    formation: siteSettings.defaultLanguage,
+    fractions: 2,
+  };
   const { amount, baseAmount, currencyCode = currency || 'USD' } = data ?? {};
   const locale = formation ?? siteSettings.defaultLanguage;
   const value = useMemo(() => {
@@ -64,12 +70,12 @@ export default function usePrice(data?: PriceProps | null) {
 
     return baseAmount
       ? formatVariantPrice({
-        amount,
-        baseAmount,
-        currencyCode,
-        locale,
-        fractions,
-      })
+          amount,
+          baseAmount,
+          currencyCode,
+          locale,
+          fractions,
+        })
       : formatPrice({ amount, currencyCode, locale, fractions });
   }, [amount, baseAmount, currencyCode]);
 

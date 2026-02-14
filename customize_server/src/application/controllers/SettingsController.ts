@@ -9,6 +9,7 @@ import { BusinessSettingsRepository } from '../../infrastructure/repositories/Bu
 const getDefaultOptions = () => ({
   siteTitle: 'XRT Online Ordering',
   siteSubtitle: 'Enterprise Ordering System',
+  timezone: 'America/New_York', // Default timezone
   currency: 'USD',
   useOtp: false,
   useAi: false,
@@ -126,7 +127,7 @@ const getDefaultOptions = () => ({
   taxes: {
     sales_tax: 0,
   },
-  timezone: 'America/New_York',
+
   server_info: {
     phpVersion: null,
     phpMaxExecutionTime: null,

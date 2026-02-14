@@ -90,7 +90,6 @@ const ImportUploadPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { query } = router;
-  const businessId = query.business_id as string | undefined;
 
   // Pre-populate with one slot using optionally the type from the query string
   const initialType = (query.type as EntityTypeId) || 'categories';
@@ -176,7 +175,6 @@ const ImportUploadPage = () => {
 
       const result = await importClient.parse({
         file: firstSlot.file!,
-        business_id: businessId,
         entity_type: firstSlot.entityType,
       });
 
@@ -395,7 +393,7 @@ const ImportUploadPage = () => {
                     >
                       <input
                         type="file"
-                        accept=".csv,.zip"
+                        accept=".csv"
                         onChange={(e) => handleFileChange(slot.id, e)}
                         className="absolute inset-0 cursor-pointer opacity-0"
                       />

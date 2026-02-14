@@ -61,6 +61,11 @@ export const modifierGroupValidationSchema = yup.object().shape({
       priceDelta: yup.number().required('form:error-price-delta-required'),
     }),
   ),
+  price: yup
+    .number()
+    .transform((value) => (isNaN(value) || value === '' ? undefined : value))
+    .optional()
+    .min(0, 'form:error-price-must-positive'),
   is_active: yup.boolean(),
   sort_order: yup
     .number()

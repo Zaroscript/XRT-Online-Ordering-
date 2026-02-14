@@ -1,7 +1,7 @@
 import Card from '@/components/common/card';
 import { SaveIcon } from '@/components/icons/save';
 import { COUNTRY_LOCALE } from '@/components/settings/payment/country-locale';
-import { CURRENCY } from '@/components/settings/payment/currency';
+import { CURRENCY } from '@/data/currencies';
 import { PAYMENT_GATEWAY } from '@/components/settings/payment/payment-gateway';
 import { paymentValidationSchema } from '@/components/settings/payment/payment-validation-schema';
 import WebHookURL from '@/components/settings/payment/webhook-url';

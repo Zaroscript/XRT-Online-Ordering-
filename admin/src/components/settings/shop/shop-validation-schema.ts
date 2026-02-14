@@ -3,8 +3,8 @@ import * as yup from 'yup';
 export const shopValidationSchema = yup.object().shape({
   siteTitle: yup.string().required('form:error-site-title-required'),
   siteSubtitle: yup.string().optional(),
-  timezone: yup.string().optional(),
-  currency: yup.string().optional(),
+  timezone: yup.mixed().optional(),
+  currency: yup.mixed().optional(),
   currencyOptions: yup
     .object()
     .shape({
@@ -41,7 +41,7 @@ export const shopValidationSchema = yup.object().shape({
       pageId: yup.string().optional(),
     })
     .optional(),
-  reviewSystem: yup.string().optional(),
+  reviewSystem: yup.mixed().optional(),
   orders: yup
     .object()
     .shape({
@@ -76,7 +76,17 @@ export const shopValidationSchema = yup.object().shape({
     .object()
     .shape({
       service_fee: yup.number().min(0, 'Must be positive'),
-      tip_options: yup.array().of(yup.number().min(0)),
+      tip_options: yup.mixed().test({
+        message: 'Must be a comma-separated list of numbers',
+        test: (value) => {
+          if (Array.isArray(value))
+            return value.every((v) => typeof v === 'number');
+          if (typeof value === 'string') {
+            return value.split(',').every((v) => !isNaN(Number(v.trim())));
+          }
+          return false;
+        },
+      }),
     })
     .optional(),
   taxes: yup

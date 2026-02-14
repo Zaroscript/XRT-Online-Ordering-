@@ -5,7 +5,7 @@ import {
 } from '@/components/ui/modal/modal.context';
 import Image from 'next/image';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ClipboardIcon } from '@/components/icons/clipboard';
 import { CheckMarkCircle } from '@/components/icons/checkmark-circle';
 import { EditIcon } from '@/components/icons/edit';
@@ -14,8 +14,11 @@ import Link from '@/components/ui/link';
 import { Routes } from '@/config/routes';
 import { resolveImageUrl } from '@/utils/resolve-image-url';
 import { useRouter } from 'next/router';
+import { useQueries } from '@tanstack/react-query';
 import { useItemQuery } from '@/data/item';
 import { useItemSizesQuery } from '@/data/item-size';
+import { API_ENDPOINTS } from '@/data/client/api-endpoints';
+import { modifierGroupClient } from '@/data/client/modifier-group';
 
 type ViewDetailsModalProps = {
   entityType?: 'category' | 'item' | 'modifier-group' | 'modifier';
@@ -61,6 +64,7 @@ const formatKey = (key: string): string => {
   if (key === 'modifier_group') return 'Parent Modifier Group';
   if (key === 'modifiers') return 'Modifiers in Group';
   if (key === 'modifier_assignment') return 'Default Modifiers';
+  if (key === 'default_size_id') return 'Default size';
 
   return key
     .replace(/_/g, ' ')
@@ -151,12 +155,59 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
     },
   );
 
+  // For hooks: use display data when available (must not depend on early return)
+  const displayDataForHooks = data
+    ? isItem && fetchedItem
+      ? fetchedItem
+      : data
+    : null;
+
+  // Fetch modifier groups that are missing from the item response (e.g. from list payload) so we can show group-level pricing
+  const groupIdsToFetch = useMemo((): string[] => {
+    if (!isItem || !displayDataForHooks?.modifier_groups) return [];
+    return Array.from(
+      new Set(
+        displayDataForHooks.modifier_groups
+          .filter((mg: any) => mg.modifier_group_id && !mg.modifier_group)
+          .map((mg: any) => String(mg.modifier_group_id)),
+      ),
+    );
+  }, [isItem, displayDataForHooks?.modifier_groups]);
+
+  const groupQueries = useQueries({
+    queries: groupIdsToFetch.map((groupId: string) => ({
+      queryKey: [API_ENDPOINTS.MODIFIER_GROUPS, groupId, locale],
+      queryFn: () =>
+        modifierGroupClient.get({
+          id: groupId,
+          language: locale ?? 'en',
+        }),
+      enabled: Boolean(groupId && locale),
+    })),
+  });
+
+  const fetchedGroupsMap = useMemo(() => {
+    const map: Record<string, { quantity_levels?: any[]; prices_by_size?: any[] }> = {};
+    groupQueries.forEach((q, i) => {
+      const gid = groupIdsToFetch[i];
+      if (gid && q.data) {
+        const raw = q.data as any;
+        const group = raw?.data ?? raw;
+        map[gid] = {
+          quantity_levels: Array.isArray(group?.quantity_levels) ? group.quantity_levels : [],
+          prices_by_size: Array.isArray(group?.prices_by_size) ? group.prices_by_size : [],
+        };
+      }
+    });
+    return map;
+  }, [groupIdsToFetch, groupQueries]);
+
   if (!data) {
     return null;
   }
 
   // Use fetched item if available, otherwise fall back to modal data
-  let displayData = isItem && fetchedItem ? fetchedItem : data;
+  let displayData = displayDataForHooks ?? data;
 
   // Synthesize modifier_assignment if missing but modifier_groups exist (for Default Modifiers display)
   if (
@@ -361,6 +412,22 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
 
     if (key === 'modifier_group' && typeof value === 'object' && value?.name) {
       return <span className="font-semibold text-heading">{value.name}</span>;
+    }
+
+    if (key === 'default_size_id' && (isItem || value)) {
+      let code: string;
+      if (value && typeof value === 'object') {
+        code = value.code ?? value.name ?? value.title ?? '';
+      } else {
+        code = getSizeLabel(
+          typeof value === 'string' ? value : String(value ?? ''),
+        );
+      }
+      return (
+        <span className="font-semibold text-heading">
+          {code && code !== 'N/A' ? code : value ? String(value) : '—'}
+        </span>
+      );
     }
 
     if (key === 'modifier_assignment' && typeof value === 'object') {
@@ -682,7 +749,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
         </div>
       </div>
 
-      {/* NEW SECTION: Quantity Pricing Matrix (Full Width) */}
+      {/* Quantity Pricing Matrix - Modifier Group / Modifier */}
       {(isModifierGroup || isModifier) &&
         displayData.quantity_levels?.length > 0 && (
           <div className="px-8 py-8 bg-gray-50/30 border-t border-gray-100">
@@ -847,6 +914,310 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
             </div>
           </div>
         )}
+
+      {/* Pricing data - Item (all assigned modifiers; quantity matrix or base size pricing) */}
+      {isItem &&
+        displayData.modifier_groups?.flatMap((mg: any, mgIdx: number) => {
+          const overrides = mg.modifier_overrides || [];
+          const fromModifiers = mg.modifiers || [];
+          const fromOverridesOnly = overrides.filter(
+            (o: any) =>
+              !fromModifiers.some(
+                (m: any) =>
+                  (m.id || m._id) ===
+                  (o.modifier_id?.id || o.modifier_id?._id || o.modifier_id),
+              ),
+            );
+          const modifiers = [
+            ...fromModifiers,
+            ...fromOverridesOnly.map((o: any) => ({
+              id: o.modifier_id?.id ?? o.modifier_id?._id ?? o.modifier_id,
+              _id: o.modifier_id?._id ?? o.modifier_id?.id ?? o.modifier_id,
+              name: getModifierName(
+                o.modifier_id?.id || o.modifier_id?._id || o.modifier_id,
+              ),
+              quantity_levels: o.quantity_levels,
+              prices_by_size: o.prices_by_size,
+            })),
+          ];
+          const getSizeLabelForKey = (key: string) => {
+            if (displayData.sizes?.length) {
+              const m = displayData.sizes.find(
+                (s: any) =>
+                  s.code === key || s.size_id === key || String(s.code) === key,
+              );
+              if (m) return m.code || m.name || key;
+            }
+            if (globalSizes?.length) {
+              const m = globalSizes.find(
+                (s: any) => s.code === key || s.id === key,
+              );
+              if (m) return m.code || m.name || key;
+            }
+            return key;
+          };
+
+          const groupData =
+            mg.modifier_group ||
+            (mg.modifier_group_id ? fetchedGroupsMap[mg.modifier_group_id] : undefined) ||
+            mg;
+
+          // First non-empty array wins (inheritance: override → modifier → group)
+          const firstNonEmpty = (...arrs: (any[] | undefined | null)[]): any[] => {
+            for (const a of arrs) {
+              if (Array.isArray(a) && a.length > 0) return a;
+            }
+            return [];
+          };
+
+          return modifiers.map((mod: any) => {
+            const modId = mod.id || mod._id;
+            const override = overrides.find(
+              (o: any) =>
+                (o.modifier_id?.id || o.modifier_id?._id || o.modifier_id) ===
+                modId,
+            );
+            // Priority: 1) item override, 2) modifier, 3) modifier group (only use a source if it has data)
+            const qtyLevels = firstNonEmpty(
+              override?.quantity_levels,
+              mod.quantity_levels,
+              groupData?.quantity_levels,
+            );
+            const pricesBySize = firstNonEmpty(
+              override?.prices_by_size,
+              mod.prices_by_size,
+              groupData?.prices_by_size,
+            );
+            const basePrice =
+              mod.price ?? groupData?.price;
+            const modName =
+              mod.name || getModifierName(modId) || 'Modifier';
+
+            const hasQtyMatrix = qtyLevels.length > 0;
+            const allSizeKeys = hasQtyMatrix
+              ? Array.from(
+                  new Set(
+                    qtyLevels.flatMap((l: any) =>
+                      (l.prices_by_size || []).map((ps: any) =>
+                        ps.sizeCode || ps.size_id || ps.code,
+                      ),
+                    ),
+                  ),
+                ).filter(Boolean)
+              : Array.from(
+                  new Set(
+                    (pricesBySize || []).map(
+                      (ps: any) => ps.sizeCode || ps.size_id || ps.code,
+                    ),
+                  ),
+                ).filter(Boolean);
+
+            return (
+              <div
+                key={`${mgIdx}-${modId}`}
+                className="px-8 py-8 bg-gray-50/30 border-t border-gray-100"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h4 className="text-lg font-bold text-heading tracking-tight flex items-center gap-2">
+                    <span className="w-1.5 h-6 bg-accent rounded-full" />
+                    {modName}
+                    {hasQtyMatrix
+                      ? ' – Quantity Pricing Matrix (Δ)'
+                      : pricesBySize.length > 0
+                        ? ' – Base Size Pricing (Δ)'
+                        : ' – Pricing'}
+                  </h4>
+                  <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+                    Delta values relative to item base price
+                  </span>
+                </div>
+
+                {hasQtyMatrix ? (
+                  <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm ring-1 ring-black/5">
+                    <table className="min-w-full divide-y divide-gray-200 text-left border-collapse">
+                      <thead className="bg-gray-50/70 backdrop-blur-sm sticky top-0 z-10">
+                        <tr>
+                          <th className="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200">
+                            Qty
+                          </th>
+                          <th className="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200">
+                            Level Name
+                          </th>
+                          <th className="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right border-b border-gray-200">
+                            Base Δ
+                          </th>
+                          {allSizeKeys.map((key) => (
+                            <th
+                              key={key}
+                              className="px-4 py-4 text-[10px] font-bold text-accent uppercase tracking-widest text-right border-b border-gray-200 bg-accent/[2%]"
+                            >
+                              {getSizeLabelForKey(key)} Δ
+                            </th>
+                          ))}
+                          <th className="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center border-b border-gray-200">
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {qtyLevels.map((level: any, idx: number) => (
+                          <tr
+                            key={idx}
+                            className={`transition-colors hover:bg-gray-50/50 ${
+                              level.is_default
+                                ? 'bg-accent/[4%] shadow-[inset_4px_0_0_0_#009f7f]'
+                                : ''
+                            }`}
+                          >
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-heading font-mono bg-gray-100 px-2 py-1 rounded">
+                                  {level.quantity}
+                                </span>
+                                {level.is_default && (
+                                  <StarIcon className="w-3.5 h-3.5 text-accent" />
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className="text-xs font-medium text-heading">
+                                {level.name || (
+                                  <span className="text-gray-300 italic text-[10px]">
+                                    Normal No Label
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-right whitespace-nowrap">
+                              <span
+                                className={`text-sm font-bold font-mono ${
+                                  Number(level.price) >= 0
+                                    ? 'text-emerald-600'
+                                    : 'text-red-500'
+                                }`}
+                              >
+                                {Number(level.price) >= 0 ? '+' : ''}$
+                                {Number(level.price || 0).toFixed(2)}
+                              </span>
+                            </td>
+                            {allSizeKeys.map((key) => {
+                              const sizePrice = level.prices_by_size?.find(
+                                (ps: any) =>
+                                  ps.sizeCode === key ||
+                                  ps.size_id === key ||
+                                  ps.code === key,
+                              );
+                              return (
+                                <td
+                                  key={key}
+                                  className="px-4 py-4 text-right whitespace-nowrap bg-accent/[1%]"
+                                >
+                                  {sizePrice ? (
+                                    <span
+                                      className={`text-sm font-bold font-mono ${
+                                        Number(sizePrice.priceDelta) >= 0
+                                          ? 'text-emerald-600'
+                                          : 'text-red-500'
+                                      }`}
+                                    >
+                                      {Number(sizePrice.priceDelta) >= 0
+                                        ? '+'
+                                        : ''}
+                                      $
+                                      {Number(sizePrice.priceDelta || 0).toFixed(
+                                        2,
+                                      )}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-200 font-mono text-xs">
+                                      —
+                                    </span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                            <td className="px-4 py-4 text-center">
+                              <div className="flex justify-center">
+                                <div
+                                  className={`w-2 h-2 rounded-full ring-4 ${
+                                    level.is_active !== false
+                                      ? 'bg-emerald-500 ring-emerald-500/10'
+                                      : 'bg-gray-300 ring-gray-100'
+                                  }`}
+                                  title={
+                                    level.is_active !== false
+                                      ? 'Active'
+                                      : 'Inactive'
+                                  }
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : pricesBySize.length > 0 ? (
+                  <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm ring-1 ring-black/5">
+                    <table className="min-w-full divide-y divide-gray-200 text-left border-collapse">
+                      <thead className="bg-gray-50/70 backdrop-blur-sm sticky top-0 z-10">
+                        <tr>
+                          <th className="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200">
+                            Size
+                          </th>
+                          <th className="px-4 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right border-b border-gray-200">
+                            Δ
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {pricesBySize.map((ps: any, idx: number) => {
+                          const key =
+                            ps.sizeCode || ps.size_id || ps.code || idx;
+                          return (
+                            <tr
+                              key={idx}
+                              className="transition-colors hover:bg-gray-50/50"
+                            >
+                              <td className="px-4 py-4 whitespace-nowrap text-xs font-medium text-heading">
+                                {getSizeLabelForKey(key)}
+                              </td>
+                              <td className="px-4 py-4 text-right whitespace-nowrap">
+                                <span
+                                  className={`text-sm font-bold font-mono ${
+                                    Number(ps.priceDelta) >= 0
+                                      ? 'text-emerald-600'
+                                      : 'text-red-500'
+                                  }`}
+                                >
+                                  {Number(ps.priceDelta) >= 0 ? '+' : ''}$
+                                  {Number(ps.priceDelta || 0).toFixed(2)}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : basePrice != null && Number(basePrice) !== 0 ? (
+                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+                      Base price (no quantity levels)
+                    </p>
+                    <p className="text-lg font-bold text-emerald-600">
+                      +${Number(basePrice).toFixed(2)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">
+                    No quantity or size pricing configured.
+                  </p>
+                )}
+              </div>
+            );
+          });
+        })}
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-3 flex-shrink-0">

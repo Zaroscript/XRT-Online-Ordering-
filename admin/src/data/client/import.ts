@@ -102,12 +102,12 @@ export const importClient = {
     return response?.data || response;
   },
 
-  listSessions: async (business_id?: string) => {
+  listSessions: async () => {
     const response = await HttpClient.get<{
       success: boolean;
       data: ImportSession[];
       message: string;
-    }>('import/sessions', { business_id });
+    }>('import/sessions');
     return response?.data || response;
   },
 
@@ -159,11 +159,11 @@ export const importClient = {
     return response;
   },
 
-  clearHistory: async (business_id: string) => {
+  clearHistory: async () => {
     const response = await HttpClient.delete<{
       success: boolean;
       message: string;
-    }>(`import/sessions?business_id=${business_id}`);
+    }>('import/sessions');
     return response;
   },
 };

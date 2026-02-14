@@ -25,6 +25,8 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
       min_select: document.min_select,
       max_select: document.max_select,
       quantity_levels: document.quantity_levels || [],
+      prices_by_size: (document as any).prices_by_size || [],
+      price: (document as any).price != null ? (document as any).price : undefined,
       modifiers: modifiers || (document as any).modifiers || [],
       is_active: document.is_active,
       sort_order: document.sort_order,

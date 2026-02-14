@@ -1,18 +1,14 @@
 import ConfirmationCard from '@/components/common/confirmation-card';
-import {
-  useModalAction,
-  useModalState,
-} from '@/components/ui/modal/modal.context';
+import { useModalAction } from '@/components/ui/modal/modal.context';
 import { useClearImportHistoryMutation } from '@/data/import';
 
 const ClearImportHistoryView = () => {
-  const { data } = useModalState(); // business_id
   const { closeModal } = useModalAction();
   const { mutate: clearHistory, isPending: loading } =
     useClearImportHistoryMutation();
 
   function handleClear() {
-    clearHistory(data, {
+    clearHistory(undefined, {
       onSuccess: () => {
         closeModal();
       },

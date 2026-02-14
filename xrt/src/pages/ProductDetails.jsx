@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { products } from '../config/constants';
+import { useProductsQuery } from '@/api';
 import { computeTotalPrice } from '../utils/priceUtils';
+import { buildDefaultModifiers, getDefaultSize, getDefaultLevel, getDefaultPlacement } from '../utils/defaultModifiers';
 import { useCart } from '../context/CartContext';
 import ProductCustomizer from '../Component/Product/ProductCustomizer';
 import { COLORS } from '../config/colors';
@@ -11,36 +12,29 @@ import SignatureProducts from '../Component/Product/SignatureProducts';
 const ProductDetails = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
-  
-  const product = products.find(p => p.id === parseInt(id));
+  const { products, loading } = useProductsQuery();
+  const product = products.find((p) => String(p.id) === String(id));
 
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedModifiers, setSelectedModifiers] = useState({});
   const [quantity, setQuantity] = useState(1);
 
-  // Initialize defaults when product loads
+  // Initialize defaults when product loads (auto-select default modifiers from admin)
   useEffect(() => {
     if (product) {
-      // Default size
-      if (product.sizes && product.sizes.length > 0) {
-        setSelectedSize(product.sizes[0]);
-      } else {
-        setSelectedSize(null);
-      }
-
-      // Default modifiers
-      const defaults = {};
-      if (product.modifiers) {
-        product.modifiers.forEach(mod => {
-          if (mod.default) {
-             defaults[mod.title] = mod.default;
-          }
-        });
-      }
-      setSelectedModifiers(defaults);
+      setSelectedSize(getDefaultSize(product));
+      setSelectedModifiers(buildDefaultModifiers(product));
       setQuantity(1);
     }
   }, [product]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="w-10 h-10 border-4 border-gray-200 border-t-green-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -53,8 +47,11 @@ const ProductDetails = () => {
   const toggleModifier = (section, optionLabel) => {
     setSelectedModifiers(prev => {
       const current = prev[section.title];
-      
+
       if (section.type === 'single') {
+        if (current === optionLabel) {
+          return { ...prev, [section.title]: undefined };
+        }
         return { ...prev, [section.title]: optionLabel };
       } else {
         const currentList = Array.isArray(current) ? current : [];
@@ -109,19 +106,30 @@ const ProductDetails = () => {
 
   const handleToggleModifier = (section, optionLabel) => {
       const isComplex = section.options.some((opt) => opt.hasLevel || opt.hasPlacement);
-      
+      const isSingle = section.type === 'single';
+
       if (isComplex) {
           setSelectedModifiers(prev => {
-              const sectionState = { ...(prev[section.title] || {}) };
-              if (sectionState[optionLabel]) {
+              const sectionState = isSingle ? {} : { ...(prev[section.title] || {}) };
+              const isCurrentlySelected = isSingle
+                ? (typeof prev[section.title] === 'object' && prev[section.title]?.[optionLabel])
+                : sectionState[optionLabel];
+              if (isSingle && isCurrentlySelected) {
+                  return { ...prev, [section.title]: undefined };
+              }
+              if (!isSingle && sectionState[optionLabel]) {
                   delete sectionState[optionLabel];
               } else {
-                  sectionState[optionLabel] = { level: "Normal", placement: "Whole" };
+                  const option = section.options.find((o) => o.label === optionLabel);
+                  sectionState[optionLabel] = {
+                      level: getDefaultLevel(option),
+                      placement: getDefaultPlacement(option),
+                  };
               }
               return { ...prev, [section.title]: sectionState };
           });
       } else {
-          toggleModifier(section, optionLabel); 
+          toggleModifier(section, optionLabel);
       }
   };
 

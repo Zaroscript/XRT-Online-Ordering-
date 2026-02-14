@@ -60,7 +60,7 @@ const ENTITY_TYPES = [
   {
     id: 'modifier_items',
     name: 'Modifier Items',
-    description: 'Individual modifier options',
+    description: 'Individual modifier options (basics only)',
     icon: AdjustmentsIcon,
     exportEndpoint: 'modifiers/export',
     importEndpoint: 'modifiers/import',
@@ -68,7 +68,7 @@ const ENTITY_TYPES = [
   {
     id: 'sizes',
     name: 'Sizes',
-    description: 'Item size variations and pricing',
+    description: 'Item size variations',
     icon: StackIcon,
     exportEndpoint: 'sizes/export',
     importEndpoint: 'sizes/import',
@@ -78,11 +78,9 @@ const ENTITY_TYPES = [
 const ImportExportPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { query } = router;
-  const businessId = query.business_id as string;
   const [activeTab, setActiveTab] = useState<'actions' | 'history'>('actions');
   const [exportLoading, setExportLoading] = useState<string | null>(null);
-  const { sessions, isLoading, error } = useImportSessionsQuery(businessId);
+  const { sessions, isLoading, error } = useImportSessionsQuery();
   const { openModal } = useModalAction();
   // removed separate mutation and loading state here as it's now handled in the modal
 
@@ -95,7 +93,6 @@ const ImportExportPage = () => {
     try {
       const response = await HttpClient.get<string>(entityType.exportEndpoint, {
         responseType: 'blob',
-        params: { business_id: businessId },
       } as any);
 
       const url = window.URL.createObjectURL(new Blob([response as any]));
@@ -120,7 +117,7 @@ const ImportExportPage = () => {
   const handleImport = (entityType: (typeof ENTITY_TYPES)[0]) => {
     router.push({
       pathname: Routes.import.upload,
-      query: { type: entityType.id, business_id: businessId },
+      query: { type: entityType.id },
     });
   };
 
@@ -253,7 +250,7 @@ const ImportExportPage = () => {
                 <Button
                   size="small"
                   className="bg-red-500 hover:bg-red-600 text-white md:hidden"
-                  onClick={() => openModal('CLEAR_IMPORT_HISTORY', businessId)}
+                  onClick={() => openModal('CLEAR_IMPORT_HISTORY')}
                 >
                   <TrashIcon className="h-4 w-4 mr-1.5" />
                   <span className="sr-only">{t('common:clear-history')}</span>
@@ -269,7 +266,7 @@ const ImportExportPage = () => {
               <Button
                 size="small"
                 className="bg-red-500 hover:bg-red-600 text-white hidden md:inline-flex"
-                onClick={() => openModal('CLEAR_IMPORT_HISTORY', businessId)}
+                onClick={() => openModal('CLEAR_IMPORT_HISTORY')}
               >
                 <TrashIcon className="h-4 w-4 mr-1.5" />
                 {t('common:clear-history')}

@@ -297,75 +297,16 @@ export class ItemController {
     // Helper to safely stringify values for CSV
     const safeString = (val: any) => `"${(val || '').toString().replace(/"/g, '""')}"`;
 
-    // Helper to format sizes
-    const formatSizes = (sizes: any[]) => {
-      if (!sizes || !Array.isArray(sizes)) return '';
-      return sizes
-        .map((s) => {
-          const name = s.size_id?.name || s.name || 'Unknown Size'; // Handle populated vs embedded
-          const price = s.price !== undefined ? `$${s.price}` : '';
-          const defaultLabel = s.is_default ? ' [Default]' : '';
-          return `${name} (${price})${defaultLabel}`;
-        })
-        .join('; ');
-    };
-
-    // Helper to format modifier groups
-    const formatModifierGroups = (groups: any[]) => {
-      if (!groups || !Array.isArray(groups)) return '';
-      return groups
-        .map((g) => {
-          const name = g.modifier_group?.name || 'Unknown Group';
-          const min = g.modifier_group?.min_select ?? 0;
-          const max = g.modifier_group?.max_select ?? 1;
-          return `${name} (Min:${min} Max:${max})`;
-        })
-        .join('; ');
-    };
-
-    // Helper to get default size name
-    const getDefaultSizeName = (item: any) => {
-      if (!item.default_size_id || !Array.isArray(item.sizes)) return '';
-      const defaultSize = item.sizes.find((s: any) => s.size_id === item.default_size_id);
-      return defaultSize?.name || item.default_size_id || '';
-    };
-
-    // Convert to CSV
+    // Basics-only export: name, description, category_name, sort_order, is_active (no pricing, sizes, modifier_groups)
     const csvRows = [
-      [
-        'name',
-        'description',
-        'base_price',
-        'is_active',
-        'is_available',
-        'is_signature',
-        'is_sizeable',
-        'is_customizable',
-        'sort_order',
-        'category_name',
-        'max_per_order',
-        'image',
-        'default_size_name',
-        'sizes',
-        'modifier_groups',
-      ].join(','),
+      ['name', 'description', 'category_name', 'sort_order', 'is_active'].join(','),
       ...items.map((item: any) =>
         [
           safeString(item.name),
           safeString(item.description),
-          item.base_price || 0,
-          item.is_active,
-          item.is_available,
-          item.is_signature,
-          item.is_sizeable,
-          item.is_customizable,
-          item.sort_order,
           safeString(item.category?.name),
-          item.max_per_order || '',
-          safeString(item.image),
-          safeString(getDefaultSizeName(item)), // Export name instead of ID
-          safeString(formatSizes(item.sizes)),
-          safeString(formatModifierGroups(item.modifier_groups)),
+          item.sort_order ?? 0,
+          item.is_active ?? true,
         ].join(',')
       ),
     ];

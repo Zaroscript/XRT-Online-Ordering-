@@ -54,7 +54,17 @@ export class ItemRepository implements IItemRepository {
             : document.default_size_id.toString()
         : undefined,
       modifier_groups: document.modifier_groups
-        ? document.modifier_groups.map((mg: any) => {
+        ? (document.modifier_groups as any[])
+            .slice()
+            .sort((a: any, b: any) => {
+              // Match dashboard order: use modifier_group.sort_order when populated
+              const gA = a.modifier_group_id && typeof a.modifier_group_id === 'object' ? a.modifier_group_id : null;
+              const gB = b.modifier_group_id && typeof b.modifier_group_id === 'object' ? b.modifier_group_id : null;
+              const sortA = gA ? (gA.sort_order ?? 0) : (a.display_order ?? 0);
+              const sortB = gB ? (gB.sort_order ?? 0) : (b.display_order ?? 0);
+              return sortA - sortB;
+            })
+            .map((mg: any) => {
             const groupId =
               typeof mg.modifier_group_id === 'string'
                 ? mg.modifier_group_id
@@ -70,14 +80,16 @@ export class ItemRepository implements IItemRepository {
                 display_name: g.display_name,
                 min_select: g.min_select,
                 max_select: g.max_select,
-                quantity_levels: g.quantity_levels,
-                prices_by_size: g.prices_by_size, // Important for inheritance
+                quantity_levels: Array.isArray(g.quantity_levels) ? g.quantity_levels : [],
+                prices_by_size: Array.isArray(g.prices_by_size) ? g.prices_by_size : [],
+                price: g.price != null ? g.price : undefined,
                 display_type: g.display_type,
                 business_id: g.business_id,
+                sort_order: g.sort_order ?? 0,
               };
             }
 
-            // Find modifiers for this group
+            // Find modifiers for this group (sorted by display_order)
             const groupModifiers = allModifiers
               .filter((m: any) => {
                 const mGroupId =
@@ -86,14 +98,17 @@ export class ItemRepository implements IItemRepository {
                     : m.modifier_group_id.toString();
                 return mGroupId === groupId;
               })
+              .slice()
+              .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
               .map((m: any) => ({
                 id: m._id.toString(),
                 name: m.name,
                 modifier_group_id: groupId,
                 display_order: m.display_order,
                 is_active: m.is_active,
-                prices_by_size: m.prices_by_size,
-                quantity_levels: m.quantity_levels,
+                prices_by_size: Array.isArray(m.prices_by_size) ? m.prices_by_size : [],
+                quantity_levels: Array.isArray(m.quantity_levels) ? m.quantity_levels : [],
+                price: m.price != null ? m.price : undefined,
                 sides_config: m.sides_config,
                 created_at: m.created_at,
                 updated_at: m.updated_at,
@@ -111,8 +126,27 @@ export class ItemRepository implements IItemRepository {
                         : (mo.modifier_id?._id || mo.modifier_id).toString(),
                     max_quantity: mo.max_quantity,
                     is_default: mo.is_default,
-                    prices_by_size: mo.prices_by_size || undefined,
-                    quantity_levels: mo.quantity_levels || undefined,
+                    price: mo.price != null ? mo.price : undefined,
+                    // Omit empty arrays so client can inherit from modifier/group
+                    prices_by_size:
+                      Array.isArray(mo.prices_by_size) && mo.prices_by_size.length > 0
+                        ? mo.prices_by_size
+                        : undefined,
+                    quantity_levels:
+                      Array.isArray(mo.quantity_levels) && mo.quantity_levels.length > 0
+                        ? mo.quantity_levels.map((ql: any) => ({
+                            quantity: ql.quantity,
+                            name: ql.name,
+                            price: ql.price,
+                            prices_by_size:
+                              Array.isArray(ql.prices_by_size) && ql.prices_by_size.length > 0
+                                ? ql.prices_by_size
+                                : undefined,
+                            is_default: ql.is_default,
+                            display_order: ql.display_order,
+                            is_active: ql.is_active,
+                          }))
+                        : undefined,
                   }))
                 : undefined,
               modifiers: groupModifiers,

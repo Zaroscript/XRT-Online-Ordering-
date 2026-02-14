@@ -22,33 +22,25 @@ export interface ParsedItemData {
   business_id: string;
   name: string;
   description?: string;
-  base_price?: number;
   category_id?: string;
   category_name?: string;
-  is_sizeable: boolean;
   is_customizable?: boolean;
   is_active?: boolean;
   is_available?: boolean;
   is_signature?: boolean;
   max_per_order?: number;
   sort_order?: number;
-  default_size_code?: string;
   [key: string]: any; // Allow additional fields
 }
 
 export interface ParsedItemSizeData {
-  item_name: string;
-  item_category_name?: string;
   size_code: string;
   name: string;
-  price: number;
   display_order?: number;
   is_active?: boolean;
-  is_default?: boolean;
 }
 
 export interface ParsedModifierGroupData {
-  group_key: string;
   business_id: string;
   name: string;
   display_name?: string;
@@ -110,7 +102,6 @@ export interface ParsedCategoryData {
   sort_order?: number;
   is_active?: boolean;
   kitchen_section_name?: string;
-  modifier_groups?: string;
 }
 
 export interface ParsedImportData {

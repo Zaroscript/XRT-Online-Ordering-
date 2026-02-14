@@ -333,6 +333,8 @@
   "error-sku-required": "SKU 为必填项",
   "error-price-must-number": "价格必须是数字",
   "error-account-must-number": "帐号必须是数字",
+  "base-price": "基础价格",
+  "used-when-no-quantity-levels": "在无数量等级时使用",
   "error-price-must-positive": "价格必须为正",
   "error-price-required": "价格为必填项",
   "error-sale-price-less-number": "销售价格应低于",

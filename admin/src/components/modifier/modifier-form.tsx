@@ -40,6 +40,8 @@ type FormValues = {
   };
   quantity_levels?: QuantityLevel[];
   prices_by_size?: PricesBySize[];
+  /** Base price when modifier has no quantity_levels */
+  price?: number;
   inherit_pricing?: boolean;
 };
 
@@ -96,6 +98,11 @@ const modifierValidationSchema = yup.object().shape({
       priceDelta: yup.number().required('form:error-price-delta-required'),
     }),
   ),
+  price: yup
+    .number()
+    .transform((value) => (isNaN(value) || value === '' ? undefined : value))
+    .optional()
+    .min(0, 'form:error-price-must-positive'),
 });
 
 const defaultValues: FormValues = {
@@ -106,6 +113,7 @@ const defaultValues: FormValues = {
     enabled: false,
     allowed_sides: [],
   },
+  price: undefined,
   inherit_pricing: true,
 };
 
@@ -157,6 +165,7 @@ export default function CreateOrUpdateModifierForm({
               prices_by_size: ql.prices_by_size || [],
             })) || [],
           prices_by_size: initialValues.prices_by_size || [],
+          price: (initialValues as any).price ?? undefined,
           inherit_pricing:
             !initialValues.quantity_levels ||
             initialValues.quantity_levels.length === 0,
@@ -220,6 +229,10 @@ export default function CreateOrUpdateModifierForm({
       is_active: values.is_active !== undefined ? values.is_active : true,
       quantity_levels: quantityLevels,
       prices_by_size: pricesBySize,
+      price:
+        values.price != null && String(values.price).trim() !== ''
+          ? Number(values.price)
+          : undefined,
     };
 
     // Include sides_config only if enabled
@@ -434,6 +447,26 @@ export default function CreateOrUpdateModifierForm({
                     />
                   </div>
                 </div>
+
+                {!inheritPricing && (
+                  <div className="mb-5">
+                    <Label className="mb-2 block">
+                      {t('form:base-price') || 'Base price'}
+                      <span className="ml-1 text-xs font-normal text-gray-500">
+                        ({t('form:used-when-no-quantity-levels') || 'used when no quantity levels'})
+                      </span>
+                    </Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      {...register('price', { valueAsNumber: true })}
+                      error={t(errors.price?.message!)}
+                      variant="outline"
+                      placeholder="0.00"
+                    />
+                  </div>
+                )}
 
                 {inheritPricing ? (
                   <div className="space-y-4">

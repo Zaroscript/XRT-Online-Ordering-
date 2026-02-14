@@ -10,6 +10,8 @@ export interface ItemModifierQuantityLevelOverride {
   quantity: number;
   name?: string;
   price?: number;
+  /** Per-size pricing when item is sizeable */
+  prices_by_size?: ItemModifierPriceOverride[];
   is_default?: boolean;
   display_order?: number;
   is_active?: boolean;
@@ -17,6 +19,8 @@ export interface ItemModifierQuantityLevelOverride {
 
 export interface ItemModifierOverride {
   modifier_id: string;
+  /** Flat price for non-sizeable modifier (no quantity levels) */
+  price?: number;
   prices_by_size?: ItemModifierPriceOverride[];
   quantity_levels?: ItemModifierQuantityLevelOverride[];
   is_default?: boolean;

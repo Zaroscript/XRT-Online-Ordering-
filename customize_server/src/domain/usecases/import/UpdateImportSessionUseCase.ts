@@ -17,10 +17,14 @@ export class UpdateImportSessionUseCase {
 
     // If parsedData is being updated, re-validate
     if (data.parsedData) {
+      const parsedData = data.parsedData as any;
+      if (typeof parsedData !== 'object' || parsedData === null) {
+        throw new Error('Invalid parsedData: must be an object');
+      }
       const validation = ImportValidationService.validate(
-        data.parsedData,
+        parsedData,
         session.business_id,
-        session.originalFiles[0] || 'import.csv'
+        (session.originalFiles && session.originalFiles[0]) || 'import.csv'
       );
       data.validationErrors = validation.errors;
       data.validationWarnings = validation.warnings;

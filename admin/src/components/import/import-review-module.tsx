@@ -125,10 +125,8 @@ export default function ImportReviewModule({
     if (entity === 'items') {
       newItem = {
         name: '',
-        base_price: 0,
         is_active: true,
         sort_order: 0,
-        is_sizeable: false,
       };
     } else if (entity === 'categories') {
       newItem = { name: '', is_active: true, sort_order: 0 };
@@ -145,10 +143,9 @@ export default function ImportReviewModule({
       newItem = { name: '', is_active: true, display_order: 0 };
     } else if (entity === 'itemSizes') {
       newItem = {
-        item_name: '',
         name: '',
         size_code: '',
-        price: 0,
+        display_order: 0,
         is_active: true,
       };
     }
@@ -283,28 +280,6 @@ export default function ImportReviewModule({
       ),
     },
     {
-      title: t('common:modifier-groups'),
-      dataIndex: 'modifier_groups',
-      key: 'modifier_groups',
-      width: 300,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`category_modifier_groups_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData(
-              'categories' as any,
-              index,
-              'modifier_groups',
-              e.target.value,
-            )
-          }
-          className="text-sm"
-          placeholder="Name (Min:0 Max:1); ..."
-        />
-      ),
-    },
-    {
       title: t('common:active'),
       dataIndex: 'is_active',
       key: 'is_active',
@@ -434,65 +409,6 @@ export default function ImportReviewModule({
       ),
     },
     {
-      title: t('common:base-price'),
-      dataIndex: 'base_price',
-      key: 'base_price',
-      width: 120,
-      render: (value: number, record: any, index: number) => (
-        <Input
-          name={`item_base_price_${index}`}
-          type="number"
-          step="0.01"
-          value={value || ''}
-          onChange={(e) =>
-            updateData(
-              'items',
-              index,
-              'base_price',
-              parseFloat(e.target.value) || 0,
-            )
-          }
-          className="text-sm"
-          disabled={record.is_sizeable}
-        />
-      ),
-    },
-    {
-      title: t('common:is-sizeable'),
-      dataIndex: 'is_sizeable',
-      key: 'is_sizeable',
-      width: 120,
-      render: (value: boolean, record: any, index: number) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={value || false}
-            onChange={(e) =>
-              updateData('items', index, 'is_sizeable', e.target.checked)
-            }
-            className="h-4 w-4 rounded border-border-200 text-accent focus:ring-accent"
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('common:default-size-code'),
-      dataIndex: 'default_size_code',
-      key: 'default_size_code',
-      width: 150,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`item_default_size_code_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('items', index, 'default_size_code', e.target.value)
-          }
-          className="text-sm"
-          disabled={!record.is_sizeable}
-        />
-      ),
-    },
-    {
       title: t('common:sort-order'),
       dataIndex: 'sort_order',
       key: 'sort_order',
@@ -593,22 +509,6 @@ export default function ImportReviewModule({
       },
     },
     {
-      title: t('common:item-name'),
-      dataIndex: 'item_name',
-      key: 'item_name',
-      width: 150,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`item_name_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('itemSizes', index, 'item_name', e.target.value)
-          }
-          className="text-sm"
-        />
-      ),
-    },
-    {
       title: t('common:size-code'),
       dataIndex: 'size_code',
       key: 'size_code',
@@ -638,47 +538,6 @@ export default function ImportReviewModule({
           }
           className="text-sm"
         />
-      ),
-    },
-    {
-      title: t('common:price'),
-      dataIndex: 'price',
-      key: 'price',
-      width: 120,
-      render: (value: number, record: any, index: number) => (
-        <Input
-          name={`size_price_${index}`}
-          type="number"
-          step="0.01"
-          value={value || ''}
-          onChange={(e) =>
-            updateData(
-              'itemSizes',
-              index,
-              'price',
-              parseFloat(e.target.value) || 0,
-            )
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:is-default'),
-      dataIndex: 'is_default',
-      key: 'is_default',
-      width: 100,
-      render: (value: boolean, record: any, index: number) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={value || false}
-            onChange={(e) =>
-              updateData('itemSizes', index, 'is_default', e.target.checked)
-            }
-            className="h-4 w-4 rounded border-border-200 text-accent focus:ring-accent"
-          />
-        </div>
       ),
     },
     {
@@ -740,22 +599,6 @@ export default function ImportReviewModule({
         }
         return <Badge text={t('common:valid')} color="bg-accent" />;
       },
-    },
-    {
-      title: t('common:group-key'),
-      dataIndex: 'group_key',
-      key: 'group_key',
-      width: 150,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`group_key_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('modifierGroups', index, 'group_key', e.target.value)
-          }
-          className="!text-sm"
-        />
-      ),
     },
     {
       title: t('common:name'),

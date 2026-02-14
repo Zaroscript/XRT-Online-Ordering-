@@ -20,6 +20,7 @@ interface SelectInputProps {
   label?: string;
   toolTipText?: string;
   error?: string;
+  className?: string;
 }
 
 const SelectInput = ({
@@ -38,10 +39,11 @@ const SelectInput = ({
   required,
   toolTipText,
   error,
+  className,
   ...rest
 }: SelectInputProps) => {
   return (
-    <>
+    <div className={className}>
       {label ? (
         <TooltipLabel
           htmlFor={name}
@@ -63,30 +65,49 @@ const SelectInput = ({
           if (isMulti) {
             // For multi-select, value is an array (of IDs or objects)
             if (Array.isArray(value)) {
-              selectedValue = value.map((val: any) => {
-                // If val is already an object, return it
-                if (typeof val === 'object' && val !== null) {
-                  return val;
-                }
-                // Otherwise, find the option by ID
-                return options?.find((opt: any) => {
-                  const optValue = getOptionValue ? getOptionValue(opt) : (opt as any).id || (opt as any).value;
-                  return optValue === val || optValue === (val?.id || val);
-                });
-              }).filter(Boolean);
+              selectedValue = value
+                .map((val: any) => {
+                  // If val is already an object, return it
+                  if (typeof val === 'object' && val !== null) {
+                    return val;
+                  }
+                  // Otherwise, find the option by ID
+                  return options?.find((opt: any) => {
+                    const optValue = getOptionValue
+                      ? getOptionValue(opt)
+                      : (opt as any).id || (opt as any).value;
+                    return optValue === val || optValue === (val?.id || val);
+                  });
+                })
+                .filter(Boolean);
             }
           } else {
             // For single select
             if (value) {
-              // If value is already an object, return it
-              if (typeof value === 'object' && value !== null) {
+              // Try to find the option in the provided options list to ensure reference equality
+              // This works whether value is an ID (string/number) or an object
+              selectedValue = options?.find((opt: any) => {
+                const optValue = getOptionValue
+                  ? getOptionValue(opt)
+                  : (opt as any).id || (opt as any).value;
+
+                const currentValue =
+                  typeof value === 'object' && value !== null
+                    ? getOptionValue
+                      ? getOptionValue(value)
+                      : (value as any).id || (value as any).value
+                    : value;
+
+                return optValue === currentValue;
+              });
+
+              // If not found (e.g. data mismatch), fall back to using the value itself if it's an object
+              if (
+                !selectedValue &&
+                typeof value === 'object' &&
+                value !== null
+              ) {
                 selectedValue = value;
-              } else {
-                // Otherwise, find the option by ID
-                selectedValue = options?.find((opt: any) => {
-                  const optValue = getOptionValue ? getOptionValue(opt) : (opt as any).id || (opt as any).value;
-                  return optValue === value || optValue === (value?.id || value);
-                });
               }
             }
           }
@@ -118,7 +139,7 @@ const SelectInput = ({
         }}
       />
       {error && <p className="my-2 text-xs text-red-500 text-start">{error}</p>}
-    </>
+    </div>
   );
 };
 

@@ -125,6 +125,15 @@ export class PublicController {
       orders: settings.orders ?? null,
       messages: settings.messages ?? null,
       operating_hours: settings.operating_hours ?? null,
+      siteLink: settings.siteLink ?? '',
+      timezone: settings.timezone ?? 'America/New_York',
+      isProductReview: settings.isProductReview ?? false,
+      enableTerms: settings.enableTerms ?? false,
+      enableCoupons: settings.enableCoupons ?? false,
+      enableEmailForDigitalProduct: settings.enableEmailForDigitalProduct ?? false,
+      enableReviewPopup: settings.enableReviewPopup ?? false,
+      reviewSystem: settings.reviewSystem ?? 'review_single_time',
+      maxShopDistance: settings.maxShopDistance ?? 0,
     };
 
     return sendSuccess(res, 'Site settings retrieved', publicSettings);

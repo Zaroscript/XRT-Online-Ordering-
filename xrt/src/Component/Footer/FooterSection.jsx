@@ -53,9 +53,22 @@ export default function FooterSection() {
       <div className="bg-[#315234] flex justify-between items-center h-[60px] px-[70px]">
         <h2 className="text-[#E1E1E1] text-[16px]">
           {(() => {
-            const text = settings?.copyrightText;
-            if (!text) return "Powered by XRT";
-            return text.includes("Powered by XRT") ? text : `${text} Powered by XRT`;
+            const text = settings?.copyrightText?.replace(/Powered by XRT/i, '').trim() || '';
+            const siteLink = settings?.siteLink || '#';
+            return (
+              <>
+                {text} {text && ' '}Powered by{' '}
+                <a 
+                  href={siteLink} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="font-bold hover:underline"
+                  style={{ color: COLORS.offerYellow }}
+                >
+                  XRT
+                </a>
+              </>
+            );
           })()}
         </h2>
         <img src={footer_image.pay} alt="" />

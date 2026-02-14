@@ -17,7 +17,24 @@ const Footer: React.FC<IFooterProp> = ({ className }) => {
       <div className="mx-auto w-full">
         <div className="flex items-center justify-between bg-white px-5 py-6 md:px-8">
           <span className="text-sm text-body sm:text-center">
-            {copyrightText} Powered by XRT
+            {(() => {
+              const text =
+                copyrightText?.replace(/Powered by XRT/i, '').trim() || '';
+              const link = siteLink || '#';
+              return (
+                <>
+                  {text} {text && ' '}Powered by{' '}
+                  <a
+                    href={link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold hover:underline text-accent"
+                  >
+                    XRT
+                  </a>
+                </>
+              );
+            })()}
           </span>
           <div className="flex space-x-6 text-sm font-medium text-body sm:justify-center">
             {process.env.NEXT_PUBLIC_VERSION}

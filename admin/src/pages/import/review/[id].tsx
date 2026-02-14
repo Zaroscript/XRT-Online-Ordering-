@@ -218,7 +218,7 @@ export default function ImportReviewPage() {
               type="file"
               ref={fileInputRef}
               className="hidden"
-              accept=".csv,.zip"
+              accept=".csv"
               onChange={handleFileChange}
             />
             <Button

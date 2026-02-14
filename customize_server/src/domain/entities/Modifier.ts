@@ -17,6 +17,8 @@ export interface Modifier {
   // Modifier-level configuration (overrides group defaults)
   quantity_levels?: QuantityLevel[];
   prices_by_size?: PricesBySize[];
+  /** Base price when modifier has no quantity_levels (flat add-on price) */
+  price?: number;
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date; // For soft delete
@@ -34,6 +36,8 @@ export interface CreateModifierDTO {
   // Modifier-level configuration (overrides group defaults)
   quantity_levels?: QuantityLevel[];
   prices_by_size?: PricesBySize[];
+  /** Base price when modifier has no quantity_levels */
+  price?: number;
 }
 
 export interface UpdateModifierDTO {
@@ -47,6 +51,7 @@ export interface UpdateModifierDTO {
   // Modifier-level configuration (overrides group defaults)
   quantity_levels?: QuantityLevel[];
   prices_by_size?: PricesBySize[];
+  price?: number;
 }
 
 export interface ModifierFilters {

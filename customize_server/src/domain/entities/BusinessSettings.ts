@@ -51,6 +51,7 @@ export interface BusinessSettings {
     }>;
     website?: string;
   };
+  timezone?: string;
   currency?: string;
   heroSlides?: Array<{
     bgImage?: any;

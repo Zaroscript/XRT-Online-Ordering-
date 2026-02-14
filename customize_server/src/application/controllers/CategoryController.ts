@@ -9,7 +9,6 @@ import { DeleteCategoryUseCase } from '../../domain/usecases/categories/DeleteCa
 import { CategoryRepository } from '../../infrastructure/repositories/CategoryRepository';
 import { ItemRepository } from '../../infrastructure/repositories/ItemRepository';
 import { KitchenSectionRepository } from '../../infrastructure/repositories/KitchenSectionRepository';
-import { ModifierGroupRepository } from '../../infrastructure/repositories/ModifierGroupRepository';
 import { CloudinaryStorage } from '../../infrastructure/cloudinary/CloudinaryStorage';
 import { sendSuccess } from '../../shared/utils/response';
 import { asyncHandler } from '../../shared/utils/asyncHandler';
@@ -23,14 +22,12 @@ export class CategoryController {
   private deleteCategoryUseCase: DeleteCategoryUseCase;
   private getCategoryByIdUseCase: GetCategoryByIdUseCase;
   private kitchenSectionRepository: KitchenSectionRepository;
-  private modifierGroupRepository: ModifierGroupRepository;
 
   constructor() {
     const categoryRepository = new CategoryRepository();
     const itemRepository = new ItemRepository();
     const imageStorage = new CloudinaryStorage();
     this.kitchenSectionRepository = new KitchenSectionRepository();
-    this.modifierGroupRepository = new ModifierGroupRepository();
 
     this.createCategoryUseCase = new CreateCategoryUseCase(categoryRepository, imageStorage);
     this.getCategoriesUseCase = new GetCategoriesUseCase(categoryRepository);
@@ -260,37 +257,16 @@ export class CategoryController {
     // Helper to safely stringify values for CSV
     const safeString = (val: any) => `"${(val || '').toString().replace(/"/g, '""')}"`;
 
-    // Helper to format modifier groups comfortably
-    const formatModifierGroups = (groups: any[]) => {
-      if (!groups || !Array.isArray(groups)) return '';
-      return groups
-        .map((g) => {
-          const name = g.modifier_group?.name || 'Unknown Group';
-          // We can also show overrides summary if needed, e.g. Max Qty
-          // For now, just the group name is a good start, or name + overrides count
-          return name;
-        })
-        .join('; ');
-    };
-
-    // Convert to CSV
+    // Basics-only export: name, description, sort_order, is_active, kitchen_section_name (no modifier_groups)
     const csvRows = [
-      [
-        'name',
-        'description',
-        'is_active',
-        'sort_order',
-        'kitchen_section_name',
-        'modifier_groups',
-      ].join(','),
+      ['name', 'description', 'sort_order', 'is_active', 'kitchen_section_name'].join(','),
       ...categories.map((cat: any) =>
         [
           safeString(cat.name),
           safeString(cat.description),
-          cat.is_active,
-          cat.sort_order,
+          cat.sort_order ?? 0,
+          cat.is_active ?? true,
           safeString(cat.kitchen_section_data?.name || ''),
-          safeString(formatModifierGroups(cat.modifier_groups)),
         ].join(',')
       ),
     ];
@@ -363,48 +339,6 @@ export class CategoryController {
             }
           } catch (err) {
             // Ignore lookup errors
-          }
-        }
-
-        // Handle Modifier Groups parsing
-        if (record.modifier_groups) {
-          const groupStrings = record.modifier_groups
-            .split(';')
-            .map((s: string) => s.trim())
-            .filter((s: string) => s);
-          const modifierGroupsList: any[] = [];
-
-          for (const groupStr of groupStrings) {
-            // Parse "Name (Min:X Max:Y)"
-            const match = groupStr.match(/^(.*?)(?:\s*\(Min:\s*(\d+)\s*Max:\s*(\d+)\))?$/i);
-            if (match) {
-              const name = match[1].trim();
-
-              // Lookup group by name
-              try {
-                // Escape regex characters to ensure literal match
-                const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const groupsFound = await this.modifierGroupRepository.findAll({
-                  business_id: business_id!,
-                  name: `^${escapedName}$`, // Exact match regex
-                });
-
-                if (groupsFound.modifierGroups.length > 0) {
-                  const group = groupsFound.modifierGroups[0];
-                  modifierGroupsList.push({
-                    modifier_group_id: group.id,
-                    display_order: modifierGroupsList.length,
-                    modifier_overrides: [],
-                  });
-                }
-              } catch (err) {
-                // Ignore lookup errors
-              }
-            }
-          }
-
-          if (modifierGroupsList.length > 0) {
-            categoryData.modifier_groups = modifierGroupsList;
           }
         }
 

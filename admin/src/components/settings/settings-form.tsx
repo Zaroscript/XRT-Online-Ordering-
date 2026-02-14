@@ -6,7 +6,7 @@ import DatePicker from '@/components/ui/date-picker';
 import { addDays, addMinutes, isSameDay, isToday } from 'date-fns';
 import { AI } from '@/components/settings/ai';
 import { COUNTRY_LOCALE } from '@/components/settings/payment/country-locale';
-import { CURRENCY } from '@/components/settings/payment/currency';
+import { CURRENCY } from '@/data/currencies';
 import { PAYMENT_GATEWAY } from '@/components/settings/payment/payment-gateway';
 import WebHookURL from '@/components/settings/payment/webhook-url';
 import { settingsValidationSchema } from '@/components/settings/settings-validation-schema';

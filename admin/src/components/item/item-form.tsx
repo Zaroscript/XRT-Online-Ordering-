@@ -270,7 +270,7 @@ export default function CreateOrUpdateItemForm({
     useModifiersQuery({ limit: 1000, language: locale, is_active: true });
 
   const { sizes: itemSizes } = useItemSizesQuery(shopId, {
-    enabled: isSizeable,
+    enabled: !!shopId && !!isSizeable,
   });
 
   // Filter modifier groups

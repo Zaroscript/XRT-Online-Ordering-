@@ -20,8 +20,19 @@ export class ImportValidationService {
     const errors: ImportValidationError[] = [];
     const warnings: ImportValidationWarning[] = [];
 
+    // Normalize to avoid "Cannot read property 'forEach' of undefined" when saving draft with partial data
+    const safe: ParsedImportData = {
+      categories: Array.isArray(data?.categories) ? data.categories : [],
+      items: Array.isArray(data?.items) ? data.items : [],
+      itemSizes: Array.isArray(data?.itemSizes) ? data.itemSizes : [],
+      modifierGroups: Array.isArray(data?.modifierGroups) ? data.modifierGroups : [],
+      modifiers: Array.isArray(data?.modifiers) ? data.modifiers : [],
+      itemModifierOverrides: Array.isArray(data?.itemModifierOverrides) ? data.itemModifierOverrides : [],
+    };
+    data = safe;
+
     // Validate Categories
-    if (data.categories) {
+    if (data.categories && data.categories.length > 0) {
       const categoryNames = new Set<string>();
       data.categories.forEach((cat, index) => {
         const row = index + 2;
@@ -101,51 +112,7 @@ export class ImportValidationService {
         }
       }
 
-      // Business rule: if is_sizeable = false → base_price is required
-      if (!item.is_sizeable) {
-        if (item.base_price === undefined || item.base_price === null) {
-          errors.push({
-            file: filename,
-            row,
-            entity: 'Item',
-            field: 'base_price',
-            message: 'Price required',
-            value: item.base_price,
-          });
-        }
-      } else {
-        // if is_sizeable = true → at least one Item Size is required
-        const itemSizes = data.itemSizes.filter(
-          (s) =>
-            itemCompositeKey(s.item_name, s.item_category_name) ===
-            itemCompositeKey(item.name, item.category_name)
-        );
-        if (itemSizes.length === 0) {
-          errors.push({
-            file: filename,
-            row,
-            entity: 'Item',
-            field: 'is_sizeable',
-            message: 'Add at least one size',
-            value: item.is_sizeable,
-          });
-        }
-
-        // default_size_code must exist when sizable
-        if (item.default_size_code) {
-          const defaultSize = itemSizes.find((s) => s.size_code === item.default_size_code);
-          if (!defaultSize) {
-            errors.push({
-              file: filename,
-              row,
-              entity: 'Item',
-              field: 'default_size_code',
-              message: 'Default size not found',
-              value: item.default_size_code,
-            });
-          }
-        }
-      }
+      // Basics-only: skip pricing/sizing validation. base_price defaults to 0, is_sizeable to false.
 
       // business_id validation
       if (item.business_id && item.business_id !== business_id) {
@@ -160,35 +127,11 @@ export class ImportValidationService {
       }
     });
 
-    // Validate Item Sizes (link by item_name + item_category_name)
-    const sizeKeys = new Map<string, Set<string>>(); // item composite key -> Set<size_code>
-    const defaultSizes = new Map<string, number>(); // item composite key -> count of default sizes
+    // Validate Item Sizes (global sizes: size_code, name, display_order, is_active only)
+    const sizeCodes = new Set<string>();
 
     data.itemSizes.forEach((size, index) => {
       const row = index + 2;
-
-      const sizeItemKey =
-        size.item_name && size.item_name.trim() !== ''
-          ? itemCompositeKey(size.item_name, size.item_category_name)
-          : null;
-
-      // Only perform item cross-checks if item_name is provided (Global sizes are valid without it)
-      if (sizeItemKey) {
-        const matchingItem = data.items.find(
-          (i) => itemCompositeKey(i.name, i.category_name) === sizeItemKey
-        );
-        if (!matchingItem) {
-          errors.push({
-            file: filename,
-            row,
-            entity: 'ItemSize',
-            field: 'item_name',
-            message: 'Item not found',
-            value: size.item_name,
-          });
-          return;
-        }
-      }
 
       if (!size.size_code) {
         errors.push({
@@ -202,13 +145,7 @@ export class ImportValidationService {
         return;
       }
 
-      // size_code unique per item (or globally if no item_name)
-      const contextKey = sizeItemKey || 'GLOBAL_SITES';
-      if (!sizeKeys.has(contextKey)) {
-        sizeKeys.set(contextKey, new Set());
-      }
-      const itemSizeCodes = sizeKeys.get(contextKey)!;
-      if (itemSizeCodes.has(size.size_code)) {
+      if (sizeCodes.has(size.size_code)) {
         errors.push({
           file: filename,
           row,
@@ -218,23 +155,10 @@ export class ImportValidationService {
           value: size.size_code,
         });
       } else {
-        itemSizeCodes.add(size.size_code);
+        sizeCodes.add(size.size_code);
       }
 
-      // price > 0 (Only required if item_name is provided, as Global Sizes in export don't have price)
-      if (sizeItemKey && (!size.price || size.price <= 0)) {
-        errors.push({
-          file: filename,
-          row,
-          entity: 'ItemSize',
-          field: 'price',
-          message: 'Enter a positive price',
-          value: size.price,
-        });
-      }
-
-      // name required (Only if item_name provided; if Global, size_code acts as name)
-      if (sizeItemKey && (!size.name || size.name.trim() === '')) {
+      if (!size.name || size.name.trim() === '') {
         errors.push({
           file: filename,
           row,
@@ -244,71 +168,13 @@ export class ImportValidationService {
           value: size.name,
         });
       }
-
-      // Track default sizes
-      if (sizeItemKey && size.is_default) {
-        const count = defaultSizes.get(sizeItemKey) || 0;
-        defaultSizes.set(sizeItemKey, count + 1);
-      }
-    });
-
-    // Validate exactly ONE default size per item
-    defaultSizes.forEach((count, sizeItemKey) => {
-      if (count === 0) {
-        const itemSizes = data.itemSizes.filter(
-          (s) => itemCompositeKey(s.item_name, s.item_category_name) === sizeItemKey
-        );
-        if (itemSizes.length > 0) {
-          warnings.push({
-            file: filename,
-            row: 0, // General warning
-            entity: 'ItemSize',
-            field: 'is_default',
-            message: 'No default size; first will be used',
-            value: sizeItemKey,
-          });
-        }
-      } else if (count > 1) {
-        errors.push({
-          file: filename,
-          row: 0,
-          entity: 'ItemSize',
-          field: 'is_default',
-          message: 'Set exactly one default size',
-          value: sizeItemKey,
-        });
-      }
     });
 
     // Validate Modifier Groups
-    const groupKeys = new Set<string>();
+    const groupNames = new Set<string>();
     data.modifierGroups.forEach((group, index) => {
       const row = index + 2;
 
-      // group_key unique
-      if (!group.group_key) {
-        errors.push({
-          file: filename,
-          row,
-          entity: 'ModifierGroup',
-          field: 'group_key',
-          message: 'Group key required',
-          value: group.group_key,
-        });
-      } else if (groupKeys.has(group.group_key)) {
-        errors.push({
-          file: filename,
-          row,
-          entity: 'ModifierGroup',
-          field: 'group_key',
-          message: 'Duplicate group key',
-          value: group.group_key,
-        });
-      } else {
-        groupKeys.add(group.group_key);
-      }
-
-      // name required
       if (!group.name || group.name.trim() === '') {
         errors.push({
           file: filename,
@@ -318,6 +184,17 @@ export class ImportValidationService {
           message: 'Name required',
           value: group.name,
         });
+      } else if (groupNames.has(group.name.toLowerCase())) {
+        errors.push({
+          file: filename,
+          row,
+          entity: 'ModifierGroup',
+          field: 'name',
+          message: 'Duplicate name',
+          value: group.name,
+        });
+      } else {
+        groupNames.add(group.name.toLowerCase());
       }
 
       // min_select ≤ max_select
@@ -345,7 +222,7 @@ export class ImportValidationService {
       }
 
       // max_select ≤ modifiers count (validate after modifiers are processed)
-      const groupModifiers = data.modifiers.filter((m) => m.group_key === group.group_key);
+      const groupModifiers = data.modifiers.filter((m) => m.group_key === group.name);
       if (group.max_select > groupModifiers.length) {
         warnings.push({
           file: filename,
@@ -431,8 +308,8 @@ export class ImportValidationService {
         });
       }
 
-      // Validate group exists
-      const groupExists = data.modifierGroups.some((g) => g.group_key === modifier.group_key);
+      // Validate group exists (modifiers reference groups by name via group_key)
+      const groupExists = data.modifierGroups.some((g) => g.name === modifier.group_key);
       if (!groupExists) {
         errors.push({
           file: filename,
@@ -487,8 +364,8 @@ export class ImportValidationService {
           value: override.group_key,
         });
       } else {
-        // Validate group exists
-        const groupExists = data.modifierGroups.some((g) => g.group_key === override.group_key);
+        // Validate group exists (overrides reference groups by name via group_key)
+        const groupExists = data.modifierGroups.some((g) => g.name === override.group_key);
         if (!groupExists) {
           errors.push({
             file: filename,

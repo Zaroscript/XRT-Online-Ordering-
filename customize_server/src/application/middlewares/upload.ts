@@ -70,24 +70,22 @@ export const uploadAttachment = multer({
   },
 });
 
-// CSV/ZIP imports: keep in memory
+// CSV imports only: keep in memory
 
 const importFileFilter = (
   req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  // Allow CSV and ZIP files
+  // Allow CSV files only
   if (
     file.mimetype === 'text/csv' ||
     file.mimetype === 'application/csv' ||
-    file.mimetype === 'application/zip' ||
-    file.originalname.endsWith('.csv') ||
-    file.originalname.endsWith('.zip')
+    file.originalname.endsWith('.csv')
   ) {
     cb(null, true);
   } else {
-    cb(new Error('Only CSV or ZIP files are allowed for imports'));
+    cb(new Error('Only CSV files are allowed for imports'));
   }
 };
 

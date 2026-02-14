@@ -43,6 +43,8 @@ type FormValues = {
   min_select: number;
   max_select: number;
   quantity_levels?: QuantityLevel[];
+  /** Base price when group has no quantity_levels */
+  price?: number;
   is_active?: boolean;
   sort_order: number;
 };
@@ -54,6 +56,7 @@ const defaultValues: FormValues = {
   min_select: 0,
   max_select: 1,
   quantity_levels: [],
+  price: undefined,
   is_active: true,
   sort_order: 0,
 };
@@ -84,6 +87,7 @@ export default function CreateOrUpdateModifierGroupForm({
               price: (ql as any).pivot?.price ?? (ql as any).price ?? 0,
               prices_by_size: ql.prices_by_size || [],
             })) || [],
+          price: (initialValues as any).price ?? undefined,
           is_active: initialValues.is_active,
           sort_order: initialValues.sort_order,
         }
@@ -139,7 +143,7 @@ export default function CreateOrUpdateModifierGroupForm({
   const { sizes: globalSizes } = useItemSizesQuery(businessId);
 
   const onSubmit = async (values: FormValues) => {
-    const input = {
+    const input: any = {
       name: values.name,
       display_name: values.display_name || undefined,
       display_type: (values.display_type as any)?.value || values.display_type,
@@ -150,6 +154,9 @@ export default function CreateOrUpdateModifierGroupForm({
       sort_order: Number(values.sort_order),
       business_id: businessId,
     };
+    const priceVal = values.price;
+    if (priceVal != null && String(priceVal).trim() !== '')
+      input.price = Number(priceVal);
 
     if (!initialValues) {
       createGroup(input);
@@ -402,6 +409,24 @@ export default function CreateOrUpdateModifierGroupForm({
             className="w-full max-w-full overflow-x-hidden"
           >
             <Card className="animate-slide-up overflow-hidden w-full max-w-full">
+              {quantityLevelFields.length === 0 && (
+                <div className="mb-4 sm:mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <Label className="mb-2 block">
+                    {t('form:base-price') || 'Base price'}
+                    <span className="ml-1 text-xs font-normal text-gray-500">
+                      ({t('form:used-when-no-quantity-levels') || 'used when no quantity levels'})
+                    </span>
+                  </Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    {...register('price', { valueAsNumber: true })}
+                    variant="outline"
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
               <div className="mb-4 sm:mb-6">
                 <h3 className="text-sm sm:text-base font-medium text-heading mb-2">
                   {t('form:input-label-quantity-levels') || 'Quantity Levels'}

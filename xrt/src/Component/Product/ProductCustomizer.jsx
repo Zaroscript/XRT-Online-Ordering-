@@ -22,13 +22,13 @@ export function ProductSizes({ product, selectedSize, setSelectedSize }) {
            // Normalize: sizeObj might be a string (legacy) or object
            const label = typeof sizeObj === "string" ? sizeObj : sizeObj.label;
            
-           // Calculate dynamic price
            let displayPrice = null;
-           if (typeof sizeObj === "object" && sizeObj.multiplier && product.basePrice) {
-                const numericPrice = product.basePrice * sizeObj.multiplier;
-                displayPrice = Number.isInteger(numericPrice) ? numericPrice : numericPrice.toFixed(2);
-           } else if (typeof sizeObj === "object" && sizeObj.price) {
-                displayPrice = sizeObj.price;
+           if (typeof sizeObj === "object" && sizeObj.price != null) {
+             displayPrice = Number(sizeObj.price);
+             displayPrice = Number.isInteger(displayPrice) ? displayPrice : Number(displayPrice.toFixed(2));
+           } else if (typeof sizeObj === "object" && sizeObj.multiplier && product.basePrice) {
+             const numericPrice = product.basePrice * sizeObj.multiplier;
+             displayPrice = Number.isInteger(numericPrice) ? numericPrice : numericPrice.toFixed(2);
            }
            
            // Robust comparison: check against selectedSize which might be object or string, matching by label or value
@@ -78,13 +78,9 @@ export function ProductModifiers({
 }) {
   if (!product || !product.modifiers || product.modifiers.length === 0) return null;
 
-  const LEVEL_MULTIPLIERS = {
-    "Light": 0.5,
-    "Normal": 1.0,
-    "Extra": 1.5
-  };
-
-  const sizeMultiplier = (selectedSize && selectedSize.multiplier) ? parseFloat(selectedSize.multiplier) : 1;
+  const sizeMultiplier =
+    selectedSize && selectedSize.multiplier ? parseFloat(selectedSize.multiplier) : 1;
+  const sizeCode = selectedSize?.code ?? selectedSize?.label ?? null;
 
   return (
     <>
@@ -105,9 +101,22 @@ export function ProductModifiers({
                 let currentPlacement = null;
 
                 if (isSingle) {
-                  isSelected = selectedModifiers[section.title] === opt.label;
+                  // Radio: value can be string (simple) or object keyed by option (complex with level/placement)
+                  const sectionVal = selectedModifiers[section.title];
+                  if (typeof sectionVal === "string") {
+                    isSelected = sectionVal === opt.label;
+                  } else if (sectionVal && typeof sectionVal === "object" && !Array.isArray(sectionVal)) {
+                    const val = sectionVal[opt.label];
+                    isSelected = !!val;
+                    if (isSelected) {
+                      currentLevel = typeof val === "object" && val != null ? val.level : val;
+                      currentPlacement = typeof val === "object" && val != null ? val.placement : null;
+                    }
+                  } else {
+                    isSelected = false;
+                  }
                 } else if (isComplex) {
-                   // Object storage
+                   // Object storage (multiple + complex)
                    const val = selectedModifiers[section.title]?.[opt.label];
                    isSelected = !!val;
                    
@@ -124,15 +133,63 @@ export function ProductModifiers({
                   isSelected = selectedModifiers[section.title]?.includes(opt.label);
                 }
 
-                // Calculate Dynamic Price
+                const getModifierPrice = (option, size) => {
+                  if (option.prices_by_size?.length && size) {
+                    const code = size.code ?? size.label;
+                    const sizeMatch = option.prices_by_size.find(
+                      (pbs) =>
+                        (pbs.size_id && pbs.size_id === size.size_id) ||
+                        (pbs.sizeCode && pbs.sizeCode === code) ||
+                        (pbs.sizeCode && pbs.sizeCode === size.label)
+                    );
+                    if (sizeMatch != null) return sizeMatch.priceDelta;
+                  }
+                  // When item is not sizeable (no size), use modifier base price directly
+                  const base = option.baseExtra ?? option.price ?? 0;
+                  return size ? base * sizeMultiplier : base;
+                };
+
+                const quantityLevels = opt.quantity_levels && opt.quantity_levels.length > 0
+                  ? [...opt.quantity_levels].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+                  : [];
+                const defaultLevel = quantityLevels.find((l) => l.is_default) || quantityLevels[0];
+                const atDefaultLevel =
+                  !quantityLevels.length ||
+                  !currentLevel ||
+                  (defaultLevel && (defaultLevel.name ?? String(defaultLevel.quantity)) === currentLevel);
+                // Quantity level price for the currently selected size (updates when user changes size)
+                const getLevelPrice = (level) => {
+                  if (level?.prices_by_size?.length && selectedSize) {
+                    const code = selectedSize.code ?? selectedSize.label;
+                    const sizeId = selectedSize.size_id;
+                    const match = level.prices_by_size.find(
+                      (p) =>
+                        (p.sizeCode && (p.sizeCode === code || p.sizeCode === selectedSize.label)) ||
+                        (p.size_id && sizeId && p.size_id === sizeId)
+                    );
+                    if (match != null) return match.priceDelta;
+                  }
+                  if (level?.price != null) return level.price;
+                  return null;
+                };
+
                 let displayPrice = 0;
                 if (isSelected) {
-                    const baseExtra = opt.baseExtra !== undefined ? opt.baseExtra : (opt.price || 0);
-                    let levelMult = 1;
-                    if (opt.hasLevel && currentLevel) {
-                         levelMult = LEVEL_MULTIPLIERS[currentLevel] || 1;
+                  // Default modifier at default quantity level is free
+                  if (opt.is_default && atDefaultLevel) {
+                    displayPrice = 0;
+                  } else {
+                    const basePrice = getModifierPrice(opt, selectedSize);
+                    if (opt.hasLevel && currentLevel && quantityLevels.length > 0) {
+                      const level = quantityLevels.find(
+                        (l) => (l.name || String(l.quantity)) === currentLevel
+                      );
+                      const levelPrice = level ? getLevelPrice(level) : null;
+                      displayPrice = levelPrice != null ? levelPrice : basePrice;
+                    } else {
+                      displayPrice = basePrice;
                     }
-                    displayPrice = baseExtra * levelMult * sizeMultiplier;
+                  }
                 }
 
                 return (
@@ -155,7 +212,11 @@ export function ProductModifiers({
                             type={isSingle ? "radio" : "checkbox"}
                             className="hidden"
                             checked={!!isSelected}
-                            onChange={() => toggleModifier(section, opt.label)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleModifier(section, opt.label);
+                            }}
                           />
                           
                           {isSingle ? (
@@ -177,38 +238,47 @@ export function ProductModifiers({
                     {/* CONTROLS CONTAINER */}
                     {isSelected && (opt.hasLevel || opt.hasPlacement) && (
                       <div className="flex flex-col gap-1 ml-1">
-                        
-                        {/* LEVEL SELECTOR */}
-                        {opt.hasLevel && currentLevel && (
+                        {/* LEVEL SELECTOR: use backend quantity_levels (e.g. Light, Normal, Extra) */}
+                        {opt.hasLevel && currentLevel && quantityLevels.length > 0 && (
                           <div className="flex flex-row bg-gray-100 p-1 rounded-md">
-                            {["Light", "Normal", "Extra"].map((lvl) => (
-                              <button
-                                key={lvl}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateModifierLevel(section.title, opt.label, lvl);
-                                }}
-                                className={`
-                                  flex-1 text-[10px] sm:text-xs font-medium py-1 rounded transition-all
-                                  ${currentLevel === lvl 
-                                      ? "bg-white text-[var(--primary)] shadow-sm" 
+                            {quantityLevels.map((lvl) => {
+                              const lvlName = lvl.name ?? String(lvl.quantity);
+                              return (
+                                <button
+                                  key={lvlName}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateModifierLevel(section.title, opt.label, lvlName);
+                                  }}
+                                  className={`
+                                    flex-1 text-[10px] sm:text-xs font-medium py-1 rounded transition-all
+                                    ${currentLevel === lvlName
+                                      ? "bg-white text-[var(--primary)] shadow-sm"
                                       : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"}
-                                `}
-                              >
-                                {lvl}
-                              </button>
-                            ))}
+                                  `}
+                                >
+                                  {lvlName}
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
 
-                        {/* PLACEMENT SELECTOR */}
-                        {opt.hasPlacement && currentPlacement && (
+                        {/* PLACEMENT SELECTOR - only show active sides from modifier config */}
+                        {opt.hasPlacement && currentPlacement && (() => {
+                          const allPlaces = [
+                            { label: "Left", val: "Left" },
+                            { label: "Whole", val: "Whole" },
+                            { label: "Right", val: "Right" },
+                          ];
+                          const activeSides = opt.allowed_sides?.length > 0
+                            ? allPlaces.filter((p) =>
+                                opt.allowed_sides.some((s) => s.toUpperCase() === p.val.toUpperCase())
+                              )
+                            : allPlaces;
+                          return activeSides.length > 0 && (
                           <div className="flex flex-row bg-gray-50 p-1 rounded-md mt-1 items-center justify-center gap-4">
-                            {[
-                              { label: "Left", val: "Left" },
-                              { label: "Whole", val: "Whole" },
-                              { label: "Right", val: "Right" }
-                            ].map((place) => {
+                            {activeSides.map((place) => {
                               const isActive = currentPlacement === place.val;
                               return (
                                 <button
@@ -245,7 +315,8 @@ export function ProductModifiers({
                               );
                             })}
                           </div>
-                        )}
+                        );
+                        })()}
                       </div>
                     )}
                   </div>

@@ -31,7 +31,7 @@ export class ModifierController {
 
   create = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { groupId } = req.params;
-    const { name, display_order, is_active, sides_config, quantity_levels, prices_by_size } =
+    const { name, display_order, is_active, sides_config, quantity_levels, prices_by_size, price } =
       req.body;
 
     if (!groupId) {
@@ -56,6 +56,7 @@ export class ModifierController {
       sides_config: parsedSidesConfig,
       quantity_levels: quantity_levels || [],
       prices_by_size: prices_by_size || [],
+      price: price != null ? Number(price) : undefined,
     });
 
     return sendSuccess(res, 'Modifier created successfully', modifier, 201);
@@ -104,7 +105,7 @@ export class ModifierController {
   update = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { groupId } = req.params;
-    const { name, display_order, is_active, sides_config, quantity_levels, prices_by_size } =
+    const { name, display_order, is_active, sides_config, quantity_levels, prices_by_size, price } =
       req.body;
 
     if (!groupId) {
@@ -131,6 +132,7 @@ export class ModifierController {
     if (parsedSidesConfig !== undefined) updateData.sides_config = parsedSidesConfig;
     if (quantity_levels !== undefined) updateData.quantity_levels = quantity_levels;
     if (prices_by_size !== undefined) updateData.prices_by_size = prices_by_size;
+    if (price !== undefined) updateData.price = price != null ? Number(price) : undefined;
 
     const modifier = await this.updateModifierUseCase.execute(id, groupId, updateData);
 
@@ -173,50 +175,16 @@ export class ModifierController {
     // Helper to safely stringify values for CSV
     const safeString = (val: any) => `"${(val || '').toString().replace(/"/g, '""')}"`;
 
-    // Helpers for formatting
-    const formatSidesConfig = (config: any) => {
-      if (!config || !config.enabled) return 'Disabled';
-      const sides = (config.allowed_sides || []).join(', ');
-      return `Enabled (${sides})`;
-    };
-
-    const formatQuantityLevels = (levels: any[]) => {
-      if (!levels || !Array.isArray(levels)) return '';
-      return levels
-        .map((ql) => {
-          const qty = ql.quantity;
-          const price = ql.price !== undefined ? `$${ql.price}` : '';
-          const name = ql.name ? ` (${ql.name})` : '';
-          return `${qty}x${name}: ${price}`;
-        })
-        .join('; ');
-    };
-
-    const formatPricesBySize = (prices: any[]) => {
-      if (!prices || !Array.isArray(prices)) return '';
-      return prices.map((p) => `${p.sizeCode}: +$${p.priceDelta}`).join('; ');
-    };
-
-    // Convert to CSV
+    // Basics-only export: group_key, modifier_key, name, display_order, is_active (no quantity_levels, prices, sides)
     const csvRows = [
-      [
-        'modifier_group_name',
-        'name',
-        'display_order',
-        'is_active',
-        'sides_config',
-        'quantity_levels',
-        'prices_by_size',
-      ].join(','),
+      ['group_key', 'modifier_key', 'name', 'display_order', 'is_active'].join(','),
       ...modifiers.map((mod: any) =>
         [
-          safeString(mod.modifier_group?.name),
+          safeString(mod.modifier_group?.name || mod.modifier_group_id),
           safeString(mod.name),
-          mod.display_order,
-          mod.is_active,
-          safeString(formatSidesConfig(mod.sides_config)),
-          safeString(formatQuantityLevels(mod.quantity_levels)),
-          safeString(formatPricesBySize(mod.prices_by_size)),
+          safeString(mod.name),
+          mod.display_order ?? 0,
+          mod.is_active ?? true,
         ].join(',')
       ),
     ];

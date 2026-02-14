@@ -5,6 +5,12 @@ import { useCart } from '../context/CartContext';
 import ProductCustomizer from './Product/ProductCustomizer';
 import { COLORS } from '../config/colors';
 import { computeTotalPrice } from '../utils/priceUtils';
+import {
+  buildDefaultModifiers,
+  getDefaultSize,
+  getDefaultLevel,
+  getDefaultPlacement,
+} from '../utils/defaultModifiers';
 
 const ProductModal = ({ isOpen, onClose, product }) => {
   const { addToCart } = useCart();
@@ -12,29 +18,20 @@ const ProductModal = ({ isOpen, onClose, product }) => {
   const [selectedModifiers, setSelectedModifiers] = useState({});
   const [quantity, setQuantity] = useState(1);
 
-  // Initialize defaults when product changes or modal opens
-  useEffect(() => {
-    if (product && isOpen) {
-      // Default size
-      if (product.sizes && product.sizes.length > 0) {
-        setSelectedSize(product.sizes[0]);
-      } else {
-        setSelectedSize(null);
-      }
+  // Product from API/list already has modifiers + sizes from api/products.js (with overrides merged)
+  const activeProduct = product;
 
-      // Default modifiers
-      const defaults = {};
-      if (product.modifiers) {
-        product.modifiers.forEach(mod => {
-          if (mod.default) {
-             defaults[mod.title] = mod.default;
-          }
-        });
-      }
-      setSelectedModifiers(defaults);
+  useEffect(() => {
+    if (!activeProduct || !isOpen) return;
+    const defSize = getDefaultSize(activeProduct);
+    const defModifiers = buildDefaultModifiers(activeProduct);
+    const tid = setTimeout(() => {
+      setSelectedSize(defSize);
+      setSelectedModifiers(defModifiers);
       setQuantity(1);
-    }
-  }, [product, isOpen]);
+    }, 0);
+    return () => clearTimeout(tid);
+  }, [activeProduct, isOpen]);
 
 
   const toggleModifier = (section, optionLabel) => {
@@ -42,8 +39,10 @@ const ProductModal = ({ isOpen, onClose, product }) => {
       const current = prev[section.title];
       
       if (section.type === 'single') {
-        // Toggle off if already selected (optional, usually single is mandatory choice)
-        // For radio behavior, we just switch
+        // Toggle off if clicking the already-selected option; otherwise select the new option
+        if (current === optionLabel) {
+          return { ...prev, [section.title]: undefined };
+        }
         return { ...prev, [section.title]: optionLabel };
       } else {
         // Multiple
@@ -59,12 +58,6 @@ const ProductModal = ({ isOpen, onClose, product }) => {
 
   const updateModifierLevel = (sectionTitle, optionLabel, level) => {
      setSelectedModifiers(prev => {
-         const sectionState = prev[sectionTitle] || {};
-         // If it's stored as an object (complex), update it. 
-         // Strategy: We need to store complex modifiers differently or expect "ProductCustomizer" to handle structure.
-         // Looking at ProductCustomizer logic: 
-         // "val = selectedModifiers[section.title]?.[opt.label]" -> So for complex, it expects { ModSection: { OptionName: { level, placement } } }
-         
          const currentSectionListeners = prev[sectionTitle] || {};
          // Ensure it is an object if we are entering complex mode
          const updatedSection = { ...currentSectionListeners };
@@ -120,24 +113,35 @@ const ProductModal = ({ isOpen, onClose, product }) => {
   // 
   // Line 124: isSelected = selectedModifiers[section.title]?.includes(opt.label);
   // So we need to detect type to update state correctly.
-  
+
   const handleToggleModifier = (section, optionLabel) => {
-      const isComplex = section.options.some((opt) => opt.hasLevel || opt.hasPlacement);
-      
-      if (isComplex) {
-          setSelectedModifiers(prev => {
-              const sectionState = { ...(prev[section.title] || {}) };
-              if (sectionState[optionLabel]) {
-                  delete sectionState[optionLabel];
-              } else {
-                  // Default ADD
-                  sectionState[optionLabel] = { level: "Normal", placement: "Whole" };
-              }
-              return { ...prev, [section.title]: sectionState };
-          });
-      } else {
-          toggleModifier(section, optionLabel); // Reuse simple logic
-      }
+    const isComplex = section.options.some((opt) => opt.hasLevel || opt.hasPlacement);
+    const isSingle = section.type === "single";
+    if (isComplex) {
+      setSelectedModifiers((prev) => {
+        const currentSection = prev[section.title];
+        const sectionState = isSingle ? {} : { ...(currentSection || {}) };
+        const isCurrentlySelected = isSingle
+          ? (typeof currentSection === "object" && currentSection?.[optionLabel])
+          : sectionState[optionLabel];
+        // For single: if clicking the already-selected option, deselect
+        if (isSingle && isCurrentlySelected) {
+          return { ...prev, [section.title]: undefined };
+        }
+        if (!isSingle && sectionState[optionLabel]) {
+          delete sectionState[optionLabel];
+        } else {
+          const option = section.options.find((o) => o.label === optionLabel);
+          sectionState[optionLabel] = {
+            level: getDefaultLevel(option),
+            placement: getDefaultPlacement(option),
+          };
+        }
+        return { ...prev, [section.title]: sectionState };
+      });
+    } else {
+      toggleModifier(section, optionLabel);
+    }
   };
 
 
@@ -196,7 +200,7 @@ const ProductModal = ({ isOpen, onClose, product }) => {
                 {/* Below: Customizer (Sizes & Modifiers) */}
                 <div className="mb-8">
                    <ProductCustomizer 
-                     product={product}
+                     product={activeProduct}
                      selectedSize={selectedSize}
                      setSelectedSize={setSelectedSize}
                      selectedModifiers={selectedModifiers}
@@ -225,9 +229,9 @@ const ProductModal = ({ isOpen, onClose, product }) => {
 
                     <button 
                       onClick={() => {
-                          const unitPrice = computeTotalPrice(product, selectedSize, selectedModifiers, 1);
+                          const unitPrice = computeTotalPrice(activeProduct, selectedSize, selectedModifiers, 1);
                           addToCart({
-                              ...product, 
+                              ...activeProduct, 
                               modifiers: selectedModifiers, 
                               size: selectedSize, 
                               price: unitPrice,

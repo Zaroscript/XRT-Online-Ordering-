@@ -113,6 +113,7 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
       website: { type: String, default: '' },
       emailAddress: { type: String, default: '' },
     },
+    timezone: { type: String, default: 'America/New_York' },
     currency: { type: String, default: 'USD' },
     heroSlides: [
       {

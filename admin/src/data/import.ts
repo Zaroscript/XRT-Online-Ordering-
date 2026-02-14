@@ -85,14 +85,14 @@ export const useImportSessionQuery = (id: string) => {
   };
 };
 
-export const useImportSessionsQuery = (business_id?: string) => {
+export const useImportSessionsQuery = () => {
   const {
     data,
     error,
     isPending: isLoading,
   } = useQuery<ImportSession[]>({
-    queryKey: [API_ENDPOINTS.IMPORT_SESSIONS, business_id],
-    queryFn: () => importClient.listSessions(business_id),
+    queryKey: [API_ENDPOINTS.IMPORT_SESSIONS],
+    queryFn: () => importClient.listSessions(),
   });
   const sessions = (data as any)?.data || data || [];
   return {
@@ -277,8 +277,8 @@ export const useClearImportHistoryMutation = () => {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: (business_id: string) => importClient.clearHistory(business_id),
-    onSuccess: (data, variables) => {
+    mutationFn: () => importClient.clearHistory(),
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [API_ENDPOINTS.IMPORT_SESSIONS],
       });
