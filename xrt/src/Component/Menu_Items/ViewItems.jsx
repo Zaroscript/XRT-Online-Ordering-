@@ -67,10 +67,10 @@ export default function ViewItems({ product }) {
           </h3>
         </Link>
 
-        <div className="flex flex-row gap-3 px-4 pb-4 justify-center">
+        <div className="flex flex-col -space-y-1.5 px-4 pb-4 mx-auto w-full max-w-[200px] justify-center">
           <div 
              onClick={handleCustomize}
-             className="flex-1 h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
+             className="w-full h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
             <Utensils
               strokeWidth={0.8}
               size={20}
@@ -86,7 +86,7 @@ export default function ViewItems({ product }) {
                ...product,
                price: (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2)
             })}
-            className="flex-1 h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
+            className="w-full h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
             <Handbag
               strokeWidth={0.8}
               size={20}
@@ -187,10 +187,10 @@ export default function ViewItems({ product }) {
                   </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-3 w-full">
+                <div className="flex flex-col md:flex-row gap-2 md:gap-3 w-full lg:justify-start">
                   <div 
                     onClick={handleCustomize}
-                    className="w-full md:flex-1 h-[48px] md:h-[45px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer bg-white transition-colors">
+                    className="w-full md:flex-1 lg:flex-none lg:w-auto lg:px-8 h-[48px] md:h-[45px] lg:h-[40px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer bg-white transition-colors">
                     <Utensils
                       strokeWidth={1.5}
                       size={20}
@@ -210,7 +210,7 @@ export default function ViewItems({ product }) {
                            price: (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2)
                         }, qty);
                     }}
-                    className="w-full md:flex-1 h-[48px] md:h-[45px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-green-700 duration-300 cursor-pointer bg-[var(--primary)] transition-colors">
+                    className="w-full md:flex-1 lg:flex-none lg:w-auto lg:px-8 h-[48px] md:h-[45px] lg:h-[40px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-green-700 duration-300 cursor-pointer bg-[var(--primary)] transition-colors">
                     <Handbag
                       strokeWidth={1.5}
                       size={20}

@@ -12,16 +12,15 @@ export default function Content(props) {
   } = props;
 
   const buttonClass = `
-    bg-white 
-    text-black 
+    bg-white/20
+    backdrop-blur-md
+    text-white 
     font-semibold 
     px-8 
     py-3 
-    mt-[30px]
     rounded-full 
     shadow-md
-    hover:bg-[#469950]
-    hover:text-white
+    hover:bg-white/40
     duration-300
     cursor-pointer
     inline-block
@@ -50,11 +49,13 @@ export default function Content(props) {
         h-full 
         flex-col 
         justify-center 
-        items-start 
-        text-left
+        items-center 
+        text-center
         max-w-[700px]
-        pl-10 md:pl-20 
+        mx-auto
+        px-4
         space-y-4
+        pb-20 md:pb-25
       ">
         {title ? (
           <h5 className="tracking-[0.25em] text-white font-semibold uppercase">

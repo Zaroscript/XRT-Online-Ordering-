@@ -1,8 +1,4 @@
 import React from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
 import { useSiteSettingsQuery } from "@/api";
 import { resolveImageUrl } from "@/utils/resolveImageUrl";
 import Content from "./Photo_Content";
@@ -52,71 +48,19 @@ export default function Sliderfun() {
     return null;
   }
 
+  const current = slides[0];
+
   return (
-    <div className="relative">
-      <button
-        className="
-          custom-prev
-          absolute left-4 top-[55%] md:top-1/2 -translate-y-1/2 z-20
-          w-12 h-12
-          backdrop-blur-md bg-white/10
-          text-white text-3xl
-          flex items-center justify-center
-          rounded-full
-          shadow-lg
-          hover:bg-white/20
-          transition-all
-        "
-        type="button"
-        aria-label="Previous slide"
-      >
-        ❮
-      </button>
-
-      <button
-        className="
-          custom-next
-          absolute right-4 top-[55%] md:top-1/2 -translate-y-1/2 z-20
-          w-12 h-12
-          backdrop-blur-md bg-white/10
-          text-white text-3xl
-          flex items-center justify-center
-          rounded-full
-          shadow-lg
-          hover:bg-white/20
-          transition-all
-        "
-        type="button"
-        aria-label="Next slide"
-      >
-        ❯
-      </button>
-
-      <Swiper
-        slidesPerView={1}
-        loop={slides.length > 1}
-        modules={[Autoplay, Navigation]}
-        navigation={{
-          nextEl: ".custom-next",
-          prevEl: ".custom-prev",
-        }}
-        autoplay={{ delay: 5000, disableOnInteraction: false }}
-        style={{ height: `${sliderHeight}px` }}
-      >
-        {slides.map((current) => (
-          <SwiperSlide key={current.key} className="h-full">
-            <Content
-              src={current.src}
-              title={current.title}
-              description={current.description}
-              subtitleTwo={current.subtitleTwo}
-              offer={current.offer}
-              btnText={current.btnText}
-              btnLink={current.btnLink}
-            />
-          </SwiperSlide>
-        ))}
-      </Swiper>
+    <div className="relative w-full">
+      <Content
+        src={current.src}
+        title={current.title}
+        description={current.description}
+        subtitleTwo={current.subtitleTwo}
+        offer={current.offer}
+        btnText={current.btnText}
+        btnLink={current.btnLink}
+      />
     </div>
   );
 }

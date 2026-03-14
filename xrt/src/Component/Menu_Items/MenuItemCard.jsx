@@ -72,10 +72,10 @@ export default function MenuItemCard({ product }) {
           </h3>
         </div>
 
-        <div className="flex flex-row gap-3 px-4 pb-4">
+        <div className="flex flex-col -space-y-1.5 px-4 pb-4 mx-auto w-full max-w-[200px]">
           <div 
              onClick={handleCustomize}
-             className="flex-1 h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
+             className="w-full h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
             <Utensils
               strokeWidth={0.8}
               size={20}
@@ -91,7 +91,7 @@ export default function MenuItemCard({ product }) {
               ...product,
               price: (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2)
             })}
-            className="flex-1 h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
+            className="w-full h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
             <Handbag
               strokeWidth={0.8}
               size={20}
@@ -104,12 +104,12 @@ export default function MenuItemCard({ product }) {
         </div>
       </div>
 
-      <div className="md:hidden w-[94%] mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col mb-4" style={styleVars}>
-        <div className="relative h-64 w-full bg-gray-50">
+      <div className="md:hidden w-[90%] max-w-[340px] mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col mb-4" style={styleVars}>
+        <div className="relative h-56 w-full bg-gray-50">
            <img
             src={product.src}
             alt={product.name}
-            className="w-full h-full object-contain p-2"
+            className="w-full h-full object-contain p-6"
           />
            <Dialog.Trigger asChild>
             <button className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full shadow-sm">
@@ -135,20 +135,20 @@ export default function MenuItemCard({ product }) {
           </p>
 
           <div className="flex flex-col gap-2.5 mt-auto">
-             <div className="flex flex-row gap-2 w-full">
+             <div className="flex flex-col -space-y-1 w-full">
                <button 
                  onClick={handleCustomize}
-                 className="flex-1 py-1.5 bg-white border border-[var(--primary)] text-[var(--primary)] rounded-lg font-medium text-[11px] flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
-                 <Utensils size={14} />
-                 Customize
+                 className="w-full py-2.5 bg-white border border-[var(--primary)] text-[var(--primary)] rounded-lg font-medium text-[13px] flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
+                 <Utensils size={15} />
+                 Customize It
                </button>
                <button 
                  onClick={() => addToCart({
                    ...product,
                    price: (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2)
                  })}
-                 className="flex-1 py-1.5 bg-[var(--primary)] text-white rounded-lg font-medium text-[11px] flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform">
-                 <Handbag size={14} />
+                 className="w-full py-2.5 bg-[var(--primary)] text-white rounded-lg font-medium text-[13px] flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform">
+                 <Handbag size={15} />
                  Order
                </button>
              </div>
@@ -248,10 +248,10 @@ export default function MenuItemCard({ product }) {
                   </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-3 w-full">
+                <div className="flex flex-col md:flex-row gap-2 md:gap-3 w-full lg:justify-start">
                   <div 
                     onClick={handleCustomize}
-                    className="w-full md:flex-1 h-[48px] md:h-[45px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer bg-white transition-colors">
+                    className="w-full md:flex-1 lg:flex-none lg:w-auto lg:px-8 h-[48px] md:h-[45px] lg:h-[40px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer bg-white transition-colors">
                     <Utensils
                       strokeWidth={1.5}
                       size={20}
@@ -271,7 +271,7 @@ export default function MenuItemCard({ product }) {
                           price: (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2)
                         }, qty);
                     }}
-                    className="w-full md:flex-1 h-[48px] md:h-[45px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-green-700 duration-300 cursor-pointer bg-[var(--primary)] transition-colors">
+                    className="w-full md:flex-1 lg:flex-none lg:w-auto lg:px-8 h-[48px] md:h-[45px] lg:h-[40px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-green-700 duration-300 cursor-pointer bg-[var(--primary)] transition-colors">
                     <Handbag
                       strokeWidth={1.5}
                       size={20}

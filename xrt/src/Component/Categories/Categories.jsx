@@ -10,9 +10,11 @@ export default function Categories({ categories: propCategories }) {
 
   if (loading && !propCategories) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+      <div className="flex flex-wrap justify-center gap-4 px-2 md:grid md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
         {[...Array(8)].map((_, i) => (
-          <CategorySkeleton key={i} />
+          <div key={i} className="w-[calc(50%-16px)] md:w-auto flex justify-center">
+            <CategorySkeleton />
+          </div>
         ))}
       </div>
     );
@@ -22,9 +24,13 @@ export default function Categories({ categories: propCategories }) {
 
   return (
     <>
-      <div className="gap-y-16 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 py-[45px] px-[38px]  pb-[10px] place-items-center">
+      <div className="flex flex-wrap  gap-x-2 gap-y-8 md:gap-y-16 md:grid md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 py-[45px] px-2 md:px-[38px] pb-[10px] place-items-center mx-auto">
         {categories.map((item, i) => {
-          return <CatCard key={item._id || i} item={item} index={i} />;
+          return (
+            <div key={item._id || i} className="w-[calc(50%-10px)] md:w-auto flex justify-center">
+              <CatCard item={item} index={i} />
+            </div>
+          );
         })}
       </div>
     </>

@@ -21,17 +21,23 @@ export default function Location() {
         <div className=" mr-[8px] mt-[4px] w-[28px] md:w-[32px] lg:w-[35px] h-[28px] md:h-[32px] lg:h-[35px] background_icon">
           <i className="fa-regular fa-envelope   text-[#5C9963]"></i>
         </div>
-        <span className="mt-2 text-[#E1E1E1] text-[17px]">
+        <a 
+          href={`mailto:${contactDetails?.emailAddress}`}
+          className="mt-2 text-[#E1E1E1] text-[17px] hover:text-[#5C9963] transition-colors"
+        >
           {contactDetails?.emailAddress}
-        </span>
+        </a>
       </li>
       <li className="flex mt-4 justify-center md:justify-start items-center">
         <div className=" mr-[8px] mt-[4px] w-[28px] md:w-[32px] lg:w-[35px] h-[28px] md:h-[32px] lg:h-[35px] background_icon">
           <Phone strokeWidth={3} className="text-[#5C9963]" size={18} />
         </div>
-        <span className="mt-2 text-[#E1E1E1] text-[17px]">
+        <a 
+          href={`tel:${contactDetails?.contact}`}
+          className="mt-2 text-[#E1E1E1] text-[17px] hover:text-[#5C9963] transition-colors"
+        >
           {contactDetails?.contact}
-        </span>
+        </a>
       </li>
       {/* Operating Hours */}
       {/* Operating Hours List */}

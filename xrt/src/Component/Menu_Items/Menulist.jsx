@@ -45,7 +45,7 @@ export default function Menulist({
 
 
 
-  const gridCols = "grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
+  const gridCols = "grid-cols-1 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6";
 
   const containerPadding = "px-4 md:px-8 lg:px-[70px]";
 
@@ -80,7 +80,7 @@ export default function Menulist({
             <div className="absolute left-0 top-0 h-full w-16 bg-[var(--primary)]" />
           </div>
 
-          <div className="flex gap-2 md:gap-3 ">
+          <div className="flex flex-wrap justify-center gap-2 md:gap-3 w-full md:w-auto px-4 md:px-0 mx-auto max-w-[400px] md:max-w-none">
             {categories.map((item, index) => (
               <ViewMenuList
                 key={index}
@@ -104,7 +104,7 @@ export default function Menulist({
               (variant === 'home' || variant === 'full') ? (
                 <div 
                   key={product.id}
-                  className="w-full h-full max-w-[155px] md:max-w-none mx-auto [&>div>div:first-child>img]:!h-[160px] [&>div>div:last-child]:!flex-col [&>div>div:last-child]:!gap-3 [&>div>div:last-child>div]:!w-full [&>div>div:last-child>div]:!h-auto [&>div>div:last-child>div]:!py-2 [&>div>div:last-child>div_h5]:!text-xs [&>div>div:last-child>div_svg]:!w-4"
+                  className="w-full h-full max-w-[320px] md:max-w-none mx-auto [&>div>div:first-child>img]:!h-[130px] [&>div>div:first-child>img]:!object-scale-down [&>div>div:first-child>img]:!p-2 [&>div>div:last-child]:!flex-col [&>div>div:last-child]:!gap-3 [&>div>div:last-child>div]:!w-full [&>div>div:last-child>div]:!h-auto [&>div>div:last-child>div]:!py-2 [&>div>div:last-child>div_h5]:!text-xs [&>div>div:last-child>div_svg]:!w-4"
                 >
                   <ItemComponent product={product} />
                 </div>

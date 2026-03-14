@@ -9,7 +9,7 @@ export default function ViewTestimonials({ item }) {
   return (
     <div className="flex flex-col items-center text-center px-4">
       <Quote className="w-10 h-10 text-[#5C9963] mb-4" />
-      <p className="text-[22px] text-gray-700 italic mb-4 w-[500px]">
+      <p className="text-lg md:text-[22px] text-gray-700 italic mb-4 w-full max-w-[500px] leading-relaxed">
         {item.feedback}
       </p>
 
@@ -25,7 +25,7 @@ export default function ViewTestimonials({ item }) {
         </div>
       )}
 
-      <h3 className="text-[20px] font-[700]">{item.name}</h3>
+      <h3 className="text-base md:text-[20px] font-[700]">{item.name}</h3>
       {role && <span className="text-gray-500">{role}</span>}
     </div>
   );
