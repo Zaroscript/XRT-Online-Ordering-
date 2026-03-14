@@ -27,7 +27,7 @@ const Home = () => {
     <>
       <Sliderfun />
       <Categories categories={categories} />
-      <AdsList />
+      <AdsList loading={loading} />
       {loading ? (
         <div className="px-4 md:px-8 lg:px-[70px] mt-4 mb-6">
           <h2 className="text-3xl font-bold text-gray-800 mb-3">Menu List</h2>
