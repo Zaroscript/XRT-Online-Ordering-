@@ -15,7 +15,7 @@ export default function Location() {
           contactDetails?.location?.state,
         ]
           .filter(Boolean)
-          .join(", ")}
+          .join(", ") + (contactDetails?.location?.zip ? ` ${contactDetails.location.zip}` : "")}
       </li>
       <li className="flex mt-4 justify-center md:justify-start items-center">
         <div className=" mr-[8px] mt-[4px] w-[28px] md:w-[32px] lg:w-[35px] h-[28px] md:h-[32px] lg:h-[35px] background_icon">

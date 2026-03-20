@@ -23,11 +23,12 @@ const Header = () => {
   const notAcceptingOrdersMessage = settings?.messages?.not_accepting_orders_message || "We are currently not accepting orders.";
 
   const contactDetails = settings?.contactDetails;
-  const address = [
+  const addressParts = [
     contactDetails?.location?.street_address,
     contactDetails?.location?.city,
     contactDetails?.location?.state
-  ].filter(Boolean).join(", ");
+  ].filter(Boolean);
+  const address = addressParts.join(", ") + (contactDetails?.location?.zip ? ` ${contactDetails.location.zip}` : "");
   const email = contactDetails?.emailAddress || "";
   const phone = contactDetails?.contact || "";
 
@@ -40,7 +41,7 @@ const Header = () => {
         {!isAcceptingOrders && notAcceptingOrdersMessage && (
           <NotAcceptingOrders message={notAcceptingOrdersMessage} />
         )}
-        <Top_Navbar address={address} phone={phone} />
+        <Top_Navbar address={address} phone={phone} email={email} />
         <MiddleNav count={cartCount} total={cartTotal.toFixed(2)} link={"/"} setclickfun={setclickfun} onCartClick={() => setCartOpen(true)} />
         <SubNav phone={phone} />
         <SideMenu open={open} setclosefun={() => setopen(false)} />

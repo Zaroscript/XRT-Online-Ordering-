@@ -17,7 +17,7 @@ export default function Information() {
           {settings?.siteSubtitle || 'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Expedita quaerat unde quam dolor culpa veritatis inventore, aut commodi eum veniam vel'}
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-y-12 md:gap-x-12 lg:gap-x-[120px] px-8 md:px-12 lg:px-[160px] py-[50px]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-y-12 md:gap-x-24 lg:gap-x-[150px] px-8 md:px-12 lg:px-[100px] py-[50px]">
         <div className="flex justify-center md:justify-start">
           <div className="flex items-start gap-4">
             <MapPinned
@@ -26,13 +26,13 @@ export default function Information() {
               className="text-[#5D9063] shrink-0"
             />
             <div>
-              <h3 className="font-bold text-[#2F3E30] text-[20px]">Address</h3>
-              <p className="text-[#656766] max-w-[250px] py-2">
+              <h3 className="font-bold text-[#2F3E30] text-[20px] whitespace-nowrap">Address</h3>
+              <p className="text-[#656766] py-2 whitespace-nowrap">
                 {[
                   contactDetails?.location?.street_address,
                   contactDetails?.location?.city,
                   contactDetails?.location?.state
-                ].filter(Boolean).join(", ")}
+                ].filter(Boolean).join(", ") + (contactDetails?.location?.zip ? ` ${contactDetails.location.zip}` : "")}
               </p>
             </div>
           </div>
@@ -46,8 +46,8 @@ export default function Information() {
               className="text-[#5D9063] shrink-0"
             />
             <div>
-              <h3 className="font-bold text-[#2F3E30] text-[20px]">Contact</h3>
-              <div className="text-[#656766] max-w-[250px] py-2">
+              <h3 className="font-bold text-[#2F3E30] text-[20px] whitespace-nowrap">Contact</h3>
+              <div className="text-[#656766] py-2 whitespace-nowrap">
                 <p>Mobile: <span className="font-bold">{contactDetails?.contact}</span></p>
                 <p className="mt-1">E-mail: <a href={`mailto:${contactDetails?.emailAddress}`} className="font-[500] text-[#528959] hover:underline">{contactDetails?.emailAddress}</a></p>
               </div>
@@ -63,8 +63,8 @@ export default function Information() {
               className="text-[#5D9063] shrink-0"
             />
             <div>
-              <h3 className="font-bold text-[#2F3E30] text-[20px]">Hour of operation</h3>
-              <div className="text-[#656766] max-w-[250px] py-2">
+              <h3 className="font-bold text-[#2F3E30] text-[20px] whitespace-nowrap">Hour of operation</h3>
+              <div className="text-[#656766] py-2 whitespace-nowrap">
                 {(() => {
                   if (!schedule) return null;
 
