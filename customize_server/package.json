@@ -15,7 +15,9 @@
     "seed:items": "tsx scripts/seedItems.ts",
     "seed:modifiers": "tsx scripts/seedModifiers.ts",
     "seed:orders": "tsx scripts/seedOrders.ts",
-    "migrate:item-images": "tsx scripts/migrateItemImages.ts"
+    "migrate:item-images": "tsx scripts/migrateItemImages.ts",
+    "print:worker-once": "tsx scripts/printWorkerOnce.ts",
+    "mock:printer-tcp": "tsx scripts/mockThermalTcpPrinter.ts"
   },
   "dependencies": {
     "@types/adm-zip": "^0.5.7",

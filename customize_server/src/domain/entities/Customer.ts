@@ -31,5 +31,7 @@ export interface UpdateCustomerDTO {
   notes?: string;
   isActive?: boolean;
   address?: any;
+  /** Set when a new order is placed (dashboard “Last order” column). */
+  last_order_at?: Date;
 }
 

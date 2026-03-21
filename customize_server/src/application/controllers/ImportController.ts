@@ -30,6 +30,11 @@ export class ImportController {
   private deleteSessionUseCase: DeleteImportSessionUseCase;
   private businessRepository: BusinessRepository;
 
+  /** Super admins may list/open/update any import session; mutations still apply to the session owner's record. */
+  private static bypassImportUserScope(req: AuthRequest): boolean {
+    return req.user?.role === UserRole.SUPER_ADMIN;
+  }
+
   constructor() {
     const importSessionRepository = new ImportSessionRepository();
     this.businessRepository = new BusinessRepository();
@@ -43,14 +48,15 @@ export class ImportController {
     this.finalSaveUseCase = new FinalSaveImportUseCase(importSessionRepository);
     this.getSessionUseCase = new GetImportSessionUseCase(importSessionRepository);
     this.listSessionsUseCase = new ListImportSessionsUseCase(importSessionRepository);
-    this.listSessionsUseCase = new ListImportSessionsUseCase(importSessionRepository);
     this.discardSessionUseCase = new DiscardImportSessionUseCase(importSessionRepository);
     this.deleteSessionUseCase = new DeleteImportSessionUseCase(importSessionRepository);
   }
 
   parseAndValidate = asyncHandler(async (req: AuthRequest, res: Response) => {
-    // Super Admin only
-    // Check for business_id from body, query, or user token
+    if (req.user?.role !== UserRole.SUPER_ADMIN) {
+      return sendError(res, 'Only Super Admin can upload import files', 403);
+    }
+
     let business_id = req.body.business_id || req.query.business_id || req.user?.business_id;
 
     // If still no business_id, use the single business (active or not) for import
@@ -89,6 +95,10 @@ export class ImportController {
   });
 
   appendFile = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (req.user?.role !== UserRole.SUPER_ADMIN) {
+      return sendError(res, 'Only Super Admin can append import files', 403);
+    }
+
     const { id } = req.params;
 
     if (!req.file) {
@@ -96,9 +106,16 @@ export class ImportController {
     }
 
     const entity_type = req.body.entity_type || null;
+    const bypass = ImportController.bypassImportUserScope(req);
 
     const appendUseCase = new AppendImportFileUseCase(new ImportSessionRepository());
-    const session = await appendUseCase.execute(id, req.file, req.user!.id, entity_type);
+    const session = await appendUseCase.execute(
+      id,
+      req.file,
+      req.user!.id,
+      entity_type,
+      bypass
+    );
 
     return sendSuccess(res, 'File appended successfully', session);
   });
@@ -109,7 +126,8 @@ export class ImportController {
     }
 
     const { id } = req.params;
-    const session = await this.getSessionUseCase.execute(id, req.user!.id);
+    const bypass = ImportController.bypassImportUserScope(req);
+    const session = await this.getSessionUseCase.execute(id, req.user!.id, bypass);
 
     if (!session) {
       return sendError(res, 'Import session not found', 404);
@@ -124,7 +142,12 @@ export class ImportController {
     }
 
     const business_id = req.query.business_id as string | undefined;
-    const sessions = await this.listSessionsUseCase.execute(req.user!.id, business_id);
+    const bypass = ImportController.bypassImportUserScope(req);
+    const sessions = await this.listSessionsUseCase.execute(
+      req.user!.id,
+      business_id,
+      bypass
+    );
 
     return sendSuccess(res, 'Import sessions retrieved', sessions);
   });
@@ -145,7 +168,13 @@ export class ImportController {
       updateData.status = status;
     }
 
-    const session = await this.updateSessionUseCase.execute(id, req.user!.id, updateData);
+    const bypass = ImportController.bypassImportUserScope(req);
+    const session = await this.updateSessionUseCase.execute(
+      id,
+      req.user!.id,
+      updateData,
+      bypass
+    );
 
     AuditLogger.logImport(
       AuditAction.IMPORT_SAVE_DRAFT,
@@ -164,16 +193,21 @@ export class ImportController {
     }
 
     const { id } = req.params;
-    const session = await this.getSessionUseCase.execute(id, req.user!.id);
+    const bypass = ImportController.bypassImportUserScope(req);
+    const session = await this.getSessionUseCase.execute(id, req.user!.id, bypass);
 
-    await this.finalSaveUseCase.execute(id, req.user!.id);
+    const io = req.app.get('io');
+    await this.finalSaveUseCase.execute(id, req.user!.id, bypass, io);
 
     AuditLogger.logImport(
       AuditAction.IMPORT_FINAL_SAVE,
       req.user!.id,
       session?.business_id || '',
       id,
-      { items: session?.parsedData.items.length, itemSizes: session?.parsedData.itemSizes.length }
+      {
+        items: session?.parsedData?.items?.length ?? 0,
+        itemSizes: session?.parsedData?.itemSizes?.length ?? 0,
+      }
     );
 
     return sendSuccess(res, 'Import saved to database successfully', null);
@@ -185,9 +219,10 @@ export class ImportController {
     }
 
     const { id } = req.params;
-    const session = await this.getSessionUseCase.execute(id, req.user!.id);
+    const bypass = ImportController.bypassImportUserScope(req);
+    const session = await this.getSessionUseCase.execute(id, req.user!.id, bypass);
 
-    await this.discardSessionUseCase.execute(id, req.user!.id);
+    await this.discardSessionUseCase.execute(id, req.user!.id, bypass);
 
     AuditLogger.logImport(AuditAction.IMPORT_DISCARD, req.user!.id, session?.business_id || '', id);
 
@@ -213,7 +248,8 @@ export class ImportController {
     }
 
     const { id } = req.params;
-    const session = await this.getSessionUseCase.execute(id, req.user!.id);
+    const bypass = ImportController.bypassImportUserScope(req);
+    const session = await this.getSessionUseCase.execute(id, req.user!.id, bypass);
 
     if (!session) {
       return sendError(res, 'Import session not found', 404);
@@ -255,12 +291,13 @@ export class ImportController {
     }
 
     const { id } = req.params;
+    const bypass = ImportController.bypassImportUserScope(req);
     const rollbackUseCase = new RollbackImportUseCase(new ImportSessionRepository());
 
-    await rollbackUseCase.execute(id, req.user!.id);
+    await rollbackUseCase.execute(id, req.user!.id, bypass);
 
     // Fetch updated session
-    const session = await this.getSessionUseCase.execute(id, req.user!.id);
+    const session = await this.getSessionUseCase.execute(id, req.user!.id, bypass);
 
     AuditLogger.logImport(
       AuditAction.IMPORT_ROLLBACK, // Need to add this action to enum if strict

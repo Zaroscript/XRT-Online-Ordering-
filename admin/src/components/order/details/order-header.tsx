@@ -51,7 +51,12 @@ export default function OrderHeader({
         </div>
       </div>
       <div className="flex items-center gap-3 w-full sm:w-auto">
-        {(order?.payment_status === 'paid' || order?.payment_status === 'partially_refunded') && (
+        {((order?.payment_status === 'paid' ||
+          order?.payment_status === 'partially_refunded' ||
+          order?.money?.payment_status === 'paid' ||
+          order?.money?.payment_status === 'partially_refunded') &&
+          order?.payment_status !== 'refunded' &&
+          order?.money?.payment_status !== 'refunded') && (
           <Button
             onClick={handleRefund}
             variant="outline"

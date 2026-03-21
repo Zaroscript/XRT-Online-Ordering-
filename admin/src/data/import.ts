@@ -16,7 +16,8 @@ export const useParseImportMutation = () => {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: importClient.parse,
+    mutationFn: (input: ParseImportInput) =>
+      importClient.parseFile(input.file, input.entity_type, input.business_id),
     onSuccess: (data) => {
       const session = (data as any)?.data || data;
       queryClient.setQueryData(
@@ -223,7 +224,7 @@ export const useImportAttributesMutation = () => {
 
   return useMutation({
     mutationFn: ({ shop_id, csv }: { shop_id: string; csv: File }) =>
-      importClient.parse({ business_id: shop_id, file: csv }),
+      importClient.parseFile(csv, undefined, shop_id),
     onSuccess: (data) => {
       const session = (data as any)?.data || data;
       queryClient.setQueryData(

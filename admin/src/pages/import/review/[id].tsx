@@ -13,11 +13,13 @@ import {
   useDownloadImportErrorsMutation,
   useAppendImportFileMutation,
 } from '@/data/import';
+import { useMeQuery } from '@/data/user';
 import { adminOnly } from '@/utils/auth-utils';
 import PageHeading from '@/components/common/page-heading';
 import Loader from '@/components/ui/loader/loader';
 import ErrorMessage from '@/components/ui/error-message';
 import ImportReviewModule from '@/components/import/import-review-module';
+import ImportProgressBar from '@/components/import/ImportProgressBar';
 import Alert from '@/components/ui/alert';
 import Link from '@/components/ui/link';
 import { Routes } from '@/config/routes';
@@ -36,6 +38,7 @@ export default function ImportReviewPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = router.query;
+  const { data: me } = useMeQuery();
   const { session, isLoading, error } = useImportSessionQuery(id as string);
   const { mutate: updateSession, isPending: isUpdating } =
     useUpdateImportSessionMutation();
@@ -51,9 +54,17 @@ export default function ImportReviewPage() {
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   const handleSaveDraft = (updatedData: any) => {
+    // Always send full shape so server validation never sees undefined arrays
     updateSession({
       id: id as string,
-      parsedData: updatedData,
+      parsedData: {
+        categories: updatedData?.categories ?? [],
+        items: updatedData?.items ?? [],
+        itemSizes: updatedData?.itemSizes ?? [],
+        modifierGroups: updatedData?.modifierGroups ?? [],
+        modifiers: updatedData?.modifiers ?? [],
+        itemModifierOverrides: updatedData?.itemModifierOverrides ?? [],
+      },
     });
   };
 
@@ -209,6 +220,10 @@ export default function ImportReviewPage() {
         onSaveDraft={handleSaveDraft}
         isUpdating={isUpdating}
       />
+
+      {isSaving && me?.id && (
+        <ImportProgressBar userId={me.id} />
+      )}
 
       {/* Action bar */}
       <Card className="mt-8 border border-border-200 shadow-sm bg-light">

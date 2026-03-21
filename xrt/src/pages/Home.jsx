@@ -42,7 +42,7 @@ const Home = () => {
           categories={categoryNames}
         />
       )}
-      <TopRated />
+      <TopRated products={uniqueMenuProducts} productsLoading={loading} />
       <Testimonials />
     </>
   );

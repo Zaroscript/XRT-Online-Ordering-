@@ -70,6 +70,20 @@ export class CSVParser {
     return null;
   }
 
+  private static getEntityTypeFromHeaders(
+    content: string
+  ): 'categories' | 'items' | 'sizes' | 'modifierGroups' | 'modifiers' | null {
+    const lines = content.split('\n');
+    if (lines.length === 0) return null;
+    const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/['"]/g, ''));
+    if (headers.includes('kitchen_section_name')) return 'categories';
+    if (headers.includes('category_name')) return 'items';
+    if (headers.includes('size_code')) return 'sizes';
+    if (headers.includes('display_type') || headers.includes('min_select')) return 'modifierGroups';
+    if (headers.includes('group_key') || headers.includes('modifier_key') || headers.includes('max_quantity')) return 'modifiers';
+    return null;
+  }
+
   private static parseCSVContent(
     content: string,
     filename: string,
@@ -123,8 +137,9 @@ export class CSVParser {
       itemModifierOverrides: [],
     };
 
-    // Use explicit entity type if provided, otherwise fall back to filename detection
-    const entityFromFilename = forcedEntityType || this.getEntityTypeFromFilename(filename);
+    // Use explicit entity type if provided, otherwise detect from headers, then fall back to filename detection
+    const entityFromHeaders = this.getEntityTypeFromHeaders(content);
+    const entityFromFilename = forcedEntityType || entityFromHeaders || this.getEntityTypeFromFilename(filename);
     const looksLikeModifierGroup = (r: any) => this.rowLooksLikeModifierGroup(r);
     const looksLikeModifierItem = (r: any) => this.rowLooksLikeModifierItem(r);
 

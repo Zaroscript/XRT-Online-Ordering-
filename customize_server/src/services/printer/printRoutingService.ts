@@ -8,6 +8,8 @@ import { OrderPrintStatus } from '../../domain/entities/Order';
 import { TemplateLayout } from '../../domain/entities/PrintTemplate';
 import { logger } from '../../shared/utils/logger';
 import { env } from '../../shared/config/env';
+import { sendRenderedTemplatesToPrinter } from './directPrintService';
+import { recordPrinterLog } from './printerActivityLogger';
 
 const DEFAULT_KITCHEN_LAYOUT: TemplateLayout = {
   header: [
@@ -27,7 +29,8 @@ const printJobRepository = new PrintJobRepository();
 /**
  * Route an order to all active printers for each kitchen section.
  * Groups items by section, finds printers per section, renders template,
- * and stores them in PrintJob ticks for the Local Agent to pick up.
+ * In queue mode: stores PrintJobs for a worker to claim.
+ * In direct mode (PRINT_DELIVERY=direct): prints immediately from the API server.
  * Uses order.print_status to avoid duplicate PrintJob assignments.
  */
 export async function routeOrderToPrinters(orderId: string): Promise<void> {
@@ -83,32 +86,93 @@ export async function routeOrderToPrinters(orderId: string): Promise<void> {
           });
         }
 
+        let routedOk = false;
+
         if (renderedTemplates.length > 0) {
           if (env.PRINT_MODE === 'mock') {
             logger.info(
               `[PrintRouting][MOCK MODE] Order ${order.order_number} simulated print to ${printer.name} (${printer.id}) with ${renderedTemplates.length} templates`
             );
-            // Simulate instant success
             await orderRepository.updatePrintStatus(orderId, printer.id, 'sent');
+            routedOk = true;
+            void recordPrinterLog({
+              printer_id: printer.id,
+              printer_name: printer.name,
+              event_type: 'order_mock_print',
+              level: 'info',
+              message: `Mock print simulated for order ${order.order_number}`,
+              order_id: order.id,
+              order_number: order.order_number,
+              metadata: { templates: renderedTemplates.length },
+            });
+          } else if (env.PRINT_DELIVERY === 'direct') {
+            try {
+              await sendRenderedTemplatesToPrinter(printer, renderedTemplates);
+              await orderRepository.updatePrintStatus(orderId, printer.id, 'sent');
+              routedOk = true;
+              logger.info(
+                `[PrintRouting][DIRECT] Order ${order.order_number} printed on ${printer.name} (${printer.id}), ${renderedTemplates.length} template(s)`
+              );
+              void recordPrinterLog({
+                printer_id: printer.id,
+                printer_name: printer.name,
+                event_type: 'order_direct_print',
+                level: 'success',
+                message: `Direct print succeeded for order ${order.order_number}`,
+                order_id: order.id,
+                order_number: order.order_number,
+                metadata: { templates: renderedTemplates.length },
+              });
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              logger.error(
+                `[PrintRouting][DIRECT] Order ${order.order_number} print failed on ${printer.name} (${printer.id}): ${msg}`,
+                err
+              );
+              await orderRepository.updatePrintStatus(orderId, printer.id, 'failed', msg);
+              void recordPrinterLog({
+                printer_id: printer.id,
+                printer_name: printer.name,
+                event_type: 'order_direct_failed',
+                level: 'error',
+                message: `Direct print failed for order ${order.order_number}`,
+                order_id: order.id,
+                order_number: order.order_number,
+                error: msg,
+                metadata: { templates: renderedTemplates.length },
+              });
+            }
           } else {
-            // Create the real PrintJob inside the queue
-            await printJobRepository.create({
+            const job = await printJobRepository.create({
               orderId: order.id,
               printerId: printer.id,
               maxRetries: printer.maxRetries ?? 3,
               renderedTemplates,
             });
 
-            // Mark order as sent to prevent duplicate jobs created by API retries
             await orderRepository.updatePrintStatus(orderId, printer.id, 'sent');
+            routedOk = true;
 
             logger.info(
               `[PrintRouting] Order ${order.order_number} queued for printer ${printer.name} (${printer.id}) with ${renderedTemplates.length} templates`
             );
+            void recordPrinterLog({
+              printer_id: printer.id,
+              printer_name: printer.name,
+              event_type: 'order_queued',
+              level: 'info',
+              message: `Print job queued for order ${order.order_number}`,
+              order_id: order.id,
+              order_number: order.order_number,
+              print_job_id: job.id,
+              metadata: { templates: renderedTemplates.length },
+            });
           }
         }
 
-        printedPrinterIds.add(printer.id);
+        if (renderedTemplates.length === 0 || routedOk) {
+          printedPrinterIds.add(printer.id);
+        }
       }
     }
   } catch (err) {

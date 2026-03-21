@@ -1,8 +1,9 @@
 import { Coupon, CreateCouponDTO, UpdateCouponDTO } from '../../domain/entities/Coupon';
+import { ICouponRepository } from '../../domain/repositories/ICouponRepository';
 import { CouponModel, CouponDocument } from '../database/models/CouponModel';
 import { NotFoundError } from '../../shared/errors/AppError';
 
-export class CouponRepository {
+export class CouponRepository implements ICouponRepository {
   private toDomain(document: CouponDocument): Coupon {
     return {
       id: document._id.toString(),
@@ -32,8 +33,8 @@ export class CouponRepository {
   }
 
   async bulkCreate(data: CreateCouponDTO[]): Promise<Coupon[]> {
-    const coupons = await CouponModel.insertMany(data);
-    return coupons.map((coupon) => this.toDomain(coupon));
+    const coupons = await CouponModel.insertMany(data as any);
+    return (coupons as any[]).map((coupon) => this.toDomain(coupon));
   }
 
   async update(id: string, data: UpdateCouponDTO): Promise<Coupon> {
@@ -42,9 +43,10 @@ export class CouponRepository {
     return this.toDomain(coupon);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<boolean> {
     const result = await CouponModel.findByIdAndDelete(id);
     if (!result) throw new NotFoundError('Coupon not found');
+    return true;
   }
 
   async findById(id: string): Promise<Coupon | null> {
@@ -62,7 +64,18 @@ export class CouponRepository {
     return coupons.map((doc) => this.toDomain(doc));
   }
 
-  async findPaginated(query: any, page: number, limit: number, sort: any = { created_at: -1 }) {
+  async findPaginated(
+    query: any,
+    page: number,
+    limit: number,
+    sort: any = { created_at: -1 }
+  ): Promise<{
+    data: Coupon[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
       CouponModel.find(query).sort(sort).skip(skip).limit(limit),

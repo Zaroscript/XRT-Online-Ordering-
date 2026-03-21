@@ -9,6 +9,7 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { SortOrder, UserAddress } from '@/types';
 import { useTranslation } from 'next-i18next';
+import cn from 'classnames';
 import { useIsRTL } from '@/utils/locals';
 import { useState } from 'react';
 import TitleWithSort from '@/components/ui/title-with-sort';
@@ -16,8 +17,8 @@ import { Order, MappedPaginatorInfo } from '@/types';
 import { useRouter } from 'next/router';
 import StatusColor from '@/components/order/status-color';
 import Badge from '@/components/ui/badge/badge';
-import Button from '@/components/ui/button';
 import { Routes } from '@/config/routes';
+import { Eye } from '@/components/icons/eye-icon';
 import { ChatIcon } from '@/components/icons/chat';
 import { useCreateConversations } from '@/data/conversations';
 import { SUPER_ADMIN } from '@/utils/constants';
@@ -32,6 +33,23 @@ type IProps = {
   onPagination: (current: number) => void;
 };
 
+/** Compact stroke icon for refund action (avoids large marketing SVG). */
+const RefundStrokeIcon = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.75}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <path d="M3 12a9 9 0 1 0 3-7.1" />
+    <path d="M3 4v5h5" />
+  </svg>
+);
+
 const OrderTransactionList = ({
   transactions,
   paginatorInfo,
@@ -40,6 +58,11 @@ const OrderTransactionList = ({
   // const { data, paginatorInfo } = orders! ?? {};
   const router = useRouter();
   const { t } = useTranslation();
+  const { t: tCommon } = useTranslation('common');
+
+  const isRefundTransaction = (record: any) =>
+    Number(record?.amount) < 0 || record?.metadata?.type === 'refund';
+
   const rowExpandable = (record: any) => record?.children?.length;
   const { alignLeft, alignRight } = useIsRTL();
   const { permissions } = getAuthCredentials();
@@ -47,6 +70,7 @@ const OrderTransactionList = ({
     useCreateConversations();
   const [loading, setLoading] = useState<boolean | string | undefined>(false);
   const { openModal } = useModalAction();
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
   const columns = [
     {
@@ -96,7 +120,36 @@ const OrderTransactionList = ({
       dataIndex: 'amount',
       key: 'amount',
       align: 'center',
-      render: (amount: number) => <ListItemPrice value={amount} />,
+      render: (amount: number, record: any) => {
+        const refund = isRefundTransaction(record);
+        return (
+          <span className={cn(refund && 'font-semibold text-amber-800')}>
+            <ListItemPrice value={amount} />
+          </span>
+        );
+      },
+    },
+    {
+      title: tCommon('text-transaction-kind'),
+      key: 'transaction_kind',
+      align: 'center',
+      render: (_: unknown, record: any) => {
+        const refund = isRefundTransaction(record);
+        return (
+          <span
+            className={cn(
+              'inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold',
+              refund
+                ? 'border-amber-400 bg-amber-100 text-amber-900'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-900'
+            )}
+          >
+            {refund
+              ? tCommon('text-transaction-kind-refund')
+              : tCommon('text-transaction-kind-charge')}
+          </span>
+        );
+      },
     },
     {
       title: t('table:table-item-order-type'),
@@ -124,50 +177,88 @@ const OrderTransactionList = ({
       key: 'actions',
       align: 'right',
       render: (id: string, record: any) => {
-        const isTransactionCompleted = record?.status === 'completed' || record?.status === 'refunded' || record?.status === 'partially_refunded';
-        const isOrderPaid = record?.payment_status === 'paid' || record?.payment_status === 'partially_refunded' || record?.money?.payment_status === 'paid' || record?.money?.payment_status === 'partially_refunded' || record?.order_id?.money?.payment_status === 'paid' || record?.order_id?.money?.payment_status === 'partially_refunded';
-        
-        const canRefund = (isTransactionCompleted || isOrderPaid) && record?.status !== 'failed' && record?.status !== 'pending';
-        
-        // determine total amount
-        const totalAmount = record?.amount ?? record?.money?.total_amount ?? record?.order_id?.money?.total_amount ?? record?.total ?? 0;
+        const orderMoney = record?.order_id?.money;
+        const orderPaymentStatus =
+          orderMoney?.payment_status ||
+          record?.order_id?.payment_status ||
+          record?.payment_status ||
+          record?.money?.payment_status;
 
-        // Get the actual order ID so refund works!
-        const actualOrderId = record?.order_id?.id || record?.order_id?._id || record?.order_id || record?.id;
+        const refundRow = isRefundTransaction(record);
+        const orderFullyRefunded = orderPaymentStatus === 'refunded';
+
+        /** Refund only from the original charge row (positive amount), never from a refund line */
+        const isChargeRow =
+          !refundRow && Number(record?.amount) > 0 && record?.status === 'completed';
+
+        const isNmiGateway = String(record?.gateway || '').toLowerCase() === 'nmi';
+
+        const canRefund =
+          isChargeRow &&
+          !isNmiGateway &&
+          !orderFullyRefunded &&
+          (orderPaymentStatus === 'paid' || orderPaymentStatus === 'partially_refunded') &&
+          record?.status !== 'failed' &&
+          record?.status !== 'pending';
+
+        const totalAmount =
+          orderMoney?.total_amount ??
+          record?.money?.total_amount ??
+          record?.amount ??
+          record?.total ??
+          0;
+
+        const actualOrderId =
+          record?.order_id?.id || record?.order_id?._id || record?.order_id || record?.id;
 
         return (
-          <div className="flex items-center justify-end gap-2">
-            {canRefund && (
-              <Button
-                size="small"
-                variant="outline"
-                onClick={() => openModal('REFUND_ORDER', { orderId: actualOrderId, totalAmount })}
-                className="!text-red-500 hover:!bg-red-50 !border-red-500 hover:!border-red-500"
-              >
-                Refund
-              </Button>
+          <div className="flex flex-col items-end gap-1">
+            {orderFullyRefunded && !refundRow && (
+              <span className="max-w-[160px] text-end text-[10px] leading-tight text-amber-800">
+                {tCommon('text-order-fully-refunded-no-refund')}
+              </span>
             )}
-            <Button
-              size="small"
-              onClick={() => setSelectedTransaction(record)}
-              className="!bg-accent !text-light"
-            >
-              {t('common:text-show-more')}
-            </Button>
+            <div className="inline-flex items-center justify-end gap-0.5">
+              {canRefund && (
+                <button
+                  type="button"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200"
+                  title={tCommon('text-tooltip-refund')}
+                  aria-label={tCommon('text-tooltip-refund')}
+                  onClick={() =>
+                    openModal('REFUND_ORDER', { orderId: actualOrderId, totalAmount })
+                  }
+                >
+                  <RefundStrokeIcon className="h-4 w-4" />
+                </button>
+              )}
+              <button
+                type="button"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-accent transition-colors hover:bg-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+                title={tCommon('text-show-more')}
+                aria-label={tCommon('text-show-more')}
+                onClick={() => setSelectedTransaction(record)}
+              >
+                <Eye className="h-[18px] w-[18px]" />
+              </button>
+            </div>
           </div>
         );
       },
     },
   ];
 
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
-
   return (
     <>
-      <div className="mb-6 overflow-hidden rounded shadow">
+      <div className="mb-6 overflow-x-auto rounded-lg border border-border-200 bg-white shadow-sm">
         <Table
           //@ts-ignore
           columns={columns}
+          rowClassName={(record: any) =>
+            isRefundTransaction(record)
+              ? '!bg-amber-50/90 hover:!bg-amber-100/90 [&>td]:border-l-4 [&>td]:border-l-amber-500 [&>td:first-child]:border-l-amber-500'
+              : ''
+          }
           emptyText={() => (
             <div className="flex flex-col items-center py-7">
               <NoDataFound className="w-52" />
@@ -179,7 +270,7 @@ const OrderTransactionList = ({
           )}
           data={transactions}
           rowKey="id"
-          scroll={{ x: 1200 }}
+          scroll={{ x: 1080 }}
         />
       </div>
 

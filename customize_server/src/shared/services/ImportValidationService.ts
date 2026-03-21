@@ -4,6 +4,15 @@ import {
   ImportValidationWarning,
 } from '../../domain/entities/ImportSession';
 
+/** Drop null/undefined/non-objects so forEach never throws (e.g. sparse arrays from the UI). */
+function onlyImportRowObjects<T extends object>(arr: unknown): T[] {
+  if (!Array.isArray(arr)) return [];
+  return arr.filter(
+    (x): x is T =>
+      x !== null && x !== undefined && typeof x === 'object' && !Array.isArray(x)
+  );
+}
+
 export class ImportValidationService {
   /**
    * Validate all parsed data and return errors and warnings
@@ -20,16 +29,18 @@ export class ImportValidationService {
     const errors: ImportValidationError[] = [];
     const warnings: ImportValidationWarning[] = [];
 
-    // Normalize to avoid "Cannot read property 'forEach' of undefined" when saving draft with partial data
+    // Normalize + strip bad slots so re-validation on "Save draft" never throws TypeError → 500
     const safe: ParsedImportData = {
-      categories: Array.isArray(data?.categories) ? data.categories : [],
-      items: Array.isArray(data?.items) ? data.items : [],
-      itemSizes: Array.isArray(data?.itemSizes) ? data.itemSizes : [],
-      modifierGroups: Array.isArray(data?.modifierGroups) ? data.modifierGroups : [],
-      modifiers: Array.isArray(data?.modifiers) ? data.modifiers : [],
-      itemModifierOverrides: Array.isArray(data?.itemModifierOverrides)
-        ? data.itemModifierOverrides
-        : [],
+      categories: onlyImportRowObjects(Array.isArray(data?.categories) ? data.categories : []),
+      items: onlyImportRowObjects(Array.isArray(data?.items) ? data.items : []),
+      itemSizes: onlyImportRowObjects(Array.isArray(data?.itemSizes) ? data.itemSizes : []),
+      modifierGroups: onlyImportRowObjects(
+        Array.isArray(data?.modifierGroups) ? data.modifierGroups : []
+      ),
+      modifiers: onlyImportRowObjects(Array.isArray(data?.modifiers) ? data.modifiers : []),
+      itemModifierOverrides: onlyImportRowObjects(
+        Array.isArray(data?.itemModifierOverrides) ? data.itemModifierOverrides : []
+      ),
     };
     data = safe;
 
@@ -38,6 +49,17 @@ export class ImportValidationService {
       const categoryNames = new Set<string>();
       data.categories.forEach((cat, index) => {
         const row = index + 2;
+        if (!cat || typeof cat !== 'object') {
+          errors.push({
+            file: filename,
+            row,
+            entity: 'Category',
+            field: 'row',
+            message: 'Invalid row data',
+            value: cat,
+          });
+          return;
+        }
 
         // name is required
         if (!cat.name || cat.name.trim() === '') {
@@ -87,6 +109,17 @@ export class ImportValidationService {
     const itemKeys = new Set<string>();
     data.items.forEach((item, index) => {
       const row = index + 2; // +2 because CSV has header and is 1-indexed
+      if (!item || typeof item !== 'object') {
+        errors.push({
+          file: filename,
+          row,
+          entity: 'Item',
+          field: 'row',
+          message: 'Invalid row data',
+          value: item,
+        });
+        return;
+      }
 
       // name is required
       if (!item.name || item.name.trim() === '') {
@@ -176,6 +209,17 @@ export class ImportValidationService {
     const groupNames = new Set<string>();
     data.modifierGroups.forEach((group, index) => {
       const row = index + 2;
+      if (!group || typeof group !== 'object') {
+        errors.push({
+          file: filename,
+          row,
+          entity: 'ModifierGroup',
+          field: 'row',
+          message: 'Invalid row data',
+          value: group,
+        });
+        return;
+      }
 
       if (!group.name || group.name.trim() === '') {
         errors.push({
@@ -224,7 +268,9 @@ export class ImportValidationService {
       }
 
       // max_select ≤ modifiers count (validate after modifiers are processed)
-      const groupModifiers = data.modifiers.filter((m) => m.group_key === group.name);
+      const groupModifiers = data.modifiers.filter(
+        (m) => m && typeof m === 'object' && m.group_key === group.name
+      );
       if (group.max_select > groupModifiers.length) {
         warnings.push({
           file: filename,
@@ -253,6 +299,17 @@ export class ImportValidationService {
     const modifierKeys = new Map<string, Set<string>>(); // group_key -> Set<modifier_key>
     data.modifiers.forEach((modifier, index) => {
       const row = index + 2;
+      if (!modifier || typeof modifier !== 'object') {
+        errors.push({
+          file: filename,
+          row,
+          entity: 'Modifier',
+          field: 'row',
+          message: 'Invalid row data',
+          value: modifier,
+        });
+        return;
+      }
 
       if (!modifier.group_key) {
         errors.push({
@@ -311,7 +368,9 @@ export class ImportValidationService {
       }
 
       // Validate group exists (modifiers reference groups by name via group_key)
-      const groupExists = data.modifierGroups.some((g) => g.name === modifier.group_key);
+      const groupExists = data.modifierGroups.some(
+        (g) => g && typeof g === 'object' && g.name === modifier.group_key
+      );
       if (!groupExists) {
         errors.push({
           file: filename,
@@ -327,6 +386,17 @@ export class ImportValidationService {
     // Validate Item Modifier Overrides
     data.itemModifierOverrides.forEach((override, index) => {
       const row = index + 2;
+      if (!override || typeof override !== 'object') {
+        errors.push({
+          file: filename,
+          row,
+          entity: 'ItemModifierOverride',
+          field: 'row',
+          message: 'Invalid row data',
+          value: override,
+        });
+        return;
+      }
 
       if (!override.item_name || override.item_name.trim() === '') {
         errors.push({
@@ -367,7 +437,9 @@ export class ImportValidationService {
         });
       } else {
         // Validate group exists (overrides reference groups by name via group_key)
-        const groupExists = data.modifierGroups.some((g) => g.name === override.group_key);
+        const groupExists = data.modifierGroups.some(
+          (g) => g && typeof g === 'object' && g.name === override.group_key
+        );
         if (!groupExists) {
           errors.push({
             file: filename,
@@ -392,7 +464,11 @@ export class ImportValidationService {
       } else {
         // Validate modifier exists and belongs to group
         const modifierExists = data.modifiers.some(
-          (m) => m.modifier_key === override.modifier_key && m.group_key === override.group_key
+          (m) =>
+            m &&
+            typeof m === 'object' &&
+            m.modifier_key === override.modifier_key &&
+            m.group_key === override.group_key
         );
         if (!modifierExists) {
           errors.push({
@@ -410,12 +486,17 @@ export class ImportValidationService {
       if (override.prices_by_size && override.prices_by_size.length > 0) {
         const itemSizes = data.itemSizes.filter(
           (s) =>
+            s &&
+            typeof s === 'object' &&
             itemCompositeKey((s as any).item_name, (s as any).item_category_name) ===
-            itemCompositeKey(override.item_name, override.item_category_name)
+              itemCompositeKey(override.item_name, override.item_category_name)
         );
-        const itemSizeCodes = new Set(itemSizes.map((s) => s.size_code));
+        const itemSizeCodes = new Set(
+          itemSizes.map((s) => s.size_code).filter((code) => code != null && code !== '')
+        );
 
         override.prices_by_size.forEach((priceOverride) => {
+          if (!priceOverride || typeof priceOverride !== 'object') return;
           if (!itemSizeCodes.has(priceOverride.sizeCode)) {
             errors.push({
               file: filename,

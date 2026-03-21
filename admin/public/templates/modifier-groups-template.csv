@@ -1,0 +1,3 @@
+name,display_name,display_type,min_select,max_select,sort_order,is_active
+"Toppings","Choose Toppings","CHECKBOX",0,5,1,true
+"Meat Temperature","How would you like it cooked?","RADIO",1,1,2,true

@@ -2,6 +2,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { printerClient, Printer } from './client/printer';
 import { API_ENDPOINTS } from './client/api-endpoints';
 
+export const usePrinterDiscoverSerialQuery = (enabled: boolean) => {
+  return useQuery({
+    queryKey: [API_ENDPOINTS.PRINTERS, 'discover-serial'],
+    queryFn: () => printerClient.discoverSerial(),
+    enabled,
+    staleTime: 30_000,
+  });
+};
+
 export const usePrintersQuery = (params?: { active?: boolean }) => {
   return useQuery({
     queryKey: [API_ENDPOINTS.PRINTERS, params],
@@ -44,6 +53,16 @@ export const useUpdatePrinterMutation = () => {
 export const useTestPrintMutation = () => {
   return useMutation({
     mutationFn: (id: string) => printerClient.testPrint(id),
+  });
+};
+
+export const useCheckPrinterConnectionMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => printerClient.checkConnection(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.PRINTERS] });
+    },
   });
 };
 

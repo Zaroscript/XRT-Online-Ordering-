@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { ICategoryRepository } from '../../domain/repositories/ICategoryRepository';
 import {
   Category,
@@ -6,6 +7,12 @@ import {
   CategoryFilters,
 } from '../../domain/entities/Category';
 import { CategoryModel, CategoryDocument } from '../database/models/CategoryModel';
+
+function isValidObjectId(value: string | undefined | null): boolean {
+  if (!value || typeof value !== 'string') return false;
+  if (value.length !== 24) return false;
+  return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
+}
 
 export class CategoryRepository implements ICategoryRepository {
   private toDomain(document: CategoryDocument): Category {
@@ -93,7 +100,9 @@ export class CategoryRepository implements ICategoryRepository {
       query.is_active = filters.is_active;
     }
 
-    if (filters.kitchen_section_id) {
+    // Only filter by kitchen_section_id if it's a valid MongoDB ObjectId.
+    // Static values like KS_004 from legacy constants are not ObjectIds and cause CastError.
+    if (filters.kitchen_section_id && isValidObjectId(filters.kitchen_section_id)) {
       query.kitchen_section_id = filters.kitchen_section_id;
     }
 

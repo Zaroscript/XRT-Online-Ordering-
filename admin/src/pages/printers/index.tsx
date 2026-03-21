@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Card from '@/components/common/card';
 import Layout from '@/components/layouts/admin';
 import ErrorMessage from '@/components/ui/error-message';
@@ -7,7 +8,13 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { Routes } from '@/config/routes';
 import PageHeading from '@/components/common/page-heading';
 import LinkButton from '@/components/ui/link-button';
-import { usePrintersQuery, useTestPrintMutation } from '@/data/printer';
+import PrinterTerminalLogModal from '@/components/printer/printer-terminal-log-modal';
+import { TerminalIcon } from '@/components/icons/terminal-icon';
+import {
+  usePrintersQuery,
+  useTestPrintMutation,
+  useCheckPrinterConnectionMutation,
+} from '@/data/printer';
 import { useTemplatesQuery } from '@/data/template';
 import { toast } from 'react-toastify';
 import Badge from '@/components/ui/badge/badge';
@@ -21,6 +28,10 @@ export default function PrintersPage() {
   const { data: printers = [], isLoading, error } = usePrintersQuery();
   const { data: templates = [] } = useTemplatesQuery();
   const { mutate: testPrint, isPending: testPrinting } = useTestPrintMutation();
+  const { mutate: checkConnection, isPending: checkingConnection } =
+    useCheckPrinterConnectionMutation();
+
+  const [logPrinter, setLogPrinter] = useState<Printer | null>(null);
 
   if (isLoading) return <Loader text={t('common:text-loading')} />;
   if (error) return <ErrorMessage message={error.message} />;
@@ -39,6 +50,22 @@ export default function PrintersPage() {
     testPrint(p.id, {
       onSuccess: () => toast.success('Test print sent'),
       onError: (e: any) => toast.error(e?.message ?? 'Test print failed'),
+    });
+  };
+
+  const handleCheckConnection = (p: Printer) => {
+    checkConnection(p.id, {
+      onSuccess: (data) => {
+        if (data.connected) {
+          toast.success('Printer reachable from server (connected)');
+        } else {
+          toast.warning(
+            data.error ??
+              'Printer not reachable from server — check IP/COM and run API on a machine that can reach the printer',
+          );
+        }
+      },
+      onError: (e: any) => toast.error(e?.message ?? 'Connection check failed'),
     });
   };
 
@@ -139,6 +166,23 @@ export default function PrintersPage() {
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"
+            onClick={() => setLogPrinter(record)}
+            className="text-gray-600 hover:text-emerald-600 transition-colors p-1"
+            title="Printer activity log (terminal)"
+          >
+            <TerminalIcon width={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleCheckConnection(record)}
+            disabled={checkingConnection || testPrinting}
+            className="text-sm font-medium text-gray-600 hover:text-accent transition-colors px-2 py-1 rounded border border-gray-200"
+            title="Check if the API server can reach this printer (not your browser)"
+          >
+            Check link
+          </button>
+          <button
+            type="button"
             onClick={() => handleTestPrint(record)}
             disabled={testPrinting}
             className="text-accent hover:text-accent-hover transition-colors p-1"
@@ -163,7 +207,7 @@ export default function PrintersPage() {
           <div className="mb-4 md:mb-0 md:w-1/4">
             <PageHeading title="Printers" />
           </div>
-          <div className="ms-auto">
+          <div className="ms-auto flex flex-wrap items-center gap-2">
             <LinkButton href={Routes.printers.create} className="h-12">
               + Add printer
             </LinkButton>
@@ -181,6 +225,12 @@ export default function PrintersPage() {
           scroll={{ x: 1000 }}
         />
       </Card>
+
+      <PrinterTerminalLogModal
+        printer={logPrinter}
+        open={!!logPrinter}
+        onClose={() => setLogPrinter(null)}
+      />
     </>
   );
 }

@@ -1,15 +1,15 @@
 import { Mail, MapPinned, Clock } from "lucide-react";
 import React from "react";
 import { useSiteSettingsQuery } from "../../api";
-import { formatPhone } from "../../utils/phoneUtils";
 import { useStoreStatus, to12Hour } from "../../hooks/useStoreStatus";
+import SocialLinks from "../Footer/SocialLinks";
 
 const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export default function Information() {
   const { data: settings } = useSiteSettingsQuery();
   const contactDetails = settings?.contactDetails;
-  const { isOpen, todaySlot, schedule } = useStoreStatus();
+  const { todaySlot, schedule } = useStoreStatus();
 
   // Sort schedule by week order
   const sortedSchedule = schedule.length
@@ -25,6 +25,14 @@ export default function Information() {
         <p className="w-full max-w-[700px] text-[#656766]">
           {settings?.siteSubtitle || 'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Expedita quaerat unde quam dolor culpa veritatis inventore, aut commodi eum veniam vel'}
         </p>
+        {contactDetails?.socials?.length ? (
+          <div className="mt-6 flex justify-center">
+            <SocialLinks
+              socials={contactDetails.socials}
+              className="justify-center gap-5 [&_a]:bg-[#5D9063]/15 [&_a]:text-[#2F3E30] [&_a:hover]:bg-[#5D9063]/25 [&_a:hover]:text-[#315234]"
+            />
+          </div>
+        ) : null}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-y-12 md:gap-x-24 lg:gap-x-[150px] px-8 md:px-12 lg:px-[100px] py-[50px]">
         <div className="flex justify-center md:justify-start">

@@ -39,3 +39,9 @@ tmp*.json
 *.njsproj
 *.sln
 *.sw?
+
+# scripts
+scripts/
+
+#docs
+docs/

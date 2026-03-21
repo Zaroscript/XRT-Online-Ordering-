@@ -11,6 +11,8 @@ import { ToastContainer } from 'react-toastify';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HydrationBoundary } from '@tanstack/react-query';
 import { useSettingsQuery } from '@/data/settings';
+import { usePublicSiteSettingsQuery } from '@/data/public-site-settings';
+import { mapPublicSiteToOptions } from '@/utils/map-public-site-to-options';
 import dynamic from 'next/dynamic';
 
 const ReactQueryDevtools = dynamic(
@@ -31,12 +33,11 @@ import DefaultSeo from '@/components/ui/default-seo';
 import ManagedModal from '@/components/ui/modal/managed-modal';
 
 import { AppLoadingProvider } from '@/contexts/app-loading.context';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { NextPageWithLayout } from '@/types';
 import { useRouter } from 'next/router';
 import PrivateRoute from '@/utils/private-route';
 import { Config } from '@/config';
-import { Routes } from '@/config/routes';
 import { getAuthCredentials } from '@/utils/auth-utils';
 
 const Noop: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
@@ -48,54 +49,51 @@ const Noop: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
  * initial render match (avoids hydration error from token/cookies differing).
  */
 const AppSettings: React.FC<{ children?: React.ReactNode }> = (props) => {
-  const { pathname, locale } = useRouter();
+  const { locale } = useRouter();
   const [mounted, setMounted] = useState(false);
   const { token } = getAuthCredentials();
   const { settings, loading, error } = useSettingsQuery({
     language: locale!,
   });
+  const { data: publicSite } = usePublicSiteSettingsQuery(mounted && !token);
+  const publicOptions = useMemo(
+    () => mapPublicSiteToOptions(publicSite ?? null),
+    [publicSite],
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const isAuthPage =
-    pathname === Routes.login ||
-    pathname === Routes.register ||
-    pathname === Routes.forgotPassword ||
-    pathname === Routes.resetPassword ||
-    pathname?.includes('/login') ||
-    pathname?.includes('/register') ||
-    pathname?.includes('/forgot-password') ||
-    pathname?.includes('/reset-password');
-
   // Before mount: render same as server (no token-dependent branching) to avoid hydration mismatch
   if (!mounted) {
     // @ts-ignore
-    return <SettingsProvider initialValue={null} {...props} />;
+    return <SettingsProvider key="boot" initialValue={null} {...props} />;
   }
 
-  if (isAuthPage) {
-    // @ts-ignore
-    return <SettingsProvider initialValue={null} {...props} />;
-  }
-
-  if (!token) {
-    // @ts-ignore
-    return <SettingsProvider initialValue={null} {...props} />;
-  }
-
-  if (loading) return <PageLoader />;
-  if (error) {
-    const errorStatus = (error as any)?.response?.status;
-    if (errorStatus !== 400 && errorStatus !== 401) {
-      return <ErrorMessage message={error.message} />;
+  // Logged in: load full settings (logo, favicon, SEO, etc.) from authenticated /settings
+  if (token) {
+    if (loading) return <PageLoader />;
+    if (error) {
+      const errorStatus = (error as any)?.response?.status;
+      if (errorStatus !== 400 && errorStatus !== 401) {
+        return <ErrorMessage message={error.message} />;
+      }
     }
+    // @ts-ignore
+    return (
+      <SettingsProvider
+        key="authenticated"
+        initialValue={settings?.options ?? null}
+        {...props}
+      />
+    );
   }
 
+  // Not logged in (login/register, or pre-redirect): branding from public API — no auth required
   // @ts-ignore
   return (
-    <SettingsProvider initialValue={settings?.options ?? null} {...props} />
+    <SettingsProvider key="guest" initialValue={publicOptions} {...props} />
   );
 };
 type AppPropsWithLayout = AppProps & {

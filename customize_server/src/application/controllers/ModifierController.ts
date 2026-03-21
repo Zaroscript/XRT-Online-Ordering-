@@ -177,12 +177,14 @@ export class ModifierController {
 
     // Basics-only export: group_key, modifier_key, name, display_order, is_active (no quantity_levels, prices, sides)
     const csvRows = [
-      ['group_key', 'modifier_key', 'name', 'display_order', 'is_active'].join(','),
+      ['group_key', 'modifier_key', 'name', 'max_quantity', 'is_default', 'display_order', 'is_active'].join(','),
       ...modifiers.map((mod: any) =>
         [
           safeString(mod.modifier_group?.name || mod.modifier_group_id),
           safeString(mod.name),
           safeString(mod.name),
+          1, // max_quantity default
+          false, // is_default default
           mod.display_order ?? 0,
           mod.is_active ?? true,
         ].join(',')

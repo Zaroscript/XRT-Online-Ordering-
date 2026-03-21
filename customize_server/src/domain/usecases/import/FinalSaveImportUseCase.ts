@@ -30,11 +30,15 @@ export class FinalSaveImportUseCase {
     );
   }
 
-  async execute(sessionId: string, user_id: string): Promise<void> {
-    const session = await this.importSessionRepository.findById(sessionId, user_id);
+  async execute(sessionId: string, user_id: string, bypassUserScope = false, io?: any): Promise<void> {
+    const session = await this.importSessionRepository.findById(
+      sessionId,
+      bypassUserScope ? undefined : user_id
+    );
     if (!session) {
       throw new ValidationError('Import session not found');
     }
+    const ownerId = session.user_id;
 
     // Re-validate before saving
     if (session.validationErrors.length > 0) {
@@ -46,11 +50,13 @@ export class FinalSaveImportUseCase {
     // Save all data in transaction
     const rollbackOps = await this.importSaveService.saveAll(
       session.parsedData,
-      session.business_id
+      session.business_id,
+      io,
+      user_id
     );
 
     // Mark session as confirmed
-    await this.importSessionRepository.update(sessionId, user_id, {
+    await this.importSessionRepository.update(sessionId, ownerId, {
       status: 'confirmed',
       rollbackData: rollbackOps,
     });

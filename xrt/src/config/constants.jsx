@@ -43,15 +43,6 @@ import product29 from "../assets/images/Menu_Items/pro-3-600x600.jpg";
 
 import coupon1 from "../assets/images/offers/item2.png.webp";
 
-{
-  /*toprated*/
-}
-import topitem1 from "../assets/images/Top_Rated/item1.jpg.webp";
-import topitem2 from "../assets/images/Top_Rated/item2.jpg.webp";
-import topitem3 from "../assets/images/Top_Rated/item3.jpg.webp";
-import topitem4 from "../assets/images/Top_Rated/item4.jpg.webp";
-import topitem5 from "../assets/images/Top_Rated/item5.jpg.webp";
-
 import Testimonial from "../assets/images/Testimonials/bg_Testimonials.jpg.webp";
 import image1 from "../assets/images/Testimonials/person1.png.webp";
 import image2 from "../assets/images/Testimonials/person2.png.webp";
@@ -565,63 +556,6 @@ export const coupons = {
   src: coupon1,
   offer: "50%",
 };
-
-export const Top_Rated_Items = [
-  {
-    src: topitem1,
-    name: "Soup & Stew Mix Pack 1.5kg",
-    basePrice: 15,
-    offer: "£546.64",
-  },
-  {
-    src: topitem2,
-    name: "Kiwi Fruit Single",
-    basePrice: 15,
-    offer: "£546.64",
-  },
-  {
-    src: topitem3,
-    name: "Mixed Chillies Pack 500g",
-    basePrice: 15,
-    offer: "£546.64",
-  },
-  {
-    src: topitem4,
-    name: "Large Queen Apple",
-    basePrice: 15,
-    offer: "£546.64",
-  },
-  {
-    src: topitem5,
-    name: "Papaya Single",
-    basePrice: 15,
-    offer: "£546.64",
-  },
-  {
-    src: topitem1,
-    name: "Soup & Stew Mix Pack 1.5kg",
-    basePrice: 15,
-    offer: "£546.64",
-  },
-  {
-    src: topitem2,
-    name: "Kiwi Fruit Single",
-    basePrice: 15,
-    offer: "£546.64",
-  },
-  {
-    src: topitem3,
-    name: "Mixed Chillies Pack 500g",
-    basePrice: 15,
-    offer: "£546.64",
-  },
-  {
-    src: topitem4,
-    name: "Large Queen Apple",
-    basePrice: 15,
-    offer: "£546.64",
-  },
-];
 
 export const Testimonials_bg = {
   src: Testimonial,

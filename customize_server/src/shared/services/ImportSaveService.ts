@@ -29,7 +29,7 @@ export class ImportSaveService {
   /**
    * Save all import data in a single transaction with Upsert logic
    */
-  async saveAll(data: ParsedImportData, business_id: string): Promise<RollbackOperation[]> {
+  async saveAll(data: ParsedImportData, business_id: string, io?: any, userId?: string): Promise<RollbackOperation[]> {
     const session = await mongoose.startSession();
     session.startTransaction();
     const rollbackOps: RollbackOperation[] = [];
@@ -54,6 +54,8 @@ export class ImportSaveService {
 
       // Process Categories from Import
       if (data.categories) {
+        let catDone = 0;
+        const totalCats = data.categories.length;
         for (const catData of data.categories) {
           const lowerName = catData.name.trim().toLowerCase();
           const existingId = categoryNameToId.get(lowerName);
@@ -91,10 +93,17 @@ export class ImportSaveService {
               id: createdCat.id,
             });
           }
+          
+          catDone++;
+          if (io && userId && (catDone % 10 === 0 || catDone === totalCats)) {
+            io.to(userId).emit('import:progress', { step: 'categories', done: catDone, total: totalCats });
+          }
         }
       }
 
       // 1. Upsert Item Sizes (Global)
+      let sizeDone = 0;
+      const totalSizes = data.itemSizes.length;
       for (const sizeData of data.itemSizes) {
         let sizeId: string;
         // Check by Code (Natural Key for Sizes)
@@ -138,9 +147,16 @@ export class ImportSaveService {
         }
 
         sizeCodeToId.set(sizeData.size_code, sizeId);
+        
+        sizeDone++;
+        if (io && userId && (sizeDone % 10 === 0 || sizeDone === totalSizes)) {
+          io.to(userId).emit('import:progress', { step: 'sizes', done: sizeDone, total: totalSizes });
+        }
       }
 
       // 2. Upsert Modifier Groups
+      let groupDone = 0;
+      const totalGroups = data.modifierGroups.length;
       for (const groupData of data.modifierGroups) {
         // Check if group exists by name
         const existingGroups = await this.modifierGroupRepository.findAll({
@@ -212,9 +228,16 @@ export class ImportSaveService {
             id: createdGroup.id,
           });
         }
+        
+        groupDone++;
+        if (io && userId && (groupDone % 10 === 0 || groupDone === totalGroups)) {
+          io.to(userId).emit('import:progress', { step: 'modifierGroups', done: groupDone, total: totalGroups });
+        }
       }
 
       // 3. Upsert Modifiers (depends on Modifier Groups)
+      let modDone = 0;
+      const totalMods = data.modifiers.length;
       for (const modifierData of data.modifiers) {
         const groupId = groupKeyToId.get(modifierData.group_key);
         if (!groupId) {
@@ -266,9 +289,16 @@ export class ImportSaveService {
             id: createdModifier.id,
           });
         }
+        
+        modDone++;
+        if (io && userId && (modDone % 50 === 0 || modDone === totalMods)) {
+          io.to(userId).emit('import:progress', { step: 'modifiers', done: modDone, total: totalMods });
+        }
       }
 
       // 4. Upsert Items
+      let itemDone = 0;
+      const totalItems = data.items.length;
       for (const itemData of data.items) {
         // Resolve Category
         let categoryId = itemData.category_id;
@@ -332,6 +362,11 @@ export class ImportSaveService {
             action: 'create',
             id: createdItem.id,
           });
+        }
+        
+        itemDone++;
+        if (io && userId && (itemDone % 20 === 0 || itemDone === totalItems)) {
+          io.to(userId).emit('import:progress', { step: 'items', done: itemDone, total: totalItems });
         }
       }
 

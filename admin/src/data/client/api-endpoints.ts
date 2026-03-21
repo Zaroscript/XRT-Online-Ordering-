@@ -51,6 +51,8 @@ export const API_ENDPOINTS = {
 
   // Legacy endpoints
   SETTINGS: 'settings',
+  /** No auth — branding for login / pre-auth shell */
+  PUBLIC_SITE_SETTINGS: 'public/site-settings',
   PROFILE_UPDATE: 'profile-update',
 
   // Additional endpoints for compatibility (may not exist in customize_server yet)
@@ -81,15 +83,21 @@ export const API_ENDPOINTS = {
   MODIFIERS: 'modifiers',
   IMPORT_PARSE: 'import/parse',
   IMPORT_SESSIONS: 'import/sessions',
-  IMPORT_HISTORY: '/import/history',
-  IMPORT_FILES: '/import/files',
-  IMPORT_ANALYTICS: '/import/analytics',
+  /** Reserved — no API route yet; use IMPORT_SESSIONS. Avoid leading `/` (breaks baseURL join). */
+  IMPORT_HISTORY: 'import/history',
+  IMPORT_FILES: 'import/files',
+  IMPORT_ANALYTICS: 'import/analytics',
   PRINTERS: 'printers',
   PRINTER_SCAN_WIFI: 'printers/scan',
   PRINTER_SCAN_LAN: 'printers/scan-lan',
   PRINTER_SCAN_BLUETOOTH: 'printers/scan-bluetooth',
+  PRINTER_DISCOVER_SERIAL: 'printers/discover-serial',
   PRINTER_DETAIL: 'printers/:id',
+  PRINTER_CHECK_CONNECTION: 'printers/:id/check-connection',
   PRINTER_TEST_PRINT: 'printers/:id/test-print',
+  PRINTER_LOGS: 'printer-logs',
+  /** GET printers/:id/logs — activity for one printer */
+  PRINTER_LOGS_BY_PRINTER: 'printers/:id/logs',
   TEMPLATES: 'templates',
   TEMPLATE_DETAIL: 'templates/:id',
   TEMPLATES_PRINTABLE_FIELDS: 'templates/printable-fields',
@@ -98,6 +106,7 @@ export const API_ENDPOINTS = {
   IMPORT_SESSION: 'import/sessions/:id',
   IMPORT_SESSION_SAVE: 'import/sessions/:id/save',
   IMPORT_SESSION_ERRORS: 'import/sessions/:id/errors',
+  EXPORT_ALL: 'export/all',
 
   // Product endpoints
   POPULAR_PRODUCTS: 'products/popular',

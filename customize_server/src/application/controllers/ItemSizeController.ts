@@ -139,7 +139,7 @@ export class ItemSizeController {
 
     // Convert to CSV
     const csvRows = [
-      ['name', 'code', 'display_order', 'is_active'].join(','),
+      ['name', 'size_code', 'display_order', 'is_active'].join(','),
       ...sizes.map((size: any) =>
         [
           `"${(size.name || '').replace(/"/g, '""')}"`,

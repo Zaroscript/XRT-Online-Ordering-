@@ -65,6 +65,14 @@ export const env = {
 
   // Printing Architecture
   PRINT_MODE: (process.env.PRINT_MODE || 'production') as 'production' | 'mock',
+  /**
+   * queue — write PrintJob to MongoDB for a worker/agent to claim (legacy).
+   * direct — print immediately from this Node process (no local agent; API host must reach printer).
+   */
+  PRINT_DELIVERY:
+    String(process.env.PRINT_DELIVERY || 'queue').toLowerCase() === 'direct'
+      ? 'direct'
+      : 'queue',
 } as const;
 
 // Validate required environment variables

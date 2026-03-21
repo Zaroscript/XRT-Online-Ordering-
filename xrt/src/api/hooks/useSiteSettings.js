@@ -17,12 +17,18 @@ export function useSiteSettingsQuery(options = {}) {
     ...options,
   });
 
+  const d = query.data;
+
   return {
     ...query,
-    heroSlides: query.data?.heroSlides ?? [],
-    siteTitle: query.data?.siteTitle ?? "",
-    siteSubtitle: query.data?.siteSubtitle ?? "",
-    logo: query.data?.logo ?? null,
-    operating_hours: query.data?.operating_hours ?? null,
+    heroSlides: d?.heroSlides ?? [],
+    siteTitle: d?.siteTitle ?? "",
+    siteSubtitle: d?.siteSubtitle ?? "",
+    logo: d?.logo ?? null,
+    operating_hours: d?.operating_hours ?? null,
+    seo: d?.seo ?? null,
+    isUnderMaintenance: Boolean(d?.isUnderMaintenance),
+    maintenance: d?.maintenance ?? null,
+    contactDetails: d?.contactDetails ?? null,
   };
 }

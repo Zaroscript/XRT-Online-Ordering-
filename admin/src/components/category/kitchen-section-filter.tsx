@@ -3,8 +3,7 @@ import React from 'react';
 import { useTranslation } from 'next-i18next';
 import cn from 'classnames';
 import { ActionMeta } from 'react-select';
-
-
+import { useKitchenSectionsQuery } from '@/data/kitchen-section';
 
 type Props = {
     onKitchenSectionFilter: (newValue: any, actionMeta: ActionMeta<unknown>) => void;
@@ -19,12 +18,13 @@ export default function KitchenSectionFilter({ onKitchenSectionFilter, className
         return val === key || val === accessKey ? fallback : val;
     };
 
-    const kitchenSectionOptions = [
-        { label: getFallback('kitchen-section-appetizers', 'common:kitchen-section-appetizers', 'Appetizers'), value: 'KS_001' },
-        { label: getFallback('kitchen-section-main-course', 'common:kitchen-section-main-course', 'Main Course'), value: 'KS_002' },
-        { label: getFallback('kitchen-section-desserts', 'common:kitchen-section-desserts', 'Desserts'), value: 'KS_004' },
-        { label: getFallback('kitchen-section-beverages', 'common:kitchen-section-beverages', 'Beverages'), value: 'KS_004' },
-    ];
+    const { data } = useKitchenSectionsQuery();
+    const sections = (Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []) as { id: string; name: string }[];
+
+    const kitchenSectionOptions = sections.map((s) => ({
+        label: s.name,
+        value: s.id,
+    }));
 
     return (
         <div className={cn('flex w-full', className)}>

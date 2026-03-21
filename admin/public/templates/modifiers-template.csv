@@ -1,0 +1,4 @@
+group_key,modifier_key,name,max_quantity,is_default,display_order,is_active
+"Toppings","Cheese","Extra Cheese",1,false,1,true
+"Toppings","Bacon","Crispy Bacon",1,false,2,true
+"Meat Temperature","Rare","Rare",1,false,1,true
