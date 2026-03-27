@@ -4,6 +4,8 @@ import { ICategoryRepository } from '../../repositories/ICategoryRepository';
 import { CreateOrderDTO, Order, OrderItem } from '../../entities/Order';
 
 import { IBusinessSettingsRepository } from '../../repositories/IBusinessSettingsRepository';
+import { ICouponRepository } from '../../repositories/ICouponRepository';
+import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 
 const KITCHEN_SECTION_UNASSIGNED = 'Unassigned';
 
@@ -12,7 +14,9 @@ export class CreateOrderUseCase {
     private orderRepository: IOrderRepository,
     private itemRepository: IItemRepository,
     private categoryRepository: ICategoryRepository,
-    private businessSettingsRepository: IBusinessSettingsRepository
+    private businessSettingsRepository: IBusinessSettingsRepository,
+    private couponRepository: ICouponRepository,
+    private customerRepository: ICustomerRepository
   ) {}
 
   /**
@@ -66,17 +70,42 @@ export class CreateOrderUseCase {
     // 2. Sum up subtotals
     const computedSubtotal = calculatedItems.reduce((acc, item) => acc + item.line_subtotal, 0);
 
+    // 2.5 Verify coupon if provided
+    let verifiedDiscount = 0;
+    if (orderData.money.coupon_code) {
+      const coupon = await this.couponRepository.verify(orderData.money.coupon_code);
+      if (!coupon) {
+        throw new Error('Invalid or expired coupon');
+      }
+
+      // Check minimum cart amount
+      if (computedSubtotal < (coupon.minimum_cart_amount || 0)) {
+        throw new Error(`Minimum order for this coupon is ${coupon.minimum_cart_amount}`);
+      }
+
+      // Calculate discount
+      if (coupon.type === 'percentage') {
+        verifiedDiscount = (computedSubtotal * coupon.amount) / 100;
+      } else {
+        verifiedDiscount = coupon.amount;
+      }
+
+      // Ensure discount doesn't exceed subtotal
+      verifiedDiscount = Math.min(verifiedDiscount, computedSubtotal);
+    }
+
     // 3. Verify calculated vs provided total to ensure consistency
     const expectedTotal =
       computedSubtotal +
       orderData.money.delivery_fee +
       orderData.money.tax_total +
       orderData.money.tips -
-      orderData.money.discount;
+      verifiedDiscount;
 
     const sanitizedMoney = {
       ...orderData.money,
       subtotal: computedSubtotal,
+      discount: verifiedDiscount, // Use verified discount
       total_amount: expectedTotal,
     };
 
@@ -88,6 +117,26 @@ export class CreateOrderUseCase {
     };
 
     const order = await this.orderRepository.create(sanitizedData);
+
+    const customerId =
+      typeof order.customer_id === 'string'
+        ? order.customer_id
+        : order.customer_id != null
+          ? String(order.customer_id)
+          : '';
+    if (customerId) {
+      const at = order.created_at ? new Date(order.created_at) : new Date();
+      try {
+        await this.customerRepository.update(
+          customerId,
+          { last_order_at: at },
+          order.business_id || undefined
+        );
+      } catch (e) {
+        console.warn('[CreateOrderUseCase] Could not update customer last_order_at:', e);
+      }
+    }
+
     return order;
   }
 }

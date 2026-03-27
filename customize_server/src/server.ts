@@ -27,6 +27,7 @@ import modifierGroupRoutes from './application/routes/modifier-group.routes';
 import modifierRoutes from './application/routes/modifier.routes';
 import itemSizeRoutes from './application/routes/item-size.routes';
 import importRoutes from './application/routes/import.routes';
+import exportRoutes from './application/routes/export.routes';
 import permissionRoutes from './application/routes/permission.routes';
 import priceRoutes from './application/routes/price.routes';
 import kitchenSectionRoutes from './application/routes/kitchen-section.routes';
@@ -37,6 +38,7 @@ import testimonialRoutes from './application/routes/testimonial.routes';
 import orderRoutes from './application/routes/order.routes';
 import templateRoutes from './application/routes/template.routes';
 import printerRoutes from './application/routes/printer.routes';
+import printerLogRoutes from './application/routes/printer-log.routes';
 import printJobRoutes from './application/routes/print-job.routes';
 import transactionRoutes from './application/routes/transaction.routes';
 import { env } from './shared/config/env';
@@ -176,6 +178,7 @@ app.use(`${env.API_BASE_URL}/sizes`, itemSizeRoutes); // Nested routes for item 
 app.use(`${env.API_BASE_URL}/customers`, customerRoutes);
 app.use(`${env.API_BASE_URL}/modifier-groups`, modifierGroupRoutes);
 app.use(`${env.API_BASE_URL}/import`, importRoutes);
+app.use(`${env.API_BASE_URL}/export`, exportRoutes);
 app.use(`${env.API_BASE_URL}/kitchen-sections`, kitchenSectionRoutes);
 app.use(`${env.API_BASE_URL}`, modifierRoutes);
 app.use(`${env.API_BASE_URL}/prices`, priceRoutes);
@@ -187,6 +190,7 @@ app.use(`${env.API_BASE_URL}/testimonials`, testimonialRoutes);
 app.use(`${env.API_BASE_URL}/orders`, orderRoutes);
 app.use(`${env.API_BASE_URL}/templates`, templateRoutes);
 app.use(`${env.API_BASE_URL}/printers`, printerRoutes);
+app.use(`${env.API_BASE_URL}/printer-logs`, printerLogRoutes);
 app.use(`${env.API_BASE_URL}/print-jobs`, printJobRoutes);
 app.use(`${env.API_BASE_URL}/transactions`, transactionRoutes);
 
@@ -218,6 +222,13 @@ const startServer = async () => {
         pingInterval: 25000,
       });
       app.set('io', io);
+
+      io.on('connection', (socket) => {
+        socket.on('join', (userId: string) => {
+          if (userId) socket.join(userId);
+        });
+      });
+
       registerOrderPrintHandler();
       startPrinterStatusMonitor(io, 30_000);
       autoOrderManager.start();

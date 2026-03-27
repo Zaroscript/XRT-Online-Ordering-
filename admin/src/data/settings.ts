@@ -24,9 +24,8 @@ export const useUpdateSettingsMutation = () => {
     onSuccess: (data: any) => {
       updateSettings(data?.options || data);
       setMaintenanceDetails(
-        data?.options?.maintenance?.isUnderMaintenance ||
-          (data as any)?.maintenance?.isUnderMaintenance,
-        data?.options?.maintenance || (data as any)?.maintenance,
+        Boolean(data?.options?.isUnderMaintenance),
+        data?.options?.maintenance ?? (data as any)?.maintenance,
       );
       toast.success(t('common:successfully-updated'));
     },

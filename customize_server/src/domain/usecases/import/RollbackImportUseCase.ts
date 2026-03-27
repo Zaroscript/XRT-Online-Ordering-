@@ -27,8 +27,11 @@ export class RollbackImportUseCase {
     this.categoryRepository = new CategoryRepository();
   }
 
-  async execute(sessionId: string, user_id: string): Promise<void> {
-    const session = await this.importSessionRepository.findById(sessionId, user_id);
+  async execute(sessionId: string, user_id: string, bypassUserScope = false): Promise<void> {
+    const session = await this.importSessionRepository.findById(
+      sessionId,
+      bypassUserScope ? undefined : user_id
+    );
 
     if (!session) {
       throw new ValidationError('Import session not found');
@@ -62,7 +65,7 @@ export class RollbackImportUseCase {
     }
 
     // Update status
-    await this.importSessionRepository.update(sessionId, user_id, {
+    await this.importSessionRepository.update(sessionId, session.user_id, {
       status: 'rolled_back',
     });
   }

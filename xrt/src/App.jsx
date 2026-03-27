@@ -6,23 +6,23 @@ import AppRoutes from "./routes/AppRoutes.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import AdsPopup from "./Component/Ads/AdsPopup.jsx";
 import LoadingPage from "./Component/UI/LoadingPage.jsx";
+import MaintenanceScreen from "./Component/Maintenance/MaintenanceScreen.jsx";
 
 import { useEffect } from "react";
 import { useSiteSettingsQuery } from "./api/hooks/useSiteSettings";
 import { resolveImageUrl } from "./utils/resolveImageUrl";
+import { isMaintenanceBlocking } from "./utils/siteMaintenance";
+import { useSiteDocumentMeta } from "./hooks/useSiteDocumentMeta";
 
 function App() {
-  const { siteTitle, logo, isLoading } = useSiteSettingsQuery();
+  const query = useSiteSettingsQuery();
+  const { logo, isLoading, data } = query;
   const logoSrc =
     logo && typeof logo === "object"
       ? resolveImageUrl(logo?.original ?? logo?.thumbnail ?? "")
       : resolveImageUrl(typeof logo === "string" ? logo : "");
 
-  useEffect(() => {
-    if (siteTitle) {
-      document.title = siteTitle;
-    }
-  }, [siteTitle]);
+  useSiteDocumentMeta(data);
 
   useEffect(() => {
     if (!logoSrc) return;
@@ -38,6 +38,10 @@ function App() {
 
   if (isLoading) {
     return <LoadingPage />;
+  }
+
+  if (isMaintenanceBlocking(data)) {
+    return <MaintenanceScreen settings={data} />;
   }
 
   return (

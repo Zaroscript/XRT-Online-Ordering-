@@ -52,14 +52,18 @@ export interface UpdateImportSessionInput {
 }
 
 export const importClient = {
-  parse: async (input: ParseImportInput) => {
+  parseFile: async (
+    file: File,
+    entity_type?: string,
+    business_id?: string
+  ) => {
     const formData = new FormData();
-    formData.append('file', input.file);
-    if (input.business_id) {
-      formData.append('business_id', input.business_id);
+    formData.append('file', file);
+    if (business_id) {
+      formData.append('business_id', business_id);
     }
-    if (input.entity_type) {
-      formData.append('entity_type', input.entity_type);
+    if (entity_type) {
+      formData.append('entity_type', entity_type);
     }
     // Content-Type is omitted by http-client when data is FormData so browser sets multipart/form-data with boundary
     const response = await HttpClient.post<{
@@ -145,10 +149,12 @@ export const importClient = {
   },
 
   downloadErrors: async (id: string): Promise<Blob> => {
-    const response = await HttpClient.get(`import/sessions/${id}/errors`, {
-      responseType: 'blob',
-    });
-    return response as Blob;
+    const response = await HttpClient.get<Blob>(
+      `import/sessions/${id}/errors`,
+      undefined,
+      { responseType: 'blob' },
+    );
+    return response instanceof Blob ? response : new Blob([response as BlobPart]);
   },
 
   rollbackSession: async (id: string) => {

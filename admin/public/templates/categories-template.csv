@@ -1,0 +1,3 @@
+name,description,sort_order,is_active,kitchen_section_name
+"Appetizers","Start your meal with these",1,true,"Grill"
+"Main Course","Hearty main dishes",2,true,"Kitchen"

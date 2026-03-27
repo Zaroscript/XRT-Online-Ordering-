@@ -3,6 +3,7 @@ import { useTranslation } from 'next-i18next';
 import dayjs from 'dayjs';
 import ListItemPrice from '@/components/price/list-item-price';
 import { useIsRTL } from '@/utils/locals';
+import cn from 'classnames';
 
 type TransactionDetailsModalProps = {
   transaction: any;
@@ -14,13 +15,29 @@ const TransactionDetailsModal = ({
   onClose,
 }: TransactionDetailsModalProps) => {
   const { t } = useTranslation();
+  const { t: tCommon } = useTranslation('common');
   const { alignLeft, alignRight } = useIsRTL();
   const order = transaction.order_id || {};
   const customer = transaction.customer_id || {};
+  const isRefundTx =
+    Number(transaction?.amount) < 0 || transaction?.metadata?.type === 'refund';
 
   return (
     <Modal open={true} onClose={onClose}>
-      <div className="bg-light p-6 md:p-8 w-full max-w-4xl overflow-hidden rounded-xl">
+      <div
+        className={cn(
+          'relative z-10 p-6 md:p-8 w-full max-w-4xl overflow-hidden rounded-xl shadow-xl',
+          isRefundTx
+            ? 'bg-amber-50 ring-2 ring-amber-200'
+            : 'bg-white ring-1 ring-border-200'
+        )}
+      >
+        {isRefundTx && (
+          <div className="mb-4 rounded-lg border border-amber-400 bg-amber-100 px-4 py-3 text-sm font-semibold text-amber-950">
+            {tCommon('text-transaction-kind-refund')}
+            {order.order_number ? ` · #${order.order_number}` : ''}
+          </div>
+        )}
         <div className="flex items-center justify-between mb-6 border-b border-border-200 pb-4">
           <h2 className="text-xl font-bold text-heading">
             {t('common:text-transaction-details')} - {order.order_number || 'N/A'}
@@ -52,6 +69,13 @@ const TransactionDetailsModal = ({
 
               <span className="text-body">{t('table:table-item-order-type')}:</span>
               <span className="font-medium text-heading capitalize">{order.order_type}</span>
+
+              <span className="text-body">{t('table:table-item-service-time')}:</span>
+              <span className="font-medium text-heading capitalize">
+                {order.service_time_type === 'Schedule' && order.schedule_time 
+                  ? `${order.service_time_type} (${dayjs(order.schedule_time).format('MM/DD/YYYY HH:mm')})`
+                  : (order.service_time_type || 'ASAP')}
+              </span>
 
               <span className="text-body">{t('table:table-item-payment-gateway')}:</span>
               <span className="font-medium text-heading uppercase">{transaction.gateway}</span>
@@ -123,7 +147,12 @@ const TransactionDetailsModal = ({
                 <span>-{order.money.rewards_points_used} pts</span>
               </div>
             )}
-            <div className="flex justify-between border-t border-border-200 pt-2 font-bold text-heading text-lg">
+            <div
+              className={cn(
+                'flex justify-between border-t border-border-200 pt-2 font-bold text-lg',
+                isRefundTx ? 'text-amber-900' : 'text-heading'
+              )}
+            >
               <span>{t('table:table-item-total')}</span>
               <ListItemPrice value={transaction.amount} />
             </div>

@@ -1,13 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
-import { Table } from '@/components/ui/table';
 import Card from '@/components/common/card';
-import Input from '@/components/ui/input';
-import Badge from '@/components/ui/badge/badge';
 import { ImportSession } from '@/data/client/import';
 import Button from '@/components/ui/button';
-import { TrashIcon } from '@/components/icons/trash';
 import { PlusIcon } from '@/components/icons/plus-icon';
+
+import EntityReviewTable from './entity-review-table';
+import { ImportSummaryCard } from './ImportSummaryCard';
+import {
+  getCategoryColumns,
+  getItemColumns,
+  getSizeColumns,
+  getModifierGroupColumns,
+  getModifierColumns,
+} from './columns';
 
 interface ImportReviewModuleProps {
   session: ImportSession;
@@ -43,6 +49,10 @@ export default function ImportReviewModule({
 
   const errors = session.validationErrors ?? [];
   const warnings = session.validationWarnings ?? [];
+  const hasErrors = errors.length > 0;
+  const hasWarnings = warnings.length > 0;
+
+  const [detailsVisible, setDetailsVisible] = useState(hasErrors || hasWarnings);
 
   const getRowErrors = (entity: string, index: number) => {
     return errors.filter(
@@ -91,8 +101,7 @@ export default function ImportReviewModule({
     };
   }, []);
 
-  const hasErrors = errors.length > 0;
-  const hasWarnings = warnings.length > 0;
+
 
   const updateData = (
     entity: keyof typeof editedData,
@@ -159,786 +168,14 @@ export default function ImportReviewModule({
     onSaveDraft(editedData);
   };
 
-  const categoriesColumns = [
-    {
-      title: t('common:status'),
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (_: any, record: any, index: number) => {
-        const errors = getRowErrors('Category', index);
-        const warnings = getRowWarnings('Category', index);
-        if (errors.length > 0)
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={errors.map((e) => e.message).join(' · ')}>
-                <Badge text={t('common:error')} color="bg-red-500" />
-              </span>
-              <span
-                className="text-xs text-red-600 dark:text-red-400 truncate"
-                title={errors.map((e) => e.message).join(' · ')}
-              >
-                {displayMessage(errors[0])}
-              </span>
-            </div>
-          );
-        if (warnings.length > 0)
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={warnings.map((w) => w.message).join(' · ')}>
-                <Badge text={t('common:warning')} color="bg-amber-500" />
-              </span>
-              <span
-                className="text-xs text-amber-700 dark:text-amber-300 truncate"
-                title={warnings.map((w) => w.message).join(' · ')}
-              >
-                {displayMessage(warnings[0])}
-              </span>
-            </div>
-          );
-        return <Badge text={t('common:valid')} color="bg-accent" />;
-      },
-    },
-    {
-      title: t('common:name'),
-      dataIndex: 'name',
-      key: 'name',
-      width: 200,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`category_name_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('categories' as any, index, 'name', e.target.value)
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:description'),
-      dataIndex: 'description',
-      key: 'description',
-      width: 250,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`category_description_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData(
-              'categories' as any,
-              index,
-              'description',
-              e.target.value,
-            )
-          }
-          className="text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:sort-order'),
-      dataIndex: 'sort_order',
-      key: 'sort_order',
-      width: 120,
-      render: (value: number, record: any, index: number) => (
-        <Input
-          name={`category_sort_order_${index}`}
-          type="number"
-          value={value || 0}
-          onChange={(e) =>
-            updateData(
-              'categories' as any,
-              index,
-              'sort_order',
-              parseInt(e.target.value) || 0,
-            )
-          }
-          className="text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:kitchen-section'),
-      dataIndex: 'kitchen_section_name',
-      key: 'kitchen_section_name',
-      width: 200,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`category_kitchen_section_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData(
-              'categories' as any,
-              index,
-              'kitchen_section_name',
-              e.target.value,
-            )
-          }
-          className="text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:active'),
-      dataIndex: 'is_active',
-      key: 'is_active',
-      width: 100,
-      render: (value: boolean, record: any, index: number) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={value !== false}
-            onChange={(e) =>
-              updateData(
-                'categories' as any,
-                index,
-                'is_active',
-                e.target.checked,
-              )
-            }
-            className="h-4 w-4 rounded border-border-200 text-accent focus:ring-accent"
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('common:actions'),
-      dataIndex: 'action',
-      key: 'action',
-      width: 50,
-      render: (_: any, __: any, index: number) => (
-        <div className="flex justify-center">
-          <button
-            onClick={() => removeData('categories', index)}
-            className="text-red-500 transition-colors hover:text-red-700"
-          >
-            <TrashIcon className="h-4 w-4" />
-          </button>
-        </div>
-      ),
-    },
-  ];
-
-  const itemsColumns = [
-    {
-      title: t('common:status'),
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (_: any, record: any, index: number) => {
-        const errors = getRowErrors('Item', index);
-        const warnings = getRowWarnings('Item', index);
-        if (errors.length > 0) {
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={errors.map((e) => e.message).join(' · ')}>
-                <Badge text={t('common:error')} color="bg-red-500" />
-              </span>
-              <span
-                className="text-xs text-red-600 dark:text-red-400 truncate"
-                title={errors.map((e) => e.message).join(' · ')}
-              >
-                {displayMessage(errors[0])}
-              </span>
-            </div>
-          );
-        }
-        if (warnings.length > 0) {
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={warnings.map((w) => w.message).join(' · ')}>
-                <Badge text={t('common:warning')} color="bg-amber-500" />
-              </span>
-              <span
-                className="text-xs text-amber-700 dark:text-amber-300 truncate"
-                title={warnings.map((w) => w.message).join(' · ')}
-              >
-                {displayMessage(warnings[0])}
-              </span>
-            </div>
-          );
-        }
-        return <Badge text={t('common:valid')} color="bg-accent" />;
-      },
-    },
-    {
-      title: t('common:name'),
-      dataIndex: 'name',
-      key: 'name',
-      width: 200,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`item_name_${index}`}
-          value={value || ''}
-          onChange={(e) => updateData('items', index, 'name', e.target.value)}
-          className="text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:category-name'),
-      dataIndex: 'category_name',
-      key: 'category_name',
-      width: 200,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`item_category_name_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('items', index, 'category_name', e.target.value)
-          }
-          className="text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:description'),
-      dataIndex: 'description',
-      key: 'description',
-      width: 250,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`item_description_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('items', index, 'description', e.target.value)
-          }
-          className="text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:sort-order'),
-      dataIndex: 'sort_order',
-      key: 'sort_order',
-      width: 100,
-      render: (value: number, record: any, index: number) => (
-        <Input
-          name={`item_sort_order_${index}`}
-          type="number"
-          value={value || 0}
-          onChange={(e) =>
-            updateData(
-              'items',
-              index,
-              'sort_order',
-              parseInt(e.target.value) || 0,
-            )
-          }
-          className="text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:active'),
-      dataIndex: 'is_active',
-      key: 'is_active',
-      width: 100,
-      render: (value: boolean, record: any, index: number) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={value !== false}
-            onChange={(e) =>
-              updateData('items', index, 'is_active', e.target.checked)
-            }
-            className="h-4 w-4 rounded border-border-200 text-accent focus:ring-accent"
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('common:actions'),
-      dataIndex: 'action',
-      key: 'action',
-      width: 50,
-      render: (_: any, __: any, index: number) => (
-        <div className="flex justify-center">
-          <button
-            onClick={() => removeData('items', index)}
-            className="text-red-500 transition-colors hover:text-red-700"
-          >
-            <TrashIcon className="h-4 w-4" />
-          </button>
-        </div>
-      ),
-    },
-  ];
-
-  const sizesColumns = [
-    {
-      title: t('common:status'),
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (_: any, record: any, index: number) => {
-        const errors = getRowErrors('ItemSize', index);
-        const warnings = getRowWarnings('ItemSize', index);
-        if (errors.length > 0) {
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={errors.map((e) => e.message).join(' · ')}>
-                <Badge text={t('common:error')} color="bg-red-500" />
-              </span>
-              <span
-                className="text-xs text-red-600 dark:text-red-400 truncate"
-                title={errors.map((e) => e.message).join(' · ')}
-              >
-                {displayMessage(errors[0])}
-              </span>
-            </div>
-          );
-        }
-        if (warnings.length > 0) {
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={warnings.map((w) => w.message).join(' · ')}>
-                <Badge text={t('common:warning')} color="bg-amber-500" />
-              </span>
-              <span
-                className="text-xs text-amber-700 dark:text-amber-300 truncate"
-                title={warnings.map((w) => w.message).join(' · ')}
-              >
-                {displayMessage(warnings[0])}
-              </span>
-            </div>
-          );
-        }
-        return <Badge text={t('common:valid')} color="bg-accent" />;
-      },
-    },
-    {
-      title: t('common:size-code'),
-      dataIndex: 'size_code',
-      key: 'size_code',
-      width: 120,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`size_code_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('itemSizes', index, 'size_code', e.target.value)
-          }
-          className="text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:name'),
-      dataIndex: 'name',
-      key: 'name',
-      width: 150,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`size_name_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('itemSizes', index, 'name', e.target.value)
-          }
-          className="text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:actions'),
-      dataIndex: 'action',
-      key: 'action',
-      width: 50,
-      render: (_: any, __: any, index: number) => (
-        <div className="flex justify-center">
-          <button
-            onClick={() => removeData('itemSizes', index)}
-            className="text-red-500 transition-colors hover:text-red-700"
-          >
-            <TrashIcon className="h-4 w-4" />
-          </button>
-        </div>
-      ),
-    },
-  ];
-
-  const groupsColumns = [
-    {
-      title: t('common:status'),
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (_: any, record: any, index: number) => {
-        const errors = getRowErrors('ModifierGroup', index);
-        const warnings = getRowWarnings('ModifierGroup', index);
-        if (errors.length > 0) {
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={errors.map((e) => e.message).join(' · ')}>
-                <Badge text={t('common:error')} color="bg-red-500" />
-              </span>
-              <span
-                className="text-xs text-red-600 dark:text-red-400 truncate"
-                title={errors.map((e) => e.message).join(' · ')}
-              >
-                {displayMessage(errors[0])}
-              </span>
-            </div>
-          );
-        }
-        if (warnings.length > 0) {
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={warnings.map((w) => w.message).join(' · ')}>
-                <Badge text={t('common:warning')} color="bg-amber-500" />
-              </span>
-              <span
-                className="text-xs text-amber-700 dark:text-amber-300 truncate"
-                title={warnings.map((w) => w.message).join(' · ')}
-              >
-                {displayMessage(warnings[0])}
-              </span>
-            </div>
-          );
-        }
-        return <Badge text={t('common:valid')} color="bg-accent" />;
-      },
-    },
-    {
-      title: t('common:name'),
-      dataIndex: 'name',
-      key: 'name',
-      width: 200,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`group_name_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('modifierGroups', index, 'name', e.target.value)
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:display-name'),
-      dataIndex: 'display_name',
-      key: 'display_name',
-      width: 200,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`group_display_name_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('modifierGroups', index, 'display_name', e.target.value)
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:display-type'),
-      dataIndex: 'display_type',
-      key: 'display_type',
-      width: 150,
-      render: (value: string, record: any, index: number) => (
-        <select
-          value={value || 'RADIO'}
-          onChange={(e) =>
-            updateData('modifierGroups', index, 'display_type', e.target.value)
-          }
-          className="h-9 w-full rounded border border-border-200 bg-light px-3 text-sm font-medium text-heading focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none"
-        >
-          <option value="RADIO">RADIO</option>
-          <option value="CHECKBOX">CHECKBOX</option>
-        </select>
-      ),
-    },
-    {
-      title: t('common:min-select'),
-      dataIndex: 'min_select',
-      key: 'min_select',
-      width: 100,
-      render: (value: number, record: any, index: number) => (
-        <Input
-          name={`group_min_select_${index}`}
-          type="number"
-          value={value || 0}
-          onChange={(e) =>
-            updateData(
-              'modifierGroups',
-              index,
-              'min_select',
-              parseInt(e.target.value) || 0,
-            )
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:max-select'),
-      dataIndex: 'max_select',
-      key: 'max_select',
-      width: 100,
-      render: (value: number, record: any, index: number) => (
-        <Input
-          name={`group_max_select_${index}`}
-          type="number"
-          value={value || 1}
-          onChange={(e) =>
-            updateData(
-              'modifierGroups',
-              index,
-              'max_select',
-              parseInt(e.target.value) || 1,
-            )
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:sort-order'),
-      dataIndex: 'sort_order',
-      key: 'sort_order',
-      width: 100,
-      render: (value: number, record: any, index: number) => (
-        <Input
-          name={`group_sort_order_${index}`}
-          type="number"
-          value={value || 0}
-          onChange={(e) =>
-            updateData(
-              'modifierGroups',
-              index,
-              'sort_order',
-              parseInt(e.target.value) || 0,
-            )
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:active'),
-      dataIndex: 'is_active',
-      key: 'is_active',
-      width: 100,
-      render: (value: boolean, record: any, index: number) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={value !== false}
-            onChange={(e) =>
-              updateData('modifierGroups', index, 'is_active', e.target.checked)
-            }
-            className="h-4 w-4 rounded border-border-200 text-accent focus:ring-accent"
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('common:actions'),
-      dataIndex: 'action',
-      key: 'action',
-      width: 50,
-      render: (_: any, __: any, index: number) => (
-        <div className="flex justify-center">
-          <button
-            onClick={() => removeData('modifierGroups', index)}
-            className="text-red-500 transition-colors hover:text-red-700"
-          >
-            <TrashIcon className="h-4 w-4" />
-          </button>
-        </div>
-      ),
-    },
-  ];
-
-  const modifiersColumns = [
-    {
-      title: t('common:status'),
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (_: any, record: any, index: number) => {
-        const errors = getRowErrors('Modifier', index);
-        const warnings = getRowWarnings('Modifier', index);
-        if (errors.length > 0) {
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={errors.map((e) => e.message).join(' · ')}>
-                <Badge text={t('common:error')} color="bg-red-500" />
-              </span>
-              <span
-                className="text-xs text-red-600 dark:text-red-400 truncate"
-                title={errors.map((e) => e.message).join(' · ')}
-              >
-                {displayMessage(errors[0])}
-              </span>
-            </div>
-          );
-        }
-        if (warnings.length > 0) {
-          return (
-            <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
-              <span title={warnings.map((w) => w.message).join(' · ')}>
-                <Badge text={t('common:warning')} color="bg-amber-500" />
-              </span>
-              <span
-                className="text-xs text-amber-700 dark:text-amber-300 truncate"
-                title={warnings.map((w) => w.message).join(' · ')}
-              >
-                {displayMessage(warnings[0])}
-              </span>
-            </div>
-          );
-        }
-        return <Badge text={t('common:valid')} color="bg-accent" />;
-      },
-    },
-    {
-      title: t('common:group-key'),
-      dataIndex: 'group_key',
-      key: 'group_key',
-      width: 150,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`modifier_group_key_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('modifiers', index, 'group_key', e.target.value)
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:modifier-key'),
-      dataIndex: 'modifier_key',
-      key: 'modifier_key',
-      width: 150,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`modifier_key_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('modifiers', index, 'modifier_key', e.target.value)
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:name'),
-      dataIndex: 'name',
-      key: 'name',
-      width: 200,
-      render: (value: string, record: any, index: number) => (
-        <Input
-          name={`modifier_name_${index}`}
-          value={value || ''}
-          onChange={(e) =>
-            updateData('modifiers', index, 'name', e.target.value)
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:max-quantity'),
-      dataIndex: 'max_quantity',
-      key: 'max_quantity',
-      width: 120,
-      render: (value: number, record: any, index: number) => (
-        <Input
-          name={`modifier_max_quantity_${index}`}
-          type="number"
-          value={value || ''}
-          onChange={(e) =>
-            updateData(
-              'modifiers',
-              index,
-              'max_quantity',
-              parseInt(e.target.value) || undefined,
-            )
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:is-default'),
-      dataIndex: 'is_default',
-      key: 'is_default',
-      width: 100,
-      render: (value: boolean, record: any, index: number) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={value || false}
-            onChange={(e) =>
-              updateData('modifiers', index, 'is_default', e.target.checked)
-            }
-            className="h-4 w-4 rounded border-border-200 text-accent focus:ring-accent"
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('common:sort-order'),
-      dataIndex: 'display_order',
-      key: 'display_order',
-      width: 100,
-      render: (value: number, record: any, index: number) => (
-        <Input
-          name={`modifier_display_order_${index}`}
-          type="number"
-          value={value || 0}
-          onChange={(e) =>
-            updateData(
-              'modifiers',
-              index,
-              'display_order',
-              parseInt(e.target.value) || 0,
-            )
-          }
-          className="!text-sm"
-        />
-      ),
-    },
-    {
-      title: t('common:active'),
-      dataIndex: 'is_active',
-      key: 'is_active',
-      width: 100,
-      render: (value: boolean, record: any, index: number) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={value !== false}
-            onChange={(e) =>
-              updateData('modifiers', index, 'is_active', e.target.checked)
-            }
-            className="h-4 w-4 rounded border-border-200 text-accent focus:ring-accent"
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('common:actions'),
-      dataIndex: 'action',
-      key: 'action',
-      width: 50,
-      render: (_: any, __: any, index: number) => (
-        <div className="flex justify-center">
-          <button
-            onClick={() => removeData('modifiers', index)}
-            className="text-red-500 transition-colors hover:text-red-700"
-          >
-            <TrashIcon className="h-4 w-4" />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  // Shared props for columns getters
+  const columnProps = {
+    t,
+    updateData,
+    removeData,
+    getRowErrors,
+    getRowWarnings,
+  };
 
   const tabs = [
     {
@@ -946,31 +183,35 @@ export default function ImportReviewModule({
       label: t('common:categories'),
       count: editedData.categories?.length || 0,
     },
-    { key: 'items', label: t('common:items'), count: editedData.items.length },
+    {
+      key: 'items',
+      label: t('common:items'),
+      count: editedData.items?.length ?? 0,
+    },
     {
       key: 'sizes',
       label: t('common:sizes'),
-      count: editedData.itemSizes.length,
+      count: editedData.itemSizes?.length ?? 0,
     },
     {
       key: 'groups',
       label: t('common:modifier-groups'),
-      count: editedData.modifierGroups.length,
+      count: editedData.modifierGroups?.length ?? 0,
     },
     {
       key: 'modifiers',
       label: t('common:modifiers'),
-      count: editedData.modifiers.length,
+      count: editedData.modifiers?.length ?? 0,
     },
   ];
 
   const getActiveData = () => {
     const map: Record<string, any[]> = {
       categories: editedData.categories || [],
-      items: editedData.items,
-      sizes: editedData.itemSizes,
-      groups: editedData.modifierGroups,
-      modifiers: editedData.modifiers,
+      items: editedData.items || [],
+      sizes: editedData.itemSizes || [],
+      groups: editedData.modifierGroups || [],
+      modifiers: editedData.modifiers || [],
     };
     return map[activeTab] || [];
   };
@@ -979,8 +220,26 @@ export default function ImportReviewModule({
   const isEmpty = !activeData.length;
 
   return (
-    <Card className="border border-border-200 shadow-sm bg-light">
-      {/* Errors & Warnings list - show where each error is */}
+    <div className="space-y-6">
+      {!hasErrors && !hasWarnings && (
+        <ImportSummaryCard
+          counts={{
+            categories: editedData.categories?.length || 0,
+            items: editedData.items?.length || 0,
+            sizes: editedData.itemSizes?.length || 0,
+            modifierGroups: editedData.modifierGroups?.length || 0,
+            modifiers: editedData.modifiers?.length || 0,
+          }}
+          onSave={handleSave}
+          isSaving={isUpdating}
+          detailsVisible={detailsVisible}
+          onToggleDetails={() => setDetailsVisible((v) => !v)}
+        />
+      )}
+
+      {detailsVisible && (
+        <Card className="border border-border-200 shadow-sm bg-light">
+      {/* Errors & Warnings list */}
       {(hasErrors || hasWarnings) && (
         <div className="mb-6 space-y-4">
           {hasErrors && (
@@ -1077,124 +336,75 @@ export default function ImportReviewModule({
       </div>
 
       <div className="overflow-x-auto min-h-[120px]">
-        {activeTab === 'categories' &&
-          (isEmpty ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-              <p className="text-sm font-semibold text-heading">
-                {t('common:no-rows-in-tab')}
-              </p>
-              <p className="mt-1 text-xs font-medium text-body">
-                {t('common:categories')}
-              </p>
-            </div>
-          ) : (
-            <Table
-              columns={categoriesColumns}
-              data={editedData.categories || []}
-              rowKey={(record, index) => `category-${index}`}
-              rowClassName={(_, index) =>
-                highlightTabKey === 'categories' && highlightRowIndex === index
-                  ? '!bg-amber-100 dark:!bg-amber-900/30'
-                  : ''
-              }
-              scroll={{ x: 1000 }}
-            />
-          ))}
-        {activeTab === 'items' &&
-          (isEmpty ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-              <p className="text-sm font-semibold text-heading">
-                {t('common:no-rows-in-tab')}
-              </p>
-              <p className="mt-1 text-xs font-medium text-body">
-                {t('common:items')}
-              </p>
-            </div>
-          ) : (
-            <Table
-              columns={itemsColumns}
-              data={editedData.items}
-              rowKey={(record, index) => `item-${index}`}
-              rowClassName={(_, index) =>
-                highlightTabKey === 'items' && highlightRowIndex === index
-                  ? '!bg-amber-100 dark:!bg-amber-900/30'
-                  : ''
-              }
-              scroll={{ x: 1200 }}
-            />
-          ))}
+        {activeTab === 'categories' && (
+          <EntityReviewTable
+            columns={getCategoryColumns(columnProps)}
+            data={editedData.categories || []}
+            rowKeyPrefix="category"
+            isEmpty={isEmpty}
+            entityNameLabel={t('common:categories')}
+            highlightTabKey={highlightTabKey}
+            highlightRowIndex={highlightRowIndex}
+            currentTabKey="categories"
+            scrollX={1000}
+          />
+        )}
 
-        {activeTab === 'sizes' &&
-          (isEmpty ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-              <p className="text-sm font-semibold text-heading">
-                {t('common:no-rows-in-tab')}
-              </p>
-              <p className="mt-1 text-xs font-medium text-body">
-                {t('common:sizes')}
-              </p>
-            </div>
-          ) : (
-            <Table
-              columns={sizesColumns}
-              data={editedData.itemSizes}
-              rowKey={(record, index) => `size-${index}`}
-              rowClassName={(_, index) =>
-                highlightTabKey === 'sizes' && highlightRowIndex === index
-                  ? '!bg-amber-100 dark:!bg-amber-900/30'
-                  : ''
-              }
-              scroll={{ x: 1000 }}
-            />
-          ))}
+        {activeTab === 'items' && (
+          <EntityReviewTable
+            columns={getItemColumns(columnProps)}
+            data={editedData.items || []}
+            rowKeyPrefix="item"
+            isEmpty={isEmpty}
+            entityNameLabel={t('common:items')}
+            highlightTabKey={highlightTabKey}
+            highlightRowIndex={highlightRowIndex}
+            currentTabKey="items"
+            scrollX={1200}
+          />
+        )}
 
-        {activeTab === 'groups' &&
-          (isEmpty ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-              <p className="text-sm font-semibold text-heading">
-                {t('common:no-rows-in-tab')}
-              </p>
-              <p className="mt-1 text-xs font-medium text-body">
-                {t('common:modifier-groups')}
-              </p>
-            </div>
-          ) : (
-            <Table
-              columns={groupsColumns}
-              data={editedData.modifierGroups}
-              rowKey={(record, index) => `group-${index}`}
-              rowClassName={(_, index) =>
-                highlightTabKey === 'groups' && highlightRowIndex === index
-                  ? '!bg-amber-100 dark:!bg-amber-900/30'
-                  : ''
-              }
-              scroll={{ x: 1000 }}
-            />
-          ))}
+        {activeTab === 'sizes' && (
+          <EntityReviewTable
+            columns={getSizeColumns(columnProps)}
+            data={editedData.itemSizes || []}
+            rowKeyPrefix="size"
+            isEmpty={isEmpty}
+            entityNameLabel={t('common:sizes')}
+            highlightTabKey={highlightTabKey}
+            highlightRowIndex={highlightRowIndex}
+            currentTabKey="sizes"
+            scrollX={1000}
+          />
+        )}
 
-        {activeTab === 'modifiers' &&
-          (isEmpty ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-              <p className="text-sm font-semibold text-heading">
-                {t('common:no-rows-in-tab')}
-              </p>
-              <p className="mt-1 text-xs font-medium text-body">
-                {t('common:modifiers')}
-              </p>
-            </div>
-          ) : (
-            <Table
-              columns={modifiersColumns}
-              data={editedData.modifiers}
-              rowKey={(record, index) => `modifier-${index}`}
-              rowClassName={(_, index) =>
-                highlightTabKey === 'modifiers' && highlightRowIndex === index
-                  ? '!bg-amber-100 dark:!bg-amber-900/30'
-                  : ''
-              }
-              scroll={{ x: 1000 }}
-            />
-          ))}
+        {activeTab === 'groups' && (
+          <EntityReviewTable
+            columns={getModifierGroupColumns(columnProps)}
+            data={editedData.modifierGroups || []}
+            rowKeyPrefix="group"
+            isEmpty={isEmpty}
+            entityNameLabel={t('common:modifier-groups')}
+            highlightTabKey={highlightTabKey}
+            highlightRowIndex={highlightRowIndex}
+            currentTabKey="groups"
+            scrollX={1000}
+          />
+        )}
+
+        {activeTab === 'modifiers' && (
+          <EntityReviewTable
+            columns={getModifierColumns(columnProps)}
+            data={editedData.modifiers || []}
+            rowKeyPrefix="modifier"
+            isEmpty={isEmpty}
+            entityNameLabel={t('common:modifiers')}
+            highlightTabKey={highlightTabKey}
+            highlightRowIndex={highlightRowIndex}
+            currentTabKey="modifiers"
+            scrollX={1000}
+          />
+        )}
       </div>
 
       <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
@@ -1224,5 +434,7 @@ export default function ImportReviewModule({
         </Button>
       </div>
     </Card>
+      )}
+    </div>
   );
 }

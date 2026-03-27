@@ -1,0 +1,3 @@
+name,description,category_name,sort_order,is_active
+"Cheeseburger","Classic burger with cheese","Main Course",1,true
+"French Fries","Crispy golden fries","Appetizers",2,true

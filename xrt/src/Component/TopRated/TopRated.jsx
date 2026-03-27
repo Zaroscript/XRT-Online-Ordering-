@@ -1,13 +1,40 @@
-import React from "react";
-import { coupons, Top_Rated_Items } from "./../../config/constants";
+import React, { useMemo } from "react";
+import { coupons } from "./../../config/constants";
 import Items from "./Items";
 import { COLORS } from "../../config/colors";
+import { useProductsQuery } from "@/api";
+import { mapProductToTopRatedItem } from "./topRatedUtils";
 
-export default function TopRated() {
+const MAX_SIGNATURE_ITEMS = 9;
+
+/**
+ * Homepage "Top Rated" strip: filled from items marked `is_signature` in admin (server).
+ * Pass `products` + `productsLoading` from Home to reuse the same fetch; omit both to fetch here.
+ */
+export default function TopRated({ products: productsProp, productsLoading: parentLoading }) {
+  const fromParent = productsProp !== undefined;
+  const { products: productsFromQuery, loading: queryLoading } = useProductsQuery({
+    enabled: !fromParent,
+  });
+
+  const loading = fromParent ? !!parentLoading : queryLoading;
+  const products = fromParent ? productsProp : productsFromQuery ?? [];
+
+  const signatureItems = useMemo(() => {
+    return products
+      .filter((p) => p.is_signature)
+      .slice(0, MAX_SIGNATURE_ITEMS)
+      .map(mapProductToTopRatedItem);
+  }, [products]);
+
   const styleVars = {
     '--text-primary': COLORS.textPrimary,
     '--offer-yellow': COLORS.offerYellow,
   };
+
+  if (!loading && signatureItems.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -32,17 +59,30 @@ export default function TopRated() {
         </div>
 
         <div className="ml-0 lg:ml-[30px] w-full lg:w-[75%]">
-          <h2 className="text-3xl font-[700] text-[var(--text-primary)] mb-3">Top Rated</h2>
+          <h2 className="text-3xl font-[700] text-[var(--text-primary)] mb-3">Top rated</h2>
+          <p className="text-sm text-gray-600 mb-1">Signature &amp; highlighted items from our menu</p>
           <div className="relative  h-[2px] bg-gray-200">
             <div className="absolute left-0 top-0 h-full w-16 bg-green-600" />
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-8">
-            {
-              Top_Rated_Items.map((item, index) => (
-                <Items key={index} item={item} />
-              ))
-            }
-          </div>
+          {loading && signatureItems.length === 0 ? (
+            <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-8 animate-pulse">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="flex gap-3">
+                  <div className="w-[100px] h-[100px] rounded-[10px] bg-gray-200" />
+                  <div className="flex-1 space-y-2 pt-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mt-8">
+              {signatureItems.map((item) => (
+                <Items key={item.id || item.name} item={item} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

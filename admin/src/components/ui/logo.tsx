@@ -2,24 +2,17 @@ import Link from '@/components/ui/link';
 import cn from 'classnames';
 import { siteSettings } from '@/settings/site.settings';
 import { useSettings } from '@/contexts/settings.context';
-import { LogoSVG } from '@/components/icons/logo';
-import LogoText from '@/components/icons/logo-text';
 import { useAtom } from 'jotai';
 import { miniSidebarInitialValue } from '@/utils/constants';
 import { useWindowSize } from '@/utils/use-window-size';
 import { RESPONSIVE_WIDTH } from '@/utils/constants';
-import { useRouter } from 'next/router';
-import { useSettingsQuery } from '@/data/settings';
 import { useEffect, useState } from 'react';
 
 const Logo: React.FC<React.AnchorHTMLAttributes<{}>> = ({
   className,
   ...props
 }) => {
-  const { locale } = useRouter();
-  const { settings } = useSettingsQuery({
-    language: locale!,
-  });
+  const settings = useSettings();
   const [miniSidebar, _] = useAtom(miniSidebarInitialValue);
   const { width } = useWindowSize();
   const [isMounted, setIsMounted] = useState(false);
@@ -47,10 +40,10 @@ const Logo: React.FC<React.AnchorHTMLAttributes<{}>> = ({
         >
           <img
             src={
-              settings?.options?.collapseLogo?.original ??
+              settings?.collapseLogo?.original ??
               siteSettings.collapseLogo.url
             }
-            alt={settings?.options?.siteTitle ?? siteSettings.collapseLogo.alt}
+            alt={settings?.siteTitle ?? siteSettings.collapseLogo.alt}
             style={{
               width: '100%',
               height: '100%',
@@ -67,8 +60,8 @@ const Logo: React.FC<React.AnchorHTMLAttributes<{}>> = ({
           }}
         >
           <img
-            src={settings?.options?.logo?.original ?? siteSettings.logo.url}
-            alt={settings?.options?.siteTitle ?? siteSettings.logo.alt}
+            src={settings?.logo?.original ?? siteSettings.logo.url}
+            alt={settings?.siteTitle ?? siteSettings.logo.alt}
             style={{
               width: '100%',
               height: '100%',

@@ -6,9 +6,11 @@ import Categories from "./Categories_Footer";
 import Categories_2 from "./Categories_Footer_2";
 
 import { useSiteSettingsQuery } from "../../api/hooks/useSiteSettings";
+import SocialLinks from "./SocialLinks";
 
 export default function FooterSection() {
   const { data: settings } = useSiteSettingsQuery();
+  const socials = settings?.contactDetails?.socials;
   return (
     <>
       <div
@@ -44,8 +46,8 @@ export default function FooterSection() {
           </ul>
         </div>
       </div>
-      <div className="bg-[#315234] flex flex-col md:flex-row justify-between items-center py-6 md:py-0 md:h-[60px] px-4 md:px-8 lg:px-[70px] gap-4 md:gap-0">
-        <h2 className="text-[#E1E1E1] text-[16px] text-center md:text-left">
+      <div className="bg-[#315234] flex flex-col gap-4 py-6 md:py-4 px-4 md:px-8 lg:px-[70px] md:flex-row md:flex-wrap md:items-center md:justify-between">
+        <h2 className="text-[#E1E1E1] text-[16px] text-center md:text-left order-2 md:order-1">
           {(() => {
             const text = settings?.copyrightText?.replace(/Powered by XRT/i, '').trim() || '';
             const siteLink = settings?.siteLink || '#';
@@ -65,7 +67,12 @@ export default function FooterSection() {
             );
           })()}
         </h2>
-        <img src={footer_image.pay} alt="" className="max-w-[200px] md:max-w-none" />
+        {socials?.length ? (
+          <div className="order-1 flex w-full justify-center md:order-2 md:w-auto md:flex-1 md:justify-center">
+            <SocialLinks socials={socials} />
+          </div>
+        ) : null}
+        <img src={footer_image.pay} alt="" className="order-3 max-w-[200px] md:max-w-none mx-auto md:mx-0" />
       </div>
     </>
   );

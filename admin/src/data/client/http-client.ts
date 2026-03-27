@@ -183,6 +183,7 @@ interface SearchParamOptions {
 }
 
 export class HttpClient {
+  /** @param params — URL query string object. @param options — extra Axios config (e.g. `{ responseType: 'blob' }`). */
   static async get<T>(url: string, params?: unknown, options?: any) {
     const response = await Axios.get<T>(url, { params, ...options });
     return response.data;

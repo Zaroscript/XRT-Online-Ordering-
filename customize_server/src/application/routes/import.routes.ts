@@ -6,7 +6,7 @@ import { upload } from '../middlewares/upload';
 const router = Router();
 const importController = new ImportController();
 
-// All import routes require authentication and Super Admin role
+// All routes require auth; Super Admin is enforced in ImportController (parse/append included).
 router.use(requireAuth);
 
 // Parse and validate import file

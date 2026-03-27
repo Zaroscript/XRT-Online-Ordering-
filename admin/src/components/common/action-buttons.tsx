@@ -184,9 +184,10 @@ const ActionButtons = ({
       )}
 
       {/* NEW REFUND BUTTON FOR ORDER HISTORY */}
-      {data?.payment_status === 'paid' || data?.payment_status === 'partially_refunded' ? (
+      {((data?.payment_status as string) === 'paid' || (data?.payment_status as string) === 'partially_refunded') &&
+      (data?.payment_status as string) !== 'refunded' ? (
         <button
-          onClick={() => openModal('REFUND_ORDER', { orderId: id, totalAmount: data?.total_amount })}
+          onClick={() => openModal('REFUND_ORDER', { orderId: id, totalAmount: data?.total_amount, trackingNumber: data?.tracking_number })}
           className="transition duration-200 text-red-500 hover:text-red-700 font-medium text-xs border border-red-500 rounded px-2 py-1 ml-2 focus:outline-none"
           title="Refund Order"
         >

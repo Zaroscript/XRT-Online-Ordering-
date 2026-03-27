@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
@@ -15,6 +16,7 @@ import Badge from '@/components/ui/badge/badge';
 import { Routes } from '@/config/routes';
 import { HttpClient } from '@/data/client/http-client';
 import { API_ENDPOINTS } from '@/data/client/api-endpoints';
+import { importClient } from '@/data/client/import';
 import {
   FolderIcon,
   CubeIcon,
@@ -32,70 +34,108 @@ import { BackIcon } from '@/components/icons/back-icon';
 import { useModalAction } from '@/components/ui/modal/modal.context';
 import cn from 'classnames';
 
-const ENTITY_TYPES = [
-  {
-    id: 'categories',
-    name: 'Categories',
-    description: 'Menu categories and kitchen sections',
-    icon: FolderIcon,
-    exportEndpoint: API_ENDPOINTS.CATEGORY_EXPORT,
-    importEndpoint: API_ENDPOINTS.CATEGORY_IMPORT,
-  },
-  {
-    id: 'items',
-    name: 'Items',
-    description: 'Menu items and products',
-    icon: CubeIcon,
-    exportEndpoint: 'items/export',
-    importEndpoint: 'items/import',
-  },
-  {
-    id: 'modifiers',
-    name: 'Modifier Groups',
-    description: 'Modifier groups configuration',
-    icon: AdjustmentsIcon,
-    exportEndpoint: 'modifier-groups/export',
-    importEndpoint: 'modifier-groups/import',
-  },
-  {
-    id: 'modifier_items',
-    name: 'Modifier Items',
-    description: 'Individual modifier options (basics only)',
-    icon: AdjustmentsIcon,
-    exportEndpoint: 'modifiers/export',
-    importEndpoint: 'modifiers/import',
-  },
-  {
-    id: 'sizes',
-    name: 'Sizes',
-    description: 'Item size variations',
-    icon: StackIcon,
-    exportEndpoint: 'sizes/export',
-    importEndpoint: 'sizes/import',
-  },
-];
+import { IMPORT_ENTITIES, ImportEntity } from '@/config/import-entities';
 
 const ImportExportPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'actions' | 'history'>('actions');
   const [exportLoading, setExportLoading] = useState<string | null>(null);
+  const [exportAllLoading, setExportAllLoading] = useState(false);
   const { sessions, isLoading, error } = useImportSessionsQuery();
   const { openModal } = useModalAction();
-  // removed separate mutation and loading state here as it's now handled in the modal
+
+  const [isQuickImporting, setIsQuickImporting] = useState(false);
+  const [quickImportError, setQuickImportError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
+    else if (e.type === 'dragleave') setDragActive(false);
+  };
+
+  const handleQuickImportDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv') && !file.name.endsWith('.zip')) {
+      setQuickImportError(t('common:invalid-file-type-csv-zip') || 'Invalid file type');
+      return;
+    }
+
+    setIsQuickImporting(true);
+    setQuickImportError(null);
+    try {
+      const result = await importClient.parseFile(file, 'categories');
+      const session = (result as any)?.data || result;
+      if (session?.id) {
+        router.push(Routes.import.review.replace(':id', session.id));
+      }
+    } catch (err: any) {
+      setQuickImportError(err?.response?.data?.message || err?.message || 'Upload failed');
+    } finally {
+      setIsQuickImporting(false);
+    }
+  };
+
+  const handleQuickImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsQuickImporting(true);
+    setQuickImportError(null);
+    try {
+      const result = await importClient.parseFile(file, 'categories');
+      const session = (result as any)?.data || result;
+      if (session?.id) {
+        router.push(Routes.import.review.replace(':id', session.id));
+      }
+    } catch (err: any) {
+      setQuickImportError(err?.response?.data?.message || err?.message || 'Upload failed');
+    } finally {
+      setIsQuickImporting(false);
+    }
+    e.target.value = '';
+  };
 
   const handleRollback = (id: string) => {
     openModal('ROLLBACK_IMPORT_SESSION', id);
   };
 
-  const handleExport = async (entityType: (typeof ENTITY_TYPES)[0]) => {
+  const handleExport = async (entityType: ImportEntity) => {
     setExportLoading(entityType.id);
     try {
-      const response = await HttpClient.get<string>(entityType.exportEndpoint, {
+      // Second arg is query params; Axios options (e.g. responseType) must be the third arg.
+      const blob = await HttpClient.get<Blob>(entityType.exportEndpoint, undefined, {
         responseType: 'blob',
-      } as any);
+      });
 
-      const url = window.URL.createObjectURL(new Blob([response as any]));
+      if (
+        blob &&
+        typeof (blob as Blob).type === 'string' &&
+        (blob as Blob).type.includes('application/json')
+      ) {
+        const text = await (blob as Blob).text();
+        let msg = `Export failed for ${entityType.name}`;
+        try {
+          const j = JSON.parse(text) as { message?: string };
+          if (j?.message) msg = j.message;
+        } catch {
+          /* ignore */
+        }
+        toast.error(msg);
+        return;
+      }
+
+      const fileBlob =
+        blob instanceof Blob ? blob : new Blob([blob as BlobPart], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(fileBlob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute(
@@ -106,15 +146,56 @@ const ImportExportPage = () => {
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
+      toast.success(t('common:export-success') || `Successfully exported ${entityType.name}`);
     } catch (err) {
       console.error('Export failed', err);
-      alert(`Export failed for ${entityType.name}`);
+      toast.error(t('common:export-failed') || `Export failed for ${entityType.name}`);
     } finally {
       setExportLoading(null);
     }
   };
 
-  const handleImport = (entityType: (typeof ENTITY_TYPES)[0]) => {
+  const handleExportAll = async () => {
+    setExportAllLoading(true);
+    try {
+      const blob = await HttpClient.get<Blob>(`${API_ENDPOINTS.EXPORT_ALL || 'export/all'}`, undefined, {
+        responseType: 'blob',
+      });
+
+      if (
+        blob &&
+        typeof (blob as Blob).type === 'string' &&
+        (blob as Blob).type.includes('application/json')
+      ) {
+        const text = await (blob as Blob).text();
+        let msg = `Bulk export failed`;
+        try {
+          const j = JSON.parse(text) as { message?: string };
+          if (j?.message) msg = j.message;
+        } catch { /* ignore */ }
+        toast.error(msg);
+        return;
+      }
+
+      const fileBlob = blob instanceof Blob ? blob : new Blob([blob as BlobPart], { type: 'application/zip' });
+      const url = window.URL.createObjectURL(fileBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `export-all-${new Date().toISOString().slice(0, 10)}.zip`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success(t('common:export-success') || `Successfully exported all data as ZIP`);
+    } catch (err) {
+      console.error('Export all failed', err);
+      toast.error(t('common:export-failed') || `Bulk export failed`);
+    } finally {
+      setExportAllLoading(false);
+    }
+  };
+
+  const handleImport = (entityType: ImportEntity) => {
     router.push({
       pathname: Routes.import.upload,
       query: { type: entityType.id },
@@ -272,6 +353,19 @@ const ImportExportPage = () => {
                 {t('common:clear-history')}
               </Button>
             )}
+            {activeTab === 'actions' && (
+              <Button
+                size="small"
+                variant="outline"
+                className="border-border-200 text-heading hover:border-accent hover:bg-accent hover:text-white transition-colors"
+                onClick={handleExportAll}
+                loading={exportAllLoading}
+                disabled={exportAllLoading}
+              >
+                <ArrowDownTrayIcon className="mr-1.5 h-4 w-4" />
+                {t('common:text-export-all') || 'Export All as ZIP'}
+              </Button>
+            )}
             <div className="flex items-center gap-2 rounded-lg bg-accent/5 border border-accent/20 px-4 py-2">
               <DocumentArrowUpIcon className="h-5 w-5 text-accent" />
               <span className="text-sm text-body">
@@ -321,8 +415,63 @@ const ImportExportPage = () => {
       </div>
 
       {activeTab === 'actions' && (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {ENTITY_TYPES.map((entity) => {
+        <>
+          {quickImportError && (
+            <div className="mb-6">
+              <ErrorMessage message={quickImportError} />
+            </div>
+          )}
+          
+          <div
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleQuickImportDrop}
+            className={cn(
+              'mb-8 relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all',
+              dragActive
+                ? 'border-accent bg-accent/5'
+                : 'border-border-200 bg-gray-50/50 hover:border-accent/40 dark:bg-gray-800/30 dark:border-gray-600',
+            )}
+          >
+            <input
+              type="file"
+              accept=".csv,.zip"
+              onChange={handleQuickImportFileChange}
+              className="absolute inset-0 cursor-pointer opacity-0"
+              disabled={isQuickImporting}
+            />
+            {isQuickImporting ? (
+              <div className="text-center">
+                <Loader text="Uploading & parsing..." />
+              </div>
+            ) : (
+              <div className="text-center">
+                <DocumentArrowUpIcon className="mx-auto mb-3 h-10 w-10 text-accent opacity-80" />
+                <h3 className="text-base font-semibold text-heading mb-1">
+                  Quick Import
+                </h3>
+                <p className="text-sm text-body">
+                  <span className="text-accent font-medium">{t('common:click-to-upload')}</span>{' '}
+                  {t('common:or-drag-and-drop')} a CSV or ZIP file here
+                </p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Data type will be auto-detected
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-heading flex items-center gap-2">
+              <FolderIcon className="w-5 h-5 text-accent" />
+              Entity Specific Actions
+            </h2>
+            <p className="text-sm text-body mt-1">Download templates, export data, or start a specific import</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {IMPORT_ENTITIES.map((entity) => {
             const IconComponent = entity.icon;
             return (
               <Card
@@ -365,11 +514,23 @@ const ImportExportPage = () => {
                       {t('common:text-import')}
                     </Button>
                   </div>
+                  <div className="mt-4 pt-4 border-t border-border-200 text-center">
+                    <a
+                      href={entity.template}
+                      download
+                      className="text-xs font-medium text-accent hover:text-accent-hover transition-colors inline-block"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t('common:download-template') || 'Download Template'}
+                    </a>
+                  </div>
                 </div>
               </Card>
             );
           })}
         </div>
+        </>
       )}
 
       {activeTab === 'history' && (

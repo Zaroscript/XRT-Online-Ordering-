@@ -3,7 +3,7 @@ export interface State {
   settings: any;
 }
 
-const initialState = {
+export const settingsInitialState = {
   siteTitle: 'XRT Restaurant System',
   siteSubtitle: '',
   currency: 'USD',
@@ -18,6 +18,8 @@ const initialState = {
   },
 };
 
+const initialState = settingsInitialState;
+
 export const SettingsContext = React.createContext<State | any>(initialState);
 
 SettingsContext.displayName = 'SettingsContext';
@@ -26,7 +28,17 @@ export const SettingsProvider: React.FC<{ initialValue: any }> = ({
   initialValue,
   ...props
 }) => {
-  const [state, updateSettings] = React.useState(initialValue ?? initialState);
+  const [state, updateSettings] = React.useState(() =>
+    initialValue != null ? { ...initialState, ...initialValue } : initialState,
+  );
+
+  // When AppSettings loads public branding or authenticated settings after mount, merge in.
+  React.useEffect(() => {
+    if (initialValue != null) {
+      updateSettings({ ...initialState, ...initialValue });
+    }
+  }, [initialValue]);
+
   const value = useMemo(
     () => ({
       ...state,

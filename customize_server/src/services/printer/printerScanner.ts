@@ -1,5 +1,8 @@
+import { exec } from 'child_process';
+import fs from 'fs';
 import net from 'net';
 import os from 'os';
+import path from 'path';
 
 /**
  * Checks if an IP address is reachable on a given port.
@@ -127,37 +130,139 @@ export async function scanForPrinters(
  */
 export const scanLAN = scanForPrinters;
 
-import { exec } from 'child_process';
-
 /**
- * Scans for connected Bluetooth devices natively.
- * Supports Windows natively via powershell.
+ * Runs a short PowerShell script and returns non-empty lines.
  */
-export async function scanBluetooth(): Promise<string[]> {
+function execPowerShellLines(command: string): Promise<string[]> {
   return new Promise((resolve) => {
-    if (os.platform() === 'win32') {
-      // Use PowerShell to get Bluetooth devices. We look for paired COM ports or devices.
-      // A common way to find Bluetooth COM ports in Windows is querying Win32_PnPEntity
-      const cmd = `powershell -NoProfile -Command "Get-PnpDevice -Class Bluetooth | Where-Object { $_.Status -eq 'OK' } | Select-Object -ExpandProperty Name"`;
-
-      exec(cmd, (error, stdout) => {
+    exec(
+      `powershell -NoProfile -Command "${command.replace(/"/g, '\\"')}"`,
+      { maxBuffer: 1024 * 1024 },
+      (error, stdout) => {
         if (error) {
-          console.error('Bluetooth scan error:', error);
+          console.error('PowerShell scan error:', error);
           return resolve([]);
         }
-
-        const devices = stdout
-          .split('\n')
-          .map((line) => line.trim())
-          .filter((line) => line.length > 0);
-
-        resolve(devices);
-      });
-    } else {
-      // For Linux/Mac, or if unsupported, return empty for now unless hcitool/system_profiler is heavily needed.
-      // This covers the generic case safely without crashing.
-      console.warn('Bluetooth scanning currently optimized for Windows host in this environment.');
-      resolve([]);
-    }
+        resolve(
+          stdout
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0)
+        );
+      }
+    );
   });
+}
+
+/**
+ * Scans for connected Bluetooth devices + COM/serial ports on the API host (Windows).
+ */
+export async function scanBluetooth(): Promise<string[]> {
+  if (os.platform() !== 'win32') {
+    console.warn('Bluetooth/COM scanning on this build is optimized for Windows API hosts.');
+    return [];
+  }
+
+  const btPs =
+    "Get-PnpDevice -Class Bluetooth -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'OK' } | Select-Object -ExpandProperty Name";
+  const serialPs =
+    "Get-CimInstance Win32_SerialPort -ErrorAction SilentlyContinue | ForEach-Object { '{0} ({1})' -f $_.DeviceID, $_.Description }";
+
+  const [btLines, serialLines] = await Promise.all([
+    execPowerShellLines(btPs),
+    execPowerShellLines(serialPs),
+  ]);
+
+  const merged = [...btLines, ...serialLines];
+  return [...new Set(merged)];
+}
+
+/** One serial/USB-style interface the API host can use for thermal printers */
+export interface DiscoveredSerialPort {
+  interface: string;
+  label: string;
+}
+
+function extractComPort(line: string): string | null {
+  const m = line.match(/COM\d+/i);
+  return m ? m[0].toUpperCase() : null;
+}
+
+/**
+ * List serial/COM/USB-virtual-COM ports on the machine running the API (not the admin browser).
+ * Windows: WMI + PnP Ports; Linux: /dev/ttyUSB* / ttyACM*; macOS: tty.usb* / cu.usb*
+ */
+export async function discoverSerialPorts(): Promise<DiscoveredSerialPort[]> {
+  const platform = os.platform();
+  const byIface = new Map<string, string>();
+
+  const add = (iface: string, label: string) => {
+    const key = iface.trim();
+    if (!key) return;
+    if (!byIface.has(key)) byIface.set(key, label);
+  };
+
+  if (platform === 'win32') {
+    const serialPs =
+      'Get-CimInstance Win32_SerialPort -ErrorAction SilentlyContinue | ForEach-Object { $_.DeviceID + [char]9 + $_.Description }';
+    const portsPs =
+      'Get-PnpDevice -Class Ports -Status OK -ErrorAction SilentlyContinue | ForEach-Object { Write-Output $_.FriendlyName }';
+
+    const [serialLines, friendlyLines] = await Promise.all([
+      execPowerShellLines(serialPs),
+      execPowerShellLines(portsPs),
+    ]);
+
+    for (const line of serialLines) {
+      const tab = line.indexOf('\t');
+      const id = (tab >= 0 ? line.slice(0, tab) : line).trim();
+      const desc = tab >= 0 ? line.slice(tab + 1).trim() : '';
+      if (/^COM\d+$/i.test(id)) {
+        const iface = id.toUpperCase();
+        add(iface, desc ? `${iface} — ${desc}` : iface);
+      }
+    }
+
+    for (const line of friendlyLines) {
+      const com = extractComPort(line);
+      if (com && !byIface.has(com)) {
+        add(com, line.trim());
+      }
+    }
+  } else if (platform === 'linux') {
+    let entries: string[] = [];
+    try {
+      entries = fs.readdirSync('/dev');
+    } catch {
+      entries = [];
+    }
+    for (const n of entries) {
+      if (
+        n.startsWith('ttyUSB') ||
+        n.startsWith('ttyACM') ||
+        n.startsWith('ttyAMA') ||
+        n === 'rfcomm0'
+      ) {
+        const iface = path.join('/dev', n);
+        add(iface, iface);
+      }
+    }
+  } else if (platform === 'darwin') {
+    let entries: string[] = [];
+    try {
+      entries = fs.readdirSync('/dev');
+    } catch {
+      entries = [];
+    }
+    for (const n of entries) {
+      if (/^tty\.(usbmodem|usbserial)/.test(n)) {
+        const iface = path.join('/dev', n);
+        add(iface, iface);
+      }
+    }
+  }
+
+  return Array.from(byIface.entries())
+    .map(([iface, label]) => ({ interface: iface, label }))
+    .sort((a, b) => a.interface.localeCompare(b.interface));
 }

@@ -1,0 +1,4 @@
+name,size_code,display_order,is_active
+"Small","S",1,true
+"Medium","M",2,true
+"Large","L",3,true

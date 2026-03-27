@@ -12,6 +12,7 @@ import { ItemRepository } from '../../infrastructure/repositories/ItemRepository
 import { CategoryRepository } from '../../infrastructure/repositories/CategoryRepository';
 import { CreateOrderUseCase } from '../../domain/usecases/order/CreateOrderUseCase';
 import { TransactionRepository } from '../../infrastructure/repositories/TransactionRepository';
+import { CouponRepository } from '../../infrastructure/repositories/CouponRepository';
 
 function getBaseUrl(req: Request): string {
   const fromEnv = (env as any).PUBLIC_ORIGIN;
@@ -55,7 +56,21 @@ function getDefaultPublicSiteSettings() {
     siteTitle: 'XRT Online Ordering',
     siteSubtitle: '',
     logo: null as any,
+    collapseLogo: null as any,
     promoPopup: null as any,
+    seo: {
+      metaTitle: '',
+      metaDescription: '',
+      ogTitle: '',
+      ogDescription: '',
+      ogImage: null as any,
+      twitterHandle: '',
+      twitterCardType: 'summary_large_image',
+      metaTags: '',
+      canonicalUrl: '',
+    },
+    isUnderMaintenance: false,
+    maintenance: null as any,
   };
 }
 
@@ -106,6 +121,18 @@ export class PublicController {
               imageUrlForRequest(logo.original, req),
           }
         : logo;
+
+    const collapseLogoRaw = (settings as any).collapseLogo;
+    const collapseLogoNormalized =
+      collapseLogoRaw && typeof collapseLogoRaw === 'object' && collapseLogoRaw.original
+        ? {
+            ...collapseLogoRaw,
+            original: imageUrlForRequest(collapseLogoRaw.original, req),
+            thumbnail:
+              imageUrlForRequest(collapseLogoRaw.thumbnail, req) ||
+              imageUrlForRequest(collapseLogoRaw.original, req),
+          }
+        : collapseLogoRaw;
     const promoPopup = settings.promoPopup;
     const promoPopupNormalized =
       promoPopup && typeof promoPopup === 'object' && (promoPopup as any).image?.original
@@ -163,11 +190,43 @@ export class PublicController {
       return Object.keys(base).length ? base : null;
     })();
 
+    const seoRaw = settings.seo ?? ({} as Record<string, unknown>);
+    const ogImg = (seoRaw as any).ogImage;
+    const ogImageNormalized =
+      ogImg && typeof ogImg === 'object' && (ogImg as any).original
+        ? {
+            ...ogImg,
+            original: imageUrlForRequest((ogImg as any).original, req),
+            thumbnail:
+              imageUrlForRequest((ogImg as any).thumbnail, req) ||
+              imageUrlForRequest((ogImg as any).original, req),
+          }
+        : ogImg ?? null;
+
+    const maint = settings.maintenance as any;
+    const maintenanceNormalized =
+      maint && typeof maint === 'object'
+        ? {
+            ...maint,
+            image:
+              maint.image?.original
+                ? {
+                    ...maint.image,
+                    original: imageUrlForRequest(maint.image.original, req),
+                    thumbnail:
+                      imageUrlForRequest(maint.image.thumbnail, req) ||
+                      imageUrlForRequest(maint.image.original, req),
+                  }
+                : maint.image,
+          }
+        : maint ?? null;
+
     const publicSettings = {
       heroSlides,
       siteTitle: settings.siteTitle ?? 'XRT Online Ordering',
       siteSubtitle: settings.siteSubtitle ?? '',
       logo: logoNormalized ?? null,
+      collapseLogo: collapseLogoNormalized ?? null,
       promoPopup: promoPopupNormalized ?? null,
       contactDetails,
       footer_text: settings.footer_text ?? '',
@@ -199,9 +258,61 @@ export class PublicController {
       authorizeNetPublicKey: settings.authorizeNetPublicKey ?? null,
       authorizeNetApiLoginId: settings.authorizeNetApiLoginId ?? null,
       authorizeNetMode: settings.authorizeNetMode ?? 'ui',
+      seo: {
+        metaTitle: (seoRaw as any).metaTitle ?? '',
+        metaDescription: (seoRaw as any).metaDescription ?? '',
+        ogTitle: (seoRaw as any).ogTitle ?? '',
+        ogDescription: (seoRaw as any).ogDescription ?? '',
+        ogImage: ogImageNormalized,
+        twitterHandle: (seoRaw as any).twitterHandle ?? '',
+        twitterCardType: (seoRaw as any).twitterCardType ?? 'summary_large_image',
+        metaTags: (seoRaw as any).metaTags ?? '',
+        canonicalUrl: (seoRaw as any).canonicalUrl ?? '',
+      },
+      isUnderMaintenance: settings.isUnderMaintenance ?? false,
+      maintenance: maintenanceNormalized,
     };
 
     return sendSuccess(res, 'Site settings retrieved', publicSettings);
+  });
+
+  verifyCoupon = asyncHandler(async (req: Request, res: Response) => {
+    const { code } = req.body;
+    if (!code) {
+      return res.status(400).json({ success: false, message: 'Coupon code is required' });
+    }
+
+    const couponRepository = new CouponRepository();
+    const coupon = await couponRepository.verify(code);
+
+    if (!coupon) {
+      return res.status(404).json({ success: false, message: 'Invalid or expired coupon' });
+    }
+
+    const now = new Date();
+    const activeFrom = new Date(coupon.active_from);
+    const expireAt = new Date(coupon.expire_at);
+
+    if (now < activeFrom || now > expireAt) {
+      return res.status(400).json({ success: false, message: 'Coupon is not active at this time' });
+    }
+
+    if (
+      coupon.max_conversions !== null &&
+      coupon.max_conversions !== undefined &&
+      coupon.orders &&
+      coupon.orders.length >= coupon.max_conversions
+    ) {
+      return res.status(400).json({ success: false, message: 'Coupon usage limit exceeded' });
+    }
+
+    return sendSuccess(res, 'Coupon is valid', {
+      is_valid: true,
+      code: coupon.code,
+      type: coupon.type,
+      amount: coupon.amount,
+      minimum_cart_amount: coupon.minimum_cart_amount,
+    });
   });
 
   getAuthorizeNetEnvironment = asyncHandler(async (req: Request, res: Response) => {
@@ -488,6 +599,8 @@ export class PublicController {
 
     // 3. Process NMI Payment if applicable
     let nmiTransactionId = '';
+    /** Which Authorize.Net API host processed the charge (used later for refunds). */
+    let authorizeNetChargeEnvironment: 'production' | 'sandbox' | undefined;
     if (money?.payment === 'nmi') {
       if (!money.paymentToken) {
         return res.status(400).json({ success: false, message: 'NMI payment token is required' });
@@ -573,6 +686,10 @@ export class PublicController {
       // The payment has already been processed and captured by the Authorize.net iframe.
       // We do not need to process it again, we just save the order.
       nmiTransactionId = money.paymentToken;
+      const iframeSettingsRepo = new BusinessSettingsRepository();
+      const iframeSettings = await iframeSettingsRepo.findByBusinessId(business.id);
+      authorizeNetChargeEnvironment =
+        iframeSettings?.authorizeNetEnvironment === 'production' ? 'production' : 'sandbox';
     } else if (money?.payment === 'authorize_net' || money?.payment === 'card') {
       if (!paymentToken && !money.paymentToken) {
         return res
@@ -678,6 +795,7 @@ export class PublicController {
         try {
           const result = await executeTransaction(AuthNetConstants.endpoint.production);
           nmiTransactionId = result.transId;
+          authorizeNetChargeEnvironment = 'production';
           if (result.cardType) {
             if (!money.cardDetails) money.cardDetails = {};
             money.cardDetails.cardType = result.cardType;
@@ -691,6 +809,7 @@ export class PublicController {
           try {
              const result = await executeTransaction(AuthNetConstants.endpoint.sandbox);
              nmiTransactionId = result.transId;
+             authorizeNetChargeEnvironment = 'sandbox';
              if (result.cardType) {
                 if (!money.cardDetails) money.cardDetails = {};
                 money.cardDetails.cardType = result.cardType;
@@ -714,11 +833,14 @@ export class PublicController {
     const itemRepository = new ItemRepository();
     const categoryRepository = new CategoryRepository();
     const businessSettingsRepository = new BusinessSettingsRepository();
+    const couponRepository = new CouponRepository();
     const createOrderUseCase = new CreateOrderUseCase(
       orderRepository,
       itemRepository,
       categoryRepository,
-      businessSettingsRepository
+      businessSettingsRepository,
+      couponRepository,
+      customerRepository
     );
     
     // Normalize address structure (frontend uses address1/zipcode, backend/admin expects street/zipCode)
@@ -820,6 +942,7 @@ export class PublicController {
           last_4: finalLast4,
           metadata: {
             authNetMethod: req.body.authNetMethod || money?.authNetMethod,
+            authorizeNetEnvironment: authorizeNetChargeEnvironment,
             customer_ip: req.ip,
             customer_name: customer?.name || existingCustomer.name,
             customer_email: customer?.email || existingCustomer.email,

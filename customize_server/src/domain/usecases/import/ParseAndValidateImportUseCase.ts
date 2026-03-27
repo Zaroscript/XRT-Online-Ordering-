@@ -4,6 +4,10 @@ import { ImportSession, ParsedImportData } from '../../entities/ImportSession';
 import { ImportValidationService } from '../../../shared/services/ImportValidationService';
 import { CSVParser } from '../../../shared/utils/csvParser';
 import { ValidationError } from '../../../shared/errors/AppError';
+import {
+  sanitizeImportValidationErrors,
+  sanitizeImportValidationWarnings,
+} from '../../../shared/utils/importValidationPersistence';
 
 export class ParseAndValidateImportUseCase {
   constructor(
@@ -39,12 +43,13 @@ export class ParseAndValidateImportUseCase {
       existingSectionNames
     );
 
+    const fileFallback = files[0] || 'import.csv';
     const session = await this.importSessionRepository.create({
       user_id,
       business_id,
       parsedData: data,
-      validationErrors: validation.errors,
-      validationWarnings: validation.warnings,
+      validationErrors: sanitizeImportValidationErrors(validation.errors, fileFallback),
+      validationWarnings: sanitizeImportValidationWarnings(validation.warnings, fileFallback),
       originalFiles: files,
     });
 

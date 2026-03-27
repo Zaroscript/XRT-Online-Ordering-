@@ -121,5 +121,6 @@
   "table-item-tax": "Tax",
   "table-item-tip": "Tip",
   "table-item-order-type": "Order Type",
-  "table-item-completed-at": "Completed At"
+  "table-item-completed-at": "Completed At",
+  "table-item-service-time": "Service Time"
 }

@@ -3,6 +3,10 @@ import { ImportSession, ParsedImportData } from '../../entities/ImportSession';
 import { ImportValidationService } from '../../../shared/services/ImportValidationService';
 import { CSVParser } from '../../../shared/utils/csvParser';
 import { AppError } from '../../../shared/errors/AppError';
+import {
+  sanitizeImportValidationErrors,
+  sanitizeImportValidationWarnings,
+} from '../../../shared/utils/importValidationPersistence';
 
 export class AppendImportFileUseCase {
   constructor(private importSessionRepository: IImportSessionRepository) {}
@@ -11,12 +15,17 @@ export class AppendImportFileUseCase {
     sessionId: string,
     file: Express.Multer.File,
     user_id: string,
-    entity_type?: 'categories' | 'items' | 'sizes' | 'modifierGroups' | 'modifiers' | null
+    entity_type?: 'categories' | 'items' | 'sizes' | 'modifierGroups' | 'modifiers' | null,
+    bypassUserScope = false
   ): Promise<ImportSession> {
-    const session = await this.importSessionRepository.findById(sessionId, user_id);
+    const session = await this.importSessionRepository.findById(
+      sessionId,
+      bypassUserScope ? undefined : user_id
+    );
     if (!session) {
       throw new AppError('Import session not found', 404);
     }
+    const ownerId = session.user_id;
 
     // Parse new file
     const { data: newData, files: newFiles } = await CSVParser.parseUpload(file, entity_type);
@@ -50,12 +59,13 @@ export class AppendImportFileUseCase {
 
     // Update Session
     const status = validation.errors.length > 0 ? 'draft' : 'validated';
+    const fileFallback = uniqueFiles[0] || 'import.csv';
 
-    return await this.importSessionRepository.update(session.id, user_id, {
+    return await this.importSessionRepository.update(session.id, ownerId, {
       status,
       parsedData: mergedData,
-      validationErrors: validation.errors,
-      validationWarnings: validation.warnings,
+      validationErrors: sanitizeImportValidationErrors(validation.errors, fileFallback),
+      validationWarnings: sanitizeImportValidationWarnings(validation.warnings, fileFallback),
       originalFiles: uniqueFiles,
     });
   }
