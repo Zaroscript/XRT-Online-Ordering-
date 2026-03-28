@@ -16,22 +16,26 @@ export default function Menu() {
 
   // Set initial active category when categories are loaded
   useEffect(() => {
-    if (categories.length > 0 && !location.state?.selectedCategory) {
+    const categoryParam = new URLSearchParams(location.search).get("category");
+    const selected = categoryParam || location.state?.selectedCategory;
+    if (categories.length > 0 && !selected) {
        setActiveCategory(categories[0].name);
     }
-  }, [categories, location.state]);
+  }, [categories, location.state, location.search]);
 
   useEffect(() => {
-    if (location.state?.selectedCategory) {
+    const categoryParam = new URLSearchParams(location.search).get("category");
+    const selected = categoryParam || location.state?.selectedCategory;
+    if (selected) {
       setTimeout(() => {
-        setActiveCategory(location.state.selectedCategory);
+        setActiveCategory(selected);
         // Scroll after state update
         if (menuListRef.current) {
           menuListRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }, 0);
     }
-  }, [location.state]);
+  }, [location.state, location.search]);
 
   const handleCategoryClick = (categoryName) => {
     setActiveCategory(categoryName);

@@ -34,7 +34,7 @@ const CatCard = ({ item, index = 0, onClick }) => {
         <img
           src={imageSrc}
           alt={item.name}
-          className="hidden translate-y-6 lg:block w-[75%] h-[75%] object-contain rounded-full drop-shadow-md transition-transform duration-300 group-hover:scale-110"
+          className="hidden translate-y-6 lg:block w-[90%] h-[90%] object-contain rounded-full drop-shadow-md transition-transform duration-300 group-hover:scale-110"
         />
 
         {/* Mobile Icon View */}

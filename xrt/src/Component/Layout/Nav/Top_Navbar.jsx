@@ -8,7 +8,33 @@ export default function Top_Navbar(props) {
 
   return (
     <>
-      <div className='bg-[#F2F7F3] py-[8px] flex header-container relative nav'>
+      {/* Mobile Layout */}
+      <div className='bg-[#F2F7F3] py-[8px] px-4 flex flex-col gap-2 relative nav md:hidden'>
+        <div className='flex justify-between items-center w-full'>
+          <h6 className='text-gray-500 text-[9px] w-[50%] md:w-auto'>{props.address}</h6>
+          
+          <a href={`tel:${props.phone}`} className='block'>
+            <div className="right_side flex items-center cursor-pointer group">
+              <div className="mr-[8px] mt-[4px] w-[28px] h-[28px] background_icon ">
+                <Phone strokeWidth={3} className="text-green-500" size={16} />
+              </div>
+              <h5 className='text-gray-500 font-normal text-[9px] duration-500 group-hover:text-[#58d793]'>{formatPhone(props.phone)}</h5>
+            </div>
+          </a>
+        </div>
+        
+        <div className="w-full flex justify-center pointer-events-none mt-1">
+          <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#e6eee8] border border-gray-200 select-none pointer-events-auto shadow-sm">
+            <span className={`w-2 h-2 rounded-full ${storeIsOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${storeIsOpen ? 'text-green-700' : 'text-red-700'}`}>
+              {storeIsOpen ? 'Open' : 'Closed'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop/Tablet Layout */}
+      <div className='bg-[#F2F7F3] py-[8px] hidden md:flex header-container relative nav'>
         <h6 className='text-gray-500 lg:text-[14px] md:text-[12px] text-[9px]'>{props.address}</h6>
 
         {/* Center: Store Open/Closed Status Badge */}
@@ -21,14 +47,6 @@ export default function Top_Navbar(props) {
           </div>
         </div>
 
-        <a href={`tel:${props.phone}`} className='block md:hidden'>
-          <div className="right_side flex items-center cursor-pointer group">
-            <div className=" mr-[8px]  mt-[4px] w-[28px] md:w-[32px] lg:w-[35px] h-[28px] md:h-[32px] lg:h-[35px] background_icon ">
-              <Phone strokeWidth={3} className="text-green-500" size={16} />
-            </div>
-            <h5 className='text-gray-500 font-normal lg:text-[14px] md:text-[12px] text-[9px] duration-500 group-hover:text-[#58d793]'>{formatPhone(props.phone)}</h5>
-          </div>
-        </a>
         <a href={`mailto:${props.email}`} className="hidden md:block">
           <div className="right_side flex items-center cursor-pointer group">
             <div className=" mr-[8px] mt-[4px] w-[28px] md:w-[32px] lg:w-[35px] h-[28px] md:h-[32px] lg:h-[35px] background_icon">

@@ -5,12 +5,11 @@ export const COLORS = {
   textPrimary: "#2F3E30",
   textSecondary: "#3D4B3E",
   textGray: "#737574",
-  textLightGray: "#707070", // Found in some components potentially, adding as safe default or from grep context
+  textLightGray: "#707070", 
   white: "#ffffff",
   black: "#000000",
-  // Add common semantic names
   success: "#5C9963",
-  danger: "#ef4444", // Tailwind red-500 approx
+  danger: "#ef4444", 
   
   // Category Backgrounds
   categoryMarrow: "#FEEFA3",
