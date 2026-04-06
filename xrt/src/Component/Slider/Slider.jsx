@@ -11,19 +11,35 @@ export default function Sliderfun() {
   const slides = React.useMemo(() => {
     if (!heroSlides?.length) return [];
     return heroSlides.map((slide, index) => {
-      const rawSrc =
-        typeof slide.bgImage === "string"
-          ? slide.bgImage
-          : slide.bgImage?.original ?? slide.bgImage?.thumbnail ?? "";
+      const isVideo = slide.bgType === "video";
+      
+      const getMediaUrl = (media) => {
+        if (!media) return "";
+        if (typeof media === "string") return media;
+        // Handle cases where it might be an array or an object
+        const target = Array.isArray(media) ? media[0] : media;
+        return (
+          target?.original ??
+          target?.thumbnail ??
+          target?.url ??
+          target?.path ??
+          ""
+        );
+      };
+
+      const rawSrc = getMediaUrl(slide.bgImage);
+      const rawVideoSrc = isVideo ? getMediaUrl(slide.bgVideo) : null;
+
       return {
-        key: `hero-${index}-${slide.title ?? ""}-${index}`,
+        key: `hero-${index}-${slide.title || "slider"}-${index}`,
         src: resolveImageUrl(rawSrc),
-        title: slide.subtitle ?? "",
-        description: slide.title ?? "",
-        subtitleTwo: slide.subtitleTwo ?? "",
-        offer: slide.offer ?? "",
-        btnText: slide.btnText ?? "Order Now",
-        btnLink: slide.btnLink ?? "",
+        videoSrc: rawVideoSrc ? resolveImageUrl(rawVideoSrc) : null,
+        title: slide.subtitle || "",
+        description: slide.title || "",
+        subtitleTwo: slide.subtitleTwo || "",
+        offer: slide.offer || "",
+        btnText: slide.btnText || "Order Now",
+        btnLink: slide.btnLink || "",
       };
     });
   }, [heroSlides]);
@@ -54,6 +70,7 @@ export default function Sliderfun() {
     <div className="relative w-full">
       <Content
         src={current.src}
+        videoSrc={current.videoSrc}
         title={current.title}
         description={current.description}
         subtitleTwo={current.subtitleTwo}

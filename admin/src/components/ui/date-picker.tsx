@@ -103,9 +103,13 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({
                     ),
                   )}
                 >
-                  {field?.value
-                    ? format(new Date(field?.value), 'MMMM, dd yyyy pp')
-                    : field?.value}
+                  {field?.value ? (
+                    format(new Date(field?.value), 'MMMM, dd yyyy pp')
+                  ) : placeholder ? (
+                    <span className="text-[#9CA3AF] font-normal">{placeholder}</span>
+                  ) : (
+                    field?.value
+                  )}
                 </div>
               } // use custom input to control input field focus
             />

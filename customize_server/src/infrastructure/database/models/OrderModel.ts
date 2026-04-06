@@ -51,6 +51,7 @@ const OrderMoneySchema = new Schema(
     payment_status: { type: String, enum: ['pending', 'paid', 'failed', 'refunded', 'partially_refunded'], default: 'pending' },
     coupon_code: { type: String },
     rewards_points_used: { type: Number },
+    loyalty_discount_amount: { type: Number, default: 0 },
     card_type: { type: String },
     last_4: { type: String },
   },

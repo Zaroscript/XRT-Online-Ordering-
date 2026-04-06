@@ -54,6 +54,12 @@ export const env = {
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD || '',
   EMAIL_FROM: process.env.EMAIL_FROM || '',
   EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || '',
+  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || '',
+
+  // Twilio SMS
+  TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID || '',
+  TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN || '',
+  TWILIO_PHONE_NUMBER: process.env.TWILIO_PHONE_NUMBER || '',
 
   // Security
   SECURE_COOKIES: process.env.NODE_ENV === 'production',

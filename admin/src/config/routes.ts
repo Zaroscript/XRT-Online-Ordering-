@@ -106,6 +106,12 @@ export const Routes = {
   message: {
     ...routesFactory('/message'),
   },
+  emails: {
+    ...routesFactory('/emails'),
+  },
+  sms: {
+    ...routesFactory('/sms'),
+  },
   shopMessage: {
     ...routesFactory('/shop-message'),
   },
@@ -170,6 +176,10 @@ export const Routes = {
     ...routesFactory('/shop-transfer'),
   },
   ownerDashboardShopTransferRequest: '/shop-transfer/vendor',
+  loyalty: {
+    settings: '/loyalty/settings',
+    members: '/loyalty/members',
+  },
 };
 
 function routesFactory(endpoint: string) {

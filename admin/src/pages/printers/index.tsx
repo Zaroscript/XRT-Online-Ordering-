@@ -133,7 +133,7 @@ export default function PrintersPage() {
       align: 'center',
       render: (status: string) => {
         const colors: any = {
-          connected: 'bg-green-500',
+          connected: 'bg-accent',
           disconnected: 'bg-yellow-500',
           error: 'bg-red-500',
         };
@@ -152,7 +152,7 @@ export default function PrintersPage() {
       align: 'center',
       render: (active: boolean) => (
         <Badge
-          className={active ? 'bg-green-500' : 'bg-red-500'}
+          className={active ? 'bg-accent' : 'bg-red-500'}
           text={active ? 'Yes' : 'No'}
         />
       ),
@@ -167,7 +167,7 @@ export default function PrintersPage() {
           <button
             type="button"
             onClick={() => setLogPrinter(record)}
-            className="text-gray-600 hover:text-emerald-600 transition-colors p-1"
+            className="text-gray-600 hover:text-accent transition-colors p-1"
             title="Printer activity log (terminal)"
           >
             <TerminalIcon width={18} />

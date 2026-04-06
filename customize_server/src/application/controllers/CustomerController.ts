@@ -35,6 +35,8 @@ export class CustomerController {
       phoneNumber,
       rewards,
       notes,
+      accepts_marketing_messages,
+      accepts_order_updates,
     } = req.body;
 
     // Automatically get business_id from current user's business
@@ -56,6 +58,8 @@ export class CustomerController {
         phoneNumber,
         rewards,
         notes,
+        accepts_marketing_messages,
+        accepts_order_updates,
       });
 
       return sendSuccess(res, 'Customer created successfully', customer, 201);
@@ -140,6 +144,8 @@ export class CustomerController {
       rewards,
       notes,
       isActive,
+      accepts_marketing_messages,
+      accepts_order_updates,
     } = req.body;
 
     let business_id = req.user?.business_id || req.query.business_id;
@@ -162,6 +168,8 @@ export class CustomerController {
           rewards,
           notes,
           isActive,
+          accepts_marketing_messages,
+          accepts_order_updates,
         },
         business_id as string | undefined
       );

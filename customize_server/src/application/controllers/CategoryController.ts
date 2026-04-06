@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { isValidObjectId } from 'mongoose';
 import { parse } from 'csv-parse/sync';
 import { AuthRequest } from '../middlewares/auth';
 import { GetCategoryByIdUseCase } from '../../domain/usecases/categories/GetCategoryByIdUseCase';
@@ -40,6 +41,36 @@ export class CategoryController {
     this.getCategoryByIdUseCase = new GetCategoryByIdUseCase(categoryRepository);
   }
 
+  private async normalizeKitchenSectionId(
+    rawKitchenSectionId: unknown,
+    options: { allowNullOnEmpty?: boolean } = {}
+  ): Promise<string | null | undefined> {
+    if (rawKitchenSectionId === undefined) {
+      return undefined;
+    }
+
+    if (rawKitchenSectionId === null) {
+      return options.allowNullOnEmpty ? null : undefined;
+    }
+
+    const kitchenSectionId = String(rawKitchenSectionId).trim();
+
+    if (!kitchenSectionId) {
+      return options.allowNullOnEmpty ? null : undefined;
+    }
+
+    if (!isValidObjectId(kitchenSectionId)) {
+      throw new ValidationError('Invalid kitchen section ID');
+    }
+
+    const section = await this.kitchenSectionRepository.findById(kitchenSectionId);
+    if (!section) {
+      throw new ValidationError('Kitchen section not found');
+    }
+
+    return kitchenSectionId;
+  }
+
   create = asyncHandler(async (req: AuthRequest, res: Response) => {
     const {
       name,
@@ -72,25 +103,32 @@ export class CategoryController {
       }
     }
 
+    const normalizedKitchenSectionId = await this.normalizeKitchenSectionId(kitchen_section_id);
+
     try {
+      const createCategoryPayload: any = {
+        business_id: business_id!,
+        name,
+        description: description || details,
+        sort_order: sort_order ? parseInt(sort_order as string) : 0,
+        is_active: is_active === 'true' || is_active === true,
+        image,
+        image_public_id,
+        icon,
+        icon_public_id,
+        language,
+        modifier_groups: parsedModifierGroups,
+        apply_modifier_groups_to_items:
+          req.body.apply_modifier_groups_to_items === 'true' ||
+          req.body.apply_modifier_groups_to_items === true,
+      };
+
+      if (typeof normalizedKitchenSectionId === 'string') {
+        createCategoryPayload.kitchen_section_id = normalizedKitchenSectionId;
+      }
+
       const category = await this.createCategoryUseCase.execute(
-        {
-          business_id: business_id!,
-          name,
-          description: description || details,
-          kitchen_section_id,
-          sort_order: sort_order ? parseInt(sort_order as string) : 0,
-          is_active: is_active === 'true' || is_active === true,
-          image,
-          image_public_id,
-          icon,
-          icon_public_id,
-          language,
-          modifier_groups: parsedModifierGroups,
-          apply_modifier_groups_to_items:
-            req.body.apply_modifier_groups_to_items === 'true' ||
-            req.body.apply_modifier_groups_to_items === true,
-        },
+        createCategoryPayload,
         req.files as { [fieldname: string]: Express.Multer.File[] }
       );
 
@@ -158,13 +196,19 @@ export class CategoryController {
       }
     }
 
+    const normalizedKitchenSectionId = await this.normalizeKitchenSectionId(kitchen_section_id, {
+      allowNullOnEmpty: true,
+    });
+
     const category = await this.updateCategoryUseCase.execute(
       id,
       business_id!,
       {
         name,
         description: description || details,
-        kitchen_section_id,
+        ...(normalizedKitchenSectionId !== undefined && {
+          kitchen_section_id: normalizedKitchenSectionId,
+        }),
         ...(sort_order !== undefined && { sort_order: Number(sort_order) }),
         is_active: is_active === 'true' || is_active === true,
         image,

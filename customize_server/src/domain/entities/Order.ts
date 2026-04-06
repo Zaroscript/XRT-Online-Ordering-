@@ -51,6 +51,7 @@ export interface OrderMoney {
   payment_status?: 'pending' | 'paid' | 'failed';
   coupon_code?: string;
   rewards_points_used?: number;
+  loyalty_discount_amount?: number;
   card_type?: string;
   last_4?: string;
 }

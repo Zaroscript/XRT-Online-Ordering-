@@ -28,13 +28,13 @@ const CatCard = ({ item, index = 0, onClick }) => {
     >
       <div 
         className="w-[90px] h-[90px] md:w-[100px] md:h-[100px] lg:w-[120px] lg:h-[120px] rounded-full flex items-end justify-center relative mb-3 pb-3"
-        style={{ backgroundColor: bgColors[index % bgColors.length] }}
+        style={{ backgroundColor: "white" }}
       >
         {/* Desktop Image View */}
         <img
           src={imageSrc}
           alt={item.name}
-          className="hidden translate-y-6 lg:block w-[90%] h-[90%] object-contain rounded-full drop-shadow-md transition-transform duration-300 group-hover:scale-110"
+          className="hidden translate-y-6 lg:block w-[95%] h-[95%] object-contain rounded-full drop-shadow-md transition-transform duration-300 group-hover:scale-110"
         />
 
         {/* Mobile Icon View */}

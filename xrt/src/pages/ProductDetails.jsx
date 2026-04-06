@@ -201,7 +201,7 @@ const ProductDetails = () => {
                           addToCart({...product, modifiers: selectedModifiers, size: selectedSize, price: unitPrice}, quantity);
                           // Optional: navigate back or show toast
                       }}
-                      className="w-full sm:w-auto px-32 h-14 bg-[var(--primary)] text-white font-bold rounded-xl flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-lg shadow-green-200/50 hover:shadow-xl hover:-translate-y-0.5"
+                      className="flex-1 bg-(--primary) text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-(--primary)/20 transform hover:-translate-y-0.5 active:translate-y-0"
                       style={{ backgroundColor: COLORS.primary }}
                     >
                       <Handbag size={22} />

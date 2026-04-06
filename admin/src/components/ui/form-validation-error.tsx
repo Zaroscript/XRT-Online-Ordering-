@@ -7,6 +7,7 @@ interface Props {
 }
 
 const ValidationError = ({ message, className }: Props) => {
+  if (!message) return null;
   return (
     <p
       className={twMerge(

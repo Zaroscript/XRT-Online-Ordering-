@@ -159,7 +159,7 @@ export default function NewOrderModal() {
                 className={cn(
                   'px-3 py-1 rounded-full text-sm font-semibold capitalize border',
                   paymentStatus === 'paid'
-                    ? 'bg-green-100 text-green-600 border-green-200'
+                    ? 'bg-accent text-white hover:bg-accent-hover'
                     : 'bg-yellow-100 text-yellow-600 border-yellow-200',
                 )}
               >

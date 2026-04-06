@@ -136,6 +136,7 @@ export default function SeoSettingsForm({ settings }: IProps) {
               name="seo.ogImage"
               control={control}
               multiple={false}
+              helperText={t('form:og-image-uploader-text')}
             />
           </div>
           <Input

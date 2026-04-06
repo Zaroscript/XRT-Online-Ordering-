@@ -162,14 +162,14 @@ const AuthorizeNetPayment = ({
             className={`
               group relative flex flex-col items-center gap-3 p-6 rounded-3xl border-2 transition-all duration-300 text-center
               ${paymentMethod === method.id 
-                ? "border-(--primary) bg-green-50/50 shadow-lg shadow-green-100/50 scale-[1.02]" 
+                ? "border-(--primary) bg-(--primary)/5 shadow-lg shadow-(--primary)/10 scale-[1.02]" 
                 : "border-gray-100 hover:border-gray-200 hover:bg-gray-50 bg-white shadow-sm"
               }
             `}
           >
             <div className={`
               w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300
-              ${paymentMethod === method.id ? "bg-(--primary) text-white shadow-lg shadow-green-200" : "bg-gray-100 text-gray-400 group-hover:text-(--primary)"}
+              ${paymentMethod === method.id ? "bg-(--primary) text-white shadow-lg shadow-(--primary)/20" : "bg-gray-100 text-gray-400 group-hover:text-(--primary)"}
             `}>
               <method.icon size={24} strokeWidth={paymentMethod === method.id ? 2.5 : 2} />
             </div>
@@ -181,7 +181,7 @@ const AuthorizeNetPayment = ({
                 {method.label}
               </span>
               <span className={`text-[9px] font-bold uppercase tracking-tighter mt-0.5 opacity-60 font-['Inter'] ${
-                paymentMethod === method.id ? "text-green-800/60" : "text-gray-400"
+                paymentMethod === method.id ? "text-(--primary) opacity-70" : "text-gray-400"
               }`}>
                 {method.sub}
               </span>
@@ -330,10 +330,10 @@ const AuthorizeNetPayment = ({
               type="submit"
               disabled={isProcessing}
               className={`
-                w-full py-5 rounded-[2rem] font-black uppercase tracking-widest text-sm transition-all duration-300 flex items-center justify-center gap-3 font-['Poppins'] mt-10
+                w-full py-5 rounded-4xl font-black uppercase tracking-widest text-sm transition-all duration-300 flex items-center justify-center gap-3 font-['Poppins'] mt-10
                 ${isProcessing 
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
-                  : "bg-(--primary) text-white shadow-xl shadow-green-100 hover:shadow-2xl hover:shadow-green-200 hover:-translate-y-0.5 active:translate-y-0"
+                  : "bg-(--primary) text-white shadow-xl shadow-(--primary)/10 hover:shadow-2xl hover:shadow-(--primary)/20 hover:-translate-y-0.5 active:translate-y-0"
                 }
               `}
             >

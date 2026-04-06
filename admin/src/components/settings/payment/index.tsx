@@ -347,7 +347,7 @@ export default function PaymentSettingsForm({ settings }: IProps) {
           {formation && (
             <div className="mb-5">
               <Label className="flex items-center gap-2.5">
-                {`Sample Output: `}
+                {t('form:text-sample-output') + ': '}
                 <Badge
                   text={formatPrice({
                     amount: 987456321.123456789,

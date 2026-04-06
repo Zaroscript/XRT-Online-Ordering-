@@ -50,7 +50,6 @@ type ShopFormValues = {
   };
   // Shop Settings
   isProductReview?: boolean;
-  enableTerms?: boolean;
   enableCoupons?: boolean;
   enableEmailForDigitalProduct?: boolean;
   useGoogleMap?: boolean;
@@ -104,6 +103,9 @@ type ShopFormValues = {
       is_closed?: boolean;
     }[];
   };
+  // Branding
+  primary_color?: string;
+  secondary_color?: string;
 };
 
 export const updatedIcons = socialIcon.map((item: any) => {
@@ -211,6 +213,8 @@ export default function SettingsForm({ settings }: IProps) {
               is_closed: false,
             })),
       },
+      primary_color: options?.primary_color ?? '#5C9963',
+      secondary_color: options?.secondary_color ?? '#2F3E30',
     },
   });
 
@@ -298,7 +302,6 @@ export default function SettingsForm({ settings }: IProps) {
         operating_hours: {
           ...values?.operating_hours,
         },
-        enableTerms: values?.enableTerms,
         enableCoupons: values?.enableCoupons,
         isProductReview: values?.isProductReview,
         enableEmailForDigitalProduct: values?.enableEmailForDigitalProduct,
@@ -319,6 +322,8 @@ export default function SettingsForm({ settings }: IProps) {
         copyrightText: options?.copyrightText,
         siteLink: options?.siteLink,
         minimumOrderAmount: Number(values?.minimumOrderAmount ?? 0),
+        primary_color: values?.primary_color,
+        secondary_color: values?.secondary_color,
       },
     };
     updateSettingsMutation(payload, {
@@ -447,7 +452,7 @@ export default function SettingsForm({ settings }: IProps) {
           </div>
 
           <Input
-            label={t('Minimum Order Amount')}
+            label={t('form:form-input-label-minimum-order-amount')}
             {...register('minimumOrderAmount')}
             type="number"
             error={t(errors.minimumOrderAmount?.message!)}
@@ -456,6 +461,92 @@ export default function SettingsForm({ settings }: IProps) {
           />
         </Card>
       </div>
+
+      {/* Branding Section */}
+      {/* <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
+        <Description
+          title={t('form:form-title-branding')}
+          details={t('form:form-description-branding')}
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+            <Input
+              label={t('form:input-label-primary-color')}
+              {...register('primary_color')}
+              variant="outline"
+              type="color"
+              className="h-14"
+            />
+            <Input
+              label={t('form:input-label-secondary-color')}
+              {...register('secondary_color')}
+              variant="outline"
+              type="color"
+              className="h-14"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5 border-t border-gray-100 pt-5">
+            <Input
+              label={t('form:input-label-header-bg-color')}
+              {...register('header_bg_color')}
+              variant="outline"
+              type="color"
+              className="h-14"
+            />
+            <Input
+              label={t('form:input-label-header-text-color')}
+              {...register('header_text_color')}
+              variant="outline"
+              type="color"
+              className="h-14"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5 border-t border-gray-100 pt-5">
+            <Input
+              label={t('form:input-label-footer-bg-color')}
+              {...register('footer_bg_color')}
+              variant="outline"
+              type="color"
+              className="h-14"
+            />
+            <Input
+              label={t('form:input-label-footer-text-color')}
+              {...register('footer_text_color')}
+              variant="outline"
+              type="color"
+              className="h-14"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 border-t border-gray-100 pt-5">
+            <Input
+              label={t('form:input-label-shadow-color')}
+              {...register('shadow_color')}
+              variant="outline"
+              type="color"
+              className="h-14"
+            />
+            <Input
+              label={t('form:input-label-gradient-start')}
+              {...register('gradient_start')}
+              variant="outline"
+              type="color"
+              className="h-14"
+            />
+            <Input
+              label={t('form:input-label-gradient-end')}
+              {...register('gradient_end')}
+              variant="outline"
+              type="color"
+              className="h-14"
+            />
+          </div>
+        </Card>
+      </div> */}
 
       <div className="flex flex-wrap pb-8 my-5 border-b border-gray-300 border-dashed sm:mt-8 sm:mb-3">
         <Description
@@ -513,7 +604,7 @@ export default function SettingsForm({ settings }: IProps) {
 
           <div className="mt-8">
             <Label className="mb-5 underline decoration-dashed uppercase text-sm font-bold text-gray-400">
-              {t('Multi-Radius Delivery Zones')}
+              {t('form:form-title-delivery-zones')}
             </Label>
 
             <div className="space-y-4">
@@ -523,21 +614,21 @@ export default function SettingsForm({ settings }: IProps) {
                   className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-100"
                 >
                   <Input
-                    label={t('Radius (km/mi)')}
+                    label={t('form:form-label-radius')}
                     {...register(`delivery.zones.${index}.radius` as const)}
                     type="number"
                     variant="outline"
                     error={t(errors.delivery?.zones?.[index]?.radius?.message!)}
                   />
                   <Input
-                    label={t('Fee')}
+                    label={t('form:form-label-fee')}
                     {...register(`delivery.zones.${index}.fee` as const)}
                     type="number"
                     variant="outline"
                     error={t(errors.delivery?.zones?.[index]?.fee?.message!)}
                   />
                   <Input
-                    label={t('Min Order')}
+                    label={t('form:form-label-min-order')}
                     {...register(`delivery.zones.${index}.min_order` as const)}
                     type="number"
                     variant="outline"
@@ -551,7 +642,7 @@ export default function SettingsForm({ settings }: IProps) {
                     variant="outline"
                     className="text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200"
                   >
-                    {t('Remove')}
+                    {t('common:button-label-remove')}
                   </Button>
                 </div>
               ))}
@@ -563,7 +654,7 @@ export default function SettingsForm({ settings }: IProps) {
               className="mt-4 bg-gray-100 text-gray-700 hover:bg-gray-200"
               variant="outline"
             >
-              + {t('Add Delivery Zone')}
+              + {t('form:button-label-add-delivery-zone')}
             </Button>
           </div>
         </Card>
@@ -638,16 +729,16 @@ export default function SettingsForm({ settings }: IProps) {
                   toolTipText={t('form:form-input-tip-auto-accept-types')}
                 />
                 <Input
-                  label={t('Default Pickup Ready Time (minutes)')}
-                  toolTipText={t('How long until a pickup order is ready, starting right after auto-accept.')}
+                  label={t('form:input-label-pickup-ready-time')}
+                  toolTipText={t('form:input-helper-pickup-ready-time')}
                   {...register('orders.auto_accept_ready_time_pickup')}
                   type="number"
                   variant="outline"
                   error={t(errors.orders?.auto_accept_ready_time_pickup?.message!)}
                 />
                 <Input
-                  label={t('Default Delivery Ready Time (minutes)')}
-                  toolTipText={t('How long until a delivery order is ready for dispatch, starting right after auto-accept.')}
+                  label={t('form:input-label-delivery-ready-time')}
+                  toolTipText={t('form:input-helper-delivery-ready-time')}
                   {...register('orders.auto_accept_ready_time_delivery')}
                   type="number"
                   variant="outline"
@@ -687,16 +778,16 @@ export default function SettingsForm({ settings }: IProps) {
           </Label>
           <div className="space-y-4">
             <div className="hidden md:grid grid-cols-4 gap-4 mb-2 text-xs font-bold text-gray-500 uppercase">
-              <div>Open</div>
-              <div>Close</div>
-              <div className="text-center">Closed</div>
+              <div>{t('form:text-open')}</div>
+              <div>{t('form:text-close')}</div>
+              <div className="text-center">{t('form:text-closed')}</div>
             </div>
             {scheduleFields.map((item: any, index: number) => (
               <div
                 key={item.id}
                 className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-b border-gray-100 pb-4 last:border-0"
               >
-                <div className="font-semibold text-sm text-heading lowercase capitalize">
+                <div className="font-semibold text-sm text-heading capitalize">
                   {t(item.day)}
                   <input
                     type="hidden"
@@ -723,7 +814,7 @@ export default function SettingsForm({ settings }: IProps) {
                   <SwitchInput
                     name={`operating_hours.schedule.${index}.is_closed`}
                     control={control}
-                    label={t('Closed')}
+                    label={t('form:text-closed')}
                   />
                 </div>
               </div>
@@ -750,15 +841,6 @@ export default function SettingsForm({ settings }: IProps) {
             />
           </div>
 
-          <div className="mt-6 mb-5">
-            <SwitchInput
-              name="enableTerms"
-              control={control}
-              label={t('form:input-label-terms-conditions-vendors')}
-              toolTipText={t('form:input-tooltip-shop-enable-terms')}
-              // disabled={isNotDefaultSettingsPage}
-            />
-          </div>
           <div className="mt-6 mb-5">
             <SwitchInput
               name="enableCoupons"

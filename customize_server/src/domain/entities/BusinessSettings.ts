@@ -42,6 +42,10 @@ export interface BusinessSettings {
   siteLink?: string;
   isProductReview?: boolean;
   enableTerms?: boolean;
+  termsPage?: {
+    title?: string;
+    body?: string;
+  };
   enableCoupons?: boolean;
   enableEmailForDigitalProduct?: boolean;
   enableReviewPopup?: boolean;
@@ -60,16 +64,27 @@ export interface BusinessSettings {
       url: string;
     }>;
     website?: string;
+    emailAddress?: string;
   };
   timezone?: string;
   currency?: string;
   heroSlides?: Array<{
     bgImage?: any;
+    bgType?: string;
+    bgVideo?: any;
     title?: string;
     subtitle?: string;
     subtitleTwo?: string;
+    offer?: string;
     btnText?: string;
     btnLink?: string;
+  }>;
+  offerCards?: Array<{
+    title?: string;
+    description?: string;
+    image?: any;
+    couponCode?: string;
+    showCouponCode?: boolean;
   }>;
   currencyOptions?: {
     formation?: string;
@@ -147,6 +162,9 @@ export interface BusinessSettings {
   paymentGateway?: any[];
   defaultPaymentGateway?: string;
   useEnableGateway?: boolean;
+  showMenuSection?: boolean;
+  primary_color?: string;
+  secondary_color?: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -162,6 +180,7 @@ export interface CreateBusinessSettingsDTO {
   siteLink?: string;
   isProductReview?: boolean;
   enableTerms?: boolean;
+  termsPage?: BusinessSettings['termsPage'];
   enableCoupons?: boolean;
   enableEmailForDigitalProduct?: boolean;
   enableReviewPopup?: boolean;
@@ -174,6 +193,7 @@ export interface CreateBusinessSettingsDTO {
   contactDetails?: BusinessSettings['contactDetails'];
   currency?: string;
   heroSlides?: BusinessSettings['heroSlides'];
+  offerCards?: BusinessSettings['offerCards'];
   currencyOptions?: BusinessSettings['currencyOptions'];
   seo?: BusinessSettings['seo'];
   google?: BusinessSettings['google'];
@@ -195,6 +215,9 @@ export interface CreateBusinessSettingsDTO {
   paymentGateway?: any[];
   defaultPaymentGateway?: string;
   useEnableGateway?: boolean;
+  showMenuSection?: boolean;
+  primary_color?: string;
+  secondary_color?: string;
 }
 
 export interface UpdateBusinessSettingsDTO {
@@ -207,6 +230,7 @@ export interface UpdateBusinessSettingsDTO {
   siteLink?: string;
   isProductReview?: boolean;
   enableTerms?: boolean;
+  termsPage?: BusinessSettings['termsPage'];
   enableCoupons?: boolean;
   enableEmailForDigitalProduct?: boolean;
   enableReviewPopup?: boolean;
@@ -219,6 +243,7 @@ export interface UpdateBusinessSettingsDTO {
   contactDetails?: BusinessSettings['contactDetails'];
   currency?: string;
   heroSlides?: BusinessSettings['heroSlides'];
+  offerCards?: BusinessSettings['offerCards'];
   currencyOptions?: BusinessSettings['currencyOptions'];
   seo?: BusinessSettings['seo'];
   google?: BusinessSettings['google'];
@@ -240,4 +265,7 @@ export interface UpdateBusinessSettingsDTO {
   paymentGateway?: any[];
   defaultPaymentGateway?: string;
   useEnableGateway?: boolean;
+  showMenuSection?: boolean;
+  primary_color?: string;
+  secondary_color?: string;
 }

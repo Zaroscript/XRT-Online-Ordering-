@@ -5,11 +5,12 @@ import Menulist from "../Component/Menu_Items/Menulist";
 import { ProductGridSkeleton } from "../Component/Menu_Items/ProductSkeleton";
 import TopRated from "../Component/TopRated/TopRated";
 import Testimonials from "../Component/Testimonials/Testimonials";
-import { useCategoriesQuery, useProductsQuery } from "@/api";
+import { useCategoriesQuery, useProductsQuery, useSiteSettingsQuery } from "@/api";
 
 const Home = () => {
   const { categories, loading: categoriesLoading } = useCategoriesQuery();
   const { products, loading: productsLoading } = useProductsQuery();
+  const { showMenuSection } = useSiteSettingsQuery();
   
   const loading = categoriesLoading || productsLoading;
   
@@ -28,19 +29,21 @@ const Home = () => {
       <Sliderfun />
       <Categories categories={categories} />
       <AdsList loading={loading} />
-      {loading ? (
-        <div className="px-4 md:px-8 lg:px-[70px] mt-4 mb-6">
-          <h2 className="text-3xl font-bold text-gray-800 mb-3">Menu List</h2>
-          <ProductGridSkeleton count={8} variant="home" />
-        </div>
-      ) : (
-        <Menulist 
-          variant="home" 
-          initialCategory={initialCategory} 
-          limit={8} 
-          products={uniqueMenuProducts}
-          categories={categoryNames}
-        />
+      {showMenuSection && (
+        loading ? (
+          <div className="px-4 md:px-8 lg:px-[70px] mt-4 mb-6">
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">Menu List</h2>
+            <ProductGridSkeleton count={8} variant="home" />
+          </div>
+        ) : (
+          <Menulist 
+            variant="home" 
+            initialCategory={initialCategory} 
+            limit={8} 
+            products={uniqueMenuProducts}
+            categories={categoryNames}
+          />
+        )
       )}
       <TopRated products={uniqueMenuProducts} productsLoading={loading} />
       <Testimonials />

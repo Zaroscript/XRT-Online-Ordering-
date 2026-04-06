@@ -1127,9 +1127,61 @@ export interface LatestMessage {
   body: string;
   conversation_id: string;
   created_at: string;
-  updated_at: string;
-  user_id: string;
+  refund_reason: string;
+  order_id: string;
   id: string;
+}
+
+// --- Loyalty Program Types ---
+
+export interface LoyaltyProgram {
+  id?: string;
+  is_active: boolean;
+  earn_rate_points_per_currency: number;
+  redeem_rate_currency_per_point: number;
+  minimum_points_to_redeem: number;
+  max_discount_percent_per_order: number;
+}
+
+export interface LoyaltyProgramInput {
+  is_active: boolean;
+  earn_rate_points_per_currency: number;
+  redeem_rate_currency_per_point: number;
+  minimum_points_to_redeem: number;
+  max_discount_percent_per_order: number;
+}
+
+export interface LoyaltyAccount {
+  id: string;
+  customer_id: string; // The user ID tied to the phone number
+  phone?: string;
+  points_balance: number;
+  total_points_earned: number;
+  total_points_redeemed: number;
+  created_at: string;
+  updated_at: string;
+  customer?: User; // Populated from backend
+}
+
+export interface LoyaltyAccountPaginator {
+  data: LoyaltyAccount[];
+  paginatorInfo: PaginatorInfo<LoyaltyAccount>;
+}
+
+export interface LoyaltyTransaction {
+  id: string;
+  loyalty_account_id: string;
+  order_id?: string;
+  type: 'EARN' | 'REDEEM' | 'ADJUST';
+  points_change: number;
+  points_balance_after: number;
+  description: string;
+  created_at: string;
+}
+
+export interface LoyaltyTransactionPaginator {
+  data: LoyaltyTransaction[];
+  paginatorInfo: PaginatorInfo<LoyaltyTransaction>;
 }
 
 export interface Conversations {
@@ -1270,6 +1322,10 @@ export interface SettingsOptions {
   guestCheckout: boolean;
   server_info?: ServerInfo;
   enableTerms?: boolean;
+  termsPage?: {
+    title?: string;
+    body?: string;
+  };
   enableCoupons?: boolean;
   maintenance: Maintenance;
   isUnderMaintenance: boolean;
@@ -1320,10 +1376,14 @@ export interface SettingsOptions {
   authorizeNetTransactionKey?: string;
   authorizeNetMode?: 'ui' | 'iframe';
   authorizeNetEnvironment?: 'sandbox' | 'production';
+  primary_color?: string;
+  secondary_color?: string;
 }
 
 export interface HeroSlide {
+  bgType?: 'image' | 'video';
   bgImage?: AttachmentInput;
+  bgVideo?: AttachmentInput;
   title: string;
   subtitle: string;
   subtitleTwo?: string;
@@ -1424,6 +1484,10 @@ export interface SettingsOptionsInput {
   server_info?: ServerInfo;
   useGoogleMap?: boolean;
   enableTerms?: boolean;
+  termsPage?: {
+    title?: string;
+    body?: string;
+  };
   enableCoupons?: boolean;
   isProductReview?: boolean;
   enableEmailForDigitalProduct?: boolean;
@@ -1469,6 +1533,8 @@ export interface SettingsOptionsInput {
   authorizeNetTransactionKey?: string;
   authorizeNetMode?: 'ui' | 'iframe';
   authorizeNetEnvironment?: 'sandbox' | 'production';
+  primary_color?: string;
+  secondary_color?: string;
 }
 
 export interface DeliveryTime {
@@ -2548,3 +2614,14 @@ export interface ItemModifierAssignment {
     };
   }; // Modifier prices by size and quantity level
 }
+
+export interface MarketingEmail {
+  id: string;
+  subject: string;
+  heading: string;
+  body: string;
+  audience: string;
+  audience_count: number;
+  created_at: string;
+}
+

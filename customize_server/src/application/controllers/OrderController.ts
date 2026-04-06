@@ -17,10 +17,12 @@ import { PrintLogRepository } from '../../infrastructure/repositories/PrintLogRe
 import { Server as SocketIOServer } from 'socket.io';
 
 import { BusinessSettingsRepository } from '../../infrastructure/repositories/BusinessSettingsRepository';
+import { BusinessRepository } from '../../infrastructure/repositories/BusinessRepository';
 import { CouponRepository } from '../../infrastructure/repositories/CouponRepository';
 import { CustomerRepository } from '../../infrastructure/repositories/CustomerRepository';
 import { TransactionRepository } from '../../infrastructure/repositories/TransactionRepository';
 import * as AuthorizeNet from 'authorizenet';
+import { CustomerOrderNotificationService } from '../../services/order/CustomerOrderNotificationService';
 
 /**
  * Authorize.Net refund (credit) transactions require refTransId, amount, and masked card XXXX1234 + expiration XXXX.
@@ -171,6 +173,26 @@ export class OrderController {
 
     if (!order) {
       throw new NotFoundError('Order not found');
+    }
+
+    try {
+      const businessRepository = new BusinessRepository();
+      const customerRepository = new CustomerRepository();
+      const [business, customer] = await Promise.all([
+        businessRepository.findOne(),
+        customerRepository.findById(order.customer_id, order.business_id),
+      ]);
+
+      if (business && customer) {
+        const notificationService = new CustomerOrderNotificationService();
+        await notificationService.sendOrderStatusNotifications({
+          business,
+          customer,
+          order,
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to send order status notifications:', error?.message || error);
     }
 
     return sendSuccess(res, 'Order status updated successfully', order);

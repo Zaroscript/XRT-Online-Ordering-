@@ -244,8 +244,8 @@ export function getOrderStatusColors(
     ready: IN_PROGRESS_COLORS,
     'out of delivery': IN_PROGRESS_COLORS,
     completed: {
-      badge: 'bg-green-50 text-green-700 border-green-200',
-      dot: 'bg-green-500',
+      badge: 'bg-accent/10 text-accent-hover border-accent/20',
+      dot: 'bg-accent',
     },
     canceled: {
       badge: 'bg-red-50 text-red-700 border-red-200',

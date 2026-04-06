@@ -712,40 +712,6 @@ export default function ModifiersSection({
                     {t('form:select-modifier-groups-first')}
                   </p>
                 )}
-                {selectedModifierGroups.length > 0 &&
-                  !loadingModifiers &&
-                  relevantModifiers.length === 0 && (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs text-yellow-600">
-                        {t('form:no-modifiers-found')}
-                      </p>
-                      {process.env.NODE_ENV === 'development' && (
-                        <details className="text-xs text-gray-500">
-                          <summary className="cursor-pointer">
-                            Debug Info
-                          </summary>
-                          <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
-                            <p>
-                              All Modifiers Count:{' '}
-                              {allModifiersList?.length || 0}
-                            </p>
-                            <p>
-                              Selected Groups Count:{' '}
-                              {selectedModifierGroups?.length || 0}
-                            </p>
-                            <p>
-                              Selected Group IDs:{' '}
-                              {JSON.stringify(
-                                selectedModifierGroups
-                                  ?.map(getGroupId)
-                                  .filter(Boolean),
-                              )}
-                            </p>
-                          </div>
-                        </details>
-                      )}
-                    </div>
-                  )}
                 {loadingModifiers && (
                   <p className="mt-2 text-xs text-gray-500">
                     {t('form:loading-modifiers')}

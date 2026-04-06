@@ -6,6 +6,7 @@ export const landingSettingsValidationSchema = yup.object().shape({
   footer_text: yup.string(),
   siteLink: yup.string(),
   copyrightText: yup.string(),
+  showMenuSection: yup.boolean(),
   contactDetails: yup.object().shape({
     location: yup
       .object()
@@ -30,9 +31,28 @@ export const landingSettingsValidationSchema = yup.object().shape({
       title: yup.string().required('form:error-title-required'),
       subtitle: yup.string(),
       offer: yup.string(),
-      btnText: yup.string(),
       btnLink: yup.string(),
-      bgImage: yup.mixed().nullable().optional(),
+      btnText: yup.string(),
+      bgType: yup.string().oneOf(['image', 'video']).default('image'),
+      bgImage: yup.mixed().when('bgType', {
+        is: 'image',
+        then: () => yup.mixed().required('form:error-hero-bg-image-required'),
+        otherwise: () => yup.mixed().nullable().optional(),
+      }),
+      bgVideo: yup.mixed().when('bgType', {
+        is: 'video',
+        then: () => yup.mixed().required('form:error-hero-bg-video-required'),
+        otherwise: () => yup.mixed().nullable().optional(),
+      }),
+    }),
+  ),
+  offerCards: yup.array().of(
+    yup.object().shape({
+      title: yup.string().required('form:error-title-required'),
+      description: yup.string(),
+      image: yup.mixed().required('form:error-image-required'),
+      couponCode: yup.mixed().nullable().optional(),
+      showCouponCode: yup.boolean().default(false),
     }),
   ),
 });

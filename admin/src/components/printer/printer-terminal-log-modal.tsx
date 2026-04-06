@@ -21,7 +21,7 @@ function levelClass(level: string): string {
     case 'warn':
       return 'text-amber-300';
     case 'success':
-      return 'text-emerald-400';
+      return 'text-accent';
     default:
       return 'text-cyan-300';
   }
@@ -98,10 +98,10 @@ export default function PrinterTerminalLogModal({ printer, open, onClose }: Prop
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl overflow-hidden rounded-lg border border-emerald-900/60 bg-[#0a0a0a] shadow-2xl shadow-black/50">
-                <div className="flex items-center justify-between border-b border-emerald-900/40 bg-[#0d1117] px-4 py-2">
+              <Dialog.Panel className="w-full max-w-4xl overflow-hidden rounded-lg border border-accent/20 bg-[#0a0a0a] shadow-2xl shadow-black/50">
+                <div className="flex items-center justify-between border-b border-accent/10 bg-[#0d1117] px-4 py-2">
                   <div className="min-w-0">
-                    <Dialog.Title className="truncate font-mono text-sm font-semibold text-emerald-500">
+                    <Dialog.Title className="truncate font-mono text-sm font-semibold text-accent">
                       xrt-print@{printer?.name ?? 'printer'}:~$ activity.log
                     </Dialog.Title>
                     <p className="truncate font-mono text-[10px] text-gray-500">
@@ -114,7 +114,7 @@ export default function PrinterTerminalLogModal({ printer, open, onClose }: Prop
                       type="button"
                       onClick={handleRefresh}
                       disabled={isFetching}
-                      className="rounded border border-emerald-800/80 px-2 py-1 font-mono text-[11px] text-emerald-400 hover:bg-emerald-950/50 disabled:opacity-50"
+                      className="rounded border border-accent/30 px-2 py-1 font-mono text-[11px] text-accent hover:bg-accent/5 disabled:opacity-50"
                     >
                       {isFetching ? 'refresh…' : 'refresh'}
                     </button>
@@ -167,7 +167,7 @@ export default function PrinterTerminalLogModal({ printer, open, onClose }: Prop
                   {!isLoading && lines.length > 0 && (
                     <span className="mt-2 block text-gray-600">
                       {'\n'}
-                      <span className="text-emerald-600">$</span>{' '}
+                      <span className="text-accent">$</span>{' '}
                       <span className="animate-pulse">_</span>
                     </span>
                   )}

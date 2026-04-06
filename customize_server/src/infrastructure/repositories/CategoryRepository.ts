@@ -73,6 +73,8 @@ export class CategoryRepository implements ICategoryRepository {
   async create(categoryData: CreateCategoryDTO): Promise<Category> {
     const categoryDoc = new CategoryModel(categoryData);
     await categoryDoc.save();
+    await categoryDoc.populate('kitchen_section_id');
+    await categoryDoc.populate('modifier_groups.modifier_group_id');
     return this.toDomain(categoryDoc);
   }
 
@@ -145,10 +147,16 @@ export class CategoryRepository implements ICategoryRepository {
     categoryData: UpdateCategoryDTO
   ): Promise<Category> {
     // Remove business_id from update filter
-    const categoryDoc = await CategoryModel.findOneAndUpdate({ _id: id }, categoryData, {
-      new: true,
-      runValidators: true,
-    });
+    const categoryDoc = await CategoryModel.findOneAndUpdate(
+      { _id: id },
+      categoryData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    )
+      .populate('kitchen_section_id')
+      .populate('modifier_groups.modifier_group_id');
 
     if (!categoryDoc) {
       throw new Error('Category not found');

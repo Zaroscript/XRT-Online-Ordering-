@@ -8,6 +8,7 @@ import Checkout from "../pages/Checkout";
 import Payment from "../pages/Payment";
 import ProductDetails from "../pages/ProductDetails";
 import OrderSuccess from "../pages/OrderSuccess";
+import TermsAndConditions from "../pages/TermsAndConditions";
 
 const routes = [
   {
@@ -41,6 +42,10 @@ const routes = [
   {
     path: "/order-success",
     element: <OrderSuccess />,
+  },
+  {
+    path: "/terms-and-conditions",
+    element: <TermsAndConditions />,
   },
   {
     path: "/product/:id",

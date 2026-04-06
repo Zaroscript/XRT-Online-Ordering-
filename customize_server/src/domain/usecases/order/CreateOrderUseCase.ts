@@ -6,6 +6,10 @@ import { CreateOrderDTO, Order, OrderItem } from '../../entities/Order';
 import { IBusinessSettingsRepository } from '../../repositories/IBusinessSettingsRepository';
 import { ICouponRepository } from '../../repositories/ICouponRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
+import { LoyaltyService } from '../../services/LoyaltyService';
+import { LoyaltyProgramRepository } from '../../../infrastructure/repositories/LoyaltyProgramRepository';
+import { LoyaltyAccountRepository } from '../../../infrastructure/repositories/LoyaltyAccountRepository';
+import { LoyaltyTransactionRepository } from '../../../infrastructure/repositories/LoyaltyTransactionRepository';
 
 const KITCHEN_SECTION_UNASSIGNED = 'Unassigned';
 
@@ -17,7 +21,15 @@ export class CreateOrderUseCase {
     private businessSettingsRepository: IBusinessSettingsRepository,
     private couponRepository: ICouponRepository,
     private customerRepository: ICustomerRepository
-  ) {}
+  ) {
+    this.loyaltyService = new LoyaltyService(
+      new LoyaltyProgramRepository(),
+      new LoyaltyAccountRepository(),
+      new LoyaltyTransactionRepository()
+    );
+  }
+
+  private loyaltyService: LoyaltyService;
 
   /**
    * Resolve kitchen section name for a menu item via Item → Category → kitchen_section_data.
@@ -94,19 +106,35 @@ export class CreateOrderUseCase {
       verifiedDiscount = Math.min(verifiedDiscount, computedSubtotal);
     }
 
+    // 2.6 Validate Loyalty Points if requested
+    let loyaltyDiscount = 0;
+    if (orderData.money.rewards_points_used && orderData.customer_id) {
+      try {
+        const { discount_value } = await this.loyaltyService.validateRedemption(
+          orderData.customer_id,
+          orderData.money.rewards_points_used
+        );
+        loyaltyDiscount = discount_value;
+      } catch (err: any) {
+        throw new Error(`Failed to apply loyalty points: ${err.message}`);
+      }
+    }
+
     // 3. Verify calculated vs provided total to ensure consistency
     const expectedTotal =
       computedSubtotal +
       orderData.money.delivery_fee +
       orderData.money.tax_total +
       orderData.money.tips -
-      verifiedDiscount;
+      verifiedDiscount -
+      loyaltyDiscount;
 
     const sanitizedMoney = {
       ...orderData.money,
       subtotal: computedSubtotal,
       discount: verifiedDiscount, // Use verified discount
-      total_amount: expectedTotal,
+      loyalty_discount_amount: loyaltyDiscount,
+      total_amount: Math.max(0, expectedTotal),
     };
 
     // 4. Check for auto-accept settings and business ID consistency
@@ -117,6 +145,19 @@ export class CreateOrderUseCase {
     };
 
     const order = await this.orderRepository.create(sanitizedData);
+
+    // 5. Safely deduct loyalty points matching validation check
+    if (orderData.money.rewards_points_used && orderData.customer_id && order.id) {
+      try {
+        await this.loyaltyService.redeemPointsByCustomer(
+          orderData.customer_id,
+          orderData.money.rewards_points_used,
+          order.id
+        );
+      } catch (e: any) {
+        console.warn('[CreateOrderUseCase] Failed to deduct loyalty points after order creation:', e.message);
+      }
+    }
 
     const customerId =
       typeof order.customer_id === 'string'

@@ -33,6 +33,9 @@ import { loadSavedCustomer, saveCustomerData } from "../utils/customerStorage";
 import { geocodeAddress, buildAddressString } from "../utils/geocode";
 import { COLORS } from "../config/colors";
 import { restaurantLocation } from "@/constants/business";
+import { useLoyalty } from "../hooks/useLoyalty";
+import { LoyaltyJoinCheckbox } from "../components/checkout/LoyaltyJoinCheckbox";
+import { LoyaltyPointsWidget } from "../components/checkout/LoyaltyPointsWidget";
 
 // Fix Leaflet icon issue
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -64,6 +67,14 @@ const YouAreHereIcon = L.divIcon({
 const DEFAULT_TIP_OPTIONS = [10, 15, 20, 25];
 const DEFAULT_TAX_RATE = 0;
 const DEFAULT_MAP_CENTER = [51.505, -0.09];
+const DEFAULT_CUSTOMER_FORM = {
+  firstName: "",
+  lastName: "",
+  phone: "",
+  email: "",
+  acceptsMarketingMessages: true,
+  acceptsOrderUpdates: true,
+};
 
 /** Returns { lat, lng } with valid numbers so Leaflet never receives undefined. */
 function getShopLocation(location) {
@@ -99,8 +110,29 @@ const Checkout = () => {
     setShowDeliveryModal,
   } = useCart();
   const navigate = useNavigate();
+  const {
+    lookup: lookupLoyalty,
+    discountValue: loyaltyDiscount,
+    pointsRedeemed: loyaltyPointsRedeemed = 0,
+  } = useLoyalty();
+
+  const [form, setForm] = useState(() => {
+    const saved = loadSavedCustomer();
+    return { ...DEFAULT_CUSTOMER_FORM, ...(saved || {}) };
+  });
+
+  // Loyalty lookup when phone changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      lookupLoyalty(form.phone || "");
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [form.phone, lookupLoyalty]);
+
   const { data: siteSettings, refetch: refetchSiteSettings } =
     useSiteSettingsQuery();
+
   useEffect(() => {
     refetchSiteSettings();
   }, [refetchSiteSettings]);
@@ -117,10 +149,6 @@ const Checkout = () => {
       : DEFAULT_TAX_RATE;
 
   const [orderType, setOrderType] = useState(contextOrderType || "delivery");
-  const [form, setForm] = useState(() => {
-    const saved = loadSavedCustomer();
-    return saved || { firstName: "", lastName: "", phone: "", email: "" };
-  });
 
   const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
   const [customerCoords, setCustomerCoords] = useState(null);
@@ -143,6 +171,7 @@ const Checkout = () => {
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
   const [asapTime, setAsapTime] = useState("");
+
 
   // Sync map center
   useEffect(() => {
@@ -232,7 +261,11 @@ const Checkout = () => {
   };
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, type, value, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleApplyPromo = () => {
@@ -334,7 +367,7 @@ const Checkout = () => {
       : 0;
 
   const deliveryFee = orderType === "delivery" ? (matchedZone?.fee ?? 0) : 0;
-  const total = subtotal + tax + tipAmount + deliveryFee - discount;
+  const total = subtotal + tax + tipAmount + deliveryFee - discount - loyaltyDiscount;
 
   // Build delivery address string
   const deliveryAddress = deliveryDetails
@@ -545,6 +578,8 @@ const Checkout = () => {
         name: `${form.firstName} ${form.lastName}`.trim(),
         email: form.email || undefined,
         phone: form.phone,
+        accepts_marketing_messages: form.acceptsMarketingMessages,
+        accepts_order_updates: form.acceptsOrderUpdates,
       },
       order_type: orderType || "pickup",
       service_time_type: orderTimeType === "asap" ? "ASAP" : "Schedule",
@@ -561,6 +596,9 @@ const Checkout = () => {
         total_amount: total,
         currency: siteSettings?.currency || "USD",
         coupon_code: promoApplied ? promoCode : undefined,
+        loyalty_discount: loyaltyDiscount > 0 ? loyaltyDiscount : undefined,
+        loyalty_points_redeemed:
+          loyaltyPointsRedeemed > 0 ? loyaltyPointsRedeemed : undefined,
         // Payment type/token will be injected by the dedicated Payment screen
       },
       delivery:
@@ -612,7 +650,7 @@ const Checkout = () => {
           </p>
           <Link
             to="/menu"
-            className="px-8 py-3 bg-[var(--primary)] text-white font-bold rounded-full hover:brightness-110 transition-all shadow-lg shadow-green-200 flex items-center gap-2"
+            className="px-8 py-3 bg-(--primary) text-white font-bold rounded-full hover:brightness-110 transition-all shadow-lg shadow-(--primary)/20 flex items-center gap-2"
           >
             <ArrowLeft size={18} />
             Browse Menu
@@ -634,7 +672,7 @@ const Checkout = () => {
         {/* Back to Cart */}
         <Link
           to="/cart"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-[var(--primary)] font-medium mb-6 transition-colors group"
+          className="inline-flex items-center gap-2 text-gray-500 hover:text-(--primary) font-medium mb-6 transition-colors group"
         >
           <ArrowLeft
             size={18}
@@ -645,7 +683,7 @@ const Checkout = () => {
 
         {/* Page Header */}
         <div className="mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-1">
+          <h1 className="text-3xl md:text-4xl font-bold text-(--text-primary) mb-1">
             Checkout
           </h1>
           <p className="text-gray-500 text-lg">
@@ -659,8 +697,8 @@ const Checkout = () => {
           <div className="lg:col-span-3 space-y-8">
             {/* Contact Information */}
             <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center">
+              <h2 className="text-xl font-bold text-(--text-primary) mb-6 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-(--primary) text-white text-sm font-bold flex items-center justify-center">
                   1
                 </span>
                 Contact Information
@@ -675,7 +713,7 @@ const Checkout = () => {
                     onClick={() => setOrderType("delivery")}
                     className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
                       orderType === "delivery"
-                        ? "bg-green-600 text-white border-green-600"
+                        ? "bg-primary text-white border-primary"
                         : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                     }`}
                   >
@@ -685,7 +723,7 @@ const Checkout = () => {
                     onClick={() => setOrderType("pickup")}
                     className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
                       orderType === "pickup"
-                        ? "bg-green-600 text-white border-green-600"
+                        ? "bg-primary text-white border-primary"
                         : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                     }`}
                   >
@@ -709,7 +747,7 @@ const Checkout = () => {
                     placeholder="John"
                     value={form.firstName}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                   />
                 </div>
                 <div>
@@ -726,7 +764,7 @@ const Checkout = () => {
                     placeholder="Doe"
                     value={form.lastName}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                   />
                 </div>
                 <div>
@@ -743,7 +781,7 @@ const Checkout = () => {
                     placeholder="+1 (555) 000-0000"
                     value={form.phone}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                   />
                 </div>
                 <div>
@@ -760,9 +798,37 @@ const Checkout = () => {
                     placeholder="john@example.com"
                     value={form.email}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                   />
                 </div>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <label className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                  <input
+                    name="acceptsMarketingMessages"
+                    type="checkbox"
+                    checked={form.acceptsMarketingMessages}
+                    onChange={handleChange}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-(--primary) focus:ring-(--primary)/30"
+                  />
+                  <span className="leading-6">
+                    I want to receive marketing and rewards program emails and text messages.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                  <input
+                    name="acceptsOrderUpdates"
+                    type="checkbox"
+                    checked={form.acceptsOrderUpdates}
+                    onChange={handleChange}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-(--primary) focus:ring-(--primary)/30"
+                  />
+                  <span className="leading-6">
+                    I want to receive emails and text messages about my order updates.
+                  </span>
+                </label>
               </div>
 
               <div className="mt-6 p-4 bg-gray-100 rounded-lg flex justify-between items-start">
@@ -781,7 +847,7 @@ const Checkout = () => {
                 {orderType === "delivery" && (
                   <button
                     onClick={() => setShowDeliveryModal(true)}
-                    className="text-green-600 text-sm font-medium hover:underline"
+                    className="text-(--primary) text-sm font-medium hover:underline"
                   >
                     Edit
                   </button>
@@ -791,8 +857,8 @@ const Checkout = () => {
 
             {/* Order Time */}
             <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center">
+              <h2 className="text-xl font-bold text-(--text-primary) mb-6 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-(--primary) text-white text-sm font-bold flex items-center justify-center">
                   2
                 </span>
                 Order Time
@@ -804,7 +870,7 @@ const Checkout = () => {
                     onClick={() => handleSetOrderTimeType("asap")}
                     className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
                       orderTimeType === "asap"
-                        ? "bg-green-600 text-white border-green-600"
+                        ? "bg-primary text-white border-primary"
                         : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                     }`}
                   >
@@ -814,7 +880,7 @@ const Checkout = () => {
                     onClick={() => handleSetOrderTimeType("later")}
                     className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
                       orderTimeType === "later"
-                        ? "bg-green-600 text-white border-green-600"
+                        ? "bg-primary text-white border-primary"
                         : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                     }`}
                   >
@@ -838,7 +904,7 @@ const Checkout = () => {
                       type="date"
                       value={scheduledDate}
                       onChange={(e) => setScheduledDate(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                     />
                   </div>
                   <div>
@@ -854,7 +920,7 @@ const Checkout = () => {
                       type="time"
                       value={scheduledTime}
                       onChange={(e) => setScheduledTime(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                     />
                   </div>
                 </div>
@@ -864,8 +930,8 @@ const Checkout = () => {
             {/* Delivery Map & Zone Selection */}
             {orderType === "delivery" && (
               <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-                <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center ">
+                <h2 className="text-xl font-bold text-(--text-primary) mb-6 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-(--primary) text-white text-sm font-bold flex items-center justify-center">
                     3
                   </span>
                   Set Delivery Location
@@ -884,7 +950,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={() => setShowDeliveryModal(true)}
-                      className="text-sm font-medium text-[var(--primary)] hover:underline flex items-center gap-1"
+                      className="text-sm font-medium text-(--primary) hover:underline flex items-center gap-1"
                     >
                       <MapPin size={14} />
                       Change delivery address
@@ -910,14 +976,14 @@ const Checkout = () => {
                             onKeyDown={(e) =>
                               e.key === "Enter" && handleSearchLocation()
                             }
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] text-sm"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) text-sm"
                           />
                         </div>
                         <button
                           type="button"
                           onClick={handleSearchLocation}
                           disabled={searchLoading || !searchQuery.trim()}
-                          className="px-4 py-2.5 rounded-xl border border-[var(--primary)] bg-[var(--primary)] text-white font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                          className="px-4 py-2.5 rounded-xl border border-(--primary) bg-(--primary) text-white font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                         >
                           {searchLoading ? "Searching…" : "Search"}
                         </button>
@@ -938,7 +1004,7 @@ const Checkout = () => {
                           type="button"
                           onClick={handleUseMyLocation}
                           disabled={locateLoading}
-                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)] hover:bg-[var(--primary)]/20 disabled:opacity-50 text-sm font-medium"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-(--primary) bg-(--primary)/10 text-(--primary) hover:bg-(--primary)/20 disabled:opacity-50 text-sm font-medium"
                         >
                           <Navigation size={16} />
                           {locateLoading ? "Getting…" : "My location"}
@@ -1072,7 +1138,7 @@ const Checkout = () => {
                             }}
                           >
                             <p
-                              className={`font-bold ${matchedZone ? "text-green-700" : "text-red-700"}`}
+                              className={`font-bold ${matchedZone ? "text-(--primary)" : "text-red-700"}`}
                             >
                               {matchedZone
                                 ? "Location in Delivery Zone"
@@ -1080,13 +1146,13 @@ const Checkout = () => {
                             </p>
                             {matchedZone && (
                               <>
-                                <p className="text-sm text-green-600 mt-1">
+                                <p className="text-sm text-(--primary) opacity-80 mt-1">
                                   Delivery Fee:{" "}
                                   {formatPrice(matchedZone.fee, siteSettings)}
                                 </p>
                                 {matchedZone.min_order != null &&
                                   matchedZone.min_order > 0 && (
-                                    <p className="text-sm text-green-600 mt-0.5">
+                                    <p className="text-sm text-(--primary) opacity-80 mt-0.5">
                                       Min. order:{" "}
                                       {formatPrice(
                                         matchedZone.min_order,
@@ -1127,8 +1193,8 @@ const Checkout = () => {
 
             {/* Promo Code */}
             <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-[var(--primary)] text-white text-sm font-bold flex items-center justify-center">
+              <h2 className="text-xl font-bold text-(--text-primary) mb-6 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-(--primary) text-white text-sm font-bold flex items-center justify-center">
                   {orderType === "delivery" ? "4" : "3"}
                 </span>
                 Promo Code
@@ -1148,13 +1214,13 @@ const Checkout = () => {
                       setPromoCode(e.target.value);
                       if (promoApplied) setPromoApplied(false);
                     }}
-                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-full pl-11 pr-4 py-3 bg-linear-to-br from-(--primary)/5 to-transparent border-l-4 border-(--primary) rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                   />
                 </div>
                 <button
                   onClick={handleApplyPromo}
                   disabled={!promoCode.trim() || verifyCouponMutation.isPending}
-                  className="px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-xl hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                  className="px-6 py-3 bg-(--primary) text-white font-bold rounded-xl hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                 >
                   {verifyCouponMutation.isPending ? "Checking..." : "Apply"}
                 </button>
@@ -1174,13 +1240,34 @@ const Checkout = () => {
                 </p>
               )}
             </section>
+
+            {/* Loyalty Rewards */}
+            <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+              <h2 className="text-xl font-bold text-(--text-primary) mb-6 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-(--primary) text-white text-sm font-bold flex items-center justify-center">
+                  {orderType === "delivery" ? "5" : "4"}
+                </span>
+                Rewards & Loyalty
+              </h2>
+              
+              <LoyaltyJoinCheckbox 
+                phone={form.phone} 
+                name={`${form.firstName} ${form.lastName}`} 
+                email={form.email} 
+              />
+
+              <LoyaltyPointsWidget 
+                phone={form.phone} 
+                subtotal={subtotal}
+              />
+            </section>
           </div>
 
           {/* ── RIGHT COLUMN: Order Summary ── */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 sticky top-28">
-              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2">
-                <ShoppingBag size={20} className="text-[var(--primary)]" />
+              <h2 className="text-xl font-bold text-(--text-primary) mb-6 flex items-center gap-2">
+                <ShoppingBag size={20} className="text-(--primary)" />
                 Your Bag
                 <span className="ml-auto text-sm font-medium text-gray-400">
                   {cartItems.reduce((s, i) => s + i.qty, 0)} items
@@ -1189,11 +1276,11 @@ const Checkout = () => {
 
               {orderType === "delivery" &&
                 (deliveryAddress || deliveryDetails) && (
-                  <div className="mb-5 p-4 bg-green-50/60 rounded-xl border border-green-100">
+                  <div className="mb-5 p-4 bg-(--primary)/10 rounded-xl border border-(--primary)/20">
                     <div className="flex items-start gap-2.5">
                       <MapPin
                         size={16}
-                        className="text-[var(--primary)] mt-0.5 flex-shrink-0"
+                        className="text-(--primary) mt-0.5 flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-700 mb-0.5">
@@ -1205,7 +1292,7 @@ const Checkout = () => {
                         <button
                           type="button"
                           onClick={() => setShowDeliveryModal(true)}
-                          className="mt-2 text-xs font-medium text-[var(--primary)] hover:underline"
+                          className="mt-2 text-xs font-medium text-(--primary) hover:underline"
                         >
                           Change delivery address
                         </button>
@@ -1248,7 +1335,7 @@ const Checkout = () => {
                           <div className="flex items-center gap-1.5 bg-gray-100 rounded-lg px-1 py-0.5">
                             <button
                               onClick={() => updateQuantity(item.id, -1)}
-                              className="p-1 hover:bg-white rounded-md transition-colors text-gray-500 hover:text-[var(--primary)]"
+                              className="p-1 hover:bg-white rounded-md transition-colors text-gray-500 hover:text-(--primary)"
                             >
                               <Minus size={12} />
                             </button>
@@ -1257,7 +1344,7 @@ const Checkout = () => {
                             </span>
                             <button
                               onClick={() => updateQuantity(item.id, 1)}
-                              className="p-1 hover:bg-white rounded-md transition-colors text-gray-500 hover:text-[var(--primary)]"
+                              className="p-1 hover:bg-white rounded-md transition-colors text-gray-500 hover:text-(--primary)"
                             >
                               <Plus size={12} />
                             </button>
@@ -1272,7 +1359,7 @@ const Checkout = () => {
                       </div>
 
                       {/* Line Total */}
-                      <span className="font-bold text-[var(--primary)] text-sm whitespace-nowrap mt-1">
+                      <span className="font-bold text-(--primary) text-sm whitespace-nowrap mt-1">
                         {formatPrice(lineTotal, siteSettings)}
                       </span>
                     </div>
@@ -1283,7 +1370,7 @@ const Checkout = () => {
               {/* Tip Section */}
               <div className="mt-5 p-4 bg-gray-50/80 rounded-xl border border-gray-100">
                 <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
-                  <Heart size={14} className="text-[var(--primary)]" />
+                  <Heart size={14} className="text-(--primary)" />
                   Add a Tip
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -1296,8 +1383,8 @@ const Checkout = () => {
                       }}
                       className={`px-3.5 py-2 text-sm font-semibold rounded-lg border transition-all ${
                         selectedTip === pct && !customTip
-                          ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm"
-                          : "bg-white text-gray-700 border-gray-200 hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                          ? "bg-(--primary) text-white border-(--primary) shadow-sm"
+                          : "bg-white text-gray-700 border-gray-200 hover:border-(--primary) hover:text-(--primary)"
                       }`}
                     >
                       {pct}%
@@ -1312,7 +1399,7 @@ const Checkout = () => {
                       setCustomTip(e.target.value);
                       if (e.target.value) setSelectedTip(null);
                     }}
-                    className="w-20 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 focus:border-[var(--primary)] transition-all"
+                    className="w-20 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                   />
                 </div>
                 {tipAmount > 0 && (
@@ -1350,22 +1437,28 @@ const Checkout = () => {
                 {tipAmount > 0 && (
                   <div className="flex justify-between text-gray-600">
                     <span>Tip</span>
-                    <span className="font-semibold text-[var(--primary)]">
+                    <span className="font-semibold text-(--primary)">
                       {formatPrice(tipAmount, siteSettings)}
                     </span>
                   </div>
                 )}
                 {discount > 0 && (
-                  <div className="flex justify-between text-green-600 font-medium">
+                  <div className="flex justify-between text-(--primary) font-medium">
                     <span>Discount</span>
                     <span>-{formatPrice(discount, siteSettings)}</span>
                   </div>
                 )}
+                {loyaltyDiscount > 0 && (
+                  <div className="flex justify-between text-(--primary) font-medium">
+                    <span>Loyalty Points Reward</span>
+                    <span>-{formatPrice(loyaltyDiscount, siteSettings)}</span>
+                  </div>
+                )}
                 <div className="border-t border-gray-100 pt-3 flex justify-between items-center">
-                  <span className="text-lg font-bold text-[var(--text-primary)]">
+                  <span className="text-lg font-bold text-(--text-primary)">
                     Total
                   </span>
-                  <span className="text-2xl font-bold text-[var(--primary)]">
+                  <span className="text-2xl font-bold text-(--primary)">
                     {formatPrice(total, siteSettings)}
                   </span>
                 </div>
@@ -1382,7 +1475,7 @@ const Checkout = () => {
               <div className="mt-6 mb-6">
                 <button
                   onClick={handleSubmitOrder}
-                  className="w-full py-4 bg-[var(--primary)] text-white font-bold text-lg rounded-xl flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-green-200 transform hover:-translate-y-0.5 active:translate-y-0"
+                  className="w-full py-4 bg-primary text-white font-bold text-lg rounded-xl flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-primary/20 transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                   <ShieldCheck size={20} />
                   Proceed to Payment

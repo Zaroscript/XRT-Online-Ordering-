@@ -24,11 +24,14 @@ export function useSiteSettingsQuery(options = {}) {
     heroSlides: d?.heroSlides ?? [],
     siteTitle: d?.siteTitle ?? "",
     siteSubtitle: d?.siteSubtitle ?? "",
+    termsPage: d?.termsPage ?? { title: "", body: "" },
     logo: d?.logo ?? null,
     operating_hours: d?.operating_hours ?? null,
     seo: d?.seo ?? null,
     isUnderMaintenance: Boolean(d?.isUnderMaintenance),
     maintenance: d?.maintenance ?? null,
     contactDetails: d?.contactDetails ?? null,
+    showMenuSection: d?.showMenuSection !== false, // default true when settings not yet loaded
+    offerCards: d?.offerCards ?? [],
   };
 }

@@ -2,7 +2,7 @@ const STORAGE_KEY = 'xrt_checkout_customer';
 
 /**
  * Load saved customer form data from localStorage (for returning visitors).
- * @returns {Object|null} { firstName, lastName, phone, email } or null
+ * @returns {Object|null} { firstName, lastName, phone, email, acceptsMarketingMessages, acceptsOrderUpdates } or null
  */
 export function loadSavedCustomer() {
   try {
@@ -17,7 +17,7 @@ export function loadSavedCustomer() {
 
 /**
  * Save customer form data to localStorage.
- * @param {Object} data - { firstName, lastName, phone, email }
+ * @param {Object} data - { firstName, lastName, phone, email, acceptsMarketingMessages, acceptsOrderUpdates }
  */
 export function saveCustomerData(data) {
   try {

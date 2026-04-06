@@ -4,6 +4,7 @@ import Header from "./Component/Layout/Header.jsx";
 import Footer from "./Component/Footer/FooterSection.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
+import { LoyaltyProvider } from "./context/LoyaltyContext.jsx";
 import AdsPopup from "./Component/Ads/AdsPopup.jsx";
 import LoadingPage from "./Component/UI/LoadingPage.jsx";
 import MaintenanceScreen from "./Component/Maintenance/MaintenanceScreen.jsx";
@@ -13,6 +14,7 @@ import { useSiteSettingsQuery } from "./api/hooks/useSiteSettings";
 import { resolveImageUrl } from "./utils/resolveImageUrl";
 import { isMaintenanceBlocking } from "./utils/siteMaintenance";
 import { useSiteDocumentMeta } from "./hooks/useSiteDocumentMeta";
+import { applyWebsiteBrandTheme } from "./utils/themeUtils";
 
 function App() {
   const query = useSiteSettingsQuery();
@@ -36,6 +38,15 @@ function App() {
     link.type = logoSrc.toLowerCase().endsWith(".svg") ? "image/svg+xml" : "image/png";
   }, [logoSrc]);
 
+  useEffect(() => {
+    if (data) {
+      const options = data.options || {};
+      const primary = data.primary_color || options.primary_color || "#5C9963";
+      const secondary = data.secondary_color || options.secondary_color || "#2F3E30";
+      applyWebsiteBrandTheme(primary, secondary);
+    }
+  }, [data]);
+
   if (isLoading) {
     return <LoadingPage />;
   }
@@ -45,13 +56,15 @@ function App() {
   }
 
   return (
-    <CartProvider>
-      <AdsPopup />
-      <Header />
-      <AppRoutes />
-      <Footer />
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-    </CartProvider>
+    <LoyaltyProvider>
+      <CartProvider>
+        <AdsPopup />
+        <Header />
+        <AppRoutes />
+        <Footer />
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </CartProvider>
+    </LoyaltyProvider>
   );
 }
 

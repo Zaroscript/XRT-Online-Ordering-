@@ -44,21 +44,21 @@ export const ImportSummaryCard: React.FC<ImportSummaryCardProps> = ({
   if (counts.modifiers > 0) summaryParts.push(`${counts.modifiers} Modifiers`);
 
   return (
-    <Card className="mb-6 border border-green-200 bg-green-50 shadow-sm overflow-hidden">
-      <div className="absolute left-0 top-0 h-full w-1 bg-green-500" />
+    <Card className="mb-6 border border-accent/20 bg-accent/5 shadow-sm overflow-hidden">
+      <div className="absolute left-0 top-0 h-full w-1 bg-accent" />
       <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-start gap-4">
-          <div className="mt-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-100/50">
-            <CheckMarkFill className="h-6 w-6 text-green-600" />
+          <div className="bg-white rounded-full shadow-sm relative overflow-hidden flex items-center justify-center h-12 w-12 ring-1 ring-black/5">
+            <CheckMarkFill className="h-6 w-6 text-accent" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-heading mb-1">
-              Ready to Import
+              {t('common:text-import-successful')}
             </h3>
             <p className="text-sm text-body mb-3">
               We parsed <span className="font-semibold text-heading">{totalRecords}</span> records with 0 errors. You can safely save this data to your catalog.
             </p>
-            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-green-700 bg-green-100/50 px-3 py-1.5 rounded-lg border border-green-200">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-accent bg-accent/5 px-3 py-1.5 rounded-lg border border-accent/20">
               {summaryParts.length > 0 ? summaryParts.join(' • ') : 'No data found'}
             </div>
           </div>
@@ -68,7 +68,7 @@ export const ImportSummaryCard: React.FC<ImportSummaryCardProps> = ({
           <Button
             onClick={onSave}
             loading={isSaving}
-            className="w-full bg-green-600 hover:bg-green-700 text-white shadow-md border-0"
+            className="w-full bg-accent hover:bg-accent-hover text-white shadow-md border-0"
             size="big"
           >
             {t('common:text-save-to-database')}

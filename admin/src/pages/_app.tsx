@@ -13,6 +13,7 @@ import { HydrationBoundary } from '@tanstack/react-query';
 import { useSettingsQuery } from '@/data/settings';
 import { usePublicSiteSettingsQuery } from '@/data/public-site-settings';
 import { mapPublicSiteToOptions } from '@/utils/map-public-site-to-options';
+import { applyAdminBrandTheme } from '@/utils/theme-utils';
 import dynamic from 'next/dynamic';
 
 const ReactQueryDevtools = dynamic(
@@ -62,8 +63,11 @@ const AppSettings: React.FC<{ children?: React.ReactNode }> = (props) => {
   );
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (settings?.options || publicOptions) {
+      const options = (settings?.options || publicOptions || {}) as any;
+      applyAdminBrandTheme(options);
+    }
+  }, [settings, publicOptions]);
 
   // Before mount: render same as server (no token-dependent branching) to avoid hydration mismatch
   if (!mounted) {
@@ -128,6 +132,7 @@ const CustomApp = ({ Component, pageProps }: AppPropsWithLayout) => {
   const router = useRouter();
   const { locale } = router;
   const dir = Config.getDirection(locale);
+
   return (
     <div dir={dir}>
       <QueryClientProvider client={queryClient}>

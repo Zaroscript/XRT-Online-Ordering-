@@ -18,6 +18,7 @@ import {
 import NewOrderNotification from '@/components/order/new-order-notification';
 import NewOrderModal from '@/components/order/new-order-modal';
 import { useSocketOrderListener } from '@/hooks/useSocketOrderListener';
+import ThemeGear from '@/components/layouts/navigation/theme-gear';
 
 interface MenuItemsProps {
   [key: string]: {
@@ -176,6 +177,7 @@ const AdminLayout: React.FC<{
       {/* Global Notification Components */}
       <NewOrderNotification />
       <NewOrderModal />
+      <ThemeGear />
     </div>
   );
 };
