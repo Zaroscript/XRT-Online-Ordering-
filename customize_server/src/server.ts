@@ -54,7 +54,8 @@ import { autoOrderManager } from './services/order/AutoOrderManagerService';
 
 const app: Express = express();
 // Trigger restart for helmet config change
-
+// Trust the Nginx reverse proxy
+app.set('trust proxy', 1);
 // Database connection
 // Database connection will be established in startServer function
 
