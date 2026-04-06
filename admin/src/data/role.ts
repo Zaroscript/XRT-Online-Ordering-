@@ -50,7 +50,8 @@ export const useRoleQuery = ({ id }: { id: string }) => {
     enabled: Boolean(id) && id !== 'undefined',
     select: (data: any) => {
       // Handle backend response format: { success: true, data: { role: {...} } }
-      return data?.data?.role || data?.data || data;
+      const res = data?.data || data;
+      return res?.role || res;
     },
   },
   );

@@ -16,6 +16,14 @@ export const useGroupedPermissionsQuery = () => {
     return useQuery<{ permissionsByModule: Record<string, Permission[]>; modules: string[] }, Error>({
         queryKey: [API_ENDPOINTS.PERMISSIONS, 'grouped'],
         queryFn: permissionClient.grouped,
+        select: (data: any) => {
+            // Handle backend response format: { success: true, data: { permissionsByModule, modules } }
+            const result = data?.data || data;
+            return {
+                permissionsByModule: result?.permissionsByModule || {},
+                modules: result?.modules || [],
+            };
+        },
     });
 };
 
