@@ -14,32 +14,27 @@ export const corsMiddleware = cors({
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) return callback(null, true);
 
-    // Allow all origins in development
-    if (env.NODE_ENV === 'development') {
-      return callback(null, true);
-    }
+    // Read origins from env (handles both variable names) and split them into an array
+    const envString = process.env.CORS_ORIGIN || process.env.ALLOWED_ORIGINS || '';
+    const envOrigins = envString.split(',').map(o => o.trim());
 
-    // Check if allowedOrigins is defined and is an array
-    if (
-      !env.ALLOWED_ORIGINS ||
-      !Array.isArray(env.ALLOWED_ORIGINS) ||
-      env.ALLOWED_ORIGINS.length === 0
-    ) {
-      // In production, if ALLOWED_ORIGINS is not set, we should probably still allow all or a default
-      // to avoid breaking things, but it's better to log it.
-      console.warn(
-        'CORS: env.ALLOWED_ORIGINS is not set properly, allowing all origins as fallback'
-      );
-      return callback(null, true);
-    }
+    // Failsafe: Always allow our core production domains
+    const safeOrigins = [
+      'https://xrttech.org',
+      'https://www.xrttech.org',
+      'https://admin.xrttech.org',
+      'http://localhost:3000',
+      'http://localhost:5173'
+    ];
 
-    if (env.ALLOWED_ORIGINS.includes(origin)) {
+    const isAllowed = envOrigins.includes(origin) || safeOrigins.includes(origin);
+
+    if (isAllowed || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
       console.warn(`CORS blocked for origin: ${origin}`);
-      // In production, if we want to be safe but not break, we could return true here
-      // but for now let's keep it strict if ALLOWED_ORIGINS is set.
-      callback(new Error(`Not allowed by CORS: ${origin}`));
+      // Return false instead of throwing an Error to prevent breaking the preflight response
+      callback(null, false); 
     }
   },
   credentials: true,
