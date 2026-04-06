@@ -3,6 +3,7 @@ import React from "react";
 export default function Content(props) {
   const {
     src,
+    videoSrc,
     title,
     description,
     subtitleTwo,
@@ -30,21 +31,85 @@ export default function Content(props) {
 
   const buttonContent = <span>{btnText}</span>;
 
+  const [isFading, setIsFading] = React.useState(false);
+  const videoRef = React.useRef(null);
+
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    // Start a gentle fade-out 1 second before the video ends
+    if (video.duration - video.currentTime < 1.0 && !isFading) {
+      setIsFading(true);
+    }
+  };
+
+  const handleEnded = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.currentTime = 0;
+    video.play();
+    setIsFading(false);
+  };
+
   return (
     <div
-      style={{ backgroundImage: src ? `url(${src})` : undefined }}
       className="
         relative
         w-full
         h-[620px] md:h-[650px]
-        bg-cover
-        bg-center
-        bg-no-repeat
+        overflow-hidden
+        bg-black
       "
     >
+      {videoSrc ? (
+        <>
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={handleEnded}
+            className={`
+              absolute
+              top-0
+              left-0
+              w-full
+              h-full
+              object-cover
+              z-0
+              transition-opacity
+              duration-1000
+              ${isFading ? "opacity-0" : "opacity-100"}
+            `}
+          >
+            <source src={videoSrc} />
+          </video>
+          
+          <div className="absolute inset-0 bg-black/40 z-10" />
+        </>
+      ) : (
+        <div
+          style={{ backgroundImage: src ? `url(${src})` : undefined }}
+          className="
+            absolute
+            top-0
+            left-0
+            w-full
+            h-full
+            bg-cover
+            bg-center
+            bg-no-repeat
+            z-0
+          "
+        />
+      )}
+
       <div className="
         relative 
-        z-10 
+        z-20 
         flex 
         h-full 
         flex-col 

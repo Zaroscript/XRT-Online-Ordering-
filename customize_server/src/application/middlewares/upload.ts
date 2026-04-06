@@ -14,6 +14,18 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   }
 };
 
+const attachmentFileFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image and video files are allowed'));
+  }
+};
+
 const memoryStorage = multer.memoryStorage();
 
 // Local disk for attachments when not using Cloudinary. Vercel FS is read-only so we use tmp or skip.
@@ -64,9 +76,9 @@ export const uploadImage = multer({
 
 export const uploadAttachment = multer({
   storage: attachmentStorage,
-  fileFilter,
+  fileFilter: attachmentFileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
+    fileSize: 50 * 1024 * 1024, // 50MB for attachments (videos)
   },
 });
 

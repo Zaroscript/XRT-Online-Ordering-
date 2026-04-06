@@ -129,7 +129,6 @@ export const API_ENDPOINTS = {
   TESTIMONIALS: 'testimonials',
 
   ORDER_STATUS: 'order-status',
-  TERMS_AND_CONDITIONS: 'terms-and-conditions',
 
   CONVERSATIONS: 'conversations',
   MESSAGES: 'messages',
@@ -165,8 +164,6 @@ export const API_ENDPOINTS = {
   REMOVE_STAFF: 'staffs',
   APPROVE_SHOP: 'shops/approve',
   DISAPPROVE_SHOP: 'shops/disapprove',
-  APPROVE_TERMS_AND_CONDITIONS: 'terms-and-conditions/approve',
-  DISAPPROVE_TERMS_AND_CONDITIONS: 'terms-and-conditions/disapprove',
   IMPORT_ATTRIBUTES: 'attributes/import',
   IMPORT_PRODUCTS: 'products/import',
   IMPORT_VARIATION_OPTIONS: 'variation-options/import',
@@ -179,4 +176,10 @@ export const API_ENDPOINTS = {
   PRICES_ROLLBACK: 'prices/rollback/:id',
   PRICES_HISTORY: 'prices/history',
   TRANSACTIONS: 'transactions',
+  EMAIL_CAMPAIGNS: 'email-campaigns',
+  SMS_CAMPAIGNS: 'sms-campaigns',
+
+  // Loyalty Program endpoints
+  LOYALTY_PROGRAM: 'loyalty/program',
+  LOYALTY_MEMBERS: 'loyalty/members',
 };

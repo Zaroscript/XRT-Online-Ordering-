@@ -39,6 +39,13 @@ export const categories_paths = {
                 properties: {
                   name: { type: 'string', example: 'Pizza' },
                   description: { type: 'string', example: 'Delicious pizza category' },
+                  kitchen_section_id: {
+                    type: 'string',
+                    example: '507f1f77bcf86cd799439012',
+                    description: 'Optional kitchen section linked to the category',
+                  },
+                  sort_order: { type: 'integer', example: 1 },
+                  is_active: { type: 'boolean', example: true },
                   image: {
                     type: 'string',
                     format: 'binary',
@@ -145,6 +152,13 @@ export const categories_paths = {
                 properties: {
                   name: { type: 'string' },
                   description: { type: 'string' },
+                  kitchen_section_id: {
+                    type: 'string',
+                    nullable: true,
+                    description: 'Kitchen section ID. Send an empty value to clear it.',
+                  },
+                  sort_order: { type: 'integer' },
+                  is_active: { type: 'boolean' },
                   image: {
                     type: 'string',
                     format: 'binary',

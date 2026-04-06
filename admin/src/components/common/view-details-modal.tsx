@@ -86,7 +86,7 @@ const CopyButton = ({ text, label }: { text: string; label?: string }) => {
     <button
       onClick={handleCopy}
       className={`group flex items-center gap-1.5 text-xs font-medium transition-colors focus:outline-none ${
-        copied ? 'text-emerald-600' : 'text-gray-400 hover:text-gray-600'
+        copied ? 'text-accent' : 'text-gray-400 hover:text-gray-600'
       }`}
       title="Copy ID"
     >
@@ -385,7 +385,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
         <span
           className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide ${
             value
-              ? 'bg-emerald-100 text-emerald-700'
+              ? 'bg-accent/10 text-accent-hover'
               : 'bg-red-100 text-red-700'
           }`}
         >
@@ -486,19 +486,19 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
           {value.map((pb: any, idx) => (
             <div
               key={idx}
-              className="group relative flex flex-col items-center bg-emerald-50/30 rounded-lg border border-emerald-100/50 p-2.5 min-w-[80px] hover:bg-emerald-50 transition-colors"
+              className="group relative flex flex-col items-center bg-accent/5 rounded-lg border border-accent/20 p-2.5 min-w-[80px] hover:bg-accent/10 transition-colors"
             >
-              <span className="text-[10px] font-bold text-emerald-700/60 uppercase mb-1 tracking-tight">
+              <span className="text-[10px] font-bold text-accent-hover/80 uppercase mb-1 tracking-tight">
                 {getSizeLabel(
                   pb.size_id,
                   pb.sizeCode || pb.code || pb.size_code,
                 )}
               </span>
-              <span className="text-sm font-black text-emerald-600">
+              <span className="text-sm font-black text-accent">
                 +${Number(pb.priceDelta || 0).toFixed(2)}
               </span>
               <div className="absolute -top-1.5 -right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="bg-emerald-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
+                <span className="bg-accent text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
                   Δ Price
                 </span>
               </div>
@@ -562,7 +562,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
             <span
               className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                 enabled
-                  ? 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-accent/10 text-accent-hover'
                   : 'bg-red-100 text-red-700'
               }`}
             >
@@ -630,7 +630,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
                   )}
                 </div>
                 <div className="h-4 w-px bg-gray-200 mx-1" />
-                <span className="text-sm font-bold text-emerald-600">
+                <span className="text-sm font-bold text-accent">
                   ${price}
                 </span>
               </div>
@@ -720,7 +720,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
             <div className="flex items-center gap-3 mt-6">
               {typeof isActive !== 'undefined' && (
                 <div
-                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'}`}
+                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${isActive ? 'bg-accent/5 text-accent border-accent/20' : 'bg-red-50 text-red-600 border-red-100'}`}
                 >
                   {isActive ? 'Active' : 'Inactive'}
                 </div>
@@ -849,7 +849,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
                             <span
                               className={`text-sm font-bold font-mono ${
                                 Number(level.price) >= 0
-                                  ? 'text-emerald-600'
+                                  ? 'text-accent'
                                   : 'text-red-500'
                               }`}
                             >
@@ -872,7 +872,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
                                   <span
                                     className={`text-sm font-bold font-mono ${
                                       Number(sizePrice.priceDelta) >= 0
-                                        ? 'text-emerald-600'
+                                        ? 'text-accent'
                                         : 'text-red-500'
                                     }`}
                                   >
@@ -898,7 +898,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
                               <div
                                 className={`w-2 h-2 rounded-full ring-4 ${
                                   level.is_active
-                                    ? 'bg-emerald-500 ring-emerald-500/10'
+                                    ? 'bg-accent/50 ring-emerald-500/10'
                                     : 'bg-gray-300 ring-gray-100'
                                 }`}
                                 title={level.is_active ? 'Active' : 'Inactive'}
@@ -1092,7 +1092,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
                               <span
                                 className={`text-sm font-bold font-mono ${
                                   Number(level.price) >= 0
-                                    ? 'text-emerald-600'
+                                    ? 'text-accent'
                                     : 'text-red-500'
                                 }`}
                               >
@@ -1116,7 +1116,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
                                     <span
                                       className={`text-sm font-bold font-mono ${
                                         Number(sizePrice.priceDelta) >= 0
-                                          ? 'text-emerald-600'
+                                          ? 'text-accent'
                                           : 'text-red-500'
                                       }`}
                                     >
@@ -1141,7 +1141,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
                                 <div
                                   className={`w-2 h-2 rounded-full ring-4 ${
                                     level.is_active !== false
-                                      ? 'bg-emerald-500 ring-emerald-500/10'
+                                      ? 'bg-accent/50 ring-emerald-500/10'
                                       : 'bg-gray-300 ring-gray-100'
                                   }`}
                                   title={
@@ -1186,7 +1186,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
                                 <span
                                   className={`text-sm font-bold font-mono ${
                                     Number(ps.priceDelta) >= 0
-                                      ? 'text-emerald-600'
+                                      ? 'text-accent'
                                       : 'text-red-500'
                                   }`}
                                 >
@@ -1205,7 +1205,7 @@ const ViewDetailsModal = ({ entityType }: ViewDetailsModalProps) => {
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
                       Base price (no quantity levels)
                     </p>
-                    <p className="text-lg font-bold text-emerald-600">
+                    <p className="text-lg font-bold text-accent">
                       +${Number(basePrice).toFixed(2)}
                     </p>
                   </div>

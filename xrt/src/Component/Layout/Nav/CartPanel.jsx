@@ -73,13 +73,13 @@ export default function CartPanel({ open, setclosefun }) {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50">
-              <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                <ShoppingBag size={20} className="text-[var(--primary)]" />
+              <h2 className="text-xl font-bold text-(--text-primary) flex items-center gap-2">
+                <ShoppingBag size={20} className="text-(--primary)" />
                 Shopping Cart
               </h2>
               <button
                 onClick={() => setclosefun()}
-                className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm hover:bg-[var(--primary)] hover:text-white transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-(--primary)/10 flex items-center justify-center text-(--primary) hover:bg-(--primary) hover:text-white transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -96,7 +96,7 @@ export default function CartPanel({ open, setclosefun }) {
 
                     {cartItems.map((item) => (
                         <div key={item.id} className="flex gap-4 items-start">
-                        <div className="w-20 h-20 bg-gray-50 rounded-lg p-2 flex-shrink-0 border border-gray-100">
+                        <div className="w-20 h-20 bg-gray-50 rounded-lg p-2 shrink-0 border border-gray-100">
                             <img 
                             src={item.src} 
                             alt={item.name} 
@@ -105,11 +105,11 @@ export default function CartPanel({ open, setclosefun }) {
                         </div>
                         <div className="flex-1">
                             {item.isCustomized && (
-                              <span className="inline-block px-2 py-0.5 mb-1 text-[10px] font-semibold text-[var(--primary)] bg-green-50 rounded-full border border-green-100">
+                              <span className="inline-block px-2 py-0.5 mb-1 text-[10px] font-semibold text-(--primary) bg-(--primary)/5 rounded-full border border-(--primary)/10">
                                 Customized
                               </span>
                             )}
-                            <h4 className="text-sm font-semibold text-[var(--text-primary)] line-clamp-2 leading-tight mb-1">
+                            <h4 className="text-sm font-semibold text-(--text-primary) line-clamp-2 leading-tight mb-1">
                             {item.name}
                             </h4>
                             <div className="text-sm text-gray-500 mb-2">
@@ -119,14 +119,14 @@ export default function CartPanel({ open, setclosefun }) {
                             <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
                             <button 
                                 onClick={() => updateQuantity(item.id, -1)}
-                                className="p-1 hover:bg-white rounded-md transition-colors text-gray-600 hover:text-[var(--primary)]"
+                                className="p-1 hover:bg-white rounded-md transition-colors text-gray-600 hover:text-(--primary)"
                             >
                                 <Minus size={14} />
                             </button>
                             <span className="text-sm font-semibold w-6 text-center">{item.qty}</span>
                             <button 
                                 onClick={() => updateQuantity(item.id, 1)}
-                                className="p-1 hover:bg-white rounded-md transition-colors text-gray-600 hover:text-[var(--primary)]"
+                                className="p-1 hover:bg-white rounded-md transition-colors text-gray-600 hover:text-(--primary)"
                             >
                                 <Plus size={14} />
                             </button>
@@ -155,14 +155,14 @@ export default function CartPanel({ open, setclosefun }) {
             {suggestedProducts.length > 0 && (
               <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
                 <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                  <span className="w-1 h-4 bg-[var(--primary)] rounded-full"></span>
+                  <span className="w-1 h-4 bg-(--primary) rounded-full"></span>
                   You might also like
                 </h3>
                 
                 <div className="relative group/scroll">
                   <button 
                     onClick={() => scroll('left')}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 z-10 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-[var(--primary)] hover:scale-110 transition-all opacity-0 group-hover/scroll:opacity-100 disabled:opacity-0"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 z-10 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-(--primary) hover:scale-110 transition-all opacity-0 group-hover/scroll:opacity-100 disabled:opacity-0"
                   >
                     <ChevronLeft size={16} />
                   </button>
@@ -186,7 +186,7 @@ export default function CartPanel({ open, setclosefun }) {
                               />
                               <button
                                 onClick={() => addToCart({ ...product, price: displayPrice })}
-                                className="absolute bottom-1 right-1 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white transition-colors"
+                                className="absolute bottom-1 right-1 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center text-(--primary) hover:bg-(--primary) hover:text-white transition-colors"
                               >
                                 <Plus size={16} />
                               </button>
@@ -194,16 +194,16 @@ export default function CartPanel({ open, setclosefun }) {
                             <h4 className="text-xs font-medium text-gray-700 line-clamp-1 mb-1" title={product.name}>
                               {product.name}
                             </h4>
-                            <div className="text-xs font-bold text-[var(--primary)]">
+                            <span className="text-sm font-bold text-(--primary) drop-shadow-sm">
                               {formatPrice(displayPrice, siteSettings)}
-                            </div>
+                            </span>
                           </div>
                       )})}
                   </div>
 
                   <button 
                     onClick={() => scroll('right')}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 -mr-2 z-10 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-[var(--primary)] hover:scale-110 transition-all opacity-0 group-hover/scroll:opacity-100"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 -mr-2 z-10 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-(--primary) hover:scale-110 transition-all opacity-0 group-hover/scroll:opacity-100"
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -214,8 +214,8 @@ export default function CartPanel({ open, setclosefun }) {
             {/* Footer */}
             <div className="p-5 bg-white border-t border-gray-100 shadow-[0_-4px_15px_-5px_rgba(0,0,0,0.05)]">
               <div className="flex justify-between items-center mb-6">
-                <span className="text-gray-600 font-medium">Total:</span>
-                <span className="text-xl font-bold text-[var(--primary)]">{formatPrice(cartTotal, siteSettings)}</span>
+                <span className="text-secondary font-medium">Cart</span>
+                <span className="text-primary font-bold">{formatPrice(cartTotal, siteSettings)}</span>
               </div>
               
               <div className="flex flex-col gap-3">
@@ -224,7 +224,7 @@ export default function CartPanel({ open, setclosefun }) {
                     navigate('/cart');
                     setclosefun();
                   }}
-                  className="w-full py-3 bg-[var(--primary)] text-white font-bold rounded-full hover:bg-green-700 transition-colors shadow-lg shadow-green-200 cursor-pointer text-sm tracking-wide"
+                  className="w-full py-3 bg-(--primary) text-white font-bold rounded-full hover:brightness-110 transition-colors shadow-lg shadow-(--primary)/20 cursor-pointer text-sm tracking-wide"
                 >
                   View Cart
                 </button>
@@ -233,7 +233,7 @@ export default function CartPanel({ open, setclosefun }) {
                     setclosefun();
                     navigate('/checkout');
                   }}
-                  className="w-full py-3 bg-[var(--primary)] text-white font-bold rounded-full hover:bg-green-700 transition-colors shadow-lg shadow-green-200 cursor-pointer text-sm tracking-wide"
+                  className="w-full py-3 bg-(--primary) text-white font-bold rounded-full hover:brightness-110 transition-colors shadow-lg shadow-(--primary)/20 cursor-pointer text-sm tracking-wide"
                 >
                   Checkout
                 </button>

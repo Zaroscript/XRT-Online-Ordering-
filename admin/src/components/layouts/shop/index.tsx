@@ -44,21 +44,12 @@ const SidebarItemMap = ({ menuItems }: any) => {
   });
   const { childMenu } = menuItems;
 
-  const isEnableTermsRoute = settings?.options?.enableTerms;
   const isEnableCouponsRoute = settings?.options?.enableCoupons;
   const { role: currentUserRole } = getAuthCredentials();
   const [miniSidebar, _] = useAtom(miniSidebarInitialValue);
   const { width } = useWindowSize();
 
-  let termsAndConditions;
   let coupons;
-
-  if (!isEnableTermsRoute) {
-    termsAndConditions = menuItems?.childMenu.find(
-      (item: any) => item.label === 'Terms And Conditions',
-    );
-    if (termsAndConditions) termsAndConditions.permissions = adminOnly;
-  }
 
   if (!isEnableCouponsRoute) {
     coupons = menuItems?.childMenu.find(

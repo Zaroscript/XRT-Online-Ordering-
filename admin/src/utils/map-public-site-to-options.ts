@@ -19,6 +19,10 @@ export function mapPublicSiteToOptions(publicData: PublicSiteSettings | null | u
     siteSubtitle,
     logo,
     collapseLogo,
+    primary_color:
+      (publicData as any).primary_color ?? '#5C9963',
+    secondary_color:
+      (publicData as any).secondary_color ?? '#2F3E30',
     currency: (publicData as any).currency ?? 'USD',
     currencyOptions:
       (publicData as any).currencyOptions ?? {

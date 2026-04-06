@@ -1,6 +1,7 @@
 import cn from 'classnames';
 import { CloseIcon } from '@/components/icons/close-icon';
 import { twMerge } from 'tailwind-merge';
+import { CheckMarkCircle } from '@/components/icons/checkmark-circle';
 
 type AlertProps = {
   message: string | undefined | null;
@@ -24,11 +25,11 @@ const variantClasses = {
   info: 'bg-blue-100 text-blue-600',
   warning: 'bg-yellow-100 text-yellow-600',
   error: 'bg-red-100 text-red-500',
-  success: 'bg-green-100 text-accent',
+  success: 'bg-accent/10 text-accent',
   infoOutline: 'border border-blue-200 text-blue-600',
   warningOutline: 'border border-yellow-200 text-yellow-600',
   errorOutline: 'border border-red-200 text-red-600',
-  successOutline: 'border border-green-200 text-green-600',
+  successOutline: 'border border-accent/20 text-accent',
 };
 
 const Alert: React.FC<AlertProps> = ({

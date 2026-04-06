@@ -30,7 +30,7 @@ export default function LandingSettingsPage() {
 
   return (
     <>
-      <PageHeading title="common:text-landing-settings" />
+      <PageHeading title={t('common:text-landing-settings')} />
       <LandingSettingsForm settings={settings} />
     </>
   );

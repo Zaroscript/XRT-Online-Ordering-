@@ -46,7 +46,7 @@ const defaultValues = {
   name: '',
   details: '',
   icon: [],
-  kitchen_section_id: '',
+  kitchen_section_id: null,
   sort_order: 0,
   is_active: true,
   modifier_groups: [],
@@ -287,11 +287,13 @@ export default function CreateOrUpdateCategoriesForm({
     useUpdateCategoryMutation();
 
   const onSubmit = async (values: any) => {
+    const selectedKitchenSectionId = values.kitchen_section_id?.value ?? null;
+
     const input = {
       language: router.locale,
       name: values.name,
       details: values.details,
-      kitchen_section_id: values.kitchen_section_id?.value,
+      kitchen_section_id: selectedKitchenSectionId,
       sort_order: Number(values.sort_order),
       is_active: values.is_active,
       business_id: 'biz_001',
@@ -456,6 +458,7 @@ export default function CreateOrUpdateCategoriesForm({
               control={control as any}
               options={kitchenSectionOptions}
               isClearable={true}
+              isLoading={loadingKitchenSections}
             />
             <ValidationError message={t(errors.kitchen_section_id?.message!)} />
           </div>

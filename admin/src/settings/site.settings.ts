@@ -214,21 +214,9 @@ export const siteSettings = {
             icon: 'ReviewIcon',
           },
           {
-            href: '',
+            href: Routes.termsAndCondition.list,
             label: 'text-terms-conditions',
             icon: 'TermsIcon',
-            childMenu: [
-              {
-                href: Routes.termsAndCondition.list,
-                label: 'text-all-terms',
-                icon: 'TermsIcon',
-              },
-              {
-                href: Routes.termsAndCondition.create,
-                label: 'text-new-terms',
-                icon: 'TermsIcon',
-              },
-            ],
           },
         ],
       },
@@ -279,6 +267,23 @@ export const siteSettings = {
               },
             ],
           },
+          {
+            href: '',
+            label: 'Loyalty Management',
+            icon: 'ReviewIcon',
+            childMenu: [
+              {
+                href: Routes.loyalty.settings,
+                label: 'Settings',
+                icon: 'SettingsIcon',
+              },
+              {
+                href: Routes.loyalty.members,
+                label: 'Members',
+                icon: 'UsersIcon',
+              },
+            ],
+          },
           // {
           //   href: '',
           //   label: 'Newsletter emails',
@@ -293,14 +298,24 @@ export const siteSettings = {
         ],
       },
 
-      feature: {
+      marketing: {
         href: '',
-        label: 'text-feature-management',
+        label: 'text-marketing-management',
         icon: 'SettingsIcon',
         childMenu: [
           {
             href: Routes.message.list,
             label: 'sidebar-nav-item-message',
+            icon: 'ChatIcon',
+          },
+          {
+            href: Routes.emails.list,
+            label: 'sidebar-nav-item-emails',
+            icon: 'StoreNoticeIcon',
+          },
+          {
+            href: Routes.sms.list,
+            label: 'sidebar-nav-item-sms',
             icon: 'ChatIcon',
           },
         ],

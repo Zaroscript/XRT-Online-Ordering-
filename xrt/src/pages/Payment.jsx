@@ -92,7 +92,7 @@ const Payment = () => {
   if (isSettingsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-(--primary)" />
       </div>
     );
   }
@@ -140,13 +140,13 @@ const Payment = () => {
             </div>
 
             <div className="pt-6 border-t border-gray-50">
-               <div className="flex items-center gap-4 p-4 bg-green-50/50 rounded-2xl border border-green-100/50">
-                  <div className="w-10 h-10 rounded-xl bg-(--primary) flex items-center justify-center text-white shadow-lg shadow-green-200">
+               <div className="flex items-center gap-4 p-4 bg-(--primary)/5 rounded-2xl border border-(--primary)/10">
+                  <div className="w-10 h-10 rounded-xl bg-(--primary) flex items-center justify-center text-white shadow-lg shadow-(--primary)/20">
                     <ShieldCheck size={20} />
                   </div>
                   <div>
                      <p className="text-[10px] font-black text-(--primary) uppercase tracking-widest font-['Poppins']">PCI Level 1 Compliant</p>
-                     <p className="text-[9px] font-medium text-green-700/50 uppercase tracking-tighter">Your data is fully encrypted</p>
+                     <p className="text-[9px] font-medium text-(--primary)/50 uppercase tracking-tighter">Your data is fully encrypted</p>
                   </div>
                </div>
             </div>
@@ -213,7 +213,7 @@ const Payment = () => {
                       )}
                     </div>
                   ) : siteSettings?.nmiPublicKey ? (
-                    <div className="nmi-container [&_button]:w-full [&_button]:py-5 [&_button]:bg-(--primary) [&_button]:text-white [&_button]:font-black [&_button]:uppercase [&_button]:tracking-widest [&_button]:rounded-2xl [&_button]:shadow-xl [&_button]:shadow-green-100 font-['Poppins']">
+                    <div className="nmi-container [&_button]:w-full [&_button]:py-5 [&_button]:bg-(--primary) [&_button]:text-white [&_button]:font-black [&_button]:uppercase [&_button]:tracking-widest [&_button]:rounded-2xl [&_button]:shadow-xl [&_button]:shadow-(--primary)/20 font-['Poppins']">
                       <NmiPayments
                         tokenizationKey={siteSettings.nmiPublicKey}
                         paymentMethods={supportedMethods}

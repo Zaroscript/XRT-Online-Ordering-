@@ -1,6 +1,6 @@
 .background_shopping_bag {
   border-radius: 50%;
-  background: #5C9963;
+  background: var(--color-primary, #5C9963);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13,7 +13,7 @@
 }
 .background_icon {
   border-radius: 50%;
-  background: #D9E8DB;
+  background: color-mix(in srgb, var(--color-primary, #5C9963) 15%, white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,5 +22,5 @@
 }
 .icon-badge i{
   font-size: 22px;
-  color: #2d8f5a;
+  color: var(--color-primary, #5C9963);
 }

@@ -22,7 +22,6 @@ export const shopValidationSchema = yup.object().shape({
     })
     .optional(),
   isProductReview: yup.boolean().optional(),
-  enableTerms: yup.boolean().optional(),
   enableCoupons: yup.boolean().optional(),
   enableEmailForDigitalProduct: yup.boolean().optional(),
   useGoogleMap: yup.boolean().optional(),

@@ -6,6 +6,40 @@ import { GetOrCreateDefaultBusinessUseCase } from '../../domain/usecases/busines
 import { BusinessRepository } from '../../infrastructure/repositories/BusinessRepository';
 import { BusinessSettingsRepository } from '../../infrastructure/repositories/BusinessSettingsRepository';
 
+const LEGACY_THEME_COLOR_FIELDS = [
+  'header_bg_color',
+  'header_text_color',
+  'footer_bg_color',
+  'footer_text_color',
+  'shadow_color',
+  'gradient_start',
+  'gradient_end',
+] as const;
+
+const DEFAULT_TERMS_TITLE = 'Terms & Conditions';
+
+function hasVisibleRichTextContent(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  const visibleText = value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return visibleText.length > 0;
+}
+
+function normalizeTermsPage(termsPage: Record<string, unknown> | null | undefined) {
+  const title = typeof termsPage?.title === 'string' ? termsPage.title.trim() : '';
+  const body = typeof termsPage?.body === 'string' ? termsPage.body.trim() : '';
+  const hasContent = Boolean(title) || hasVisibleRichTextContent(body);
+
+  return {
+    title: title || (hasContent ? DEFAULT_TERMS_TITLE : ''),
+    body,
+  };
+}
+
 const getDefaultOptions = () => ({
   siteTitle: 'XRT Online Ordering',
   siteSubtitle: 'Enterprise Ordering System',
@@ -19,6 +53,10 @@ const getDefaultOptions = () => ({
   maximumQuestionLimit: 5,
   isProductReview: true,
   enableTerms: false,
+  termsPage: {
+    title: '',
+    body: '',
+  },
   enableCoupons: true,
   enableEmailForDigitalProduct: false,
   useGoogleMap: true,
@@ -133,6 +171,7 @@ const getDefaultOptions = () => ({
     upload_max_filesize: 10240, // 10MB in KB
   },
   heroSlides: [] as any[],
+  offerCards: [] as any[],
   siteLink: '',
   enableReviewPopup: false,
   nmiPublicKey: '',
@@ -145,7 +184,27 @@ const getDefaultOptions = () => ({
   paymentGateway: [],
   defaultPaymentGateway: '',
   useEnableGateway: true,
+  showMenuSection: true,
+  primary_color: '#5C9963',
+  secondary_color: '#2F3E30',
 });
+
+function sanitizeSettingsOptions(options: Record<string, any>) {
+  const sanitizedOptions = { ...options };
+
+  for (const field of LEGACY_THEME_COLOR_FIELDS) {
+    delete sanitizedOptions[field];
+  }
+
+  if (Object.prototype.hasOwnProperty.call(sanitizedOptions, 'termsPage')) {
+    sanitizedOptions.termsPage = normalizeTermsPage(sanitizedOptions.termsPage);
+    sanitizedOptions.enableTerms =
+      Boolean(sanitizedOptions.termsPage.title) ||
+      hasVisibleRichTextContent(sanitizedOptions.termsPage.body);
+  }
+
+  return sanitizedOptions;
+}
 
 export class SettingsController {
   // Get settings - loads from BusinessSettings for the single business (get-or-create)
@@ -183,7 +242,13 @@ export class SettingsController {
     const options = {
       ...defaultOptions,
       ...rest,
+      termsPage: normalizeTermsPage((rest as any).termsPage),
+      enableTerms:
+        settings.enableTerms ??
+        (Boolean((settings.termsPage as any)?.title) ||
+          hasVisibleRichTextContent((settings.termsPage as any)?.body)),
       heroSlides: settings.heroSlides ?? defaultOptions.heroSlides,
+      offerCards: settings.offerCards ?? defaultOptions.offerCards,
       server_info: defaultOptions.server_info,
     };
 
@@ -213,7 +278,9 @@ export class SettingsController {
     );
     const business = await getOrCreateUseCase.execute(userId);
 
-    const settingsData = req.body.options ? req.body.options : req.body;
+    const settingsData = sanitizeSettingsOptions(
+      req.body.options ? req.body.options : req.body,
+    );
 
     const existing = await businessSettingsRepository.findByBusinessId(business.id);
     if (!existing) {
@@ -226,7 +293,13 @@ export class SettingsController {
         options: {
           ...getDefaultOptions(),
           ...settingsData,
+          termsPage: normalizeTermsPage((created as any).termsPage),
+          enableTerms:
+            created.enableTerms ??
+            (Boolean((created.termsPage as any)?.title) ||
+              hasVisibleRichTextContent((created.termsPage as any)?.body)),
           heroSlides: created.heroSlides ?? settingsData.heroSlides,
+          offerCards: created.offerCards ?? settingsData.offerCards,
         },
       });
     }
@@ -243,7 +316,13 @@ export class SettingsController {
     const options = {
       ...defaultOptions,
       ...updatedRest,
+      termsPage: normalizeTermsPage((updatedRest as any).termsPage),
+      enableTerms:
+        updated.enableTerms ??
+        (Boolean((updated.termsPage as any)?.title) ||
+          hasVisibleRichTextContent((updated.termsPage as any)?.body)),
       heroSlides: updated.heroSlides ?? defaultOptions.heroSlides,
+      offerCards: updated.offerCards ?? defaultOptions.offerCards,
       server_info: defaultOptions.server_info,
     };
 

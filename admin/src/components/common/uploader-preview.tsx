@@ -39,8 +39,22 @@ export default function FilePreview({
                   src={file.thumbnail || file.original}
                   alt={filename || 'uploaded-image'}
                   className="h-full w-full object-contain"
-                  // onError removed for debugging
                 />
+              </div>
+            ) : isVideoFile(file) ? (
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center w-16 h-16 min-w-0 overflow-hidden bg-gray-800 rounded text-white text-[10px] font-bold">
+                  VIDEO
+                </div>
+                <p className="flex items-baseline p-1 text-xs cursor-default text-body">
+                  <span
+                    className="inline-block max-w-[64px] overflow-hidden overflow-ellipsis whitespace-nowrap"
+                    title={`${filename}.${fileType}`}
+                  >
+                    {filename}
+                  </span>
+                  .{fileType}
+                </p>
               </div>
             ) : (
               <div className="flex flex-col items-center">
@@ -99,6 +113,7 @@ const imgTypes = [
   'raw',
   'svg',
 ];
+const videoTypes = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'avi', 'mkv'];
 
 function extractFileInfo(file: Attachment): {
   filename: string;
@@ -144,8 +159,20 @@ function isImageFile(file: Attachment): boolean {
     file?.thumbnail?.match(/\.(svg|png|jpg|jpeg|gif|webp)(\?|$)/i) ||
     file?.original?.match(/\.(svg|png|jpg|jpeg|gif|webp)(\?|$)/i);
 
+  // If it's a known video type, it's not an image file (for preview purposes)
+  if (videoTypes.includes(fileType)) return false;
+
   return (
     !!(file?.thumbnail || file?.original) &&
     (imgTypes.includes(fileType) || !!hasImageUrl)
   );
+}
+
+function isVideoFile(file: Attachment): boolean {
+  const { fileType } = extractFileInfo(file);
+  const hasVideoUrl =
+    file?.thumbnail?.match(/\.(mp4|webm|ogg|mov|m4v|avi|mkv)(\?|$)/i) ||
+    file?.original?.match(/\.(mp4|webm|ogg|mov|m4v|avi|mkv)(\?|$)/i);
+
+  return videoTypes.includes(fileType) || !!hasVideoUrl;
 }

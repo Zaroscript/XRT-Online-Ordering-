@@ -46,7 +46,7 @@ export default function ViewItems({ product }) {
               "
             >
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/90 mb-2">
-                <Eye className="w-5 h-5 text-green-700" />
+                <Eye className="w-5 h-5 text-(--primary)" />
               </div>
               <span className="text-sm font-medium bg-black px-3 py-1 rounded-full">
                 Quick view
@@ -55,14 +55,14 @@ export default function ViewItems({ product }) {
           </Dialog.Trigger>
 
           <div className="absolute -bottom-5 left-1/2 -translate-x-1/2">
-            <div className="flex items-center gap-1 px-4 py-1 rounded-full bg-[var(--primary)] text-white shadow-md">
+            <div className="flex items-center gap-1 px-4 py-1 rounded-full bg-(--primary) text-white shadow-md">
               <span className="text-[17px] font-bold">${product.basePrice.toFixed(2)}</span>
             </div>
           </div>
         </div>
 
         <Link to={`/product/${product.id}`} className="block mt-8 mb-3 text-center group cursor-pointer">
-          <h3 className="text-[13px] font-[500] text-[var(--text-secondary)] group-hover:text-[var(--primary)] group-hover:underline transition-colors">
+          <h3 className="text-[13px] font-[500] text-(--text-secondary) group-hover:text-(--primary) group-hover:underline transition-colors">
             {product.name}
           </h3>
         </Link>
@@ -70,13 +70,13 @@ export default function ViewItems({ product }) {
         <div className="flex flex-row gap-2 px-4 pb-4 mx-auto w-full justify-center">
           <div 
              onClick={handleCustomize}
-             className="flex-1 h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
+             className="flex-1 h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-(--primary) duration-300 cursor-pointer">
             <Utensils
               strokeWidth={0.8}
               size={18}
-              className="text-[var(--primary)] group-hover:text-white duration-300"
+              className="text-(--primary) group-hover:text-white duration-300"
             />
-            <h5 className="ml-1 text-[var(--text-gray)] text-[11px] font-medium group-hover:text-white duration-300 truncate">
+            <h5 className="ml-1 text-(--text-gray) text-[11px] font-medium group-hover:text-white duration-300 truncate">
               Customize
             </h5>
           </div>
@@ -86,13 +86,13 @@ export default function ViewItems({ product }) {
                ...product,
                price: (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2)
             })}
-            className="flex-1 h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer">
+            className="flex-1 h-[40px] border-2 border-gray-100 rounded-full flex items-center justify-center group hover:bg-(--primary) duration-300 cursor-pointer">
             <Handbag
               strokeWidth={0.8}
               size={18}
-              className="text-[var(--primary)] group-hover:text-white duration-300"
+              className="text-(--primary) group-hover:text-white duration-300"
             />
-            <h5 className="ml-1 text-[var(--text-gray)] text-[11px] font-medium group-hover:text-white duration-300 truncate">
+            <h5 className="ml-1 text-(--text-gray) text-[11px] font-medium group-hover:text-white duration-300 truncate">
               Add To Cart
             </h5>
           </div>
@@ -143,11 +143,11 @@ export default function ViewItems({ product }) {
             </div>
 
             <div className="w-full md:w-1/2 flex flex-col gap-4">
-              <Dialog.Title className="text-2xl font-semibold text-[var(--text-primary)] ">
+              <Dialog.Title className="text-2xl font-semibold text-(--text-primary) ">
                 {product.name}
               </Dialog.Title>
 
-              <p className="text-[var(--primary)] text-2xl font-bold">
+              <p className="text-(--primary) text-2xl font-bold">
                 ${product.basePrice.toFixed(2)}
               </p>
 
@@ -190,13 +190,13 @@ export default function ViewItems({ product }) {
                 <div className="flex flex-col md:flex-row gap-2 md:gap-3 w-full lg:justify-start">
                   <div 
                     onClick={handleCustomize}
-                    className="w-full md:flex-1 lg:flex-none lg:w-auto lg:px-8 h-[48px] md:h-[45px] lg:h-[40px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-[var(--primary)] duration-300 cursor-pointer bg-white transition-colors">
+                    className="w-full md:flex-1 lg:flex-none lg:w-auto lg:px-8 h-[48px] md:h-[45px] lg:h-[40px] border-2 border-(--primary) rounded-full flex items-center justify-center group hover:bg-(--primary) duration-300 cursor-pointer bg-white transition-colors">
                     <Utensils
                       strokeWidth={1.5}
                       size={20}
-                      className="text-[var(--primary)] group-hover:text-white duration-300"
+                      className="text-(--primary) group-hover:text-white duration-300"
                     />
-                    <h5 className="ml-2 text-[var(--primary)] group-hover:text-white duration-300 font-bold text-sm md:text-base">
+                    <h5 className="ml-2 text-(--primary) group-hover:text-white duration-300 font-bold text-sm md:text-base">
                       Customize It
                     </h5>
                   </div>
@@ -210,7 +210,7 @@ export default function ViewItems({ product }) {
                            price: (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2)
                         }, qty);
                     }}
-                    className="w-full md:flex-1 lg:flex-none lg:w-auto lg:px-8 h-[48px] md:h-[45px] lg:h-[40px] border-2 border-[var(--primary)] rounded-full flex items-center justify-center group hover:bg-green-700 duration-300 cursor-pointer bg-[var(--primary)] transition-colors">
+                    className="w-full md:flex-1 lg:flex-none lg:w-auto lg:px-8 h-[48px] md:h-[45px] lg:h-[40px] border-2 border-(--primary) rounded-full flex items-center justify-center group hover:brightness-110 duration-300 cursor-pointer bg-(--primary) transition-colors">
                     <Handbag
                       strokeWidth={1.5}
                       size={20}

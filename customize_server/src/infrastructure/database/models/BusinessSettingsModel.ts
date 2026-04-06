@@ -105,6 +105,10 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
     siteLink: { type: String, default: '' },
     isProductReview: { type: Boolean, default: false },
     enableTerms: { type: Boolean, default: false },
+    termsPage: {
+      title: { type: String, default: '' },
+      body: { type: String, default: '' },
+    },
     enableCoupons: { type: Boolean, default: false },
     enableEmailForDigitalProduct: { type: Boolean, default: false },
     enableReviewPopup: { type: Boolean, default: false },
@@ -139,12 +143,23 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
     heroSlides: [
       {
         bgImage: { type: Object, default: {} },
+        bgType: { type: String, default: 'image' },
+        bgVideo: { type: Object, default: {} },
         title: { type: String, default: '' },
         subtitle: { type: String, default: '' },
         subtitleTwo: { type: String, default: '' },
         offer: { type: String, default: '' },
         btnText: { type: String, default: '' },
         btnLink: { type: String, default: '' },
+      },
+    ],
+    offerCards: [
+      {
+        title: { type: String, default: '' },
+        description: { type: String, default: '' },
+        image: { type: Object, default: {} },
+        couponCode: { type: String, default: '' },
+        showCouponCode: { type: Boolean, default: false },
       },
     ],
     currencyOptions: {
@@ -278,6 +293,18 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
     useEnableGateway: {
       type: Boolean,
       default: true,
+    },
+    showMenuSection: {
+      type: Boolean,
+      default: true,
+    },
+    primary_color: {
+      type: String,
+      default: "#5C9963",
+    },
+    secondary_color: {
+      type: String,
+      default: "#2F3E30",
     },
   },
   {

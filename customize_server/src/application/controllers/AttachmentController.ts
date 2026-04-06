@@ -45,7 +45,7 @@ export class AttachmentController {
     if (files.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'No files uploaded. Make sure you selected an image (max 5MB).',
+        message: 'No files uploaded. Make sure you selected a valid image or video (max 50MB).',
       });
     }
 
@@ -53,13 +53,23 @@ export class AttachmentController {
 
     if (useCloudinary) {
       const attachments = [];
-      for (const file of files as Express.Multer.File[]) {
-        const result = await this.imageStorage.uploadImage(file, 'xrttech/attachments');
-        attachments.push({
-          id: result.public_id,
-          thumbnail: result.secure_url,
-          original: result.secure_url,
-          file_name: file.originalname,
+      try {
+        for (const file of files as Express.Multer.File[]) {
+          logger.info(`Uploading file to Cloudinary: ${file.originalname} (${file.mimetype})`);
+          const result = await this.imageStorage.uploadImage(file, 'xrttech/attachments');
+          attachments.push({
+            id: result.public_id,
+            thumbnail: result.secure_url,
+            original: result.secure_url,
+            file_name: file.originalname,
+          });
+        }
+      } catch (error: any) {
+        logger.error('AttachmentController.upload Cloudinary Error:', error.message || error);
+        return res.status(500).json({
+          success: false,
+          message: error.message || 'Cloudinary upload failed',
+          error: error.name || 'CloudinaryError',
         });
       }
       logger.info('AttachmentController.upload: returning', attachments.length, 'attachments (Cloudinary)');

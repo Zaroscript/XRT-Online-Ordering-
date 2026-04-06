@@ -72,6 +72,10 @@ export default function MaintenanceSettingsForm({ settings }: IProps) {
       {t('form:maintenance-cover-image-help-text')} <br />
       {t('form:cover-image-dimension-help-text')} &nbsp;
       <span className="font-bold">1170 x 435{t('common:text-px')}</span>
+      <br />
+      <span className="text-xs text-gray-500 mt-1 block">
+        {t('form:maintenance-image-dimension-note')}
+      </span>
     </span>
   );
   let sameDay = useMemo(() => {
@@ -131,6 +135,7 @@ export default function MaintenanceSettingsForm({ settings }: IProps) {
             control={control}
             multiple={false}
             disabled={!isMaintenanceMode}
+            helperText={t('form:maintenance-image-uploader-text')}
           />
         </Card>
       </div>

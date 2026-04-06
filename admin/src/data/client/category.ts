@@ -52,6 +52,9 @@ export const categoryClient = {
         formData.append('image', input.image instanceof File ? input.image : input.image);
       } else if (key === 'icon' && input.icon) {
         formData.append('icon', input.icon instanceof File ? input.icon : input.icon);
+      } else if (key === 'kitchen_section_id') {
+        const value = input[key as keyof CreateCategoryInput] as string | null | undefined;
+        formData.append(key, value ?? '');
       } else if (
         key === 'modifier_groups' &&
         (input as any).modifier_groups !== undefined
@@ -83,6 +86,8 @@ export const categoryClient = {
         formData.append('image', input.image instanceof File ? input.image : input.image);
       } else if (key === 'icon' && input.icon) {
         formData.append('icon', input.icon instanceof File ? input.icon : input.icon);
+      } else if (key === 'kitchen_section_id') {
+        formData.append(key, input[key] ?? '');
       } else if (
         key === 'modifier_groups' &&
         input.modifier_groups !== undefined

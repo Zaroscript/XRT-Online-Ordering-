@@ -13,6 +13,7 @@ import { CategoryRepository } from '../../infrastructure/repositories/CategoryRe
 import { CreateOrderUseCase } from '../../domain/usecases/order/CreateOrderUseCase';
 import { TransactionRepository } from '../../infrastructure/repositories/TransactionRepository';
 import { CouponRepository } from '../../infrastructure/repositories/CouponRepository';
+import { CustomerOrderNotificationService } from '../../services/order/CustomerOrderNotificationService';
 
 function getBaseUrl(req: Request): string {
   const fromEnv = (env as any).PUBLIC_ORIGIN;
@@ -43,11 +44,41 @@ function imageUrlForRequest(url: string | undefined, req: Request): string {
   return trimmed;
 }
 
+function normalizeBoolean(value: unknown, fallback = true): boolean {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+  }
+  return fallback;
+}
+
+function hasVisibleRichTextContent(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  const visibleText = value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return visibleText.length > 0;
+}
+
+function normalizeTermsPage(termsPage: Record<string, unknown> | null | undefined) {
+  return {
+    title: typeof termsPage?.title === 'string' ? termsPage.title.trim() : '',
+    body: typeof termsPage?.body === 'string' ? termsPage.body : '',
+  };
+}
+
 /** Default when no settings in DB. Hero slides = admin Settings > Hero Slider. */
 function getDefaultPublicSiteSettings() {
   return {
     heroSlides: [] as Array<{
       bgImage?: { id?: string; original?: string; thumbnail?: string };
+      bgType?: string;
+      bgVideo?: { id?: string; original?: string; thumbnail?: string };
       title?: string;
       subtitle?: string;
       btnText?: string;
@@ -55,6 +86,10 @@ function getDefaultPublicSiteSettings() {
     }>,
     siteTitle: 'XRT Online Ordering',
     siteSubtitle: '',
+    termsPage: {
+      title: '',
+      body: '',
+    },
     logo: null as any,
     collapseLogo: null as any,
     promoPopup: null as any,
@@ -94,11 +129,20 @@ export class PublicController {
     const rawSlides = settings.heroSlides ?? [];
     const heroSlides = rawSlides.map((slide: any) => {
       const bg = slide?.bgImage;
-      const url =
+      const imageUrl =
         typeof bg === 'string'
           ? bg
           : ((bg && (typeof bg === 'object' ? (bg.original ?? bg.thumbnail) : undefined)) ?? '');
-      const normalized = imageUrlForRequest(url, req);
+      
+      const video = slide?.bgVideo;
+      const videoUrl =
+        typeof video === 'string'
+          ? video
+          : ((video && (typeof video === 'object' ? (video.original ?? video.thumbnail) : undefined)) ?? '');
+
+      const normalizedImage = imageUrlForRequest(imageUrl, req);
+      const normalizedVideo = imageUrlForRequest(videoUrl, req);
+
       return {
         title: slide?.title ?? '',
         subtitle: slide?.subtitle ?? '',
@@ -106,7 +150,26 @@ export class PublicController {
         btnText: slide?.btnText ?? '',
         btnLink: slide?.btnLink ?? '',
         offer: slide?.offer ?? '',
-        bgImage: normalized ? { original: normalized, thumbnail: normalized } : {},
+        bgType: slide?.bgType ?? 'image',
+        bgImage: normalizedImage ? { original: normalizedImage, thumbnail: normalizedImage } : {},
+        bgVideo: normalizedVideo ? { original: normalizedVideo, thumbnail: normalizedVideo } : {},
+      };
+    });
+
+    const rawOfferCards = (settings as any).offerCards ?? [];
+    const offerCards = rawOfferCards.map((card: any) => {
+      const img = card?.image;
+      const url =
+        typeof img === 'string'
+          ? img
+          : ((img && (typeof img === 'object' ? (img.original ?? img.thumbnail) : undefined)) ?? '');
+      const normalized = imageUrlForRequest(url, req);
+      return {
+        title: card?.title ?? '',
+        description: card?.description ?? '',
+        couponCode: card?.couponCode ?? '',
+        showCouponCode: card?.showCouponCode ?? false,
+        image: normalized ? { original: normalized, thumbnail: normalized } : {},
       };
     });
 
@@ -223,8 +286,10 @@ export class PublicController {
 
     const publicSettings = {
       heroSlides,
+      offerCards,
       siteTitle: settings.siteTitle ?? 'XRT Online Ordering',
       siteSubtitle: settings.siteSubtitle ?? '',
+      termsPage: normalizeTermsPage((settings as any).termsPage),
       logo: logoNormalized ?? null,
       collapseLogo: collapseLogoNormalized ?? null,
       promoPopup: promoPopupNormalized ?? null,
@@ -248,7 +313,10 @@ export class PublicController {
         return { ...d, zones: d.zones ?? [] };
       })(),
       isProductReview: settings.isProductReview ?? false,
-      enableTerms: settings.enableTerms ?? false,
+      enableTerms:
+        settings.enableTerms ??
+        (Boolean((settings.termsPage as any)?.title) ||
+          hasVisibleRichTextContent((settings.termsPage as any)?.body)),
       enableCoupons: settings.enableCoupons ?? false,
       enableEmailForDigitalProduct: settings.enableEmailForDigitalProduct ?? false,
       enableReviewPopup: settings.enableReviewPopup ?? false,
@@ -258,6 +326,7 @@ export class PublicController {
       authorizeNetPublicKey: settings.authorizeNetPublicKey ?? null,
       authorizeNetApiLoginId: settings.authorizeNetApiLoginId ?? null,
       authorizeNetMode: settings.authorizeNetMode ?? 'ui',
+      showMenuSection: settings.showMenuSection !== false, // default true
       seo: {
         metaTitle: (seoRaw as any).metaTitle ?? '',
         metaDescription: (seoRaw as any).metaDescription ?? '',
@@ -271,6 +340,8 @@ export class PublicController {
       },
       isUnderMaintenance: settings.isUnderMaintenance ?? false,
       maintenance: maintenanceNormalized,
+      primary_color: settings.primary_color ?? "#5C9963",
+      secondary_color: settings.secondary_color ?? "#2F3E30",
     };
 
     return sendSuccess(res, 'Site settings retrieved', publicSettings);
@@ -578,7 +649,18 @@ export class PublicController {
     // 2. Find or create customer by phone number
     const customerRepository = new CustomerRepository();
     const customerPhone = String(customer.phone);
+    const acceptsMarketingMessages = normalizeBoolean(
+      customer?.accepts_marketing_messages,
+      true
+    );
+    const acceptsOrderUpdates = normalizeBoolean(customer?.accepts_order_updates, true);
     let existingCustomer = await customerRepository.findByPhone(customerPhone, business.id);
+
+    const isPlaceholderEmail = (email?: string) => {
+      if (!email) return true;
+      const lower = email.toLowerCase();
+      return lower.endsWith('@guest.local') || lower.endsWith('@placeholder.com');
+    };
 
     if (!existingCustomer) {
       existingCustomer = await customerRepository.create({
@@ -586,15 +668,36 @@ export class PublicController {
         name: customer.name || 'Guest',
         email: customer.email || `${customerPhone.replace(/\D/g, '')}@guest.local`,
         phoneNumber: customerPhone,
+        accepts_marketing_messages: acceptsMarketingMessages,
+        accepts_order_updates: acceptsOrderUpdates,
       });
-    } else if (
-      (existingCustomer.name === 'Guest' || !existingCustomer.name) &&
-      customer.name &&
-      customer.name !== 'Guest'
-    ) {
-      // Update the customer name if it was previously set to Guest
-      await customerRepository.update(existingCustomer.id, { name: customer.name }, business.id);
-      existingCustomer.name = customer.name;
+    } else {
+      // Update existing customer info if provided
+      const updates: any = {};
+      
+      // Update name if currently Guest or missing
+      if (customer.name && customer.name !== 'Guest' && existingCustomer.name !== customer.name) {
+        updates.name = customer.name;
+      }
+      
+      // Update email if current is placeholder and new one is valid
+      if (customer.email && isPlaceholderEmail(existingCustomer.email) && !isPlaceholderEmail(customer.email)) {
+        updates.email = customer.email;
+      }
+
+      if (existingCustomer.accepts_marketing_messages !== acceptsMarketingMessages) {
+        updates.accepts_marketing_messages = acceptsMarketingMessages;
+      }
+
+      if (existingCustomer.accepts_order_updates !== acceptsOrderUpdates) {
+        updates.accepts_order_updates = acceptsOrderUpdates;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        await customerRepository.update(existingCustomer.id, updates, business.id);
+        // Sync local object for use below
+        Object.assign(existingCustomer, updates);
+      }
     }
 
     // 3. Process NMI Payment if applicable
@@ -984,6 +1087,17 @@ export class PublicController {
       emitNewOrder({ orderId: order.id, orderNumber: order.order_number });
     } catch {
       // Printer events are optional
+    }
+
+    try {
+      const notificationService = new CustomerOrderNotificationService();
+      await notificationService.sendOrderCreatedNotifications({
+        business,
+        customer: existingCustomer,
+        order,
+      });
+    } catch (err: any) {
+      console.error('Failed to send order confirmation notifications:', err?.message || err);
     }
 
     return sendSuccess(res, 'Order created successfully', order, 201);

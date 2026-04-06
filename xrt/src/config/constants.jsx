@@ -600,6 +600,7 @@ export const MY_ACCOUNT = [
   { name: "Home", path: "/" },
   { name: "Menu", path: "/menu" },
   { name: "Contact", path: "/contact" },
+  { name: "Terms & Conditions", path: "/terms-and-conditions" },
 ];
 export const CATEGORIES_Footer = [
   "Pizza",

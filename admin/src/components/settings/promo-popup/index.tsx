@@ -72,7 +72,11 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
     <span>
       {t('form:popup-cover-image-help-text')} <br />
       {t('form:cover-image-dimension-help-text')} &nbsp;
-      <span className="font-bold">450 x 450{t('common:text-px')}</span>
+      <span className="font-bold">600 x 600{t('common:text-px')}</span>
+      <br />
+      <span className="text-xs text-gray-500 mt-1 block">
+        {t('form:popup-image-dimension-note')}
+      </span>
     </span>
   );
 
@@ -115,6 +119,7 @@ export default function PromoPopUpSettingsForm({ settings }: IProps) {
             multiple={false}
             disabled={!isPromoPopUp}
             label={t('text-upload-highlight')}
+            helperText={t('form:popup-image-uploader-text')}
             {...(isPromoPopUp && {
               required: true,
             })}

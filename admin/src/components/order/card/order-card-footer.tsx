@@ -274,7 +274,7 @@ export const OrderCardFooter = ({
             onClick={handleAcceptOrder}
             disabled={isLoading || !selectedTimeOption || (selectedTimeOption === 'custom' && !customDate)}
             className={cn(
-              'group relative flex w-full items-center justify-center overflow-hidden rounded-lg bg-green-600 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2',
+              'group relative flex w-full items-center justify-center overflow-hidden rounded-lg bg-accent py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-accent-hover hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2',
               (isLoading || !selectedTimeOption || (selectedTimeOption === 'custom' && !customDate))
                 && 'opacity-50 cursor-not-allowed',
             )}

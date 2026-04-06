@@ -5,10 +5,6 @@ import { MODAL_VIEWS, useModalAction, useModalState } from './modal.context';
 const TestimonialDeleteView = dynamic(
   () => import('@/components/testimonials/testimonial-delete-view'),
 );
-const TermsAndConditionsDeleteView = dynamic(
-  () =>
-    import('@/components/terms-and-conditions/terms-and-conditions-delete-view'),
-);
 const TagDeleteView = dynamic(() => import('@/components/tag/tag-delete-view'));
 
 const BanCustomerView = dynamic(
@@ -140,12 +136,6 @@ const ComposerMessage = dynamic(
   () => import('@/components/message/compose-message'),
 );
 
-const ApproveTermView = dynamic(
-  () => import('@/components/terms-and-conditions/approve-term-view'),
-);
-const DisApproveTermView = dynamic(
-  () => import('@/components/terms-and-conditions/disapprove-term-view'),
-);
 const SearchModal = dynamic(
   () => import('@/components/layouts/topbar/search-modal'),
 );
@@ -197,6 +187,10 @@ const ModifierToggleView = dynamic(
 
 const ViewDetailsModal = dynamic(
   () => import('@/components/common/view-details-modal'),
+);
+
+const CampaignDetailsModal = dynamic(
+  () => import('@/components/marketing/campaign-details-modal'),
 );
 
 const ConfirmationRedirectView = dynamic(
@@ -307,12 +301,6 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <OpenAiModal />;
     case 'COMPOSE_MESSAGE':
       return <ComposerMessage />;
-    case 'DELETE_TERMS_AND_CONDITIONS':
-      return <TermsAndConditionsDeleteView />;
-    case 'TERM_APPROVE_VIEW':
-      return <ApproveTermView />;
-    case 'TERM_DISAPPROVE_VIEW':
-      return <DisApproveTermView />;
     case 'SEARCH_VIEW':
       return <SearchModal />;
     case 'DESCRIPTION_VIEW':
@@ -334,6 +322,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <AdminPermissionsView />;
     case 'VIEW_DETAILS':
       return <ViewDetailsModal />;
+    case 'CAMPAIGN_DETAILS_VIEW':
+      return <CampaignDetailsModal />;
     default:
       return null;
   }

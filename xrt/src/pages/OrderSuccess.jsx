@@ -5,7 +5,10 @@ import { CheckCircle, ArrowLeft, ShoppingBag } from 'lucide-react';
 
 const OrderSuccess = () => {
   const location = useLocation();
-  const orderNumber = location.state?.orderNumber || '';
+  const orderNumber =
+    location.state?.orderNumber ||
+    location.state?.order?.order_number ||
+    '';
 
   return (
     <div
@@ -14,29 +17,29 @@ const OrderSuccess = () => {
     >
       <div className="max-w-xl mx-auto flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
         {/* Success Icon */}
-        <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6 animate-bounce">
-          <CheckCircle size={48} className="text-[var(--primary)]" />
+        <div className="w-24 h-24 bg-(--primary)/10 rounded-full flex items-center justify-center mb-6 animate-bounce">
+          <CheckCircle size={48} className="text-(--primary)" />
         </div>
 
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">
-          Order Placed!
+        <h1 className="text-3xl font-bold text-(--text-primary) mb-2">
+          Order Success!
         </h1>
-
-        {orderNumber && (
-          <p className="text-lg text-gray-600 mb-2">
-            Order <span className="font-bold text-[var(--primary)]">#{orderNumber}</span>
-          </p>
-        )}
-
-        <p className="text-gray-500 mb-8 text-center px-6 max-w-md">
-          Thank you for your order! We've received it and are preparing it now.
-          You'll be notified when it's ready.
+        <p className="text-gray-500 mb-8 text-center px-6">
+          Thank you for your order. We've received it and are starting to
+          prepare it for you.
         </p>
+
+        <div className="bg-(--primary)/5 border border-(--primary)/10 rounded-2xl p-6 mb-8 w-full max-w-sm">
+          <p className="text-sm text-gray-500 text-center mb-1">Order Number</p>
+          <p className="text-2xl font-black text-(--primary) text-center tracking-wider">
+            #{orderNumber || "PENDING"}
+          </p>
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <Link
             to="/menu"
-            className="px-8 py-3 bg-[var(--primary)] text-white font-bold rounded-full hover:brightness-110 transition-all shadow-lg shadow-green-200 flex items-center gap-2"
+            className="px-8 py-3 bg-(--primary) text-white font-bold rounded-full hover:brightness-110 transition-all shadow-lg shadow-(--primary)/20 flex items-center gap-2"
           >
             <ShoppingBag size={18} />
             Order More

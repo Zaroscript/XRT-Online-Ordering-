@@ -21,7 +21,7 @@ const OrderTypeModal = () => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 sm:p-6" id="product_modal">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -35,22 +35,21 @@ const OrderTypeModal = () => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            className="relative bg-white rounded-4xl shadow-2xl w-full max-w-md overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-[var(--primary)] p-6 text-center" style={{ backgroundColor: COLORS.primary }}>
+            <div className="bg-(--primary) p-6 text-center" style={{ backgroundColor: COLORS.primary }}>
               <h2 className="text-2xl font-bold text-white mb-2">How would you like your order?</h2>
-              <p className="text-green-100">Please select your preferred method</p>
+              <p className="text-white/80">Please select your preferred method</p>
             </div>
 
             {/* Options */}
             <div className="p-8 grid grid-cols-2 gap-4">
               <button
                 onClick={() => handleSelectType('pickup')}
-                className="group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-gray-100 hover:border-[var(--primary)] hover:bg-green-50 transition-all duration-300"
-                style={{ '--primary': COLORS.primary }}
+                className="group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-gray-100 hover:border-(--primary) hover:bg-(--primary)/5 transition-all duration-300"
               >
-                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-[var(--primary)] mb-4 group-hover:scale-110 transition-transform">
+                <div className="w-16 h-16 rounded-full bg-(--primary)/10 flex items-center justify-center text-(--primary) mb-4 group-hover:scale-110 transition-transform">
                   <ShoppingBag size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-800">Pick Up</h3>

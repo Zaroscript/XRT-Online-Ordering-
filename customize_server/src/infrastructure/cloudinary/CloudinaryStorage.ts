@@ -70,10 +70,10 @@ export const storage = createCloudinaryStorage({
     }
 
     // Use 'auto' to let Cloudinary automatically detect the resource type
-    // This works correctly for SVG files and other image types
+    // This works correctly for images, videos, and other supported files
     return {
       folder: folder,
-      resource_type: 'image',
+      resource_type: 'auto',
     };
   },
 });
@@ -102,11 +102,11 @@ export class CloudinaryStorage implements IImageStorage {
     logger.info('Cloudinary upload start:', file.originalname);
     return new Promise((resolve, reject) => {
       const uploadOptions: any = {
-        resource_type: 'image',
+        resource_type: 'auto',
         folder: folder ? (folder.startsWith('xrttech') ? folder : `xrttech/${folder}`) : 'xrttech',
       };
 
-      const timeoutMs = 30000;
+      const timeoutMs = 120000;
       const timeoutId = setTimeout(() => {
         reject(new Error(`Cloudinary upload timed out after ${timeoutMs / 1000}s`));
       }, timeoutMs);

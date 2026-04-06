@@ -1,16 +1,15 @@
 export const COLORS = {
-  primary: "#5C9963",
-  primaryHover: "#58d793",
-  primaryDark: "#2F3E30", 
-  textPrimary: "#2F3E30",
-  textSecondary: "#3D4B3E",
+  primary: "var(--color-primary, #5C9963)",
+  primaryHover: "var(--color-primary-hover, #58d793)",
+  primaryDark: "var(--color-secondary, #2F3E30)", 
+  textPrimary: "var(--color-secondary, #2F3E30)",
+  textSecondary: "var(--color-secondary, #2F3E30)",
   textGray: "#737574",
-  textLightGray: "#707070", // Found in some components potentially, adding as safe default or from grep context
+  textLightGray: "#707070", 
   white: "#ffffff",
   black: "#000000",
-  // Add common semantic names
-  success: "#5C9963",
-  danger: "#ef4444", // Tailwind red-500 approx
+  success: "var(--color-primary, #5C9963)",
+  danger: "#ef4444", 
   
   // Category Backgrounds
   categoryMarrow: "#FEEFA3",

@@ -42,7 +42,7 @@ export interface CreateCategoryDTO {
 export interface UpdateCategoryDTO {
   name?: string;
   description?: string;
-  kitchen_section_id?: string;
+  kitchen_section_id?: string | null;
   sort_order?: number;
   is_active?: boolean;
   image?: string;

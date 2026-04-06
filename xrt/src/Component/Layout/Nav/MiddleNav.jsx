@@ -13,7 +13,7 @@ const MiddleNav = ({ count, total, link, setclickfun, onCartClick }) => {
 
   return (
     <div 
-      className="py-[15px] flex header-container"
+      className="py-[15px] flex header-container bg-header-bg text-header-text"
       style={{ '--primary-hover': COLORS.primaryHover }}
     >
       {/* Logo (Left on mobile/desktop) */}

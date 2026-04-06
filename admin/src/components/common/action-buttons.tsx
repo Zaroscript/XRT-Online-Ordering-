@@ -31,13 +31,11 @@ type Props = {
   userStatus?: boolean;
   isShopActive?: boolean;
   approveButton?: boolean;
-  termApproveButton?: boolean;
   couponApproveButton?: boolean;
   showAddWalletPoints?: boolean;
   changeRefundStatus?: boolean;
   showMakeAdminButton?: boolean;
   customLocale?: string;
-  isTermsApproved?: boolean;
   isCouponApprove?: boolean;
   transferShopOwnership?: boolean;
   showViewDetails?: boolean;
@@ -60,12 +58,10 @@ const ActionButtons = ({
   isUserActive = false,
   isShopActive,
   approveButton = false,
-  termApproveButton = false,
   showAddWalletPoints = false,
   changeRefundStatus = false,
   showMakeAdminButton = false,
   customLocale,
-  isTermsApproved,
   couponApproveButton,
   isCouponApprove,
   transferShopOwnership,
@@ -116,14 +112,6 @@ const ActionButtons = ({
       }
     } else {
       openModal('SHOP_DISAPPROVE_VIEW', id);
-    }
-  }
-
-  function handleTermsStatus(status: boolean) {
-    if (status === true) {
-      openModal('TERM_APPROVE_VIEW', id);
-    } else {
-      openModal('TERM_DISAPPROVE_VIEW', id);
     }
   }
 
@@ -243,24 +231,6 @@ const ActionButtons = ({
           </button>
         ))}
 
-      {termApproveButton &&
-        (!isTermsApproved ? (
-          <button
-            onClick={() => handleTermsStatus(true)}
-            className="transition duration-200 text-accent hover:text-accent-hover focus:outline-none"
-            title={t('common:text-approve-shop')}
-          >
-            <CheckMarkCircle width={16} />
-          </button>
-        ) : (
-          <button
-            onClick={() => handleTermsStatus(false)}
-            className="text-red-500 transition duration-200 hover:text-red-600 focus:outline-none"
-            title={t('common:text-disapprove-shop')}
-          >
-            <CloseFillIcon width={17} />
-          </button>
-        ))}
       {userStatus && (
         <>
           {isUserActive ? (

@@ -61,7 +61,7 @@
     "react-laag": "2.0.5",
     "react-leaflet": "^5.0.0",
     "react-phone-input-2": "2.15.1",
-    "react-quill": "^0.4.1",
+    "react-quill": "^2.0.0",
     "react-quill-emoji": "0.1.9",
     "react-scroll": "1.9.3",
     "react-select": "5.10.2",

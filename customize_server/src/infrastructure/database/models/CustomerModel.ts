@@ -43,6 +43,18 @@ const CustomerSchema = new Schema<CustomerDocument>(
       type: Boolean,
       default: true,
     },
+    opted_into_loyalty: {
+      type: Boolean,
+      default: false,
+    },
+    accepts_marketing_messages: {
+      type: Boolean,
+      default: true,
+    },
+    accepts_order_updates: {
+      type: Boolean,
+      default: true,
+    },
     last_order_at: {
       type: Date,
     },

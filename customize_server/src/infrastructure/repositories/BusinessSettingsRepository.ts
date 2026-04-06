@@ -10,6 +10,16 @@ import {
 } from '../database/models/BusinessSettingsModel';
 import { NotFoundError } from '../../shared/errors/AppError';
 
+const LEGACY_THEME_COLOR_UNSET = {
+  header_bg_color: 1,
+  header_text_color: 1,
+  footer_bg_color: 1,
+  footer_text_color: 1,
+  shadow_color: 1,
+  gradient_start: 1,
+  gradient_end: 1,
+};
+
 export class BusinessSettingsRepository implements IBusinessSettingsRepository {
   private toDomain(document: BusinessSettingsDocument): BusinessSettings {
     return {
@@ -38,12 +48,14 @@ export class BusinessSettingsRepository implements IBusinessSettingsRepository {
       copyrightText: document.copyrightText,
       messages: document.messages,
       promoPopup: document.promoPopup,
+      offerCards: document.offerCards,
       created_at: document.created_at,
       updated_at: document.updated_at,
       siteLink: document.siteLink,
       timezone: document.timezone,
       isProductReview: document.isProductReview,
       enableTerms: document.enableTerms,
+      termsPage: document.termsPage,
       enableCoupons: document.enableCoupons,
       enableEmailForDigitalProduct: document.enableEmailForDigitalProduct,
       enableReviewPopup: document.enableReviewPopup,
@@ -59,6 +71,9 @@ export class BusinessSettingsRepository implements IBusinessSettingsRepository {
       paymentGateway: document.paymentGateway,
       defaultPaymentGateway: document.defaultPaymentGateway,
       useEnableGateway: document.useEnableGateway,
+      showMenuSection: document.showMenuSection,
+      primary_color: document.primary_color,
+      secondary_color: document.secondary_color,
     };
   }
 
@@ -84,7 +99,10 @@ export class BusinessSettingsRepository implements IBusinessSettingsRepository {
   ): Promise<BusinessSettings> {
     const settingsDoc = await BusinessSettingsModel.findOneAndUpdate(
       { business: businessId },
-      settingsData,
+      {
+        $set: settingsData,
+        $unset: LEGACY_THEME_COLOR_UNSET,
+      },
       {
         new: true,
         runValidators: true,

@@ -24,10 +24,10 @@ module.exports = {
       colors: {
         light: withOpacity('--color-light'),
         dark: withOpacity('--color-dark'),
-        accent: withOpacity('--color-accent'),
+        accent: withOpacity('--color-primary'),
         'muted-black': withOpacity('--color-muted-black'),
-        'base-dark': withOpacity('--text-base-dark'),
-        'accent-hover': withOpacity('--color-accent-hover'),
+        'base-dark': withOpacity('--color-secondary'),
+        'accent-hover': withOpacity('--color-primary-hover'),
         'accent-300': withOpacity('--color-accent-300'),
         'accent-400': withOpacity('--color-accent-400'),
         'accent-500': withOpacity('--color-accent-500'),

@@ -20,6 +20,8 @@ export type PublicSiteSettings = {
   isUnderMaintenance?: boolean;
   maintenance?: Record<string, unknown> | null;
   contactDetails?: { socials?: Array<{ icon?: string; url?: string }> };
+  primary_color?: string;
+  secondary_color?: string;
   [key: string]: unknown;
 };
 
