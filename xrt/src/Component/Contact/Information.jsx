@@ -34,7 +34,7 @@ export default function Information() {
           </div>
         ) : null}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-y-12 md:gap-x-24 lg:gap-x-[150px] px-8 md:px-12 lg:px-[100px] py-[50px]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-y-12 md:gap-x-24 lg:gap-x-[140px] px-8 md:px-12 lg:px-[100px] py-[50px]">
         <div className="flex justify-center md:justify-start">
           <div className="flex items-start gap-4">
             <MapPinned
@@ -66,13 +66,16 @@ export default function Information() {
               <h3 className="font-bold text-secondary text-[20px]">Contact</h3>
               <div className="text-[#656766] max-w-[250px] py-2">
                 <p>Mobile: <span className="font-bold">{contactDetails?.contact}</span></p>
-                <p className="mt-1">E-mail: <a href={`mailto:${contactDetails?.emailAddress}`} className="font-medium text-primary hover:underline">{contactDetails?.emailAddress}</a></p>
+                <div className="mt-1 flex items-center gap-1 whitespace-nowrap">
+                  <span>E-mail:</span>
+                  <a href={`mailto:${contactDetails?.emailAddress}`} className="font-[500] text-[#528959] hover:underline">{contactDetails?.emailAddress}</a>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-center md:justify-start">
+        <div className="flex justify-center md:justify-start md:col-span-2 lg:col-span-2 xl:col-span-1">
           <div className="flex items-start gap-4">
             <Clock
               strokeWidth={0.5}

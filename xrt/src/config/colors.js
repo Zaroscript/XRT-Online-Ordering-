@@ -8,7 +8,7 @@ export const COLORS = {
   textLightGray: "#707070", 
   white: "#ffffff",
   black: "#000000",
-  success: "var(--color-primary, #5C9963)",
+  success: "#5C9963",
   danger: "#ef4444", 
   
   // Category Backgrounds

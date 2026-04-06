@@ -41,8 +41,7 @@ export default function SideMenu({ open, setclosefun }) {
               className="fixed top-0 left-0 h-screen w-[280px] bg-[#FFFFFF] z-50"
               role="dialog"
             >
-              <div className='flex justify-between px-[20px] w-[280px] bg-[#F7F7F7] py-[20px]'>
-                <h4 className='cursor-pointer'>main menu</h4>
+              <div className='flex justify-end px-[20px] w-[280px] bg-[#F7F7F7] py-[20px]'>
                 <button
                   className='cursor-pointer'
                   onClick={() => setclosefun()}

@@ -39,9 +39,9 @@ export default function FooterSection() {
                 <My_Account/>
             </ul>
         </div>
-        <div className="text-center md:text-left">
-            <span className="font-bold text-(--color-primary) text-[17px] block mb-4">CATEGORIES</span>
-          <ul className="pt-0 grid grid-cols-2 md:grid-cols-1">
+        <div className="text-center md:text-left xl:flex xl:flex-col xl:items-center xl:col-span-2">
+            <span className="font-bold text-[#FFA900] text-[17px] block mb-4 xl:w-full xl:text-center xl:pr-[40%]">CATEGORIES</span>
+          <ul className="pt-0 grid grid-cols-2 md:grid-cols-1 xl:grid-cols-2 xl:gap-x-8 xl:w-full xl:text-left xl:m-0 xl:p-0">
             <Categories/>
           </ul>
         </div>
