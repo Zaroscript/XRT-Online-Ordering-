@@ -187,8 +187,8 @@ export default function RoleForm({ initialValues }: IProps) {
               <div className="py-4 text-center">Loading permissions...</div>
             ) : (
               <div className="space-y-6">
-                {permissionsData?.modules.map((module) => {
-                  const modulePermissions = permissionsData.permissionsByModule[module] || [];
+                {(permissionsData?.modules || []).map((module) => {
+                  const modulePermissions = permissionsData?.permissionsByModule[module] || [];
                   const allSelected = modulePermissions.every(p => currentPermissions.includes(p.key));
                   const someSelected = modulePermissions.some(p => currentPermissions.includes(p.key));
 
@@ -238,7 +238,7 @@ export default function RoleForm({ initialValues }: IProps) {
               </div>
             )}
 
-            {(!permissionsData || permissionsData.modules.length === 0) && !loadingPermissions && (
+            {(!permissionsData || !permissionsData?.modules?.length) && !loadingPermissions && (
               <div className="text-red-500 text-sm">{t('form:error-no-permissions-found') || 'No permissions found'}</div>
             )}
 

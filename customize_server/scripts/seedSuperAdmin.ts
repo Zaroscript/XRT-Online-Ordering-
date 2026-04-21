@@ -12,65 +12,82 @@ interface SuperAdminData {
   isBanned: boolean;
 }
 
+/**
+ * Ensures a super admin user exists in the `users` collection.
+ * - If the email already exists and is already super_admin → skips.
+ * - If the email already exists but has a different role → upgrades to super_admin.
+ * - If the email does not exist → creates a new super_admin.
+ */
+async function ensureSuperAdmin(data: SuperAdminData): Promise<void> {
+  const existingUser = await UserModel.findOne({ email: data.email });
+
+  if (existingUser) {
+    console.log(`  ℹ️  User already exists: ${data.email}`);
+
+    if (existingUser.role !== 'super_admin') {
+      console.log(`  🔄 Upgrading role to super_admin...`);
+      existingUser.role = UserRole.SUPER_ADMIN;
+      existingUser.setDefaultPermissions();
+      await existingUser.save();
+      console.log(`  ✅ Role upgraded successfully.`);
+    } else {
+      console.log(`  ✅ Already a super_admin — no changes needed.`);
+    }
+  } else {
+    console.log(`  ➕ Creating new super_admin: ${data.email}`);
+    const user = new UserModel(data);
+    user.setDefaultPermissions();
+    await user.save();
+    console.log(`  ✅ Created successfully.`);
+  }
+
+  // Verify
+  const admin = await UserModel.findOne({ email: data.email });
+  if (admin) {
+    console.log(`  📋 Role: ${admin.role} | Permissions: ${admin.permissions.length}`);
+  }
+}
+
+const superAdmins: SuperAdminData[] = [
+  {
+    name: 'Andrew Azer',
+    email: 'andrewazer18@gmail.com',
+    password: '21720015146',
+    role: 'super_admin',
+    isApproved: true,
+    isBanned: false,
+  },
+  {
+    name: 'Thomas Ibrahim',
+    email: 'thomas.ibrahim2020@gmail.com',
+    password: 'thomasIbrahim@xrt2025',
+    role: 'super_admin',
+    isApproved: true,
+    isBanned: false,
+  },
+];
+
 const seedSuperAdmin = async (): Promise<void> => {
   try {
-    // 1. Connect to MongoDB
-    console.log('Connecting to database...');
+    console.log('\n🔌 Connecting to database...');
     await connectDatabase();
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ Connected to MongoDB\n');
 
-    // 2. Define Super Admin Data
-    const superAdminData: SuperAdminData = {
-      name: 'Andrew Azer',
-      email: 'andrewazer18@gmail.com', // Change this if needed
-      password: '21720015146', // Change this if needed
-      role: 'super_admin',
-      isApproved: true,
-      isBanned: false,
-    };
-
-    // 3. Check if user already exists
-    const existingUser = await UserModel.findOne({ email: superAdminData.email });
-
-    if (existingUser) {
-      console.log(`User with email ${superAdminData.email} already exists.`);
-
-      // Optional: Update to super_admin if they exist but aren't super admin
-      if (existingUser.role !== 'super_admin') {
-        console.log('Updating existing user to super_admin role...');
-        existingUser.role = UserRole.SUPER_ADMIN;
-        existingUser.setDefaultPermissions();
-        await existingUser.save();
-        console.log('✅ User updated to super_admin.');
-      }
-    } else {
-      // 4. Create new Super Admin
-      console.log('Creating new Super Admin user...');
-      const user = new UserModel(superAdminData);
-
-      // Explicitly set default permissions (though pre-save hook handles it)
-      user.setDefaultPermissions();
-
-      await user.save();
-      console.log('✅ Super Admin created successfully!');
+    for (const admin of superAdmins) {
+      console.log(`\n--- Processing: ${admin.email} ---`);
+      await ensureSuperAdmin(admin);
     }
 
-    // 5. Verify Permissions
-    const admin = await UserModel.findOne({ email: superAdminData.email });
-    if (admin) {
-      console.log(`Admin Role: ${admin.role}`);
-      console.log(`Permissions count: ${admin.permissions.length}`);
-    }
+    console.log('\n🎉 Super admin seeding completed successfully!\n');
   } catch (error) {
-    console.error('❌ Error seeding super admin:', error);
+    console.error('\n❌ Error seeding super admins:', error);
     process.exit(1);
   } finally {
     const mongoose = await import('mongoose');
     await mongoose.default.disconnect();
-    console.log('Disconnected from MongoDB');
+    console.log('🔌 Disconnected from MongoDB');
     process.exit(0);
   }
 };
 
 seedSuperAdmin();
-

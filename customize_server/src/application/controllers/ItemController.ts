@@ -258,25 +258,24 @@ export class ItemController {
 
   updateSortOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { items } = req.body;
+    console.log('🔄 Item Sort Order Update:', { 
+      hasItems: !!items, 
+      isArray: Array.isArray(items),
+      count: Array.isArray(items) ? items.length : 0 
+    });
 
     if (!items || !Array.isArray(items)) {
       throw new ValidationError('items array is required');
     }
 
-    // We can reuse the same repo method directly or wrap it in a UseCase.
-    // For simplicity and uniformity with the plan, let's use a repository method directly for now
-    // or create the generic UseCase instance if we want to be strict.
-    // Given the plan defined `UpdateSortOrderUseCase`, let's use it if we instantiate it,
-    // OR just call the repository since it's a simple proxy.
-    // Plan said: "Implement updateSortOrder use case in admin data layer" (Frontend)
-    // Backend plan said: "Create UseCase to handle bulk update logic".
-
-    // Let's create a local instance or just call repo for expediency as it's a simple pass-through.
-    // Actually, let's stick to the pattern and use the repo directly here as the controller logic is minimal.
-    const repo = new ItemRepository();
-    await repo.updateSortOrder(items);
-
-    return sendSuccess(res, 'Item sort order updated successfully');
+    try {
+      const repo = new ItemRepository();
+      await repo.updateSortOrder(items);
+      return sendSuccess(res, 'Item sort order updated successfully');
+    } catch (error: any) {
+      console.error('❌ Failed to update item sort order:', error);
+      throw error;
+    }
   });
 
   exportItems = asyncHandler(async (req: AuthRequest, res: Response) => {

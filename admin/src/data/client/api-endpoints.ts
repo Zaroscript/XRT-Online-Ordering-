@@ -53,7 +53,7 @@ export const API_ENDPOINTS = {
   SETTINGS: 'settings',
   /** No auth — branding for login / pre-auth shell */
   PUBLIC_SITE_SETTINGS: 'public/site-settings',
-  PROFILE_UPDATE: 'profile-update',
+  PROFILE_UPDATE: 'auth/profile',
 
   // Additional endpoints for compatibility (may not exist in customize_server yet)
   VERIFY_FORGET_PASSWORD_TOKEN: 'auth/verify-reset-token',
@@ -79,8 +79,13 @@ export const API_ENDPOINTS = {
   TYPES: 'types',
   ANALYTICS: 'analytics',
   ITEMS: 'items',
+  ITEMS_SORT_ORDER: 'items/sort-order',
   MODIFIER_GROUPS: 'modifier-groups',
+  MODIFIER_GROUPS_SORT_ORDER: 'modifier-groups/sort-order',
   MODIFIERS: 'modifiers',
+  MODIFIERS_SORT_ORDER: 'modifiers/sort-order',
+  ITEM_SIZES: 'item-sizes',
+  ITEM_SIZES_SORT_ORDER: 'item-sizes/sort-order',
   IMPORT_PARSE: 'import/parse',
   IMPORT_SESSIONS: 'import/sessions',
   /** Reserved — no API route yet; use IMPORT_SESSIONS. Avoid leading `/` (breaks baseURL join). */

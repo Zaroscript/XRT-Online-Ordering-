@@ -30,6 +30,7 @@ export class UserRepository implements IUserRepository {
       twoFactorSecret: document.twoFactorSecret,
       twoFactorEnabled: document.twoFactorEnabled,
       customRole: document.customRole,
+      profile: document.profile,
       created_at: document.created_at,
       updated_at: document.updated_at,
     };
@@ -56,6 +57,20 @@ export class UserRepository implements IUserRepository {
       query.select('+password');
     }
     const userDoc = await query;
+    return userDoc ? this.toDomain(userDoc) : null;
+  }
+
+  async findByIdentity(identity: string, includePassword = false): Promise<User | null> {
+    const query = UserModel.findOne({
+      $or: [
+        { email: identity.toLowerCase() },
+        { 'profile.contact': identity }
+      ]
+    });
+    if (includePassword) {
+      query.select('+password +isActive +isApproved +isBanned +banReason');
+    }
+    const userDoc = await query.populate('customRole');
     return userDoc ? this.toDomain(userDoc) : null;
   }
 

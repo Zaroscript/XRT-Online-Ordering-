@@ -86,8 +86,13 @@
     "payment-help-text":  "Configure your payment methods, currency, and gateway settings here.",
     "form-title-events-settings":  "Events Settings",
     "form-title-forgot-password":  "Forgot Password",
-    "form-title-profile-settings":  "Profile Settings",
-    "form-title-faqs":  "FAQs",
+    "form-title-profile-settings": "Profile Settings",
+    "form-title-account-settings": "Account Settings",
+    "form-title-security": "Security",
+    "form-title-account-information": "Account Information",
+    "form-title-general-information": "General Information",
+    "form-label-back-to-dashboard": "Back to Dashboard",
+    "error-contact-number-invalid": "Please provide a valid contact number",
     "form-title-all-notifications":  "All notifications",
     "order-status-description-helper-text":  "order status from here",
     "featured-image-title":  "Featured Image",
@@ -1235,5 +1240,7 @@
     "input-label-show-coupon-code": "Show Coupon Code",
     "input-tooltip-show-coupon-code": "Enable this to display the coupon code on the offer card with a copy button.",
     "form-label-offer-card": "Offer Card",
-    "button-label-add-offer-card": "Add Offer Card"
+    "button-label-add-offer-card": "Add Offer Card",
+    "input-label-suggested-products": "Suggested Products",
+    "category-suggested-products-helper-text": "Select products to suggest when viewing items from this category."
 }

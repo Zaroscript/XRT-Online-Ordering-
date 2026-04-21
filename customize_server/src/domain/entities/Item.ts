@@ -65,6 +65,7 @@ export interface Item {
   is_customizable?: boolean;
   default_size_id?: string; // KEEPING for backward compat or quick lookup, but sizes array has is_default
   modifier_groups?: ItemModifierGroupAssignment[];
+  suggested_products?: any[]; // Populated items from category suggestions
   created_at: Date;
   updated_at: Date;
 }

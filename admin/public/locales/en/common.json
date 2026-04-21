@@ -67,7 +67,7 @@
   "nav-menu-faq": "FAQ",
   "nav-menu-contact": "Contact",
   "user-avatar": "user avatar",
-  "auth-menu-profile": "Contact",
+  "auth-menu-profile": "Profile",
   "auth-menu-checkout": "Checkout",
   "auth-menu-my-orders": "My Orders",
   "auth-menu-logout": "Logout",
@@ -75,6 +75,8 @@
   "change-locale": "Switch to german",
   "admin-login-title": "Login to dashboard",
   "admin-register-title": "Register new account",
+  "input-label-identity": "Email or Contact Number",
+  "input-placeholder-identity": "Enter email or contact number",
   "billing-address": "Billing Address",
   "shipping-address": "Shipping Address",
   "no-order-found": "No Order Found",
@@ -983,5 +985,13 @@
   "audience": "Audience",
   "audience-count": "Audience Count",
   "analyze": "Analyze",
-  "resend": "Resend"
+  "resend": "Resend",
+  "Theme": "Theme",
+  "Customizer": "Customizer",
+  "Primary Color": "Primary Color",
+  "Secondary Color": "Secondary Color",
+  "Apply Theme": "Apply Theme",
+  "Saving...": "Saving...",
+  "Previewing Changes": "Previewing Changes",
+  "Reset": "Reset"
 }

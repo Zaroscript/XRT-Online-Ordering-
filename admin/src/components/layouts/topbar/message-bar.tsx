@@ -8,16 +8,13 @@ import { Menu, Transition } from '@headlessui/react';
 import cn from 'classnames';
 import Link from '@/components/ui/link';
 import Image from 'next/image';
-import { Fragment, useEffect, useState, useRef } from 'react';
+import { Fragment, useState } from 'react';
 import { isEmpty } from 'lodash';
 import { SortOrder } from '@/types';
 import dayjs from 'dayjs';
 import { adminOnly, getAuthCredentials, hasAccess } from '@/utils/auth-utils';
 import { Routes } from '@/config/routes';
 import { MessageAvatarPlaceholderIcon } from '@/components/icons/message-avatar-placeholder-icon';
-import { PusherConfig } from '@/utils/pusher-config';
-import { toast } from 'react-toastify';
-import { Config } from '@/config';
 
 type IProps = {
   user: any;
@@ -25,8 +22,6 @@ type IProps = {
 
 const MessageBar = ({ user }: IProps) => {
   const { t } = useTranslation();
-  const [notice, setNotice] = useState([]);
-  const allNotice = useRef<any>([]);
   const router = useRouter();
   const [conversationsOpen, setConversationsOpen] = useState(false);
   const { permissions } = getAuthCredentials();
@@ -51,36 +46,6 @@ const MessageBar = ({ user }: IProps) => {
     (conversation) => conversation?.unseen,
   );
 
-  useEffect(() => {
-    if (Config.broadcastDriver === 'pusher' && Config.pusherEnable === 'true') {
-      const channelName =
-        `${process.env.NEXT_PUBLIC_MESSAGE_CHANNEL_PRIVATE}` + '.' + user?.id;
-
-      if (PusherConfig) {
-        const channel = PusherConfig.subscribe(channelName);
-
-        channel.bind(
-          `${process.env.NEXT_PUBLIC_MESSAGE_EVENT}`,
-          (data: any) => {
-            allNotice.current.push(data);
-            //@ts-ignore
-            setNotice([...allNotice.current]);
-            toast.success(data?.message, {
-              toastId: 'messageSuccess',
-            });
-          },
-        );
-
-        return () => {
-          PusherConfig?.unsubscribe(channelName);
-        };
-      }
-    } else {
-      PusherConfig?.disconnect();
-    }
-  }, [notice]);
-
-  // here messages will be passed as a props in eventData. to keep the useEffect track of having a new message
   return (
     <>
       <Menu as="div" className="inline-block text-left sm:relative">

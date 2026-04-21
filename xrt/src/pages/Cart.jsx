@@ -12,6 +12,27 @@ const Cart = () => {
   const navigate = useNavigate();
   const { data: siteSettings } = useSiteSettingsQuery();
 
+  // Aggregate suggestions from all items in cart
+  const suggestions = React.useMemo(() => {
+    const allSuggestions = [];
+    const seenIds = new Set();
+    const cartItemIds = new Set(cartItems.map(item => String(item.id)));
+
+    cartItems.forEach(item => {
+      if (item.suggested_products && Array.isArray(item.suggested_products)) {
+        item.suggested_products.forEach(p => {
+          const pid = String(p.id || p._id);
+          if (!seenIds.has(pid) && !cartItemIds.has(pid)) {
+            seenIds.add(pid);
+            allSuggestions.push(p);
+          }
+        });
+      }
+    });
+
+    return allSuggestions;
+  }, [cartItems]);
+
   return (
     <div 
       className="min-h-screen pt-32 pb-20 px-4 md:px-8 max-w-7xl mx-auto"
@@ -149,6 +170,44 @@ const Cart = () => {
           </Link>
         </div>
       )}
+
+      {/* Suggested Products Section - Show suggestions aggregated from all items in cart */}
+      {suggestions.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-800 mb-8 px-2">You may also like</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {suggestions.slice(0, 8).map((item) => (
+              <div 
+                key={item.id} 
+                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col group transition-all hover:shadow-md"
+              >
+                <div className="relative aspect-square overflow-hidden bg-gray-50 p-4">
+                  <img 
+                    src={item.image || "https://placehold.co/400x400?text=No+Image"} 
+                    alt={item.name}
+                    className="w-full h-full object-contain transition-transform group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-4 flex flex-col flex-1">
+                  <h4 className="font-bold text-gray-800 text-base mb-1 line-clamp-1 group-hover:text-(--primary) transition-colors">{item.name}</h4>
+                  <div className="mt-auto flex items-center justify-between pt-4">
+                    <span className="font-bold text-lg text-(--primary)" style={{ color: COLORS.primary }}>
+                      ${item.base_price || 0}
+                    </span>
+                    <button 
+                      onClick={() => navigate(`/product/${item.id}`)}
+                      className="p-2.5 bg-gray-50 hover:bg-(--primary) hover:text-white rounded-xl transition-all group/btn"
+                    >
+                      <Plus size={20} className="group-hover/btn:scale-110 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <SignatureProducts />
     </div>
   );

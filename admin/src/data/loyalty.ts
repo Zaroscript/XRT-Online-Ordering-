@@ -6,6 +6,7 @@ import { HttpClient } from './client/http-client';
 import {
   LoyaltyProgram,
   LoyaltyProgramInput,
+  LoyaltyAccount,
   LoyaltyAccountPaginator,
   LoyaltyTransactionPaginator,
   QueryOptions,
@@ -83,7 +84,7 @@ export const useLoyaltyMembersQuery = (options: Partial<QueryOptions> & { search
 
   return {
     members: data?.data ?? [],
-    paginatorInfo: mapPaginatorData(data as any),
+    paginatorInfo: mapPaginatorData(data as any) as any,
     error,
     loading: isLoading,
   };
@@ -99,7 +100,7 @@ export const useLoyaltyTransactionsQuery = (options: { id: string } & Partial<Qu
 
   return {
     transactions: data?.data ?? [],
-    paginatorInfo: mapPaginatorData(data as any),
+    paginatorInfo: mapPaginatorData(data as any) as any,
     error,
     loading: isLoading,
   };

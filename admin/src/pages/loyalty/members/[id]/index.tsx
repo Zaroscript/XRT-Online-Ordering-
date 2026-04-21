@@ -52,7 +52,9 @@ export default function LoyaltyMemberDetails() {
             </div>
             <div>
               <span className="text-sm text-body block">{t('common:text-phone', 'Phone')}</span>
-              <span className="font-medium text-heading">{member.customer?.phoneNumber || member.phone || '-'}</span>
+              <span className="font-medium text-heading">
+                {member.customer?.profile?.contact || member.phone || '-'}
+              </span>
             </div>
             <div>
               <span className="text-sm text-body block">{t('common:text-email', 'Email')}</span>

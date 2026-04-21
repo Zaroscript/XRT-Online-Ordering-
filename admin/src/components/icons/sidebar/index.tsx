@@ -40,6 +40,7 @@ export { MaintenanceIcon } from '@/components/icons/sidebar/maintenance';
 export { StoreNoticeIcon } from '@/components/icons/sidebar/store-notice';
 export { TermsIcon } from '@/components/icons/sidebar/terms';
 export { LogOutIcon } from '@/components/icons/logout';
+export { ArrowPrev } from '@/components/icons/arrow-prev';
 export { MyShopOwnerIcon } from '@/components/icons/sidebar/my-shop';
 export { ChatOwnerIcon } from '@/components/icons/sidebar/chat';
 export { StoreNoticeOwnerIcon } from '@/components/icons/sidebar/store-notice';

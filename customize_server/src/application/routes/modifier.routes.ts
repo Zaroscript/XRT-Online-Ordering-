@@ -9,7 +9,7 @@ const modifierController = new ModifierController();
 // Modifier routes need explicit authentication instead of global router.use
 // to prevent bleeding into other routes mounted on the same base path.
 
-// Sort order update - specific route before generic /:id routes
+// Sort order update - specific route MUST come before generic /:id routes
 router.post(
   '/modifier-groups/:groupId/modifiers/sort-order',
   requireAuth,

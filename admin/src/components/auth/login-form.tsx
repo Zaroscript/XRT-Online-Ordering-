@@ -19,15 +19,14 @@ import {
 } from '@/utils/auth-utils';
 
 const loginFormSchema = yup.object().shape({
-  email: yup
+  identity: yup
     .string()
-    .email('form:error-email-format')
     .required('form:error-email-required'),
   password: yup.string().required('form:error-password-required'),
 });
 
 const defaultValues = {
-  email: 'admin@demo.com',
+  identity: 'admin@demo.com',
   password: 'demodemo',
 };
 
@@ -40,10 +39,10 @@ const LoginForm = () => {
   // Load saved email on mount
   useState(() => {
     if (typeof window !== 'undefined') {
-      const savedEmail = localStorage.getItem('remember_email');
+      const savedIdentity = localStorage.getItem('remember_identity');
       const savedPassword = localStorage.getItem('remember_password');
-      if (savedEmail) {
-        defaultValues.email = savedEmail;
+      if (savedIdentity) {
+        defaultValues.identity = savedIdentity;
         if (savedPassword) {
           defaultValues.password = savedPassword;
         }
@@ -53,32 +52,29 @@ const LoginForm = () => {
   });
 
   function onSubmit(values: LoginInput, e?: React.BaseSyntheticEvent) {
-    // Prevent any default form submission behavior
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
 
-    // Clear any previous error messages
     setErrorMessage(null);
 
     // Handle Remember Me
     if (rememberMe) {
-      localStorage.setItem('remember_email', values.email);
+      localStorage.setItem('remember_identity', values.identity);
       localStorage.setItem('remember_password', values.password);
     } else {
-      localStorage.removeItem('remember_email');
+      localStorage.removeItem('remember_identity');
       localStorage.removeItem('remember_password');
     }
 
     login(
       {
-        email: values.email,
+        identity: values.identity,
         password: values.password,
       },
       {
         onSuccess: (data: any) => {
-          // Handle customize_server response format: { success: true, message: '...', data: { user, accessToken, refreshToken } }
           const responseData = data?.data || data;
           const token = responseData?.accessToken;
           const refreshToken = responseData?.refreshToken;
@@ -88,7 +84,6 @@ const LoginForm = () => {
             const permissions = user.permissions || [];
             const role = user.role || '';
 
-            // Check if role is allowed
             if (
               role === 'super_admin' ||
               role === 'admin' ||
@@ -108,7 +103,6 @@ const LoginForm = () => {
             setErrorMessage(errorMsg);
             toast.error(errorMsg);
           } else {
-            // Handle case where response format is unexpected
             console.error('Unexpected login response format:', data);
             const errorMsg = t('form:error-credential-wrong');
             setErrorMessage(errorMsg);
@@ -116,16 +110,8 @@ const LoginForm = () => {
           }
         },
         onError: (error: any) => {
-          console.error('Login error details:', {
-            message: error?.message,
-            response: error?.response?.data,
-            status: error?.response?.status,
-            code: error?.code,
-          });
-
           let errorMsg = t('common:login-failed');
 
-          // Handle network errors and timeouts
           if (
             error?.code === 'ERR_NETWORK' ||
             error?.message?.includes('Network Error')
@@ -136,7 +122,6 @@ const LoginForm = () => {
             return;
           }
 
-          // Handle timeout errors
           if (
             error?.code === 'ECONNABORTED' ||
             error?.message?.includes('timeout')
@@ -147,7 +132,6 @@ const LoginForm = () => {
             return;
           }
 
-          // Handle different HTTP error types
           if (error?.response?.status === 401) {
             errorMsg =
               error?.response?.data?.message ||
@@ -160,8 +144,6 @@ const LoginForm = () => {
             errorMsg = t('form:error-too-many-attempts');
           } else if (error?.response?.data?.message) {
             errorMsg = error.response.data.message;
-          } else if (error?.message) {
-            errorMsg = error.message;
           }
 
           setErrorMessage(errorMsg);
@@ -190,12 +172,11 @@ const LoginForm = () => {
         {({ register, formState: { errors } }) => (
           <div className="space-y-4">
             <Input
-              label={t('form:input-label-email')}
-              {...register('email')}
-              type="email"
+              label={t('common:input-label-identity')}
+              {...register('identity')}
               variant="outline"
-              error={t(errors?.email?.message!)}
-              placeholder={t('form:input-placeholder-email')}
+              error={t(errors?.identity?.message!)}
+              placeholder={t('common:input-placeholder-identity')}
               className="transition-all duration-200 focus:ring-2 focus:ring-accent/20"
             />
             <PasswordInput
@@ -240,15 +221,3 @@ const LoginForm = () => {
 };
 
 export default LoginForm;
-
-{
-  /* {errorMsg ? (
-          <Alert
-            message={t(errorMsg)}
-            variant="error"
-            closeable={true}
-            className="mt-5"
-            onClose={() => setErrorMsg('')}
-          />
-        ) : null} */
-}

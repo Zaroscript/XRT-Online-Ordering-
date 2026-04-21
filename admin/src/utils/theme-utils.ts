@@ -104,6 +104,7 @@ export function buildAdminBrandTheme(
   const primary = normalizeThemeColor(primaryInput, DEFAULT_PRIMARY_COLOR);
   const secondary = normalizeThemeColor(secondaryInput, DEFAULT_SECONDARY_COLOR);
   const primaryHover = mixHexColors(primary, secondary, 0.22);
+  const secondaryHover = mixHexColors(secondary, '#000000', 0.1);
   const accent300 = mixHexColors(primary, '#ffffff', 0.68);
   const accent400 = mixHexColors(primary, '#ffffff', 0.4);
   const accent500 = primary;
@@ -113,9 +114,12 @@ export function buildAdminBrandTheme(
   return {
     primary,
     secondary,
+    primaryContrast: getContrastColor(primary),
+    secondaryContrast: getContrastColor(secondary),
     primaryRgb: hexToRgb(primary) || hexToRgb(DEFAULT_PRIMARY_COLOR) || '',
     secondaryRgb: hexToRgb(secondary) || hexToRgb(DEFAULT_SECONDARY_COLOR) || '',
     primaryHover,
+    secondaryHover,
     primaryHoverRgb:
       hexToRgb(primaryHover) || hexToRgb(mixHexColors(DEFAULT_PRIMARY_COLOR, DEFAULT_SECONDARY_COLOR, 0.22)) || '',
     accent300Rgb: hexToRgb(accent300) || '',
@@ -141,8 +145,15 @@ export function applyAdminBrandTheme(options?: {
   );
 
   root.style.setProperty('--color-primary', theme.primaryRgb);
+  root.style.setProperty('--color-primary-hex', theme.primary);
+  root.style.setProperty('--color-primary-contrast', theme.primaryContrast);
   root.style.setProperty('--color-primary-hover', theme.primaryHoverRgb);
+  
   root.style.setProperty('--color-secondary', theme.secondaryRgb);
+  root.style.setProperty('--color-secondary-hex', theme.secondary);
+  root.style.setProperty('--color-secondary-contrast', theme.secondaryContrast);
+  root.style.setProperty('--color-secondary-hover', theme.secondaryHover);
+
   root.style.setProperty('--color-accent', theme.primaryRgb);
   root.style.setProperty('--color-accent-hover', theme.primaryHoverRgb);
   root.style.setProperty('--color-accent-300', theme.accent300Rgb);

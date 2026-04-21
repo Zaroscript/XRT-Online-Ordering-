@@ -81,6 +81,8 @@ export function CartProvider({ children }) {
   };
 
   const addToCart = (product, quantity = 1) => {
+    // Ensure we are using the most up-to-date product data including suggested_products
+    // In case the passed product is a partial or from an old cache
     setCartItems(prev => {
       // Helper to generate a unique signature for the item options
       const getSignature = (item) => {
@@ -117,7 +119,9 @@ export function CartProvider({ children }) {
         const newCart = [...prev];
         newCart[existingIndex] = {
            ...newCart[existingIndex],
-           qty: newCart[existingIndex].qty + quantity
+           qty: newCart[existingIndex].qty + quantity,
+           // Preserve or update suggestions if they come with the product
+           suggested_products: product.suggested_products || newCart[existingIndex].suggested_products
         };
         return newCart;
       }
