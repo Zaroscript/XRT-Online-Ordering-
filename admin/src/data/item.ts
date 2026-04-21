@@ -4,6 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_ENDPOINTS } from '@/data/client/api-endpoints';
 import { itemClient } from './client/item';
+import { HttpClient } from './client/http-client';
 import {
     ItemQueryOptions,
     GetParams,
@@ -147,6 +148,23 @@ export const useDeleteItemMutation = () => {
         },
         onError: (error: any) => {
             toast.error(t(`common:${error?.response?.data.message}`));
+        },
+    });
+};
+
+export const useUpdateItemsSortOrderMutation = () => {
+    const { t } = useTranslation();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (items: { id: string; order: number }[]) =>
+            HttpClient.post(API_ENDPOINTS.ITEMS_SORT_ORDER, { items }),
+        onSuccess: () => {
+            toast.success(t('common:successfully-updated'));
+            queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ITEMS] });
+        },
+        onError: (error: any) => {
+            toast.error(t('common:update-failed'));
         },
     });
 };

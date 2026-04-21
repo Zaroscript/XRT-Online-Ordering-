@@ -89,9 +89,9 @@ export class AuthController {
   });
 
   login = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { identity, password } = req.body;
 
-    const result = await this.loginUseCase.execute({ email, password });
+    const result = await this.loginUseCase.execute({ identity, password });
 
     // Set cookies
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
@@ -128,10 +128,10 @@ export class AuthController {
   });
 
   updatePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { currentPassword, newPassword } = req.body;
+    const { oldPassword, newPassword } = req.body;
 
     const result = await this.updatePasswordUseCase.execute(req.user!.id, {
-      currentPassword,
+      oldPassword,
       newPassword,
     });
 
@@ -249,8 +249,12 @@ export class AuthController {
     return sendSuccess(res, 'User created successfully', { user }, 201);
   });
 
-  updateUser = asyncHandler(async (req: Request, res: Response) => {
-    const user = await this.updateUserUseCase.execute(req.params.id, req.body);
+  updateUser = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.params.id || req.user?.id;
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    const user = await this.updateUserUseCase.execute(userId, req.body);
 
     return sendSuccess(res, 'User updated successfully', { user });
   });

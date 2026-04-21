@@ -8,8 +8,8 @@ const itemSizeController = new ItemSizeController();
 
 router.use(requireAuth);
 
-// Sort order update - specific route before generic /:id routes
-router.post('/sort-order', requireAuth, itemSizeController.updateSortOrder);
+// Sort order update - specific route MUST come before generic /:id routes
+router.post('/sort-order', itemSizeController.updateSortOrder);
 
 // Export sizes - requires items:read permission
 router.get('/export', requirePermission('items:read'), itemSizeController.exportSizes);

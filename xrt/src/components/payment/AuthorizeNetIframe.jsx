@@ -7,20 +7,23 @@ const AuthorizeNetIframe = ({
   customer,
   delivery,
   onSuccess,
-  onError,
-  primaryColor = '#3D6642'
+  onError
 }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [iframeError, setIframeError] = useState(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const formRef = useRef(null);
+  const hasFiredSuccess = useRef(false);
   
   // We determine the secure hosted form URL dynamically based on the backend environment
   const [actionUrl, setActionUrl] = useState("https://accept.authorize.net/payment/payment");
+  const fetchInitiatedRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
+    if (fetchInitiatedRef.current) return;
+    fetchInitiatedRef.current = true;
     
     // Fetch the token from our backend
     const fetchToken = async () => {
@@ -59,8 +62,6 @@ const AuthorizeNetIframe = ({
   }, [amount, customer, delivery, onError]);
 
   // Once token is established, submit the hidden form into the iframe only ONCE.
-  // If the component re-renders (e.g., due to parent state changes), we do not want to
-  // re-submit because it will reload the iframe and erase user input.
   const hasSubmittedRef = useRef(false);
   useEffect(() => {
     if (token && formRef.current && !hasSubmittedRef.current && !formSubmitted) {
@@ -72,71 +73,64 @@ const AuthorizeNetIframe = ({
 
   // Listen for messages from Authorize.net communicator HTML
   useEffect(() => {
+      /**
+       * Strictly validated origins for security and CSP compliance.
+       * We accept messages ONLY from the payment provider or our own app origin.
+       */
+      const allowedOrigins = new Set([
+          window.location.origin,
+          'https://accept.authorize.net',
+          'https://test.authorize.net',
+      ]);
+
       const handleMessage = (event) => {
+          // 1. Safety first: Skip empty data or messages from untrusted origins
           if (!event.data) return;
+          if (event.origin && !allowedOrigins.has(event.origin)) return;
           
-          let eventData = event.data;
-          
-          // Some messages strings, others already parsed
-          if (typeof eventData === "string") {
-              // Ignore extraneous messages (vite, react devtools, etc)
-              if (eventData.includes("vite") || eventData.includes("react-devtools")) return;
-              
+          const rawData = event.data;
+          let transId = null;
+          let response = {};
 
-              // Standard communicator.html payload is query string style: action=...&transId=...
+          // 2. Data Extraction: Handle both modern JSON objects and legacy query strings
+          if (typeof rawData === "object") {
+              const payload = rawData.payload || rawData.response || rawData;
+              transId = payload.transId || payload.transactionId;
+              response = payload;
+          } 
+          else if (typeof rawData === "string") {
+              // Ignore background noise from browser extensions or Vite internal signals
+              if (!rawData.includes('transactResponse') && !rawData.includes('transId=')) return;
+
               try {
-                  const urlParams = new URLSearchParams(eventData);
-                  const action = urlParams.get('action');
-                  const transId = urlParams.get('transId');
-                  
-                  if (action === 'transactResponse') {
-                      const responseStr = urlParams.get('response');
-                      let response = {};
-                      try {
-                          response = responseStr ? JSON.parse(responseStr) : {};
-                      } catch (e) {
-                          // ignore parsing errors for transaction response JSON
-                      }
-                      
-
-                      if (transId && transId !== '0') {
-                          onSuccess({ 
-                              token: transId, 
-                              method: 'authorize_net_iframe',
-                              cardType: response.accountType,
-                              last4: response.accountNumber ? response.accountNumber.slice(-4) : undefined
-                          });
-                      } else {
-                          // The transaction failed or was cancelled
-                          let msg = "Transaction did not complete.";
-                          if (response && response.messages && response.messages.message && response.messages.message.length > 0) {
-                              msg = response.messages.message[0].text;
-                          }
-                          setIframeError(msg);
-                          onError(msg);
-                      }
-                  } else if (action === 'cancel') {
-                      const msg = "Payment was cancelled.";
-                      setIframeError(msg);
-                      onError(msg);
-                  } else if (action === 'successfulSave') {
-                      // Handle if needed
-                  }
+                  const params = new URLSearchParams(rawData);
+                  transId = params.get('transId');
+                  const respStr = params.get('response');
+                  if (respStr) response = JSON.parse(respStr);
               } catch (e) {
-                  // ignore parsing errors for extraneous messages
+                  return; // Silent fail for malformed signals
               }
-          } else if (typeof eventData === "object") {
-              // Handle potential object payload if communicator is bypassed or modern
-              if (eventData.action === 'transactResponse') {
-                 if (eventData.transId && eventData.transId !== '0') {
-                    onSuccess({ 
-                        token: eventData.transId, 
-                        method: 'authorize_net_iframe',
-                        cardType: eventData.accountType,
-                        last4: eventData.accountNumber ? eventData.accountNumber.slice(-4) : undefined
-                    });
-                 }
-              }
+          }
+
+          // 3. Prevent duplicate success triggers
+          if (transId && transId !== '0') {
+              if (hasFiredSuccess.current) return;
+              hasFiredSuccess.current = true;
+
+              console.log('✅ [Auth.Net] Transaction Success Confirmed:', transId);
+              
+              onSuccess({ 
+                  token: transId, 
+                  method: 'authorize_net_iframe',
+                  cardType: response.accountType || response.cardType,
+                  last4: response.accountNumber ? response.accountNumber.slice(-4) : undefined
+              });
+              return;
+          }
+
+          // 4. Handle cancellation signal
+          if (typeof rawData === 'string' && rawData.includes('cancel')) {
+              onError("Payment was cancelled.");
           }
       };
 
@@ -194,23 +188,23 @@ const AuthorizeNetIframe = ({
       )}
 
       {/* The iframe where the Authorize.net secure form will load */}
-      <div className="w-full max-w-md mx-auto h-[600px] border border-gray-100 rounded-[2rem] overflow-hidden bg-gray-50 shadow-inner">
+      <div className="w-full max-w-2xl mx-auto h-[620px] border border-gray-100 rounded-[2rem] overflow-hidden bg-white shadow-xl shadow-gray-200/50 payment-iframe-container">
           <iframe 
             id="add_payment" 
             name="add_payment" 
             width="100%" 
             height="100%" 
             frameBorder="0" 
-            scrolling="yes"
+            scrolling="no"
             title="Secure Payment Form"
-            className="w-full h-full"
+            className="w-full h-full overflow-hidden"
           >
               <p className="text-center mt-10 text-gray-500 text-sm">Your browser does not support iframes.</p>
           </iframe>
       </div>
       
       <p className="text-center mt-6 text-[10px] font-bold text-gray-400 uppercase tracking-widest max-w-sm">
-          Please complete your payment securely within the frame above.
+          Payment processing is secured with 256-bit encryption.
       </p>
     </div>
   );

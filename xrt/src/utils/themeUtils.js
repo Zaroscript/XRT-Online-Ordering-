@@ -97,6 +97,7 @@ export function buildWebsiteBrandTheme(primaryInput, secondaryInput) {
   const primary = normalizeThemeColor(primaryInput, DEFAULT_PRIMARY_COLOR);
   const secondary = normalizeThemeColor(secondaryInput, DEFAULT_SECONDARY_COLOR);
   const primaryHover = mixHexColors(primary, secondary, 0.22);
+  const secondaryHover = mixHexColors(secondary, "#000000", 0.14);
   const headerBg = secondary;
   const footerBg = mixHexColors(secondary, "#000000", 0.14);
   const gradientStart = mixHexColors(primary, "#ffffff", 0.12);
@@ -106,7 +107,10 @@ export function buildWebsiteBrandTheme(primaryInput, secondaryInput) {
   return {
     primary,
     secondary,
+    primaryContrast: getContrastColor(primary),
+    secondaryContrast: getContrastColor(secondary),
     primaryHover,
+    secondaryHover,
     primaryRgb: hexToRgb(primary),
     secondaryRgb: hexToRgb(secondary),
     headerBg,
@@ -129,9 +133,14 @@ export function applyWebsiteBrandTheme(primaryInput, secondaryInput) {
 
   root.style.setProperty("--color-primary", theme.primary);
   root.style.setProperty("--color-primary-rgb", theme.primaryRgb);
+  root.style.setProperty("--color-primary-contrast", theme.primaryContrast);
   root.style.setProperty("--color-primary-hover", theme.primaryHover);
+  
   root.style.setProperty("--color-secondary", theme.secondary);
   root.style.setProperty("--color-secondary-rgb", theme.secondaryRgb);
+  root.style.setProperty("--color-secondary-contrast", theme.secondaryContrast);
+  root.style.setProperty("--color-secondary-hover", theme.secondaryHover);
+
   root.style.setProperty("--color-header-bg", theme.headerBg);
   root.style.setProperty("--color-header-text", theme.headerText);
   root.style.setProperty("--color-footer-bg", theme.footerBg);

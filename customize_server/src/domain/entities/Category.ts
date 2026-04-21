@@ -18,6 +18,7 @@ export interface Category {
   icon_public_id?: string;
   translated_languages: string[];
   modifier_groups?: ItemModifierGroupAssignment[]; // Using ItemModifierGroupAssignment from Item entity
+  suggested_products?: any[]; // Can be string IDs or populated Item objects
   products_count?: number;
   created_at: Date;
   updated_at: Date;
@@ -36,6 +37,7 @@ export interface CreateCategoryDTO {
   icon_public_id?: string;
   language?: string;
   modifier_groups?: ItemModifierGroupAssignment[];
+  suggested_products?: string[];
   apply_modifier_groups_to_items?: boolean;
 }
 
@@ -51,6 +53,7 @@ export interface UpdateCategoryDTO {
   icon_public_id?: string;
   language?: string;
   modifier_groups?: ItemModifierGroupAssignment[];
+  suggested_products?: string[];
   apply_modifier_groups_to_items?: boolean;
   delete_icon?: boolean;
 }

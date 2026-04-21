@@ -61,6 +61,24 @@ export const rateLimitMiddleware = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
 });
 
+// Auth brute-force protection for public auth endpoints
+export const authRateLimitMiddleware = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: env.NODE_ENV === 'development' ? 300 : 25,
+  message: 'Too many authentication attempts. Please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Sensitive write endpoints (orders/payments/import save)
+export const writeRateLimitMiddleware = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: env.NODE_ENV === 'development' ? 500 : 40,
+  message: 'Too many write requests. Please slow down and try again shortly.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 export const requestLogger = (req: Request, res: Response, next: NextFunction): void => {
   next();
 };

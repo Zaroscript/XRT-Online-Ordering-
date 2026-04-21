@@ -15,10 +15,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const classes = {
   root: 'inline-flex items-center justify-center flex-shrink-0 font-semibold leading-none rounded-lg outline-none transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent/30',
   normal:
-    'bg-accent text-light border border-transparent hover:bg-accent-hover shadow-sm hover:shadow-md',
+    'bg-accent text-[var(--color-primary-contrast)] border border-transparent hover:bg-accent-hover shadow-sm hover:shadow-md',
   custom: 'border border-transparent',
   outline:
-    'border border-gray-300 bg-white text-body hover:text-light hover:bg-accent hover:border-accent shadow-sm hover:shadow-md',
+    'border border-gray-300 bg-white text-body hover:text-[var(--color-primary-contrast)] hover:bg-accent hover:border-accent shadow-sm hover:shadow-md',
   loading:
     'h-4 w-4 ms-2 rounded-full border-2 border-transparent border-t-2 animate-spin',
   disabled:
@@ -69,8 +69,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           <span
             className={classes.loading}
             style={{
-              borderTopColor:
-                variant === 'outline' ? 'currentColor' : '#ffffff',
+              borderTopColor: 'var(--color-primary-contrast)',
             }}
           />
         )}

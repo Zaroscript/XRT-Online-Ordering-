@@ -1,4 +1,3 @@
-import { toInteger } from 'lodash';
 import type { NextPage } from 'next';
 
 export type NextPageWithLayout<P = {}> = NextPage<P> & {
@@ -198,7 +197,7 @@ export interface PaginatorInfo<T> {
 }
 
 export interface LoginInput {
-  email: string;
+  identity: string;
   password: string;
 }
 
@@ -256,6 +255,7 @@ export interface Category {
   };
   is_active?: boolean;
   modifier_groups?: any[];
+  suggested_products?: any[];
 }
 
 export interface KitchenSection {
@@ -955,6 +955,7 @@ export interface CreateCategoryInput {
   kitchen_section_id?: string;
   sort_order?: number;
   is_active?: boolean;
+  suggested_products?: string[];
 }
 
 // -> TODO: Simplify this
@@ -1197,6 +1198,7 @@ export interface Conversations {
 }
 
 export interface Message extends LatestMessage {
+  user_id?: string | number;
   conversation: Conversations;
 }
 

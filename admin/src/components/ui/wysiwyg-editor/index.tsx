@@ -1,4 +1,3 @@
-import './quill-polyfill';
 import classNames from 'classnames';
 import { useMemo, useRef, useState } from 'react';
 import { Controller } from 'react-hook-form';

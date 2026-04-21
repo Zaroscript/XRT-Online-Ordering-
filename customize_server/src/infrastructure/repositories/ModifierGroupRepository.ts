@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import {
   IModifierGroupRepository,
   PaginatedModifierGroups,
@@ -194,7 +195,7 @@ export class ModifierGroupRepository implements IModifierGroupRepository {
 
     const operations = items.map((item) => ({
       updateOne: {
-        filter: { _id: item.id },
+        filter: { _id: new mongoose.Types.ObjectId(item.id) },
         update: { sort_order: item.order },
       },
     }));

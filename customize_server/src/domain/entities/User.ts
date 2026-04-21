@@ -1,5 +1,23 @@
 import { UserRole } from '../../shared/constants/roles';
 
+export interface UserProfile {
+  bio?: string;
+  contact?: string;
+  avatar?: {
+    thumbnail: string;
+    original: string;
+    id: string;
+  };
+  notifications?: {
+    email: string;
+    enable: boolean;
+  };
+  socials?: {
+    type: string;
+    link: string;
+  }[];
+}
+
 export interface User {
   id: string;
   name: string;
@@ -22,6 +40,7 @@ export interface User {
   twoFactorSecret?: string;
   twoFactorEnabled: boolean;
   customRole?: any;
+  profile?: UserProfile;
   created_at: Date;
   updated_at: Date;
 }
@@ -33,6 +52,7 @@ export interface CreateUserDTO {
   role: UserRole;
   permissions?: string[];
   isApproved?: boolean;
+  profile?: UserProfile;
 }
 
 export interface UpdateUserDTO {
@@ -45,10 +65,11 @@ export interface UpdateUserDTO {
   isBanned?: boolean;
   banReason?: string;
   isActive?: boolean;
+  profile?: UserProfile;
 }
 
 export interface LoginDTO {
-  email: string;
+  identity: string;
   password: string;
 }
 
@@ -70,7 +91,7 @@ export interface ResetPasswordDTO {
 }
 
 export interface UpdatePasswordDTO {
-  currentPassword: string;
+  oldPassword: string;
   newPassword: string;
 }
 

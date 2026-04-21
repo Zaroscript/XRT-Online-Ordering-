@@ -16,8 +16,8 @@ const logUpload = (method: string) => (req: any, res: any, next: any) => {
 // All item routes require authentication
 router.use(requireAuth);
 
-// Sort order update - specific route before generic /:id routes
-router.post('/sort-order', requireAuth, itemController.updateSortOrder);
+// Sort order update - specific route MUST come before generic /:id routes
+router.post('/sort-order', itemController.updateSortOrder);
 
 // Export items - requires items:read permission
 router.get('/export', requirePermission('items:read'), itemController.exportItems);
@@ -56,10 +56,5 @@ router.put(
 
 // Delete item - requires items:delete permission
 router.delete('/:id', requirePermission('items:delete'), itemController.delete);
-
-// Sort order update - specific route before generic /:id routes
-router.post('/sort-order', requireAuth, itemController.updateSortOrder);
-
-// Get all items - requires items:read permission
 
 export default router;

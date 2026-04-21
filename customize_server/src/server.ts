@@ -10,6 +10,7 @@ import {
   securityMiddleware,
   compressionMiddleware,
   rateLimitMiddleware,
+  authRateLimitMiddleware,
   requestLogger,
   errorHandler,
 } from './application/middlewares';
@@ -60,21 +61,39 @@ app.set('trust proxy', 1);
 // Database connection will be established in startServer function
 
 // Global middlewares
-// Skip body parsing for any route that accepts multipart/form-data so Multer gets the raw stream (otherwise upload hangs)
-const skipBodyParsing = (req: express.Request) =>
-  req.path.startsWith('/attachments') ||
-  req.originalUrl.includes('/attachments') ||
-  req.path.startsWith('/import') ||
-  req.originalUrl.includes('/import') ||
-  req.path.startsWith('/items') ||
-  req.originalUrl.includes('/items') ||
-  req.path.startsWith('/categories') ||
-  req.originalUrl.includes('/categories');
+// Skip body parsing for any route that accepts multipart/form-data (multer) 
+// UNLESS it's a JSON request (like sort-order).
+const skipBodyParsing = (req: express.Request) => {
+  const contentType = (req.headers['content-type'] || '').toLowerCase();
+  
+  // NEVER skip body parsing if it's application/json
+  if (contentType.includes('application/json')) {
+    return false;
+  }
+
+  // Only skip for specific paths known to handle multipart/form-data
+  const path = req.path.toLowerCase();
+  const url = req.originalUrl.toLowerCase();
+  
+  return (
+    path.includes('/attachments') ||
+    url.includes('/attachments') ||
+    path.includes('/import') ||
+    url.includes('/import') ||
+    path.includes('/items') ||
+    url.includes('/items') ||
+    path.includes('/categories') ||
+    url.includes('/categories')
+  );
+};
 
 app.use((req, res, next) => {
-  if (skipBodyParsing(req)) {
+  const shouldSkip = skipBodyParsing(req);
+  if (shouldSkip) {
+    console.log(`⏩ Skipping body parsing for: ${req.method} ${req.originalUrl}`);
     return next();
   }
+  console.log(`🔍 Parsing body for: ${req.method} ${req.originalUrl} (${req.headers['content-type']})`);
   express.json({ limit: '10mb' })(req, res, next);
 });
 
@@ -163,20 +182,14 @@ app.use(async (req, res, next) => {
 });
 
 // API Routes
-app.use(`${env.API_BASE_URL}/auth`, authRoutes);
+app.use(`${env.API_BASE_URL}/auth`, authRateLimitMiddleware, authRoutes);
 app.use(`${env.API_BASE_URL}/businesses`, businessRoutes);
 app.use(`${env.API_BASE_URL}/categories`, categoryRoutes);
 app.use(`${env.API_BASE_URL}/settings`, settingsRoutes);
 app.use(`${env.API_BASE_URL}/public`, publicRoutes);
 app.use(`${env.API_BASE_URL}/roles`, roleRoutes);
 app.use(`${env.API_BASE_URL}/permissions`, permissionRoutes);
-app.use(
-  `${env.API_BASE_URL}/attachments`,
-  (req, res, next) => {
-    next();
-  },
-  attachmentRoutes
-);
+app.use(`${env.API_BASE_URL}/attachments`, attachmentRoutes);
 app.use(`${env.API_BASE_URL}/items`, itemRoutes);
 app.use(`${env.API_BASE_URL}/sizes`, itemSizeRoutes); // Nested routes for item sizes
 app.use(`${env.API_BASE_URL}/customers`, customerRoutes);
@@ -215,6 +228,12 @@ app.use(errorHandler);
 let server: http.Server | null = null;
 let io: SocketIOServer | null = null;
 
+const getSocketAllowedOrigins = (): string[] => {
+  const configured = env.ALLOWED_ORIGINS.filter(Boolean);
+  const productionDefaults = ['https://xrttech.org', 'https://www.xrttech.org', 'https://admin.xrttech.org'];
+  return Array.from(new Set([...configured, ...productionDefaults]));
+};
+
 const startServer = async () => {
   try {
     await connectDatabase();
@@ -223,8 +242,10 @@ const startServer = async () => {
     if (!process.env.VERCEL) {
       const PORT = env.PORT;
       server = http.createServer(app);
+      const socketAllowedOrigins =
+        env.NODE_ENV === 'development' ? true : getSocketAllowedOrigins();
       io = new SocketIOServer(server, {
-        cors: { origin: '*', methods: ['GET', 'POST'] },
+        cors: { origin: socketAllowedOrigins, methods: ['GET', 'POST'] },
         pingTimeout: 60000,
         pingInterval: 25000,
       });

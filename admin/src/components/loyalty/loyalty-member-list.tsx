@@ -85,7 +85,7 @@ const LoyaltyMemberList = ({ members, paginatorInfo, onPagination }: IProps) => 
         align: 'center',
         render: (id: string) => (
           <Button
-            variant="text"
+            variant="outline"
             className="text-accent hover:text-accent-hover focus:outline-none"
             onClick={() => router.push(`/loyalty/members/${id}`)}
             title={t('common:text-view-details', 'View Details')}
@@ -114,8 +114,8 @@ const LoyaltyMemberList = ({ members, paginatorInfo, onPagination }: IProps) => 
         <div className="flex items-center justify-end">
           <Pagination
             total={paginatorInfo.total}
-            current={paginatorInfo.currentPage}
-            pageSize={paginatorInfo.perPage}
+            current={paginatorInfo.current_page}
+            pageSize={paginatorInfo.per_page}
             onChange={onPagination}
           />
         </div>

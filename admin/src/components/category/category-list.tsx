@@ -7,7 +7,7 @@ import { Routes } from '@/config/routes';
 import { Category, MappedPaginatorInfo, SortOrder } from '@/types';
 import { useTranslation } from 'next-i18next';
 import { useIsRTL } from '@/utils/locals';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import TitleWithSort from '@/components/ui/title-with-sort';
 
 import { useRouter } from 'next/router';
@@ -39,10 +39,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableRow } from '@/components/ui/sortable-row';
-import { useMutation } from '@tanstack/react-query';
-import { API_ENDPOINTS } from '@/data/client/api-endpoints';
-import { HttpClient } from '@/data/client/http-client';
 import { toast } from 'react-toastify';
+import { useDeleteCategoryMutation, useUpdateCategoriesSortOrderMutation } from '@/data/category';
 
 export type IProps = {
   categories: Category[] | undefined | null;
@@ -68,6 +66,8 @@ const CategoryList = ({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
+  const { mutate: updateSortOrder, isPending: isUpdatingSortOrder } = useUpdateCategoriesSortOrderMutation();
+
   // Local state for optimistic updates
   const [itemsList, setItemsList] = useState<Category[]>([]);
 
@@ -83,6 +83,7 @@ const CategoryList = ({
       setTogglingId(null);
     }
   }, [isOpen]);
+
   const { alignLeft, alignRight } = useIsRTL();
   const [sortingObj, setSortingObj] = useState<{
     sort: SortOrder;
@@ -104,29 +105,15 @@ const CategoryList = ({
     }),
   );
 
-  // Sorting Mutation
-  const updateSortOrder = useMutation({
-    mutationFn: async (newItems: { id: string; order: number }[]) => {
-      // API_ENDPOINTS.CATEGORIES is 'categories', so we append /sort-order
-      return HttpClient.post(API_ENDPOINTS.CATEGORIES + '/sort-order', {
-        items: newItems,
-      });
-    },
-    onSuccess: () => {
-      toast.success(t('common:successfully-updated'));
-    },
-    onError: (error) => {
-      console.error('Failed to update sort order', error);
-      // Optionally revert state here if needed
-    },
-  });
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over?.id) {
+    if (active && over && active.id !== over.id) {
       setItemsList((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over?.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        if (oldIndex === -1 || newIndex === -1) return items;
+        
         const newItems = arrayMove(items, oldIndex, newIndex);
 
         const pageSize = paginatorInfo?.perPage || 10;
@@ -138,11 +125,8 @@ const CategoryList = ({
           order: startOrder + index,
         }));
 
-        updateSortOrder.mutate(payload);
+        updateSortOrder(payload);
 
-        // Crucial: Update the sort_order in the local state immediately
-        // so that if the user clicks "Disable" (or Edit) before a refetch,
-        // we send the correct updated sort_order.
         return newItems.map((item, index) => ({
           ...item,
           sort_order: startOrder + index,
@@ -442,7 +426,7 @@ const CategoryList = ({
     <>
       <div
         className={`mb-6 overflow-hidden rounded shadow ${
-          updateSortOrder.isPending ? 'opacity-50 pointer-events-none' : ''
+          isUpdatingSortOrder ? 'opacity-50 pointer-events-none' : ''
         }`}
       >
         <DndContext

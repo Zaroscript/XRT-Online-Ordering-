@@ -40,10 +40,10 @@ export default function AuthorizedMenu() {
           className="shrink-0 grow-0 basis-auto drop-shadow"
         />
         <div className="hidden w-[calc(100%-48px)] flex-col items-start space-y-0.5 truncate text-sm ltr:text-left rtl:text-right xl:flex">
-          <span className="w-full truncate font-semibold capitalize text-black">
+          <span className="w-full truncate font-semibold capitalize text-heading">
             {isMounted ? data?.name : ''}
           </span>
-          <span className="w-full truncate text-xs capitalize text-gray-400">
+          <span className="w-full truncate text-xs capitalize text-body/60">
             {isMounted ? (role ? role.split('_').join(' ') : data?.email) : ''}
           </span>
         </div>

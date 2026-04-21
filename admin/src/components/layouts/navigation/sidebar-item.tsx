@@ -344,7 +344,7 @@ const SidebarItem = ({
             ? 'hover:text-accent-hover ltr:pl-3 rtl:pr-3'
             : 'hover:bg-gray-100',
           sanitizedPath === href
-            ? `font-medium !text-accent-hover ${!showMiniSidebar ? 'bg-accent/10 hover:!bg-accent/10' : ''}`
+            ? `font-medium !text-accent-hover ${!showMiniSidebar ? 'bg-accent !text-[var(--color-primary-contrast)] hover:bg-accent' : ''}`
             : '',
         )}
         title={label}
@@ -355,7 +355,7 @@ const SidebarItem = ({
             className={cn(
               'transition',
               sanitizedPath === href
-                ? 'text-accent-hover'
+                ? (showMiniSidebar ? 'text-accent-hover' : 'text-[var(--color-primary-contrast)]')
                 : 'text-gray-600 group-focus:text-accent',
               showMiniSidebar ? 'group-hover:text-accent' : null,
             )}

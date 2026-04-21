@@ -211,6 +211,48 @@ const ProductDetails = () => {
                 </div>
              </div>
         </div>
+
+        {/* Suggested Products Section */}
+        {product.suggested_products && product.suggested_products.length > 0 && (
+          <div className="mt-8">
+            <h3 className="text-2xl font-bold text-gray-800 mb-6 px-2">You may also like</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {product.suggested_products.map((item) => (
+                <div 
+                  key={item.id} 
+                  className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col group transition-all hover:shadow-md"
+                >
+                  <div className="relative aspect-square overflow-hidden bg-gray-50">
+                    <img 
+                      src={item.image || "https://placehold.co/400x400?text=No+Image"} 
+                      alt={item.name}
+                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-3 flex flex-col flex-1">
+                    <h4 className="font-semibold text-gray-800 text-sm md:text-base mb-1 line-clamp-1">{item.name}</h4>
+                    <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+                      <span className="font-bold text-(--primary)" style={{ color: COLORS.primary }}>
+                        ${item.base_price || 0}
+                      </span>
+                      <button 
+                        onClick={() => {
+                          // Quick Add logic: use default size and no modifiers for speed
+                          // For a more robust version, we could navigate to that product
+                          window.location.href = `/product/${item.id}`;
+                        }}
+                        className="p-2 bg-gray-50 hover:bg-(--primary) hover:text-white rounded-lg transition-colors group/btn"
+                        title="View Details"
+                      >
+                        <Handbag size={18} className="group-hover/btn:scale-110 transition-transform" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
         <SignatureProducts />
       </div>

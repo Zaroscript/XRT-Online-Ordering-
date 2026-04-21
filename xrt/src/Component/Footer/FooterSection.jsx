@@ -14,15 +14,17 @@ export default function FooterSection() {
   return (
     <>
       <div
-        className="bg-footer-bg text-footer-text grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 px-4 py-12 md:px-8 lg:px-[70px]"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 px-4 py-12 md:px-8 lg:px-[70px]"
         style={{
+          backgroundColor: 'var(--color-footer-bg)',
+          color: 'var(--color-footer-text)',
           backgroundImage: `url(${footer_image.bg})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
       >
-        <div className="text-[#E1E1E1] text-center md:text-left">
+        <div className="text-center md:text-left" style={{ color: 'var(--color-footer-text)' }}>
           {settings?.footer_text && (
              <p className="mb-4 text-2xl font-medium leading-7" style={{ color: COLORS.offerYellow }}>
                {settings?.footer_text}
@@ -46,8 +48,8 @@ export default function FooterSection() {
           </ul>
         </div>
       </div>
-      <div className="bg-footer-bg brightness-90 flex flex-col gap-4 py-6 md:py-4 px-4 md:px-8 lg:px-[70px] md:flex-row md:flex-wrap md:items-center md:justify-between">
-        <h2 className="text-[#E1E1E1] text-[16px] text-center md:text-left order-2 md:order-1">
+      <div className="brightness-90 flex flex-col gap-4 py-6 md:py-4 px-4 md:px-8 lg:px-[70px] md:flex-row md:flex-wrap md:items-center md:justify-between" style={{ backgroundColor: 'var(--color-footer-bg)' }}>
+        <h2 className="text-[16px] text-center md:text-left order-2 md:order-1" style={{ color: 'var(--color-footer-text)' }}>
           {(() => {
             const text = settings?.copyrightText?.replace(/Powered by XRT/i, '').trim() || '';
             const siteLink = settings?.siteLink || '#';

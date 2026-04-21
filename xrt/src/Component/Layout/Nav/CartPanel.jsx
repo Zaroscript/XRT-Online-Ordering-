@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingBag, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,10 +27,26 @@ export default function CartPanel({ open, setclosefun }) {
     }
   };
 
-  // Get suggested products (exclude items already in cart)
-  const suggestedProducts = products
-    .filter(p => !cartItems.find(item => item.id === p.id))
-    .slice(0, 5); // Show first 5 matches
+  // Aggregate suggestions from all items in cart
+  const suggestions = useMemo(() => {
+    const allSuggestions = [];
+    const seenIds = new Set();
+    const cartItemIds = new Set(cartItems.map(item => String(item.id)));
+
+    cartItems.forEach(item => {
+      if (item.suggested_products && Array.isArray(item.suggested_products)) {
+        item.suggested_products.forEach(p => {
+          const pid = String(p.id || p._id);
+          if (!seenIds.has(pid) && !cartItemIds.has(pid)) {
+            seenIds.add(pid);
+            allSuggestions.push(p);
+          }
+        });
+      }
+    });
+
+    return allSuggestions;
+  }, [cartItems]);
 
   const variants = {
     hidden: { x: '100%', transition: { duration: 0.45, ease: 'easeInOut' } },
@@ -152,7 +168,7 @@ export default function CartPanel({ open, setclosefun }) {
 
 
             {/* Cross Selling Section */}
-            {suggestedProducts.length > 0 && (
+            {suggestions.length > 0 && (
               <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
                 <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                   <span className="w-1 h-4 bg-(--primary) rounded-full"></span>
@@ -171,8 +187,8 @@ export default function CartPanel({ open, setclosefun }) {
                     ref={scrollContainerRef}
                     className="flex gap-3 overflow-x-hidden scroll-smooth pb-2 px-1"
                   >
-                      {suggestedProducts.map((product) => {
-                         const displayPrice = (product.basePrice * (product.sizes?.[0]?.multiplier || 1)).toFixed(2);
+                      {suggestions.map((product) => {
+                         const displayPrice = product.base_price || 0;
                          return (
                           <div 
                             key={product.id} 
@@ -180,12 +196,16 @@ export default function CartPanel({ open, setclosefun }) {
                           >
                             <div className="relative h-24 mb-2 bg-gray-50 rounded-lg overflow-hidden">
                               <img 
-                                src={product.src} 
+                                src={product.image || "https://placehold.co/400x400?text=No+Image"} 
                                 alt={product.name} 
                                 className="w-full h-full object-contain mix-blend-multiply p-1 group-hover:scale-105 transition-transform duration-300"
                               />
                               <button
-                                onClick={() => addToCart({ ...product, price: displayPrice })}
+                                onClick={() => {
+                                  // For simplicity in drawer, we add with base price and no modifiers
+                                  // This matches the quick add behavior requested
+                                  addToCart({ ...product, src: product.image, price: displayPrice });
+                                }}
                                 className="absolute bottom-1 right-1 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center text-(--primary) hover:bg-(--primary) hover:text-white transition-colors"
                               >
                                 <Plus size={16} />

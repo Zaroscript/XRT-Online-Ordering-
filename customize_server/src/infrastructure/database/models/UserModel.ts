@@ -95,6 +95,25 @@ const UserSchema = new Schema<UserDocument>(
       type: Schema.Types.ObjectId,
       ref: 'Role',
     },
+    profile: {
+      bio: String,
+      contact: String,
+      avatar: {
+        thumbnail: String,
+        original: String,
+        id: String,
+      },
+      notifications: {
+        email: String,
+        enable: { type: Boolean, default: false },
+      },
+      socials: [
+        {
+          type: String,
+          link: String,
+        },
+      ],
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

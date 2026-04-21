@@ -123,6 +123,23 @@ input[type="number"] {
   padding-left: 1rem;
 }
 
+/* Authorize.net Iframe & Secure Form Styles */
+iframe#add_payment {
+  overflow-x: hidden !important;
+}
+
+/* Custom scrollbar for the payment container */
+.payment-iframe-container::-webkit-scrollbar {
+  width: 6px;
+}
+.payment-iframe-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.payment-iframe-container::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+
 /* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

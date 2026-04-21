@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { OrderController } from '../controllers/OrderController';
 import { requireAuth } from '../middlewares/auth';
 import { requirePermission } from '../middlewares/authorize';
+import { writeRateLimitMiddleware } from '../middlewares';
 
 const router = Router();
 const orderController = new OrderController();
@@ -12,6 +13,7 @@ const orderController = new OrderController();
 // Create order - requires orders:create permission or customer role
 router.post(
   '/',
+  writeRateLimitMiddleware,
   // requireAuth,
   // requirePermission('orders:create'),
   orderController.create
@@ -43,6 +45,7 @@ router.get(
 // Update order status - requires orders:update permission
 router.put(
   '/:id/status',
+  writeRateLimitMiddleware,
   // requireAuth,
   // requirePermission('orders:update'),
   orderController.updateStatus
@@ -51,6 +54,7 @@ router.put(
 // Manual reprint - clear print status and trigger routing (optional body: { printerId? })
 router.post(
   '/:id/reprint',
+  writeRateLimitMiddleware,
   // requireAuth,
   orderController.reprint
 );
@@ -66,6 +70,7 @@ router.delete(
 // Refund order (full or partial)
 router.post(
   '/:id/refund',
+  writeRateLimitMiddleware,
   // requireAuth,
   orderController.refundOrder
 );

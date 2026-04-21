@@ -12,6 +12,7 @@ import {
 } from '@/types';
 import { mapPaginatorData } from '@/utils/data-mappers';
 import { categoryClient } from './client/category';
+import { HttpClient } from './client/http-client';
 import { Config } from '@/config';
 
 export const useCreateCategoryMutation = () => {
@@ -84,6 +85,23 @@ export const useUpdateCategoryMutation = () => {
     // Always refetch after error or success to ensure data consistency
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.CATEGORIES] });
+    },
+  });
+};
+
+export const useUpdateCategoriesSortOrderMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (items: { id: string; order: number }[]) =>
+      HttpClient.post(API_ENDPOINTS.CATEGORIES + '/sort-order', { items }),
+    onSuccess: () => {
+      toast.success(t('common:successfully-updated'));
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.CATEGORIES] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || t('common:update-failed'));
     },
   });
 };
