@@ -146,7 +146,7 @@ export default function Content(props) {
           </h3>
         ) : null}
 
-        {btnLink ? (
+        {btnText && (
           <a
             href={btnLink}
             className={buttonClass}
@@ -155,10 +155,6 @@ export default function Content(props) {
           >
             {buttonContent}
           </a>
-        ) : (
-          <button type="button" className={buttonClass}>
-            {buttonContent}
-          </button>
         )}
       </div>
     </div>

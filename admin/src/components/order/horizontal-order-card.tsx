@@ -11,6 +11,7 @@ import { useModalAction } from '@/components/ui/modal/modal.context';
 import { toast } from 'react-toastify';
 import cn from 'classnames';
 import { DatePicker } from 'rsuite';
+import { formatOrderTrackingLabel } from '@/utils/order-tracking';
 import 'rsuite/dist/rsuite-no-reset.min.css';
 
 dayjs.extend(relativeTime);
@@ -40,7 +41,7 @@ export default function HorizontalOrderCard({
     order.shipping_address?.formatted_address ??
     order.billing_address?.formatted_address ??
     '';
-  const orderId = order.tracking_number;
+  const trackingLabel = formatOrderTrackingLabel(order.tracking_number) || 'N/A';
   const status = order.order_status;
   const orderTotal = order.total;
 
@@ -110,7 +111,7 @@ export default function HorizontalOrderCard({
       {/* Basic Info */}
       <div className="flex flex-col gap-1.5 w-full md:w-1/3">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-gray-400">#{orderId}</span>
+          <span className="text-xs font-bold text-gray-400">{trackingLabel}</span>
           <span className="text-xs text-gray-400">|</span>
           <span className="text-xs text-gray-500">
             {dayjs((order as any).created_at).format('MMM D, h:mm A')}

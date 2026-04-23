@@ -1,11 +1,16 @@
 import { useTranslation } from 'next-i18next';
-import { OrderStatus, PaymentStatus } from '@/types';
 import Button from '@/components/ui/button';
 import { DownloadIcon } from '@/components/icons/download-icon';
 import StatusColor from '@/components/order/status-color';
 import Badge from '@/components/ui/badge/badge';
-import cn from 'classnames';
 import { useModalAction } from '@/components/ui/modal/modal.context';
+import {
+  getOrderStatusColors,
+  getOrderStatusLabelKey,
+  isScheduledOrder,
+} from '@/data/order';
+import { formatOrderDisplayValue } from '@/utils/order-display';
+import { formatOrderTrackingLabel } from '@/utils/order-tracking';
 
 interface OrderHeaderProps {
   order: any;
@@ -20,6 +25,28 @@ export default function OrderHeader({
 }: OrderHeaderProps) {
   const { t } = useTranslation('common');
   const { openModal } = useModalAction();
+  const trackingLabel = formatOrderTrackingLabel(order?.tracking_number);
+  const scheduled = isScheduledOrder(order);
+  const statusColors = getOrderStatusColors(order?.order_status, scheduled);
+  const paymentStatus = String(order?.payment_status ?? '')
+    .toLowerCase()
+    .replace(/\s+/g, '_');
+  const paymentLabelMap: Record<string, string> = {
+    pending: t('payment-pending'),
+    payment_pending: t('payment-pending'),
+    processing: t('payment-processing'),
+    payment_processing: t('payment-processing'),
+    paid: t('payment-success'),
+    success: t('payment-success'),
+    payment_success: t('payment-success'),
+    refunded: t('payment-refunded'),
+    payment_refunded: t('payment-refunded'),
+  };
+  const paymentLabel =
+    paymentLabelMap[paymentStatus] ||
+    (paymentStatus === 'partially_refunded'
+      ? 'Partially Refunded'
+      : formatOrderDisplayValue(order?.payment_status));
 
   const handleRefund = () => {
     openModal('REFUND_ORDER', {
@@ -35,17 +62,17 @@ export default function OrderHeader({
         <h2 className="mb-2 text-xl font-bold text-heading">
           {t('form:input-label-order-id')}{' '}
           <span className="text-base font-normal text-body">
-            #{order?.tracking_number}
+            {trackingLabel || 'N/A'}
           </span>
         </h2>
         <div className="flex flex-wrap items-center gap-3">
           <Badge
-            text={t(order?.order_status)}
-            color={StatusColor(order?.order_status)}
+            text={t(`common:${getOrderStatusLabelKey(order?.order_status, scheduled)}`)}
+            color={statusColors.badge}
             className="flex min-h-[2rem] items-center text-sm font-medium"
           />
           <Badge
-            text={t(order?.payment_status)}
+            text={paymentLabel}
             color={StatusColor(order?.payment_status)}
             className="flex min-h-[2rem] items-center text-sm font-medium"
           />

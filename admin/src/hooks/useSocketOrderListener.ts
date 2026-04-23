@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAtom } from 'jotai';
+import { useQueryClient } from '@tanstack/react-query';
 import { pendingOrdersAtom } from '@/store/order-atoms';
 import {
   serverOrderToAdminOrder,
   ServerOrder,
 } from '@/data/order/server-order-mapper';
+import { invalidateOrderRealtimeQueries } from '@/utils/invalidate-order-realtime-queries';
 
 /**
  * Derive the socket.io base URL from NEXT_PUBLIC_REST_API_ENDPOINT.
@@ -24,13 +26,14 @@ function getSocketUrl(): string {
 
 /**
  * Hook that connects to the backend socket.io server and listens for
- * `new-order` events. When an event arrives it maps the payload to the
- * admin Order type and pushes it onto the pending-orders queue so the
- * NewOrderNotification component can show the modal directly.
+ * order-related events. `new-order` events enqueue the modal notification,
+ * while both `new-order` and `order-changed` invalidate dashboard/order
+ * queries so the UI refreshes immediately.
  */
 export function useSocketOrderListener() {
   const socketRef = useRef<Socket | null>(null);
   const [, setPendingOrders] = useAtom(pendingOrdersAtom);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const url = getSocketUrl();
@@ -42,8 +45,12 @@ export function useSocketOrderListener() {
 
     socketRef.current = socket;
 
+    const refreshOrderRelatedData = () => {
+      invalidateOrderRealtimeQueries(queryClient);
+    };
 
-    socket.on('new-order', (data: any) => {
+    const handleNewOrder = (data: any) => {
+      refreshOrderRelatedData();
 
       // The backend emits the full server order object
       let order;
@@ -76,12 +83,21 @@ export function useSocketOrderListener() {
 
       // Add to the pending orders queue
       setPendingOrders((prev) => [...prev, order]);
-    });
+    };
+
+    const handleOrderChanged = () => {
+      refreshOrderRelatedData();
+    };
+
+    socket.on('new-order', handleNewOrder);
+    socket.on('order-changed', handleOrderChanged);
 
 
     return () => {
+      socket.off('new-order', handleNewOrder);
+      socket.off('order-changed', handleOrderChanged);
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [setPendingOrders]);
+  }, [queryClient, setPendingOrders]);
 }

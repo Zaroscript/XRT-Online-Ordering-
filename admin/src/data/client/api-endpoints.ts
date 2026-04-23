@@ -114,11 +114,11 @@ export const API_ENDPOINTS = {
   EXPORT_ALL: 'export/all',
 
   // Product endpoints
-  POPULAR_PRODUCTS: 'products/popular',
+  POPULAR_PRODUCTS: 'analytics/popular-items',
   LOW_STOCK_PRODUCTS_ANALYTICS: 'products/low-stock',
   CATEGORY_WISE_PRODUCTS: 'products/category-wise',
   CATEGORY_WISE_PRODUCTS_SALE: 'products/category-wise-sale',
-  TOP_RATED_PRODUCTS: 'products/top-rated',
+  TOP_RATED_PRODUCTS: 'analytics/less-sold-items',
 
   // Additional placeholder endpoints
   AUTHORS: 'authors',

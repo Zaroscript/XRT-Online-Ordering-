@@ -796,6 +796,7 @@ export interface Product {
   digital_file?: DigitalFile;
   pivot?: OrderProductPivot;
   orders: Order[];
+  orders_count?: number;
   description?: string;
   in_stock?: boolean;
   is_digital?: boolean;

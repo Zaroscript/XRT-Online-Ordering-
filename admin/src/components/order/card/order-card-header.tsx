@@ -9,6 +9,7 @@ import {
   isScheduledOrder,
   IN_PROGRESS_STATUSES,
 } from '@/data/order';
+import { formatOrderTrackingLabel } from '@/utils/order-tracking';
 import cn from 'classnames';
 
 dayjs.extend(relativeTime);
@@ -39,6 +40,7 @@ export const OrderCardHeader = ({ order }: OrderCardHeaderProps) => {
   const timeLabel = scheduled
     ? t('common:text-scheduled-for')
     : t('text-ready-in');
+  const trackingLabel = formatOrderTrackingLabel(order.tracking_number);
 
   return (
     <div className="relative overflow-hidden rounded-t-xl bg-white p-4 sm:p-5 text-heading border-b border-gray-100">
@@ -55,9 +57,9 @@ export const OrderCardHeader = ({ order }: OrderCardHeaderProps) => {
             <span className={cn('h-1.5 w-1.5 rounded-full', colors.dot)} />
             {t(`common:${getOrderStatusLabelKey(status, scheduled)}`)}
           </span>
-          {order.tracking_number && (
+          {trackingLabel && (
             <span className="text-[11px] font-bold text-accent font-mono">
-              #{order.tracking_number}
+              {trackingLabel}
             </span>
           )}
           {order.order_type && (

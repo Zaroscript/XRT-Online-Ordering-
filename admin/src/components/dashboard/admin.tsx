@@ -1,28 +1,32 @@
 import RecentOrders from '@/components/order/recent-orders';
-import { motion } from 'framer-motion';
 import PopularProductList from '@/components/product/popular-product-list';
-import ErrorMessage from '@/components/ui/error-message';
 import Loader from '@/components/ui/loader/loader';
-import ColumnChart from '@/components/widgets/column-chart';
+import ErrorMessage from '@/components/ui/error-message';
+import SalesChart from '@/components/dashboard/sales-chart';
+import TaxChart from '@/components/dashboard/tax-chart';
+import TipsChart from '@/components/dashboard/tips-chart';
+import TrendChart from '@/components/dashboard/trend-chart';
+import OrderAnalysis from '@/components/dashboard/order-analysis';
+import CouponAnalysis from '@/components/dashboard/coupon-analysis';
 import StickerCard from '@/components/widgets/sticker-card';
+import DashboardExportButton from '@/components/dashboard/dashboard-export-button';
+import EmailCampaignAnalytics from '@/components/dashboard/email-campaign-analytics';
 
-import Button from '@/components/ui/button';
 import {
+  DashboardAnalyticsData,
+  getDashboardSummaryStats,
   useAnalyticsQuery,
   usePopularProductsQuery,
-  useLowProductStockQuery,
-  useProductByCategoryQuery,
   useTopRatedProductsQuery,
 } from '@/data/dashboard';
 import { useOrdersQuery } from '@/data/order';
 
 import usePrice from '@/utils/use-price';
 import { useTranslation } from 'next-i18next';
-import cn from 'classnames';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
-import LowStockProduct from '@/components/product/product-stock';
-import { useEffect, useState } from 'react';
+
+import { useState } from 'react';
 import { EaringIcon } from '@/components/icons/summary/earning';
 import { ShoppingIcon } from '@/components/icons/summary/shopping';
 import { BasketIcon } from '@/components/icons/summary/basket';
@@ -30,28 +34,11 @@ import { ChecklistIcon } from '@/components/icons/summary/checklist';
 import Search from '@/components/common/search';
 import { getAuthCredentials } from '@/utils/auth-utils';
 import { useDashboardLoading } from '@/hooks/use-app-loading';
-import { TodayTotalOrderByStatus } from '@/types';
+import { CancelledProcessedIcon } from '@/components/icons/summary/cancelled-order';
+import DashboardTimeframeFilter from '@/components/dashboard/timeframe-filter';
+import PageHeading from '@/components/common/page-heading';
 
-// const TotalOrderByStatus = dynamic(
-//   () => import('@/components/dashboard/total-order-by-status')
-// );
-// const WeeklyDaysTotalOrderByStatus = dynamic(
-//   () => import('@/components/dashboard/total-order-by-status')
-// );
-// const MonthlyTotalOrderByStatus = dynamic(
-//   () => import('@/components/dashboard/total-order-by-status')
-// );
-
-const OrderStatusWidget = dynamic(
-  () => import('@/components/dashboard/widgets/box/widget-order-by-status'),
-);
-
-const ProductCountByCategory = dynamic(
-  () =>
-    import('@/components/dashboard/widgets/table/widget-product-count-by-category'),
-);
-
-const TopRatedProducts = dynamic(
+const LessSoldProducts = dynamic(
   () => import('@/components/dashboard/widgets/box/widget-top-rate-product'),
 );
 
@@ -59,25 +46,24 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { locale } = useRouter();
   const { data, isPending: loading } = useAnalyticsQuery();
-  const analyticsData = data as any;
+  const analyticsData = data?.data as Partial<DashboardAnalyticsData> | undefined;
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTimeFrame, setActiveTimeFrame] = useState(1);
-  const [orderDataRange, setOrderDataRange] = useState(
-    analyticsData?.todayTotalOrderByStatus,
-  );
 
   const {
     error: orderError,
     orders: orderData,
-    loading: orderLoading,
+    isFetching: orderFetching,
     paginatorInfo: orderPaginatorInfo,
   } = useOrdersQuery({
     language: locale,
     limit: 5,
     page,
     tracking_number: searchTerm,
+    today_only: true,
   });
+
   const {
     data: popularProductData,
     isLoading: popularProductLoading,
@@ -90,68 +76,24 @@ export default function Dashboard() {
     error: topRatedProductsError,
   } = useTopRatedProductsQuery({ limit: 10, language: locale });
 
-  const {
-    data: lowStockProduct,
-    isLoading: lowStockProductLoading,
-    error: lowStockProductError,
-  } = useLowProductStockQuery({
-    limit: 10,
-    language: locale,
-  });
-
-  const {
-    data: productByCategory,
-    isLoading: productByCategoryLoading,
-    error: productByCategoryError,
-  } = useProductByCategoryQuery({ limit: 10, language: locale });
-
-  // Always call the hook, but pass empty array if not authenticated
   const { token } = getAuthCredentials();
   useDashboardLoading({
-    loadingStates: token
-      ? [
-          loading,
-          orderLoading,
-          popularProductLoading,
-          topRatedProductsLoading,
-          lowStockProductLoading,
-          productByCategoryLoading,
-        ]
-      : [],
+    loadingStates: token ? [loading, popularProductLoading, topRatedProductsLoading] : [],
     loadingMessage: 'Loading dashboard data...',
   });
 
-  const { price: total_revenue } = usePrice(
-    data && {
-      amount: analyticsData?.totalRevenue!,
-    },
-  );
-  const { price: todays_revenue } = usePrice(
-    data && {
-      amount: analyticsData?.todaysRevenue!,
-    },
-  );
+  const activeStats = getDashboardSummaryStats(analyticsData, activeTimeFrame);
 
-  let salesByYear: number[] = Array.from({ length: 12 }, (_) => 0);
-  if (
-    analyticsData?.totalYearSaleByMonth &&
-    Array.isArray(analyticsData.totalYearSaleByMonth)
-  ) {
-    // Map the monthly data, ensuring we don't exceed 12 months and provide a fallback for NaN
-    analyticsData.totalYearSaleByMonth.forEach((item: any, index: number) => {
-      if (index < 12) {
-        const total = item?.total ?? item?.value ?? 0;
-        const value =
-          typeof total === 'number' ? total : parseFloat(String(total || '0'));
-        salesByYear[index] =
-          isNaN(value) || !isFinite(value) ? 0 : Math.max(0, value);
-      }
-    });
-  }
-  // Ensure all values are valid numbers (no NaN, null, or undefined)
-  salesByYear = salesByYear.map((val) =>
-    typeof val === 'number' && !isNaN(val) && isFinite(val) ? val : 0,
-  );
+  const { price: total_revenue } = usePrice(activeStats && { amount: activeStats.totalRevenue });
+  const { price: total_tips }   = usePrice(activeStats && { amount: activeStats.totalTips });
+
+  const brandColors = {
+    revenue:   'rgb(var(--color-primary))',
+    tips:      'rgb(var(--color-pending))',
+    orders:    'rgb(var(--color-muted-black))',
+    completed: 'rgb(var(--color-complete))',
+    canceled:  'rgb(var(--color-canceled))',
+  };
 
   function handleSearch({ searchText }: { searchText: string }) {
     setSearchTerm(searchText);
@@ -162,56 +104,7 @@ export default function Dashboard() {
     setPage(current);
   }
 
-  const timeFrame = [
-    { name: t('text-today'), day: 1 },
-    { name: t('text-weekly'), day: 7 },
-    { name: t('text-monthly'), day: 30 },
-    { name: t('text-yearly'), day: 365 },
-  ];
-
-  useEffect(() => {
-    switch (activeTimeFrame) {
-      case 1:
-        setOrderDataRange(analyticsData?.todayTotalOrderByStatus);
-        break;
-      case 7:
-        setOrderDataRange(analyticsData?.weeklyTotalOrderByStatus);
-        break;
-      case 30:
-        setOrderDataRange(analyticsData?.monthlyTotalOrderByStatus);
-        break;
-      case 365:
-        setOrderDataRange(data?.yearlyTotalOrderByStatus);
-        break;
-
-      default:
-        setOrderDataRange(orderDataRange);
-        break;
-    }
-  });
-
-  // Transform order status data from array to object format
-  const transformOrderStatusData = (orderStatusArray: any[] | undefined) => {
-    if (!orderStatusArray || !Array.isArray(orderStatusArray)) return {};
-
-    return orderStatusArray.reduce((acc, item) => {
-      if (item && item.status) {
-        let statusKey = item.status.replace('-', '').toLowerCase();
-        if (statusKey === 'completed') statusKey = 'complete';
-        if (statusKey === 'cancelled') statusKey = 'cancelled';
-        const count = parseInt(item.count);
-        acc[statusKey] = isNaN(count) ? 0 : count;
-      }
-      return acc;
-    }, {} as any);
-  };
-
-  if (
-    loading ||
-    orderLoading ||
-    popularProductLoading ||
-    topRatedProductsLoading
-  ) {
+  if (loading || popularProductLoading || topRatedProductsLoading) {
     return <Loader text={t('common:text-loading')} />;
   }
   if (orderError || popularProductError || topRatedProductsError) {
@@ -228,91 +121,41 @@ export default function Dashboard() {
 
   return (
     <div className="grid gap-7 md:gap-8 lg:grid-cols-2 2xl:grid-cols-12">
-      <div className="col-span-full rounded-lg bg-light p-6 md:p-7">
-        <div className="mb-5 flex items-center justify-between md:mb-7">
-          <h3 className="before:content-'' relative mt-1 bg-light text-lg font-semibold text-heading before:absolute before:-top-px before:h-7 before:w-1 before:rounded-tr-md before:rounded-br-md before:bg-accent ltr:before:-left-6 rtl:before:-right-6 md:before:-top-0.5 md:ltr:before:-left-7 md:rtl:before:-right-7 lg:before:h-8">
-            {t('text-summary')}
-          </h3>
-        </div>
 
-        <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          <StickerCard
-            titleTransKey="sticker-card-title-rev"
-            subtitleTransKey="sticker-card-subtitle-rev"
-            icon={<EaringIcon className="h-8 w-8" />}
-            color="#1EAE98"
-            price={total_revenue}
-          />
-          <StickerCard
-            titleTransKey="sticker-card-title-order"
-            subtitleTransKey="sticker-card-subtitle-order"
-            icon={<ShoppingIcon className="h-8 w-8" />}
-            color="#865DFF"
-            price={data?.totalOrders}
-          />
-          <StickerCard
-            titleTransKey="sticker-card-title-vendor"
-            icon={<ChecklistIcon className="h-8 w-8" />}
-            color="#D74EFF"
-            price={data?.totalVendors}
-          />
-          <StickerCard
-            titleTransKey="sticker-card-title-total-shops"
-            icon={<BasketIcon className="h-8 w-8" />}
-            color="#E157A0"
-            price={analyticsData?.totalShops}
-          />
-        </div>
-      </div>
-
-      <div className="col-span-full rounded-lg bg-light p-6 md:p-7">
+      {/* ① KPI Summary Cards — the single most important first glance */}
+      <div className="col-span-full rounded-lg bg-light p-5 md:p-8">
         <div className="mb-5 items-center justify-between sm:flex md:mb-7">
-          <h3 className="before:content-'' relative mt-1 bg-light text-lg font-semibold text-heading before:absolute before:-top-px before:h-7 before:w-1 before:rounded-tr-md before:rounded-br-md before:bg-accent ltr:before:-left-6 rtl:before:-right-6 md:before:-top-0.5 md:ltr:before:-left-7 md:rtl:before:-right-7 lg:before:h-8">
-            {t('text-order-status')}
-          </h3>
-          <div className="mt-3.5 inline-flex rounded-full bg-gray-100/80 p-1.5 sm:mt-0">
-            {timeFrame
-              ? timeFrame.map((time) => (
-                  <div key={time.day} className="relative">
-                    <Button
-                      className={cn(
-                        '!focus:ring-0  relative z-10 !h-7 rounded-full !px-2.5 text-sm font-medium text-gray-500',
-                        time.day === activeTimeFrame ? 'text-accent' : '',
-                      )}
-                      type="button"
-                      onClick={() => setActiveTimeFrame(time.day)}
-                      variant="custom"
-                    >
-                      {time.name}
-                    </Button>
-                    {time.day === activeTimeFrame ? (
-                      <motion.div className="absolute bottom-0 left-0 right-0 z-0 h-full rounded-3xl bg-accent/10" />
-                    ) : null}
-                  </div>
-                ))
-              : null}
+          <PageHeading title={t('text-summary-order-status')} />
+          <div className="flex items-center gap-3">
+            <DashboardTimeframeFilter
+              activeTimeFrame={activeTimeFrame}
+              onChange={setActiveTimeFrame}
+            />
+            <DashboardExportButton
+              analyticsData={analyticsData}
+              activeStats={activeStats}
+              popularProducts={popularProductData ?? []}
+              lessSoldProducts={topRatedProducts ?? []}
+            />
           </div>
         </div>
-
-        <OrderStatusWidget
-          order={transformOrderStatusData(orderDataRange)}
-          timeFrame={activeTimeFrame}
-          allowedStatus={[
-            'pending',
-            'processing',
-            'complete',
-            'cancel',
-            // 'out-for-delivery',
-          ]}
-        />
+        <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <StickerCard titleTransKey="sticker-card-title-rev"              icon={<EaringIcon className="h-8 w-8" />}            color={brandColors.revenue}   price={total_revenue} />
+          <StickerCard titleTransKey="sticker-card-title-tips"             icon={<ShoppingIcon className="h-8 w-8" />}           color={brandColors.tips}      price={total_tips} />
+          <StickerCard titleTransKey="sticker-card-title-total-orders"     icon={<BasketIcon className="h-8 w-8" />}             color={brandColors.orders}    price={activeStats?.totalOrders} />
+          <StickerCard titleTransKey="sticker-card-title-completed-orders" icon={<ChecklistIcon className="h-8 w-8" />}          color={brandColors.completed} price={activeStats?.completedOrders} />
+          <StickerCard titleTransKey="sticker-card-title-canceled-orders"  icon={<CancelledProcessedIcon className="h-8 w-8" />} color={brandColors.canceled}  price={activeStats?.canceledOrders} />
+        </div>
       </div>
 
+      {/* ② Live Today's Orders — operational visibility */}
       <RecentOrders
         className="col-span-full"
         orders={orderData}
         paginatorInfo={orderPaginatorInfo}
         title={t('table:recent-order-table-title')}
         onPagination={handlePagination}
+        isFetching={orderFetching}
         searchElement={
           <Search
             onSearch={handleSearch}
@@ -322,61 +165,54 @@ export default function Dashboard() {
           />
         }
       />
-      <div className="lg:col-span-full 2xl:col-span-8">
-        <ColumnChart
-          widgetTitle={t('common:sale-history')}
-          colors={['#6073D4']}
-          series={salesByYear}
-          categories={[
-            t('common:january'),
-            t('common:february'),
-            t('common:march'),
-            t('common:april'),
-            t('common:may'),
-            t('common:june'),
-            t('common:july'),
-            t('common:august'),
-            t('common:september'),
-            t('common:october'),
-            t('common:november'),
-            t('common:december'),
-          ]}
-        />
+
+      {/* ③ Sales History — revenue breakdown (items / tax / tips) */}
+      <div className="col-span-full">
+        <SalesChart analyticsData={analyticsData} />
       </div>
 
+      {/* ④ Sales Trend — directional momentum with delta tooltips */}
+      <div className="col-span-full">
+        <TrendChart analyticsData={analyticsData} />
+      </div>
+
+      {/* ⑤ Order Fulfillment — pickup vs delivery split, AOV */}
+      <div className="col-span-full">
+        <OrderAnalysis analyticsData={analyticsData} />
+      </div>
+
+      {/* ⑥ Product Performance — side-by-side popular vs slow movers */}
       <PopularProductList
         products={popularProductData ?? []}
         title={t('table:popular-products-table-title')}
-        className="lg:col-span-1 lg:col-start-2 lg:row-start-5 2xl:col-span-4 2xl:col-start-auto 2xl:row-start-auto"
+        className="lg:col-span-1 2xl:col-span-6"
       />
-
-      <LowStockProduct
-        //@ts-ignore
-        products={lowStockProduct ?? []}
-        title={'text-low-stock-products'}
-        paginatorInfo={null as any}
-        onPagination={handlePagination}
-        className="col-span-full"
-        searchElement={
-          <Search
-            onSearch={handleSearch}
-            placeholderText={t('form:input-placeholder-search-name')}
-            className="hidden max-w-sm sm:inline-block"
-            inputClassName="!h-10"
-          />
-        }
-      />
-
-      <TopRatedProducts
+      <LessSoldProducts
         products={topRatedProducts ?? []}
-        title={'text-most-rated-products'}
-        className="lg:col-span-1 lg:col-start-1 lg:row-start-5 2xl:col-span-5 2xl:col-start-auto 2xl:row-start-auto 2xl:me-20"
+        title={'text-less-sold-products'}
+        className="lg:col-span-1 2xl:col-span-6"
       />
-      <ProductCountByCategory
-        products={productByCategory ?? []}
-        title={'text-most-category-products'}
-        className="col-span-full 2xl:col-span-7 2xl:ltr:-ml-20 2xl:rtl:-mr-20"
-      />
+
+      {/* ⑦ Tax Collected — financial compliance */}
+      <div className="col-span-full">
+        <TaxChart analyticsData={analyticsData} />
+      </div>
+
+      {/* ⑧ Daily Tips — service quality / staff performance signal */}
+      <div className="col-span-full">
+        <TipsChart analyticsData={analyticsData} />
+      </div>
+
+      {/* ⑨ Coupon Analysis — promotional spend effectiveness */}
+      <div className="col-span-full">
+        <CouponAnalysis analyticsData={analyticsData} />
+      </div>
+
+      {/* ⑩ Email Campaign Analytics — marketing engagement */}
+      <div className="col-span-full">
+        <EmailCampaignAnalytics />
+      </div>
+
     </div>
   );
 }

@@ -55,6 +55,8 @@ export const env = {
   EMAIL_FROM: process.env.EMAIL_FROM || '',
   EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || '',
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || '',
+  /** Signing key from SendGrid → Settings → Mail Settings → Event Webhook → Signing Key */
+  SENDGRID_WEBHOOK_KEY: process.env.SENDGRID_WEBHOOK_KEY || '',
 
   // Twilio SMS
   TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID || '',
