@@ -42,9 +42,11 @@ import printerRoutes from './application/routes/printer.routes';
 import printerLogRoutes from './application/routes/printer-log.routes';
 import printJobRoutes from './application/routes/print-job.routes';
 import transactionRoutes from './application/routes/transaction.routes';
+import analyticsRoutes from './application/routes/analytics.routes';
 import emailCampaignRoutes from './application/routes/email-campaign.routes';
 import smsCampaignRoutes from './application/routes/sms-campaign.routes';
 import loyaltyRoutes from './application/routes/loyalty.routes';
+import webhookRoutes from './application/routes/webhook.routes';
 import { env } from './shared/config/env';
 import { logger } from './shared/utils/logger';
 import { registerOrderPrintHandler } from './services/printer/orderPrintEvents';
@@ -210,9 +212,13 @@ app.use(`${env.API_BASE_URL}/printers`, printerRoutes);
 app.use(`${env.API_BASE_URL}/printer-logs`, printerLogRoutes);
 app.use(`${env.API_BASE_URL}/print-jobs`, printJobRoutes);
 app.use(`${env.API_BASE_URL}/transactions`, transactionRoutes);
+app.use(`${env.API_BASE_URL}/analytics`, analyticsRoutes);
 app.use(`${env.API_BASE_URL}/email-campaigns`, emailCampaignRoutes);
 app.use(`${env.API_BASE_URL}/sms-campaigns`, smsCampaignRoutes);
 app.use(`${env.API_BASE_URL}/loyalty`, loyaltyRoutes);
+
+// Webhook routes — PUBLIC, no auth required (signature-verified internally)
+app.use(`${env.API_BASE_URL}/webhooks`, webhookRoutes);
 
 // 404 handler
 app.use((req, res) => {

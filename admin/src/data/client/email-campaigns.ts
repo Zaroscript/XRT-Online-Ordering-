@@ -59,4 +59,10 @@ export const emailCampaignClient = {
       (res: any) => res?.data ?? res
     );
   },
+
+  getAnalytics: () => {
+    return HttpClient.get<any>(`${API_ENDPOINTS.EMAIL_CAMPAIGNS}/analytics`).then(
+      (res: any) => res?.data ?? res
+    );
+  },
 };

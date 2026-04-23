@@ -274,7 +274,11 @@ export default function Orders() {
 
       {selectedOrder && (
         <Modal open={true} onClose={closeModal}>
-          <OrderDetailsView order={selectedOrder} onClose={closeModal} />
+          <OrderDetailsView
+            orderId={selectedOrder.id}
+            initialOrder={selectedOrder}
+            onClose={closeModal}
+          />
         </Modal>
       )}
     </>

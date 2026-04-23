@@ -4,6 +4,7 @@ import { useModalState, useModalAction } from '@/components/ui/modal/modal.conte
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import { useRefundOrderMutation } from '@/data/order';
+import { formatOrderTrackingLabel } from '@/utils/order-tracking';
 
 const RefundModal = () => {
   const { t } = useTranslation('common');
@@ -14,8 +15,8 @@ const RefundModal = () => {
   const [refundType, setRefundType] = useState<'full' | 'partial'>('full');
   const [amount, setAmount] = useState<string>('');
 
-  const trackingStr = String(data?.trackingNumber ?? data?.orderId);
-  const displayId = trackingStr.toUpperCase().startsWith('ORD') ? trackingStr : `ORD-${trackingStr}`;
+  const displayId =
+    formatOrderTrackingLabel(data?.trackingNumber, data?.orderId) || 'N/A';
 
   const handleRefund = () => {
     const payload = {

@@ -7,6 +7,9 @@ const emailCampaignController = new EmailCampaignController();
 // List all campaigns (paginated)
 router.get('/', emailCampaignController.paginated);
 
+// Dashboard analytics summary
+router.get('/analytics', emailCampaignController.getAnalytics);
+
 // Get single campaign
 router.get('/:id', emailCampaignController.getById);
 

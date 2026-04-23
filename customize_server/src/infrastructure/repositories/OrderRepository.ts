@@ -168,6 +168,13 @@ export class OrderRepository implements IOrderRepository {
       this.applyStatusFilter(query, filters.status);
     }
     if (filters.order_type) query.order_type = filters.order_type;
+    if (filters.today_only) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      query.created_at = { $gte: startOfDay, $lte: endOfDay };
+    }
 
     const page = filters.page || 1;
     const limit = filters.limit || 10;
@@ -198,6 +205,13 @@ export class OrderRepository implements IOrderRepository {
     const query: any = { customer_id: customerId };
     if (filters.status) {
       this.applyStatusFilter(query, filters.status);
+    }
+    if (filters.today_only) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      query.created_at = { $gte: startOfDay, $lte: endOfDay };
     }
 
     const page = filters.page || 1;

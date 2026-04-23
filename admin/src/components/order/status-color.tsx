@@ -9,17 +9,23 @@ const StatusColor = (status: string) => {
   } else if (
     status?.toLowerCase() === 'processing' ||
     status?.toLowerCase() === 'processing' ||
-    status?.toLowerCase() === 'payment-processing'
+    status?.toLowerCase() === 'payment-processing' ||
+    status?.toLowerCase() === 'accepted' ||
+    status?.toLowerCase() === 'inkitchen' ||
+    status?.toLowerCase() === 'ready' ||
+    status?.toLowerCase() === 'out of delivery'
   ) {
     bg_class = 'bg-status-processing bg-opacity-10 text-status-processing';
   } else if (
     status?.toLowerCase() === 'completed' ||
     status?.toLowerCase() === 'approved' ||
-    status?.toLowerCase() === 'payment-success'
+    status?.toLowerCase() === 'payment-success' ||
+    status?.toLowerCase() === 'paid'
   ) {
     bg_class = 'bg-status-complete bg-opacity-10 text-status-complete';
   } else if (
     status?.toLowerCase() === 'cancelled' ||
+    status?.toLowerCase() === 'canceled' ||
     status?.toLowerCase() === 'rejected' ||
     status?.toLowerCase() === 'payment-reversal'
   ) {
@@ -37,6 +43,7 @@ const StatusColor = (status: string) => {
       'bg-status-out-for-delivery bg-opacity-10 text-status-out-for-delivery';
   } else if (
     status?.toLowerCase() === 'refunded' ||
+    status?.toLowerCase() === 'partially_refunded' ||
     status?.toLowerCase() === 'refunded' ||
     status?.toLowerCase() === 'payment-refunded'
   ) {

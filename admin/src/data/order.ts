@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'next-i18next';
@@ -20,6 +20,7 @@ export interface UseOrdersQueryParams {
   tracking_number?: string;
   /** Server status filter: single status or comma-separated (e.g. 'pending' or 'inkitchen,ready,completed') */
   status?: string;
+  today_only?: boolean;
 }
 
 export const useOrdersQuery = (
@@ -30,6 +31,7 @@ export const useOrdersQuery = (
     data,
     error,
     isPending: isLoading,
+    isFetching,
   } = useQuery<OrdersListResult, Error>({
     queryKey: [API_ENDPOINTS.ORDERS, params],
     queryFn: () =>
@@ -37,7 +39,9 @@ export const useOrdersQuery = (
         status: params.status,
         page: params.page ?? 1,
         limit: params.limit ?? 20,
+        today_only: params.today_only,
       }),
+    placeholderData: keepPreviousData,
     ...options,
   });
   const paginatorInfo: MappedPaginatorInfo | null = data?.paginatorInfo
@@ -51,6 +55,7 @@ export const useOrdersQuery = (
     paginatorInfo,
     error,
     loading: isLoading,
+    isFetching,
   };
 };
 
@@ -380,3 +385,23 @@ export function useOrderSeen() {
 
   return { readOrderNotice, isLoading, isSuccess };
 }
+
+export const useReprintOrderMutation = () => {
+  const { t } = useTranslation('common');
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, printerId }: { id: string; printerId?: string }) =>
+      orderClient.reprint(id, printerId),
+    onSuccess: () => {
+      toast.success(t('text-reprint-sent') || 'Reprint sent to printer');
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message || error?.message || 'Reprint failed';
+      toast.error(message);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ORDERS] });
+    },
+  });
+};

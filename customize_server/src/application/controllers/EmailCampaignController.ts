@@ -3,10 +3,12 @@ import { asyncHandler } from '../../shared/utils/asyncHandler';
 import { EmailCampaignRepository } from '../../infrastructure/repositories/EmailCampaignRepository';
 import { EmailService } from '../../infrastructure/services/EmailService';
 import { CustomerModel } from '../../infrastructure/database/models/CustomerModel';
+import { EmailCampaignModel } from '../../infrastructure/database/models/EmailCampaignModel';
 import { OrderModel } from '../../infrastructure/database/models/OrderModel';
 import { sendSuccess, sendError } from '../../shared/utils/response';
 import { logger } from '../../shared/utils/logger';
 import { AudienceFilter } from '../../domain/entities/EmailCampaign';
+import moment from 'moment';
 
 function normalizeBoolean(value: unknown, fallback = true): boolean {
   if (typeof value === 'boolean') return value;
@@ -159,6 +161,7 @@ export class EmailCampaignController {
           emails: recipientEmails,
           subject,
           html: body,
+          campaignId: campaign.id,
         });
       }
 
@@ -230,6 +233,7 @@ export class EmailCampaignController {
           emails: recipientEmails,
           subject,
           html: body,
+          campaignId: id,
         });
       }
 
@@ -270,6 +274,7 @@ export class EmailCampaignController {
         emails: recipientEmails,
         subject: campaign.subject,
         html: campaign.body,
+        campaignId: id,
       });
 
       const updated = await this.repository.update(id, {
@@ -298,5 +303,119 @@ export class EmailCampaignController {
     const { id } = req.params;
     await this.repository.delete(id);
     return sendSuccess(res, 'Email campaign deleted successfully');
+  });
+
+  /**
+   * GET /email-campaigns/analytics
+   * Aggregated performance summary for the dashboard section.
+   * Returns:
+   *  - Overall totals (opens, clicks, bounces, unsubs, recipients)
+   *  - Open rate & click rate %
+   *  - Monthly send volume (last 12 months)
+   *  - Per-campaign breakdown (top 10 by recipient_count)
+   *  - Status distribution count
+   */
+  getAnalytics = asyncHandler(async (req: Request, res: Response) => {
+    const startOfYear = moment().subtract(11, 'months').startOf('month').toDate();
+
+    const [totals, monthly, topCampaigns, statusDist] = await Promise.all([
+      // 1. Overall totals across all sent campaigns
+      EmailCampaignModel.aggregate([
+        { $match: { status: 'sent' } },
+        {
+          $group: {
+            _id: null,
+            total_recipients: { $sum: '$recipient_count' },
+            total_opens:       { $sum: '$open_count' },
+            total_clicks:      { $sum: '$click_count' },
+            total_bounces:     { $sum: '$bounce_count' },
+            total_unsubs:      { $sum: '$unsubscribe_count' },
+            total_spam:        { $sum: '$spam_count' },
+            unique_opens:      { $sum: '$unique_opens' },
+            unique_clicks:     { $sum: '$unique_clicks' },
+            campaign_count:    { $sum: 1 },
+          },
+        },
+      ]),
+
+      // 2. Monthly send volume (last 12 months)
+      EmailCampaignModel.aggregate([
+        { $match: { status: 'sent', created_at: { $gte: startOfYear } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m', date: '$created_at' } },
+            campaigns_sent:    { $sum: 1 },
+            total_recipients:  { $sum: '$recipient_count' },
+            total_opens:       { $sum: '$open_count' },
+            total_clicks:      { $sum: '$click_count' },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+
+      // 3. Top 10 campaigns by recipients
+      EmailCampaignModel.find({ status: 'sent' })
+        .sort({ recipient_count: -1 })
+        .limit(10)
+        .select('heading subject recipient_count open_count click_count bounce_count unsubscribe_count sent_at unique_opens unique_clicks')
+        .lean(),
+
+      // 4. Status distribution (all campaigns)
+      EmailCampaignModel.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+        { $project: { _id: 0, status: '$_id', count: 1 } },
+      ]),
+    ]);
+
+    const t = totals[0] || {
+      total_recipients: 0, total_opens: 0, total_clicks: 0,
+      total_bounces: 0, total_unsubs: 0, total_spam: 0,
+      unique_opens: 0, unique_clicks: 0, campaign_count: 0,
+    };
+
+    const open_rate  = t.total_recipients > 0
+      ? Number(((t.unique_opens  / t.total_recipients) * 100).toFixed(1))
+      : 0;
+    const click_rate = t.total_recipients > 0
+      ? Number(((t.unique_clicks / t.total_recipients) * 100).toFixed(1))
+      : 0;
+    const bounce_rate = t.total_recipients > 0
+      ? Number(((t.total_bounces / t.total_recipients) * 100).toFixed(1))
+      : 0;
+
+    // Fill in every month of the last 12 even if no campaign was sent
+    const months: any[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const key    = moment().subtract(i, 'months').format('YYYY-MM');
+      const label  = moment().subtract(i, 'months').format('MMM YY');
+      const found  = monthly.find((m: any) => m._id === key);
+      months.push({
+        label,
+        campaigns_sent:   found?.campaigns_sent   ?? 0,
+        total_recipients: found?.total_recipients ?? 0,
+        total_opens:      found?.total_opens      ?? 0,
+        total_clicks:     found?.total_clicks     ?? 0,
+      });
+    }
+
+    return sendSuccess(res, 'Email analytics retrieved successfully', {
+      totals: {
+        campaign_count:    t.campaign_count,
+        total_recipients:  t.total_recipients,
+        total_opens:       t.total_opens,
+        total_clicks:      t.total_clicks,
+        total_bounces:     t.total_bounces,
+        total_unsubs:      t.total_unsubs,
+        unique_opens:      t.unique_opens,
+        unique_clicks:     t.unique_clicks,
+        open_rate,
+        click_rate,
+        bounce_rate,
+      },
+      monthly,
+      monthlyFilled: months,
+      topCampaigns,
+      statusDist,
+    });
   });
 }

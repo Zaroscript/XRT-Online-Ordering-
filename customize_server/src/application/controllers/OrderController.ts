@@ -62,6 +62,22 @@ function refundErrorSuggestsWrongEnvironment(msg: string): boolean {
   );
 }
 
+function emitOrderChanged(
+  req: Request,
+  payload: {
+    action: 'status-updated' | 'deleted' | 'refunded';
+    orderId: string;
+    order?: unknown;
+    status?: string;
+    deleted?: boolean;
+  },
+) {
+  const socketIo = req.app.get('io') as SocketIOServer | undefined;
+  if (socketIo) {
+    socketIo.emit('order-changed', payload);
+  }
+}
+
 export class OrderController {
   private createOrderUseCase: CreateOrderUseCase;
   private getOrderUseCase: GetOrderUseCase;
@@ -126,6 +142,7 @@ export class OrderController {
       order_type: req.query.order_type as string,
       page: req.query.page ? parseInt(req.query.page as string) : 1,
       limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
+      today_only: req.query.today_only === 'true',
     };
 
     // If a customer is querying their own orders
@@ -195,6 +212,13 @@ export class OrderController {
       console.error('Failed to send order status notifications:', error?.message || error);
     }
 
+    emitOrderChanged(req, {
+      action: 'status-updated',
+      orderId: order.id,
+      order,
+      status: order.status,
+    });
+
     return sendSuccess(res, 'Order status updated successfully', order);
   });
 
@@ -205,6 +229,12 @@ export class OrderController {
     if (!success) {
       throw new NotFoundError('Order not found or already deleted');
     }
+
+    emitOrderChanged(req, {
+      action: 'deleted',
+      orderId: id,
+      deleted: true,
+    });
 
     return sendSuccess(res, 'Order deleted successfully', { deleted: true });
   });
@@ -527,6 +557,13 @@ export class OrderController {
         refTransId: order.money.payment_id,
         authorizeNetEnvironment: primaryEnv,
       },
+    });
+
+    emitOrderChanged(req, {
+      action: 'refunded',
+      orderId,
+      order: updatedOrder ?? order,
+      status: updatedOrder?.status ?? order.status,
     });
 
     return sendSuccess(

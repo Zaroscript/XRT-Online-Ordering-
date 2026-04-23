@@ -7,6 +7,7 @@ export interface GetOrdersFilters {
   page?: number;
   limit?: number;
   customer_id?: string;
+  today_only?: boolean;
 }
 
 export class GetOrdersUseCase {

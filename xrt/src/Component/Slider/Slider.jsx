@@ -38,8 +38,8 @@ export default function Sliderfun() {
         description: slide.title || "",
         subtitleTwo: slide.subtitleTwo || "",
         offer: slide.offer || "",
-        btnText: slide.btnText || "Order Now",
-        btnLink: slide.btnLink || "",
+        btnText: slide.btnText,
+        btnLink: slide.btnLink,
       };
     });
   }, [heroSlides]);

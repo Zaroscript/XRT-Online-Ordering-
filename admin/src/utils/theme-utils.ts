@@ -21,7 +21,7 @@ export function hexToRgb(hex: string): string | null {
 export function adjustColorBrightness(hex: string, amount: number): string {
   hex = hex.replace(/^#/, '');
   if (hex.length === 3) hex = hex.split('').map(char => char + char).join('');
-  
+
   let r = parseInt(hex.substring(0, 2), 16);
   let g = parseInt(hex.substring(2, 4), 16);
   let b = parseInt(hex.substring(4, 6), 16);
@@ -38,7 +38,7 @@ export function getContrastColor(hexColor: string): 'white' | 'black' {
   if (!hexColor) return 'black';
   const cleanHex = hexColor.replace('#', '');
   if (cleanHex.length !== 6 && cleanHex.length !== 3) return 'black';
-  
+
   let r, g, b;
   if (cleanHex.length === 3) {
     r = parseInt(cleanHex[0] + cleanHex[0], 16);
@@ -49,7 +49,7 @@ export function getContrastColor(hexColor: string): 'white' | 'black' {
     g = parseInt(cleanHex.substring(2, 4), 16);
     b = parseInt(cleanHex.substring(4, 6), 16);
   }
-  
+
   const yiq = (r * 299 + g * 587 + b * 114) / 1000;
   return yiq >= 128 ? 'black' : 'white';
 }
@@ -138,6 +138,12 @@ export function applyAdminBrandTheme(options?: {
     return;
   }
 
+  // Only apply theme if colors are explicitly provided in options
+  // This prevents overriding the CSS-defined brand colors with defaults
+  if (!options?.primary_color && !options?.secondary_color) {
+    return;
+  }
+
   const root = document.documentElement;
   const theme = buildAdminBrandTheme(
     options?.primary_color,
@@ -148,7 +154,7 @@ export function applyAdminBrandTheme(options?: {
   root.style.setProperty('--color-primary-hex', theme.primary);
   root.style.setProperty('--color-primary-contrast', theme.primaryContrast);
   root.style.setProperty('--color-primary-hover', theme.primaryHoverRgb);
-  
+
   root.style.setProperty('--color-secondary', theme.secondaryRgb);
   root.style.setProperty('--color-secondary-hex', theme.secondary);
   root.style.setProperty('--color-secondary-contrast', theme.secondaryContrast);
