@@ -25,4 +25,16 @@ export const settingsClient = {
       unwrap
     ) as Promise<Settings>;
   },
+  getSeo(params?: { locale?: string }) {
+    return HttpClient.get<any>(API_ENDPOINTS.SETTINGS_SEO, params).then(unwrap);
+  },
+  updateSeo(payload: { locale?: string; seoSettings: Record<string, any> }) {
+    return HttpClient.put<any>(API_ENDPOINTS.SETTINGS_SEO, payload).then(unwrap);
+  },
+  generateSeo(payload?: { locale?: string; force?: boolean }) {
+    return HttpClient.post<any>(API_ENDPOINTS.SETTINGS_SEO_GENERATE, payload ?? {}).then(unwrap);
+  },
+  getSeoHealth(params?: { locale?: string }) {
+    return HttpClient.get<any>(API_ENDPOINTS.SETTINGS_SEO_HEALTH, params).then(unwrap);
+  },
 };

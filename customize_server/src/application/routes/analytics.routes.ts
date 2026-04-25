@@ -8,6 +8,12 @@ const router = Router();
 const controller = new AnalyticsController();
 
 router.get('/', requireAuth, authorizeRoles(UserRole.BUSINESS_ADMIN, UserRole.SUPER_ADMIN), controller.getAnalytics);
+router.get(
+  '/coupons-performance',
+  requireAuth,
+  authorizeRoles(UserRole.BUSINESS_ADMIN, UserRole.SUPER_ADMIN),
+  controller.getCouponPerformance,
+);
 
 router.get('/popular-items', requireAuth, authorizeRoles(UserRole.BUSINESS_ADMIN, UserRole.SUPER_ADMIN), controller.getPopularItems);
 router.get('/less-sold-items', requireAuth, authorizeRoles(UserRole.BUSINESS_ADMIN, UserRole.SUPER_ADMIN), controller.getLessSoldItems);

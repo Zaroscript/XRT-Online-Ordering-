@@ -9,40 +9,43 @@ export default function Location() {
 
   return (
     <>
-      <li className="text-[#E1E1E1] mt-3 text-[17px] text-center md:text-left">
-        {[
-          contactDetails?.location?.street_address,
-          contactDetails?.location?.city,
-          contactDetails?.location?.state,
-        ]
-          .filter(Boolean)
-          .join(", ") + (contactDetails?.location?.zip ? ` ${contactDetails.location.zip}` : "")}
+      <li className="flex justify-center md:justify-start items-start gap-3 text-[#E1E1E1] text-[15px]">
+        <div className="mt-1">
+          <i className="fa-solid fa-location-dot text-[18px]" style={{ color: 'var(--color-primary)' }}></i>
+        </div>
+        <div className="leading-relaxed">
+          {contactDetails?.formattedAddress || 
+            (contactDetails?.address ? `${contactDetails.address.street || ''}, ${contactDetails.address.city || ''}` : '') ||
+            ""}
+        </div>
       </li>
-      <li className="flex mt-4 justify-center md:justify-start items-center">
-        <div className=" mr-[8px] mt-[4px] w-[28px] md:w-[32px] lg:w-[35px] h-[28px] md:h-[32px] lg:h-[35px] background_icon">
-          <i className="fa-regular fa-envelope text-primary"></i>
+      <li className="flex justify-center md:justify-start items-center gap-3">
+        <div className="">
+          <i className="fa-regular fa-envelope text-[18px]" style={{ color: 'var(--color-primary)' }}></i>
         </div>
         <a 
           href={`mailto:${contactDetails?.emailAddress}`}
-          className="mt-2 text-[#E1E1E1] text-[17px] hover:text-primary transition-colors"
+          className="text-[#E1E1E1] text-[15px] transition-colors duration-200"
+          onMouseEnter={(e) => e.target.style.color = 'var(--color-primary)'}
+          onMouseLeave={(e) => e.target.style.color = ''}
         >
           {contactDetails?.emailAddress}
         </a>
       </li>
-      <li className="flex mt-4 justify-center md:justify-start items-center">
-        <div className=" mr-[8px] mt-[4px] w-[28px] md:w-[32px] lg:w-[35px] h-[28px] md:h-[32px] lg:h-[35px] background_icon">
-          <Phone strokeWidth={3} className="text-primary" size={18} />
+      <li className="flex justify-center md:justify-start items-center gap-3">
+        <div className="">
+          <Phone strokeWidth={3} size={18} style={{ color: 'var(--color-primary)' }} />
         </div>
         <a 
           href={`tel:${contactDetails?.contact}`}
-          className="mt-2 text-[#E1E1E1] text-[17px] hover:text-primary transition-colors"
+          className="text-[#E1E1E1] text-[15px] transition-colors duration-200"
+          onMouseEnter={(e) => e.target.style.color = 'var(--color-primary)'}
+          onMouseLeave={(e) => e.target.style.color = ''}
         >
           {formatPhone(contactDetails?.contact)}
         </a>
       </li>
       {/* Operating Hours */}
-      {/* Operating Hours List */}
-      {/* Operating Hours - Current Day Only */}
       {(() => {
         if (!settings?.operating_hours?.schedule) return null;
 
@@ -62,8 +65,8 @@ export default function Location() {
         };
 
         return (
-          <li className="flex mt-4 flex-col items-center md:items-start">
-             <h4 className="text-[#FFA900] font-bold text-[17px] mb-2">OPENING HOURS</h4>
+          <li className="flex mt-6 flex-col items-center md:items-start gap-2">
+             <span className="font-bold text-[18px] uppercase tracking-wider block" style={{ color: 'var(--color-primary)' }}>Opening Hours</span>
              <div className="text-[#E1E1E1] text-[15px]">
                {todaySlot.is_closed ? (
                  <span>{todaySlot.day}: Closed</span>

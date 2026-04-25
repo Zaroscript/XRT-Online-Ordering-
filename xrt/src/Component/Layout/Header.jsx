@@ -10,6 +10,7 @@ import { useCart } from '../../context/CartContext';
 
 
 import { useSiteSettingsQuery } from '../../api/hooks/useSiteSettings';
+import { resolveOperationsState } from '../../utils/operations';
 
 import NotAcceptingOrders from '../Notice/NotAcceptingOrders';
 
@@ -19,16 +20,17 @@ const Header = () => {
   const { cartCount, cartTotal } = useCart();
   const { data: settings } = useSiteSettingsQuery();
   
-  const isAcceptingOrders = settings?.orders?.accept_orders ?? true;
-  const notAcceptingOrdersMessage = settings?.messages?.not_accepting_orders_message || "We are currently not accepting orders.";
+  const operationsState = settings?.operationsState || resolveOperationsState(settings || {});
+  const isAcceptingOrders = operationsState?.allowsCheckout ?? true;
+  const notAcceptingOrdersMessage =
+    operationsState?.mode === "SCHEDULED_ONLY"
+      ? "We are currently accepting scheduled orders only."
+      : settings?.messages?.not_accepting_orders_message || "We are currently not accepting orders.";
 
   const contactDetails = settings?.contactDetails;
-  const addressParts = [
-    contactDetails?.location?.street_address,
-    contactDetails?.location?.city,
-    contactDetails?.location?.state
-  ].filter(Boolean);
-  const address = addressParts.join(", ") + (contactDetails?.location?.zip ? ` ${contactDetails.location.zip}` : "");
+  const address = contactDetails?.formattedAddress || 
+    (contactDetails?.address ? `${contactDetails.address.street || ''}, ${contactDetails.address.city || ''}` : '') ||
+    "";
   const email = contactDetails?.emailAddress || "";
   const phone = contactDetails?.contact || "";
 
@@ -38,7 +40,7 @@ const Header = () => {
   }
   return (
     <header>
-        {!isAcceptingOrders && notAcceptingOrdersMessage && (
+        {(!isAcceptingOrders || operationsState?.mode === "SCHEDULED_ONLY") && notAcceptingOrdersMessage && (
           <NotAcceptingOrders message={notAcceptingOrdersMessage} />
         )}
         <Top_Navbar address={address} phone={phone} email={email} />

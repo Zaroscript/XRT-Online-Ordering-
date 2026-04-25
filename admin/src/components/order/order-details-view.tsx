@@ -290,9 +290,12 @@ function ActionBar({
   ).toLowerCase();
   const isRefundable =
     !isTerminal &&
-    (rawPaymentStatus === 'paid' || rawPaymentStatus === 'partially_refunded') &&
+    (rawPaymentStatus === 'paid' ||
+      rawPaymentStatus === 'partially_refunded' ||
+      rawPaymentStatus === 'pending') &&
     rawPaymentStatus !== 'refunded';
   const isAlreadyRefunded = rawPaymentStatus === 'refunded';
+  const refundButtonLabel = rawPaymentStatus === 'pending' ? 'Void Payment' : 'Refund Order';
 
   const nextLabel =
     delivery && serverStatus === 'ready'
@@ -327,7 +330,7 @@ function ActionBar({
           disabled={isUpdating}
           className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-orange-600 transition-colors hover:border-orange-300 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-1"
         >
-          Refund
+          {refundButtonLabel}
         </button>
       )}
 
@@ -546,11 +549,15 @@ export default function OrderDetailsView({
   };
 
   const handleRefund = () => {
+    const paymentStatus = String(
+      (order as any)?.money?.payment_status || order?.payment_status || '',
+    ).toLowerCase();
     openModal('REFUND_ORDER', {
       orderId: order?.id,
       totalAmount:
         (order as any)?.money?.total_amount ?? order?.total ?? order?.paid_total,
       trackingNumber: order?.tracking_number,
+      preferredAction: paymentStatus === 'pending' ? 'void' : 'refund',
     });
   };
 

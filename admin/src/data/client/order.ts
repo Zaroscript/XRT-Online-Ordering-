@@ -105,12 +105,32 @@ export const orderClient = {
       ...body,
     });
   },
-  refund: (id: string, amount?: number) => {
+  refund: (
+    id: string,
+    payload: {
+      amount?: number;
+      reason: string;
+      refundType: 'full' | 'partial';
+      notes?: string;
+    },
+  ) => {
     const orderId = String(id).trim();
     if (!orderId) return Promise.reject(new Error('Order id is required'));
-    return HttpClient.post<Order>(`${API_ENDPOINTS.ORDERS}/${orderId}/refund`, {
-      amount,
-    });
+    return HttpClient.post<Order>(`${API_ENDPOINTS.ORDERS}/${orderId}/refund`, payload);
+  },
+  refundAction: (id: string) => {
+    const orderId = String(id).trim();
+    if (!orderId) return Promise.reject(new Error('Order id is required'));
+    return HttpClient.get<{
+      action: 'refund' | 'void';
+      transactionId: string;
+      transactionStatus: string;
+      settled: boolean;
+      capturedAmount: number | null;
+      remainingRefundable: number;
+      last4: string | null;
+      message?: string;
+    }>(`${API_ENDPOINTS.ORDERS}/${orderId}/refund-action`);
   },
   paginated: ({ tracking_number, ...params }: Partial<OrderQueryOptions>) => {
     return HttpClient.get<OrderPaginator>(API_ENDPOINTS.ORDERS, {

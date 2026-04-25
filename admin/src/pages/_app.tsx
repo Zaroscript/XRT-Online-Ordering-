@@ -63,6 +63,10 @@ const AppSettings: React.FC<{ children?: React.ReactNode }> = (props) => {
   );
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (settings?.options || publicOptions) {
       const options = (settings?.options || publicOptions || {}) as any;
       applyAdminBrandTheme(options);

@@ -33,6 +33,8 @@ function SidebarShortItem({
   const { t } = useTranslation();
   const router = useRouter();
   const sanitizedPath = router.asPath.split('#')[0].split('?')[0];
+  const isParents = router?.query?.parents;
+  const isActive = isParents === label;
   return (
     <AdvancePopover
       onMouseEnter={() => setDropdown(true)}
@@ -57,14 +59,14 @@ function SidebarShortItem({
                     query: { parents: label },
                   }}
                   className={cn(
-                    'relative flex w-full cursor-pointer items-center rounded-lg py-2 text-sm text-start focus:text-accent',
+                    'relative flex w-full cursor-pointer items-center rounded-lg py-2 text-sm text-start focus:!text-accent',
                     (
                       shop
                         ? sanitizedPath === item?.href(shop?.toString()!)
                         : sanitizedPath === item?.href
                     )
-                      ? 'bg-transparent font-medium text-accent-hover'
-                      : 'text-body-dark hover:text-accent focus:text-accent',
+                      ? 'bg-transparent font-medium !text-gray-800 hover:!text-accent'
+                      : '!text-gray-700 hover:!text-accent focus:!text-accent',
                   )}
                   title={t(item?.label)}
                   onClick={() => closeSidebar()}
@@ -82,8 +84,9 @@ function SidebarShortItem({
     >
       <div
         className={cn(
-          'relative flex w-full cursor-pointer items-center px-3 py-2.5 text-sm text-gray-600 before:absolute before:-right-5 before:top-0 before:h-full before:w-5 before:content-[""]',
-          miniSidebar ? 'hover:text-accent ltr:pl-3 rtl:pr-3' : null,
+          'relative flex w-full cursor-pointer items-center px-3 py-2.5 text-sm before:absolute before:-right-5 before:top-0 before:h-full before:w-5 before:content-[""]',
+          isActive ? 'text-accent' : 'text-gray-600',
+          miniSidebar ? 'hover:text-accent focus-within:text-accent ltr:pl-3 rtl:pr-3' : null,
         )}
       >
         {getIcon({
@@ -211,13 +214,13 @@ const SidebarItem = ({
             <motion.div
               initial={false}
               className={cn(
-                'group cursor-pointer rounded-md px-3 py-2.5 text-body-dark hover:bg-gray-100 focus:text-accent',
+                'group cursor-pointer rounded-md px-3 py-2.5 !text-gray-700 hover:!text-accent hover:bg-gray-100 focus:text-accent',
                 isOpen ? 'bg-gray-100 font-medium' : '',
               )}
               onClick={onClick}
             >
               <div className={cn('flex w-full items-center text-sm')}>
-                <span className="text-gray-600">
+                <span className="text-gray-600 transition-colors group-hover:text-accent">
                   {getIcon({
                     iconList: sidebarIcons,
                     iconName: icon,
@@ -302,15 +305,15 @@ const SidebarItem = ({
                                   : item?.href
                               }
                               className={cn(
-                                'relative flex w-full cursor-pointer items-center rounded-lg py-2 px-5 text-sm text-start before:absolute before:-left-0.5 before:top-[18px] before:h-px before:w-3 before:border-t before:border-dashed before:border-gray-300 before:content-[""] focus:text-accent',
+                                'relative flex w-full cursor-pointer items-center rounded-lg py-2 px-5 text-sm text-start before:absolute before:-left-0.5 before:top-[18px] before:h-px before:w-3 before:border-t before:border-dashed before:border-gray-300 before:content-[""] focus:!text-accent',
                                 (
                                   shop
                                     ? sanitizedPath ===
                                       item?.href(shop?.toString()!)
                                     : sanitizedPath === item?.href
                                 )
-                                  ? 'bg-transparent font-medium text-accent-hover'
-                                  : 'text-body-dark hover:text-accent focus:text-accent',
+                                  ? 'bg-transparent font-medium !text-gray-800 hover:!text-accent'
+                                  : '!text-gray-700 hover:!text-accent focus:!text-accent',
                               )}
                               title={t(item.label)}
                               onClick={() => closeSidebar()}
@@ -339,12 +342,14 @@ const SidebarItem = ({
       <Link
         href={href}
         className={cn(
-          `group flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-gray-700 text-start focus:text-accent`,
+          `group flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-sm text-gray-700 text-start focus:!text-accent`,
           showMiniSidebar
             ? 'hover:text-accent-hover ltr:pl-3 rtl:pr-3'
-            : 'hover:bg-gray-100',
+            : 'hover:bg-gray-100 hover:!text-accent',
           sanitizedPath === href
-            ? `font-medium !text-accent-hover ${!showMiniSidebar ? 'bg-accent !text-[var(--color-primary-contrast)] hover:bg-accent' : ''}`
+            ? showMiniSidebar
+              ? 'font-medium !text-accent hover:!text-accent focus:!text-accent'
+              : 'font-medium !text-white hover:!text-accent bg-accent hover:bg-accent'
             : '',
         )}
         title={label}
@@ -355,8 +360,10 @@ const SidebarItem = ({
             className={cn(
               'transition',
               sanitizedPath === href
-                ? (showMiniSidebar ? 'text-accent-hover' : 'text-[var(--color-primary-contrast)]')
-                : 'text-gray-600 group-focus:text-accent',
+                ? (showMiniSidebar
+                  ? 'text-accent group-hover:text-accent group-focus:text-accent'
+                  : 'text-white group-hover:text-accent group-focus:text-accent')
+                : 'text-gray-600 group-hover:text-accent group-focus:text-accent',
               showMiniSidebar ? 'group-hover:text-accent' : null,
             )}
           >
@@ -367,7 +374,14 @@ const SidebarItem = ({
             })}
           </span>
         ) : null}
-        <span className={cn(showMiniSidebar ? 'hidden' : '')}>{label}</span>
+        <span
+          className={cn(
+            showMiniSidebar ? 'hidden' : '',
+            sanitizedPath === href ? 'text-white group-hover:text-accent' : '',
+          )}
+        >
+          {label}
+        </span>
       </Link>
     );
   }

@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import Button from '@/components/ui/button';
 import { Eye } from '@/components/icons/eye-icon';
 import { useRouter } from 'next/router';
-import { useLoyaltyProgramQuery } from '@/data/loyalty';
 
 type IProps = {
   members: LoyaltyAccount[] | null | undefined;
@@ -18,28 +17,39 @@ type IProps = {
 const LoyaltyMemberList = ({ members, paginatorInfo, onPagination }: IProps) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { program } = useLoyaltyProgramQuery();
-  const redeemRate = program?.redeem_rate_currency_per_point || 0;
 
   const columns = useMemo(
     () => [
       {
-        title: t('table:table-item-customer', 'Customer'),
+        title: t('table:table-item-name', 'Name'),
         dataIndex: 'customer',
-        key: 'customer',
+        key: 'name',
         align: 'left',
         render: (customer: any, record: LoyaltyAccount) => {
-          const name = customer?.name || record.phone || t('common:text-unknown');
           return (
-            <div className="flex flex-col">
-              <span className="font-semibold text-heading">{name}</span>
-              <span className="text-sm text-body">{customer?.email || record.phone}</span>
-            </div>
+            <span className="font-semibold text-heading">
+              {customer?.name || t('common:text-unknown')}
+            </span>
           );
         },
       },
       {
-        title: t('table:table-item-points-balance', 'Balance'),
+        title: t('table:table-item-phone', 'Phone Number'),
+        dataIndex: 'customer',
+        key: 'phone',
+        align: 'left',
+        render: (customer: any, record: LoyaltyAccount) =>
+          customer?.phoneNumber || record.phone || '-',
+      },
+      {
+        title: t('table:table-item-email', 'Email'),
+        dataIndex: 'customer',
+        key: 'email',
+        align: 'left',
+        render: (customer: any) => customer?.email || '-',
+      },
+      {
+        title: t('table:table-item-points-balance', 'Points Balance'),
         dataIndex: 'points_balance',
         key: 'points_balance',
         align: 'center',
@@ -48,34 +58,23 @@ const LoyaltyMemberList = ({ members, paginatorInfo, onPagination }: IProps) => 
         ),
       },
       {
-        title: t('table:table-item-total-earned', 'Total Earned'),
-        dataIndex: 'total_points_earned',
-        key: 'total_points_earned',
-        align: 'center',
-      },
-      {
-        title: t('table:table-item-total-redeemed', 'Total Redeemed'),
-        dataIndex: 'total_points_redeemed',
-        key: 'total_points_redeemed',
-        align: 'center',
-      },
-      {
-        title: t('table:table-item-redeemed-value', 'Redeemed Value'),
-        dataIndex: 'total_points_redeemed',
-        key: 'redeemed_value',
-        align: 'center',
-        render: (points: number) => {
-          const value = points * redeemRate;
-          return <span className="font-semibold text-accent">${value.toFixed(2)}</span>;
-        },
-      },
-      {
-        title: t('table:table-item-joined', 'Joined At'),
+        title: t('table:table-item-joined', 'Join Date'),
         dataIndex: 'created_at',
         key: 'created_at',
         align: 'center',
         render: (date: string) => {
           return <span className="whitespace-nowrap">{dayjs(date).format('DD MMM YYYY')}</span>;
+        },
+      },
+      {
+        title: t('table:table-item-last-activity', 'Last Activity'),
+        dataIndex: 'last_activity',
+        key: 'last_activity',
+        align: 'center',
+        render: (date: string, record: LoyaltyAccount) => {
+          const value = date || record?.customer?.last_activity || record?.customer?.last_order_at;
+          if (!value) return '-';
+          return <span className="whitespace-nowrap">{dayjs(value).format('DD MMM YYYY')}</span>;
         },
       },
       {
@@ -95,7 +94,7 @@ const LoyaltyMemberList = ({ members, paginatorInfo, onPagination }: IProps) => 
         ),
       },
     ],
-    [t, router, redeemRate]
+    [t, router]
   );
 
   return (

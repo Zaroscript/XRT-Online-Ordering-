@@ -54,6 +54,7 @@ import { startPrinterStatusMonitor } from './services/printer/printerStatusMonit
 // Import swagger config - using relative path from src to config directory
 import { specs } from './swagger';
 import { autoOrderManager } from './services/order/AutoOrderManagerService';
+import { startCustomerDedupeJob } from './services/maintenance/customerDedupeService';
 
 const app: Express = express();
 // Trigger restart for helmet config change
@@ -266,6 +267,11 @@ const startServer = async () => {
       registerOrderPrintHandler();
       startPrinterStatusMonitor(io, 30_000);
       autoOrderManager.start();
+      startCustomerDedupeJob({
+        enabled: env.CUSTOMER_DEDUPE_JOB_ENABLED,
+        intervalMinutes: env.CUSTOMER_DEDUPE_JOB_INTERVAL_MINUTES,
+        runOnStart: env.CUSTOMER_DEDUPE_JOB_RUN_ON_START,
+      });
 
       server.listen(PORT, () => {
         logger.info(`🚀 Server running on port ${PORT}`);

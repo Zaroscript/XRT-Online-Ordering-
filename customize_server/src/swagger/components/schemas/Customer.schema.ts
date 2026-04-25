@@ -50,6 +50,8 @@ export const Customer = {
             type: 'string',
             enum: ['bronze', 'silver', 'gold', 'platinum'],
             example: 'silver',
+            deprecated: true,
+            description: 'Deprecated legacy field. Tier is no longer used by loyalty logic.',
           },
           totalOrders: { type: 'number', example: 25 },
           totalSpent: { type: 'number', example: 1250.5 },

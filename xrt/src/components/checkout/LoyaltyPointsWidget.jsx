@@ -29,6 +29,12 @@ export const LoyaltyPointsWidget = ({ phone, subtotal, onDiscountApplied }) => {
     !hasValidPointValue ||
     belowMinimum ||
     exceedsBalance;
+  const currentBalanceValue = pointsBalance * redeemRate;
+  const requestedRewardValue = hasValidPointValue ? parsedPoints * redeemRate : 0;
+  const remainingBalance = hasValidPointValue
+    ? Math.max(pointsBalance - parsedPoints, 0)
+    : pointsBalance;
+  const remainingRewardValue = remainingBalance * redeemRate;
 
   if (!isActive || !isEnrolled) return null;
 
@@ -157,20 +163,53 @@ export const LoyaltyPointsWidget = ({ phone, subtotal, onDiscountApplied }) => {
                   disabled={isLoading}
                 />
               </div>
-              <button
-                onClick={handleApply}
-                disabled={applyDisabled}
-                className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:brightness-110 disabled:opacity-50 transition-all shadow-sm shadow-primary/20"
-              >
-                {isLoading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <>
-                    Apply
-                    <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setPointsToRedeem('');
+                    setRedeemError(null);
+                  }}
+                  disabled={isLoading}
+                  className="inline-flex items-center gap-2 bg-white text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-gray-50 disabled:opacity-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleApply}
+                  disabled={applyDisabled}
+                  className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:brightness-110 disabled:opacity-50 transition-all shadow-sm shadow-primary/20"
+                >
+                  {isLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <>
+                      Redeem
+                      <ArrowRight size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div className="rounded-lg bg-gray-50 border border-gray-100 p-2.5">
+                <p className="text-gray-500">Current Balance</p>
+                <p className="font-semibold text-gray-800">
+                  {pointsBalance} pts (${currentBalanceValue.toFixed(2)})
+                </p>
+              </div>
+              <div className="rounded-lg bg-gray-50 border border-gray-100 p-2.5">
+                <p className="text-gray-500">Equivalent Reward Value</p>
+                <p className="font-semibold text-gray-800">
+                  ${requestedRewardValue.toFixed(2)}
+                </p>
+              </div>
+              <div className="rounded-lg bg-gray-50 border border-gray-100 p-2.5">
+                <p className="text-gray-500">Remaining Balance After Redeem</p>
+                <p className="font-semibold text-gray-800">
+                  {remainingBalance} pts (${remainingRewardValue.toFixed(2)})
+                </p>
+              </div>
             </div>
             
             <div className="mt-4 flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-primary opacity-80">

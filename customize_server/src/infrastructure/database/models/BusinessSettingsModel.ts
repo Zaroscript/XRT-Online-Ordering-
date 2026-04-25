@@ -125,6 +125,10 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
       type: Object,
       default: {},
     },
+    favicon: {
+      type: Object,
+      default: {},
+    },
     contactDetails: {
       location: { type: Object, default: {} },
       contact: { type: String, default: '' },
@@ -177,6 +181,10 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
       metaTags: String,
       canonicalUrl: String,
     },
+    seoSettings: {
+      type: Schema.Types.Mixed,
+      default: {},
+    },
     google: {
       isEnable: { type: Boolean, default: false },
       tagManagerId: { type: String, default: '' },
@@ -189,6 +197,40 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
     isUnderMaintenance: {
       type: Boolean,
       default: false,
+    },
+    operationsSettings: {
+      mode: {
+        type: String,
+        enum: ['OPEN_NORMAL', 'SCHEDULED_ONLY', 'ORDERS_PAUSED', 'FULL_MAINTENANCE'],
+        default: 'OPEN_NORMAL',
+      },
+      manualOverride: {
+        type: Boolean,
+        default: false,
+      },
+      overrideUntil: {
+        type: Date,
+        default: null,
+      },
+      messageTitle: {
+        type: String,
+        default: '',
+      },
+      messageBody: {
+        type: String,
+        default: '',
+      },
+      showCountdown: {
+        type: Boolean,
+        default: true,
+      },
+      maintenanceTheme: {
+        type: String,
+        default: 'restaurant-premium',
+      },
+      updatedAt: {
+        type: Date,
+      },
     },
     maintenance: {
       image: {

@@ -11,6 +11,38 @@ import { API_ENDPOINTS } from './api-endpoints';
 import { HttpClient } from './http-client';
 import { businessClient } from './business';
 
+const getImageUrl = (image: any): string | undefined => {
+  if (!image) return undefined;
+
+  if (typeof image === 'string') {
+    const trimmed = image.trim();
+    return trimmed || undefined;
+  }
+
+  if (Array.isArray(image)) {
+    for (const item of image) {
+      const value = getImageUrl(item);
+      if (value) return value;
+    }
+    return undefined;
+  }
+
+  if (typeof image === 'object') {
+    const original =
+      typeof image.original === 'string' ? image.original.trim() : '';
+    if (original) return original;
+
+    const thumbnail =
+      typeof image.thumbnail === 'string' ? image.thumbnail.trim() : '';
+    if (thumbnail) return thumbnail;
+
+    const url = typeof image.url === 'string' ? image.url.trim() : '';
+    if (url) return url;
+  }
+
+  return undefined;
+};
+
 export const shopClient = {
   // Use business endpoints - shops are businesses in the backend
   get: async ({ slug, id }: { slug?: string; id?: string }) => {
@@ -56,6 +88,7 @@ export const shopClient = {
   },
   create: async (input: ShopInput) => {
     // Map shop input to business input
+    const logo = getImageUrl((input as any).logo);
     const businessInput = {
       owner: (input as any).owner_id || (input as any).owner,
       name: input.name,
@@ -65,6 +98,7 @@ export const shopClient = {
       primary_content_phone: (input as any).phone || '',
       description: (input as any).description,
       website: (input as any).website,
+      ...(logo ? { logo } : {}),
     };
     const business = await businessClient.create(businessInput);
     return {
@@ -79,6 +113,8 @@ export const shopClient = {
     if ((input as any).description) businessInput.description = (input as any).description;
     if ((input as any).website) businessInput.website = (input as any).website;
     if ((input as any).is_active !== undefined) businessInput.isActive = (input as any).is_active;
+    const logo = getImageUrl((input as any).logo);
+    if (logo) businessInput.logo = logo;
     const business = await businessClient.update({ id, ...businessInput });
     return {
       ...business,

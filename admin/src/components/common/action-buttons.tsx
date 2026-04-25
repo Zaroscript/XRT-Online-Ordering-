@@ -77,6 +77,13 @@ const ActionButtons = ({
   const [_, setApproveModal] = useAtom(approveModalInitialValues);
 
   function handleDelete() {
+    if (deleteModalView === 'DELETE_CUSTOMER') {
+      openModal(deleteModalView, {
+        id,
+        customerName: String(data?.customer_name || ''),
+      });
+      return;
+    }
     openModal(deleteModalView, id);
   }
 
@@ -172,14 +179,24 @@ const ActionButtons = ({
       )}
 
       {/* NEW REFUND BUTTON FOR ORDER HISTORY */}
-      {((data?.payment_status as string) === 'paid' || (data?.payment_status as string) === 'partially_refunded') &&
+      {((data?.payment_status as string) === 'paid' ||
+        (data?.payment_status as string) === 'partially_refunded' ||
+        (data?.payment_status as string) === 'pending') &&
       (data?.payment_status as string) !== 'refunded' ? (
         <button
-          onClick={() => openModal('REFUND_ORDER', { orderId: id, totalAmount: data?.total_amount, trackingNumber: data?.tracking_number })}
+          onClick={() =>
+            openModal('REFUND_ORDER', {
+              orderId: id,
+              totalAmount: data?.total_amount,
+              trackingNumber: data?.tracking_number,
+              preferredAction:
+                (data?.payment_status as string) === 'pending' ? 'void' : 'refund',
+            })
+          }
           className="transition duration-200 text-red-500 hover:text-red-700 font-medium text-xs border border-red-500 rounded px-2 py-1 ml-2 focus:outline-none"
-          title="Refund Order"
+          title={(data?.payment_status as string) === 'pending' ? 'Void Payment' : 'Refund Order'}
         >
-          Refund
+          {(data?.payment_status as string) === 'pending' ? 'Void Payment' : 'Refund'}
         </button>
       ) : null}
 

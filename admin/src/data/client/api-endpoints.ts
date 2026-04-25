@@ -51,6 +51,9 @@ export const API_ENDPOINTS = {
 
   // Legacy endpoints
   SETTINGS: 'settings',
+  SETTINGS_SEO: 'settings/seo',
+  SETTINGS_SEO_GENERATE: 'settings/seo/generate',
+  SETTINGS_SEO_HEALTH: 'settings/seo/health-score',
   /** No auth — branding for login / pre-auth shell */
   PUBLIC_SITE_SETTINGS: 'public/site-settings',
   PROFILE_UPDATE: 'auth/profile',
@@ -78,6 +81,7 @@ export const API_ENDPOINTS = {
   ATTRIBUTES: 'attributes',
   TYPES: 'types',
   ANALYTICS: 'analytics',
+  COUPON_PERFORMANCE_ANALYTICS: 'analytics/coupons-performance',
   ITEMS: 'items',
   ITEMS_SORT_ORDER: 'items/sort-order',
   MODIFIER_GROUPS: 'modifier-groups',
