@@ -1160,9 +1160,16 @@ export interface LoyaltyAccount {
   points_balance: number;
   total_points_earned: number;
   total_points_redeemed: number;
+  last_activity?: string | null;
   created_at: string;
   updated_at: string;
-  customer?: User; // Populated from backend
+  customer?: {
+    name?: string;
+    email?: string;
+    phoneNumber?: string;
+    last_order_at?: string | null;
+    last_activity?: string | null;
+  };
 }
 
 export interface LoyaltyAccountPaginator {
@@ -1320,6 +1327,7 @@ export interface SettingsOptions {
   deliveryTime?: DeliveryTime[];
   logo?: Attachment;
   collapseLogo?: Attachment;
+  favicon?: Attachment;
   useEnableGateway?: boolean;
   currencyOptions?: SettingCurrencyOptions;
   guestCheckout: boolean;
@@ -1332,6 +1340,7 @@ export interface SettingsOptions {
   enableCoupons?: boolean;
   maintenance: Maintenance;
   isUnderMaintenance: boolean;
+  operationsSettings?: OperationsSettings;
   enableEmailForDigitalProduct?: boolean;
   isPromoPopUp?: boolean;
   promoPopup?: PromoPopupFormValues;
@@ -1449,8 +1458,25 @@ export interface Maintenance {
   contactUsTitle?: string;
 }
 
+export type OperationsMode =
+  | 'OPEN_NORMAL'
+  | 'SCHEDULED_ONLY'
+  | 'ORDERS_PAUSED'
+  | 'FULL_MAINTENANCE';
+
+export interface OperationsSettings {
+  mode: OperationsMode;
+  manualOverride: boolean;
+  overrideUntil: string | null;
+  messageTitle: string;
+  messageBody: string;
+  showCountdown: boolean;
+  maintenanceTheme: string;
+  updatedAt?: string;
+}
+
 export interface MaintenanceFormValues {
-  isUnderMaintenance: boolean;
+  operationsSettings: OperationsSettings;
   maintenance: Maintenance;
 }
 
@@ -1478,6 +1504,8 @@ export interface SettingsOptionsInput {
   maximumQuestionLimit?: number;
   deliveryTime?: DeliveryTimeInput[];
   logo?: AttachmentInput;
+  collapseLogo?: AttachmentInput;
+  favicon?: AttachmentInput;
   seo?: SeoSettingsInput;
   google?: GoogleSettingsInput;
   facebook?: FacebookSettingsInput;
@@ -1538,6 +1566,7 @@ export interface SettingsOptionsInput {
   authorizeNetEnvironment?: 'sandbox' | 'production';
   primary_color?: string;
   secondary_color?: string;
+  operationsSettings?: OperationsSettings;
 }
 
 export interface DeliveryTime {
@@ -2033,6 +2062,7 @@ export interface Customer {
   email: string;
   phoneNumber: string;
   business_id: string;
+  loyaltyPoints?: number;
   rewards: number;
   isActive: boolean;
   last_order_at: string | null;
@@ -2051,7 +2081,6 @@ export interface Customer {
     country: string;
     isDefault: boolean;
   }>;
-  loyaltyTier?: string;
   totalOrders?: number;
   totalSpent?: number;
   notes?: string;

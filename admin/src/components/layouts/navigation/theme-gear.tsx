@@ -205,7 +205,7 @@ export default function ThemeGear() {
                     onClick={handleSave}
                     disabled={!hasChanges || isUpdating}
                     loading={isUpdating}
-                    className="h-12 w-full rounded-2xl bg-accent text-sm font-bold shadow-lg shadow-accent/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="h-12 w-full text-white rounded-2xl bg-accent text-sm font-bold shadow-lg shadow-accent/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
                   >
                     {isUpdating ? t('Saving...') : t('Apply Theme')}
                   </Button>

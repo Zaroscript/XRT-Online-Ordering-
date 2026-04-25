@@ -55,6 +55,7 @@ export interface BusinessSettings {
   siteSubtitle?: string;
   logo?: any;
   collapseLogo?: any;
+  favicon?: any;
   contactDetails?: {
     location?: any;
     contact?: string;
@@ -101,6 +102,26 @@ export interface BusinessSettings {
     metaTags?: string;
     canonicalUrl?: string;
   };
+  seoSettings?: Record<
+    string,
+    {
+      locale?: string;
+      metaTitle?: string;
+      metaDescription?: string;
+      keywords?: string[];
+      slug?: string;
+      shareTitle?: string;
+      shareDescription?: string;
+      shareImage?: any;
+      canonicalUrl?: string;
+      noindex?: boolean;
+      score?: number;
+      customized?: boolean;
+      updatedAt?: Date | string;
+      ogTitle?: string;
+      ogDescription?: string;
+    }
+  >;
   google?: {
     isEnable?: boolean;
     tagManagerId?: string;
@@ -111,6 +132,16 @@ export interface BusinessSettings {
     pageId?: string;
   };
   isUnderMaintenance?: boolean;
+  operationsSettings?: {
+    mode?: 'OPEN_NORMAL' | 'SCHEDULED_ONLY' | 'ORDERS_PAUSED' | 'FULL_MAINTENANCE';
+    manualOverride?: boolean;
+    overrideUntil?: Date | null;
+    messageTitle?: string;
+    messageBody?: string;
+    showCountdown?: boolean;
+    maintenanceTheme?: string;
+    updatedAt?: Date | string;
+  };
   maintenance?: {
     image?: {
       id?: string;
@@ -190,15 +221,18 @@ export interface CreateBusinessSettingsDTO {
   siteSubtitle?: string;
   logo?: any;
   collapseLogo?: any;
+  favicon?: any;
   contactDetails?: BusinessSettings['contactDetails'];
   currency?: string;
   heroSlides?: BusinessSettings['heroSlides'];
   offerCards?: BusinessSettings['offerCards'];
   currencyOptions?: BusinessSettings['currencyOptions'];
   seo?: BusinessSettings['seo'];
+  seoSettings?: BusinessSettings['seoSettings'];
   google?: BusinessSettings['google'];
   facebook?: BusinessSettings['facebook'];
   isUnderMaintenance?: boolean;
+  operationsSettings?: BusinessSettings['operationsSettings'];
   maintenance?: BusinessSettings['maintenance'];
   footer_text?: string;
   copyrightText?: string;
@@ -240,15 +274,18 @@ export interface UpdateBusinessSettingsDTO {
   siteSubtitle?: string;
   logo?: any;
   collapseLogo?: any;
+  favicon?: any;
   contactDetails?: BusinessSettings['contactDetails'];
   currency?: string;
   heroSlides?: BusinessSettings['heroSlides'];
   offerCards?: BusinessSettings['offerCards'];
   currencyOptions?: BusinessSettings['currencyOptions'];
   seo?: BusinessSettings['seo'];
+  seoSettings?: BusinessSettings['seoSettings'];
   google?: BusinessSettings['google'];
   facebook?: BusinessSettings['facebook'];
   isUnderMaintenance?: boolean;
+  operationsSettings?: BusinessSettings['operationsSettings'];
   maintenance?: BusinessSettings['maintenance'];
   footer_text?: string;
   copyrightText?: string;

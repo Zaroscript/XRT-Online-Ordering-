@@ -53,7 +53,7 @@ export default function LoyaltyMemberDetails() {
             <div>
               <span className="text-sm text-body block">{t('common:text-phone', 'Phone')}</span>
               <span className="font-medium text-heading">
-                {member.customer?.profile?.contact || member.phone || '-'}
+                {member.customer?.phoneNumber || member.phone || '-'}
               </span>
             </div>
             <div>
@@ -61,8 +61,30 @@ export default function LoyaltyMemberDetails() {
               <span className="font-medium text-heading">{member.customer?.email || '-'}</span>
             </div>
             <div>
+              <span className="text-sm text-body block">
+                {t('common:text-current-balance', 'Current Balance')}
+              </span>
+              <span className="font-medium text-heading">
+                {member.points_balance} pts
+              </span>
+            </div>
+            <div>
               <span className="text-sm text-body block">{t('common:text-joined-at', 'Joined At')}</span>
               <span className="font-medium text-heading">{dayjs(member.created_at).format('DD MMM YYYY')}</span>
+            </div>
+            <div>
+              <span className="text-sm text-body block">
+                {t('common:text-last-activity', 'Last Activity')}
+              </span>
+              <span className="font-medium text-heading">
+                {member.last_activity || member.customer?.last_activity || member.customer?.last_order_at
+                  ? dayjs(
+                      member.last_activity ||
+                        member.customer?.last_activity ||
+                        member.customer?.last_order_at
+                    ).format('DD MMM YYYY')
+                  : '-'}
+              </span>
             </div>
           </div>
         </Card>

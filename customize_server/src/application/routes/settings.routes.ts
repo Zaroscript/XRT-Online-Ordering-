@@ -16,6 +16,30 @@ router.get(
     settingsController.getSettings
 );
 
+router.get(
+    '/seo',
+    requirePermission('settings:read'),
+    settingsController.getSeoSettings
+);
+
+router.get(
+    '/seo/health-score',
+    requirePermission('settings:read'),
+    settingsController.getSeoHealthScore
+);
+
+router.post(
+    '/seo/generate',
+    requirePermission('settings:update'),
+    settingsController.generateSeoSettings
+);
+
+router.put(
+    '/seo',
+    requirePermission('settings:update'),
+    settingsController.updateSeoSettings
+);
+
 // Update settings - requires settings:update permission
 router.patch(
     '/',

@@ -1,8 +1,16 @@
 import { useSettings } from '@/contexts/settings.context';
 import { DefaultSeo as NextDefaultSeo } from 'next-seo';
+import { pickFirstAttachmentUrl } from '@/utils/branding';
 
 const DefaultSeo = () => {
   const settings = useSettings();
+  const faviconHref =
+    pickFirstAttachmentUrl(
+      settings?.favicon,
+      settings?.logo,
+      '/icons/apple-icon-180.png',
+    ) ?? '/icons/apple-icon-180.png';
+
   return (
     <NextDefaultSeo
       title={settings.siteTitle ?? 'XRT Restaurant System'}
@@ -64,10 +72,7 @@ const DefaultSeo = () => {
         },
         {
           rel: 'icon',
-          href:
-            settings?.logo?.thumbnail ||
-            settings?.logo?.original ||
-            'icons/apple-icon-180.png',
+          href: faviconHref,
         },
         {
           rel: 'manifest',

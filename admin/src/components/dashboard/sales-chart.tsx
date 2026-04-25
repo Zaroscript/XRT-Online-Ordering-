@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import dynamic from 'next/dynamic';
 import cn from 'classnames';
@@ -40,6 +40,13 @@ export default function SalesChart({ analyticsData }: SalesChartProps) {
   const [activeTimeFrame, setActiveTimeFrame] = useState<number>(1);
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([new Date(), new Date()]);
   const [startDate, endDate] = dateRange;
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [yearlyRange, setYearlyRange] = useState<number | 'all'>(5);
+
+  const yearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 8 }, (_, index) => currentYear - index);
+  }, []);
 
   const { data: customData } = useAnalyticsQuery({
     start_date: startDate?.toISOString(),
@@ -47,19 +54,37 @@ export default function SalesChart({ analyticsData }: SalesChartProps) {
     enabled: activeTimeFrame === -1 && !!startDate && !!endDate,
   });
 
+  const { data: monthlyBucketData } = useAnalyticsQuery({
+    granularity: 'month',
+    year: selectedYear,
+    enabled: activeTimeFrame === 30,
+  });
+
+  const { data: weeklyBucketData } = useAnalyticsQuery({
+    granularity: 'weekday',
+    enabled: activeTimeFrame === 7,
+  });
+
+  const { data: yearlyBucketData } = useAnalyticsQuery({
+    granularity: 'year',
+    years_range: yearlyRange,
+    enabled: activeTimeFrame === 365,
+  });
+
   // Derive the correct time-bucket from analyticsData
   const history = (() => {
     switch (activeTimeFrame) {
       case 1:   return analyticsData?.salesHistory?.today   ?? [];
-      case 7:   return analyticsData?.salesHistory?.weekly  ?? [];
-      case 30:  return analyticsData?.salesHistory?.monthly ?? [];
-      case 365: return analyticsData?.salesHistory?.yearly  ?? [];
+      case 7:   return weeklyBucketData?.data?.salesHistory?.custom  ?? [];
+      case 30:  return monthlyBucketData?.data?.salesHistory?.custom ?? [];
+      case 365: return yearlyBucketData?.data?.salesHistory?.custom  ?? [];
       case -1:  return customData?.data?.salesHistory?.custom ?? [];
       default:  return analyticsData?.salesHistory?.today   ?? [];
     }
   })();
 
   const categories = history.map((h) => h.label);
+  const tooltipLabels = history.map((h) => h.tooltipLabel ?? h.label);
 
   const series = [
     {
@@ -177,7 +202,7 @@ export default function SalesChart({ analyticsData }: SalesChartProps) {
       }) => {
         const seriesNames: string[] = w.globals.seriesNames;
         const colors: string[] = w.globals.colors;
-        const label: string = categories[dataPointIndex] ?? '';
+        const label: string = tooltipLabels[dataPointIndex] ?? categories[dataPointIndex] ?? '';
 
         const fmt = (v: number) => `$${v.toFixed(2)}`;
 
@@ -283,6 +308,78 @@ export default function SalesChart({ analyticsData }: SalesChartProps) {
                 className="w-full sm:w-60 h-10 rounded border border-gray-300 px-3 py-2 text-sm focus:border-accent focus:outline-none"
                 placeholderText="Select date range"
               />
+            </div>
+          )}
+          {activeTimeFrame === 30 && (
+            <Menu as="div" className="relative z-20 inline-block text-left">
+              <Menu.Button className="inline-flex h-10 min-w-[148px] items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:border-accent/50 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-accent/30">
+                <span className="inline-flex items-center gap-1.5">
+                  <svg className="h-4 w-4 text-accent" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 10-2 0v1H3a2 2 0 00-2 2v2h18V5a2 2 0 00-2-2h-1V2a1 1 0 10-2 0v1H6V2zM19 9H1v8a2 2 0 002 2h14a2 2 0 002-2V9z" clipRule="evenodd" />
+                  </svg>
+                  <span>Year: {selectedYear}</span>
+                </span>
+                <svg className="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </Menu.Button>
+              <Transition
+                as={Fragment}
+                enter="transition ease-out duration-100"
+                enterFrom="transform opacity-0 scale-95"
+                enterTo="transform opacity-100 scale-100"
+                leave="transition ease-in duration-75"
+                leaveFrom="transform opacity-100 scale-100"
+                leaveTo="transform opacity-0 scale-95"
+              >
+                <Menu.Items className="absolute right-0 mt-2 max-h-64 w-44 origin-top-right overflow-auto rounded-xl border border-gray-200 bg-white p-1 shadow-lg focus:outline-none">
+                  {yearOptions.map((year) => (
+                    <Menu.Item key={year}>
+                      {({ active }) => (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedYear(year)}
+                          className={cn(
+                            'w-full rounded-lg px-3 py-2 text-left text-sm',
+                            selectedYear === year ? 'bg-accent/10 text-accent font-semibold' : 'text-gray-700',
+                            active ? 'bg-gray-100' : '',
+                          )}
+                        >
+                          {year}
+                        </button>
+                      )}
+                    </Menu.Item>
+                  ))}
+                </Menu.Items>
+              </Transition>
+            </Menu>
+          )}
+          {activeTimeFrame === 365 && (
+            <div className="inline-flex h-10 items-center rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setYearlyRange(5)}
+                className={cn(
+                  'h-8 rounded-lg px-3 text-sm font-medium transition-colors focus:outline-none',
+                  yearlyRange === 5
+                    ? 'bg-accent/10 text-accent'
+                    : 'text-gray-600 hover:bg-gray-100',
+                )}
+              >
+                Last 5 Years
+              </button>
+              <button
+                type="button"
+                onClick={() => setYearlyRange('all')}
+                className={cn(
+                  'h-8 rounded-lg px-3 text-sm font-medium transition-colors focus:outline-none',
+                  yearlyRange === 'all'
+                    ? 'bg-accent/10 text-accent'
+                    : 'text-gray-600 hover:bg-gray-100',
+                )}
+              >
+                All Time
+              </button>
             </div>
           )}
           {/* Timeframe filter — independent from the Summary section filter */}

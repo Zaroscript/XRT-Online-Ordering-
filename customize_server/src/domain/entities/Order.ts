@@ -48,10 +48,14 @@ export interface OrderMoney {
   currency: string;
   payment: string; // payment enum/string
   payment_id?: string;
-  payment_status?: 'pending' | 'paid' | 'failed';
+  payment_status?: 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
   coupon_code?: string;
   rewards_points_used?: number;
   loyalty_discount_amount?: number;
+  refunded_amount?: number;
+  net_paid_amount?: number;
+  gateway_captured_amount?: number;
+  gateway_refundable_remaining?: number;
   card_type?: string;
   last_4?: string;
 }
@@ -88,7 +92,7 @@ export interface Order {
   cancelled_reason?: string;
   cancelled_by?: string;
   money: OrderMoney;
-  payment_status?: 'pending' | 'paid' | 'failed';
+  payment_status?: 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
   delivery?: OrderDelivery;
   notes?: string;
   items: OrderItem[];
@@ -103,7 +107,7 @@ export interface CreateOrderDTO {
   service_time_type: ServiceTimeType;
   schedule_time?: Date | null;
   money: OrderMoney;
-  payment_status?: 'pending' | 'paid' | 'failed';
+  payment_status?: 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
   delivery?: OrderDelivery;
   notes?: string;
   items: Omit<OrderItem, 'id' | 'order_id'>[]; // items when creating a new order

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { useModalState, useModalAction } from '@/components/ui/modal/modal.context';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import { useRefundOrderMutation } from '@/data/order';
 import { formatOrderTrackingLabel } from '@/utils/order-tracking';
+import { orderClient } from '@/data/client/order';
 
 const RefundModal = () => {
   const { t } = useTranslation('common');
@@ -14,18 +15,159 @@ const RefundModal = () => {
 
   const [refundType, setRefundType] = useState<'full' | 'partial'>('full');
   const [amount, setAmount] = useState<string>('');
+  const [reason, setReason] = useState<string>('');
+  const [notes, setNotes] = useState<string>('');
+  const [formError, setFormError] = useState<string>('');
+  const [actionType, setActionType] = useState<'refund' | 'void'>('refund');
+  const [actionLoading, setActionLoading] = useState<boolean>(false);
+  const [actionMessage, setActionMessage] = useState<string>('');
+  const [remainingRefundable, setRemainingRefundable] = useState<number | null>(null);
 
   const displayId =
     formatOrderTrackingLabel(data?.trackingNumber, data?.orderId) || 'N/A';
 
-  const handleRefund = () => {
-    const payload = {
-      id: data.orderId,
-      amount: refundType === 'partial' ? parseFloat(amount) : undefined,
+  const parsedAmount = Number(amount);
+  const normalizedAmount = Number.isFinite(parsedAmount)
+    ? Math.round((parsedAmount + Number.EPSILON) * 100) / 100
+    : NaN;
+  const selectedRefundType: 'full' | 'partial' =
+    actionType === 'void' ? 'full' : refundType;
+  const partialAmountInvalid =
+    selectedRefundType === 'partial' &&
+    (!amount || !Number.isFinite(normalizedAmount) || normalizedAmount <= 0);
+  const reasonMissing = reason.trim().length === 0;
+  useEffect(() => {
+    let isMounted = true;
+    const orderId = String(data?.orderId || '').trim();
+    if (!orderId) return () => undefined;
+
+    const preferredAction = data?.preferredAction === 'void' ? 'void' : 'refund';
+    setActionType(preferredAction);
+    if (preferredAction === 'void') setRefundType('full');
+
+    setActionLoading(true);
+    setActionMessage('');
+
+    orderClient
+      .refundAction(orderId)
+      .then((res: any) => {
+        if (!isMounted) return;
+        const payload = (res as any)?.data ?? res;
+        const action = payload?.action === 'void' ? 'void' : 'refund';
+        setActionType(action);
+        if (Number.isFinite(Number(payload?.remainingRefundable))) {
+          setRemainingRefundable(Number(payload.remainingRefundable));
+        } else {
+          setRemainingRefundable(null);
+        }
+        if (payload?.message) {
+          setActionMessage(String(payload.message));
+        }
+        if (action === 'void') {
+          setRefundType('full');
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setActionType('refund');
+        setRemainingRefundable(null);
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setActionLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
     };
-    
+  }, [data?.orderId, data?.preferredAction]);
+
+  const isSubmitDisabled = useMemo(
+    () =>
+      actionLoading ||
+      isPending ||
+      partialAmountInvalid ||
+      reasonMissing ||
+      (selectedRefundType === 'partial' &&
+        remainingRefundable != null &&
+        normalizedAmount > remainingRefundable),
+    [
+      actionLoading,
+      isPending,
+      partialAmountInvalid,
+      reasonMissing,
+      selectedRefundType,
+      remainingRefundable,
+      normalizedAmount,
+    ],
+  );
+
+  const handleRefundTypeChange = (nextType: 'full' | 'partial') => {
+    setRefundType(nextType);
+    if (nextType === 'full') {
+      setAmount('');
+    }
+    if (formError) setFormError('');
+  };
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+    console.info('[RefundModal] refundType changed', {
+      orderId: data?.orderId,
+      actionType,
+      refundType: selectedRefundType,
+    });
+  }, [data?.orderId, actionType, selectedRefundType]);
+
+  const handleRefund = () => {
+    if (isPending) return;
+
+    const trimmedReason = reason.trim();
+    const trimmedNotes = notes.trim();
+    if (!trimmedReason) {
+      setFormError(t('text-refund-reason-required', 'Reason is required.'));
+      return;
+    }
+    if (partialAmountInvalid) {
+      setFormError(t('text-refund-invalid-amount', 'Enter a valid refund amount.'));
+      return;
+    }
+    if (
+      selectedRefundType === 'partial' &&
+      remainingRefundable != null &&
+      normalizedAmount > remainingRefundable
+    ) {
+      setFormError(
+        t(
+          'text-refund-exceeds-remaining',
+          `Refund amount exceeds remaining refundable balance ($${remainingRefundable.toFixed(2)}).`,
+        ),
+      );
+      return;
+    }
+
+    setFormError('');
+    const payload =
+      selectedRefundType === 'partial'
+        ? {
+            id: data.orderId,
+            amount: normalizedAmount,
+            reason: trimmedReason,
+            refundType: 'partial' as const,
+            notes: trimmedNotes || undefined,
+          }
+        : {
+            id: data.orderId,
+            reason: trimmedReason,
+            refundType: 'full' as const,
+            notes: trimmedNotes || undefined,
+          };
+
     refundOrder(payload, {
       onSuccess: () => {
+        setReason('');
+        setNotes('');
+        setAmount('');
         closeModal();
       },
     });
@@ -61,33 +203,43 @@ const RefundModal = () => {
         </p>
       </div>
 
-      <div className="flex items-center gap-4 mb-6">
-        <label className="flex items-center gap-2 cursor-pointer">
+      <div className="mb-6 flex items-center gap-4 pointer-events-auto">
+        <label htmlFor="refund-type-full" className="flex items-center gap-2 cursor-pointer">
           <input
+            id="refund-type-full"
             type="radio"
             name="refundType"
             value="full"
-            checked={refundType === 'full'}
-            onChange={() => setRefundType('full')}
+            checked={selectedRefundType === 'full'}
+            onChange={(e) => handleRefundTypeChange(e.currentTarget.value as 'full')}
+            disabled={actionType === 'void' || isPending}
             className="w-4 h-4 text-accent border-gray-300 focus:ring-accent"
           />
           <span className="text-gray-700">{t('text-full-refund', 'Full Refund')}</span>
         </label>
         
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label htmlFor="refund-type-partial" className="flex items-center gap-2 cursor-pointer">
           <input
+            id="refund-type-partial"
             type="radio"
             name="refundType"
             value="partial"
-            checked={refundType === 'partial'}
-            onChange={() => setRefundType('partial')}
+            checked={selectedRefundType === 'partial'}
+            onChange={(e) => handleRefundTypeChange(e.currentTarget.value as 'partial')}
+            disabled={actionType === 'void' || isPending}
             className="w-4 h-4 text-accent border-gray-300 focus:ring-accent"
           />
           <span className="text-gray-700">{t('text-partial-refund', 'Partial Refund')}</span>
         </label>
       </div>
 
-      {refundType === 'partial' && (
+      {actionType === 'void' && (
+        <div className="mb-4 rounded border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+          {actionMessage || t('text-payment-not-settled-voiding', 'Payment not settled yet, voiding instead')}
+        </div>
+      )}
+
+      {selectedRefundType === 'partial' && (
         <div className="mb-6">
           <Input
             label={t('text-refund-amount-usd', 'Refund Amount (USD)')}
@@ -95,6 +247,7 @@ const RefundModal = () => {
             type="number"
             step="0.01"
             min="0.01"
+            max={remainingRefundable != null ? String(remainingRefundable) : undefined}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder={t('text-enter-amount-to-refund', 'Enter amount to refund')}
@@ -102,12 +255,46 @@ const RefundModal = () => {
             className="mb-4"
           />
           <p className="text-xs text-gray-500">
-            {t('text-order-total-reference', 'Order total (reference):')}{' '}
-            <span className="font-bold">${data?.totalAmount ?? '—'}</span>
+            {remainingRefundable != null ? (
+              <span className="block">
+                {t('text-maximum-refundable', 'Maximum refundable:')}{' '}
+                <span className="font-semibold">${remainingRefundable.toFixed(2)}</span>
+              </span>
+            ) : null}
             <span className="block mt-1">
               {t('text-refund-limit-desc')}
             </span>
           </p>
+        </div>
+      )}
+
+      <div className="mb-5">
+        <Input
+          label={t('text-refund-reason', 'Reason')}
+          name="reason"
+          value={reason}
+          onChange={(e) => {
+            setReason(e.target.value);
+            if (formError) setFormError('');
+          }}
+          placeholder={t('text-refund-reason-placeholder', 'Enter reason for refund')}
+          variant="outline"
+          required
+          className="mb-4"
+        />
+        <Input
+          label={t('text-refund-notes', 'Notes (Optional)')}
+          name="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder={t('text-refund-notes-placeholder', 'Add internal notes')}
+          variant="outline"
+        />
+      </div>
+
+      {formError && (
+        <div className="mb-4 rounded border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+          {formError}
         </div>
       )}
 
@@ -122,10 +309,14 @@ const RefundModal = () => {
         <Button
           onClick={handleRefund}
           loading={isPending}
-          disabled={isPending || (refundType === 'partial' && (!amount || isNaN(Number(amount)) || Number(amount) <= 0))}
+          disabled={isSubmitDisabled}
           className="w-1/2 bg-red-600 hover:bg-red-700"
         >
-          {refundType === 'full' ? t('text-process-full-refund', 'Process Full Refund') : t('text-process-partial-refund', 'Process Partial Refund')}
+          {actionType === 'void'
+            ? t('text-process-void-payment', 'Void Payment')
+            : selectedRefundType === 'full'
+              ? t('text-process-full-refund', 'Process Full Refund')
+              : t('text-process-partial-refund', 'Process Partial Refund')}
         </Button>
       </div>
     </div>

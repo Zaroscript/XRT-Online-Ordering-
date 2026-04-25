@@ -305,6 +305,7 @@ export const useUpdateOrderMutation = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ORDERS] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRANSACTIONS] });
     },
   });
 };
@@ -314,8 +315,25 @@ export const useRefundOrderMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, amount }: { id: string; amount?: number }) =>
-      orderClient.refund(id, amount),
+    mutationFn: ({
+      id,
+      amount,
+      reason,
+      refundType,
+      notes,
+    }: {
+      id: string;
+      amount?: number;
+      reason: string;
+      refundType: 'full' | 'partial';
+      notes?: string;
+    }) =>
+      orderClient.refund(id, {
+        amount,
+        reason,
+        refundType,
+        notes,
+      }),
     onSuccess: () => {
       toast.success(t('common:text-refund-success'));
     },
@@ -328,6 +346,7 @@ export const useRefundOrderMutation = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ORDERS] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRANSACTIONS] });
     },
   });
 };

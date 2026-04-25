@@ -10,6 +10,7 @@ import { LoyaltyService } from '../../services/LoyaltyService';
 import { LoyaltyProgramRepository } from '../../../infrastructure/repositories/LoyaltyProgramRepository';
 import { LoyaltyAccountRepository } from '../../../infrastructure/repositories/LoyaltyAccountRepository';
 import { LoyaltyTransactionRepository } from '../../../infrastructure/repositories/LoyaltyTransactionRepository';
+import { ValidationError } from '../../../shared/errors/AppError';
 
 const KITCHEN_SECTION_UNASSIGNED = 'Unassigned';
 
@@ -87,12 +88,14 @@ export class CreateOrderUseCase {
     if (orderData.money.coupon_code) {
       const coupon = await this.couponRepository.verify(orderData.money.coupon_code);
       if (!coupon) {
-        throw new Error('Invalid or expired coupon');
+        throw new ValidationError('Invalid or expired coupon');
       }
 
       // Check minimum cart amount
       if (computedSubtotal < (coupon.minimum_cart_amount || 0)) {
-        throw new Error(`Minimum order for this coupon is ${coupon.minimum_cart_amount}`);
+        throw new ValidationError(
+          `Minimum order for this coupon is ${coupon.minimum_cart_amount}`,
+        );
       }
 
       // Calculate discount
@@ -106,17 +109,23 @@ export class CreateOrderUseCase {
       verifiedDiscount = Math.min(verifiedDiscount, computedSubtotal);
     }
 
+    const rewardsPointsUsed = Math.floor(
+      Number(orderData.money.rewards_points_used || 0)
+    );
+
     // 2.6 Validate Loyalty Points if requested
     let loyaltyDiscount = 0;
-    if (orderData.money.rewards_points_used && orderData.customer_id) {
+    if (rewardsPointsUsed > 0 && orderData.customer_id) {
       try {
-        const { discount_value } = await this.loyaltyService.validateRedemption(
+        const { discount_value } =
+          await this.loyaltyService.validateRedemptionWithSubtotal(
           orderData.customer_id,
-          orderData.money.rewards_points_used
+          rewardsPointsUsed,
+          computedSubtotal
         );
         loyaltyDiscount = discount_value;
       } catch (err: any) {
-        throw new Error(`Failed to apply loyalty points: ${err.message}`);
+        throw new ValidationError(`Failed to apply loyalty points: ${err.message}`);
       }
     }
 
@@ -134,6 +143,7 @@ export class CreateOrderUseCase {
       subtotal: computedSubtotal,
       discount: verifiedDiscount, // Use verified discount
       loyalty_discount_amount: loyaltyDiscount,
+      rewards_points_used: rewardsPointsUsed > 0 ? rewardsPointsUsed : undefined,
       total_amount: Math.max(0, expectedTotal),
     };
 
@@ -147,15 +157,17 @@ export class CreateOrderUseCase {
     const order = await this.orderRepository.create(sanitizedData);
 
     // 5. Safely deduct loyalty points matching validation check
-    if (orderData.money.rewards_points_used && orderData.customer_id && order.id) {
+    if (rewardsPointsUsed > 0 && orderData.customer_id && order.id) {
       try {
         await this.loyaltyService.redeemPointsByCustomer(
           orderData.customer_id,
-          orderData.money.rewards_points_used,
+          rewardsPointsUsed,
           order.id
         );
       } catch (e: any) {
-        console.warn('[CreateOrderUseCase] Failed to deduct loyalty points after order creation:', e.message);
+        // Keep order and loyalty ledger consistent on redemption failure.
+        await this.orderRepository.delete(order.id);
+        throw new ValidationError(`Failed to finalize loyalty redemption: ${e.message}`);
       }
     }
 

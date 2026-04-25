@@ -9,6 +9,7 @@ export function mapPublicSiteToOptions(publicData: PublicSiteSettings | null | u
 
   const logo = publicData.logo ?? null;
   const collapseLogo = publicData.collapseLogo ?? logo;
+  const favicon = (publicData as any).favicon ?? logo;
 
   const apiSeo = (publicData as any).seo;
   const siteTitle = publicData.siteTitle ?? 'XRT Restaurant System';
@@ -19,6 +20,7 @@ export function mapPublicSiteToOptions(publicData: PublicSiteSettings | null | u
     siteSubtitle,
     logo,
     collapseLogo,
+    favicon,
     primary_color:
       (publicData as any).primary_color ?? '#5C9963',
     secondary_color:
@@ -41,6 +43,7 @@ export function mapPublicSiteToOptions(publicData: PublicSiteSettings | null | u
       canonicalUrl: apiSeo?.canonicalUrl ?? '',
     },
     isUnderMaintenance: Boolean((publicData as any).isUnderMaintenance),
+    operationsSettings: (publicData as any).operationsSettings ?? null,
     maintenance: (publicData as any).maintenance ?? null,
   };
 }

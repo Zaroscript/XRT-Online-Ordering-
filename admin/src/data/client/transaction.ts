@@ -4,6 +4,7 @@ import { HttpClient } from './http-client';
 export interface TransactionsListParams {
   page?: number;
   limit?: number;
+  order_id?: string;
   status?: string;
   gateway?: string;
   date?: string;

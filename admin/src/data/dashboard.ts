@@ -16,6 +16,7 @@ export interface DashboardStatusStat {
 
 export interface DashboardSaleHistoryItem {
   label: string;
+  tooltipLabel?: string;
   items: number;
   tax: number;
   tips: number;
@@ -40,6 +41,85 @@ export interface DashboardSummaryStats {
   aov: number;
 }
 
+export interface DashboardCouponUsageDetail {
+  code: string;
+  description?: string;
+  type: 'fixed' | 'percentage' | 'free_shipping' | string;
+  amount: number;
+  activeFrom: string;
+  expireAt: string;
+  minimumCartAmount: number;
+  maxConversions: number | null;
+  isApproved: boolean;
+  usageCount: number;
+  uniqueCustomers: number;
+  totalDiscount: number;
+}
+
+export type CouponPerformanceStatus = 'active' | 'expiring' | 'paused';
+
+export interface CouponPerformanceTrendPoint {
+  label: string;
+  revenue: number;
+  discount: number;
+  previousRevenue: number;
+  previousDiscount: number;
+}
+
+export interface CouponPerformanceRow {
+  couponName: string;
+  type: string;
+  uses: number;
+  revenue: number;
+  discountCost: number;
+  netProfit: number;
+  newCustomers: number;
+  roi: number;
+  status: CouponPerformanceStatus;
+}
+
+export interface CouponPerformanceAlert {
+  tone: 'green' | 'red' | 'yellow';
+  text: string;
+}
+
+export interface CouponPerformanceAnalyticsData {
+  rangeDays: 1 | 7 | 30 | 365;
+  summary: {
+    couponRevenueGenerated: number;
+    netRevenueAfterDiscounts: number;
+    newCustomersViaCoupons: number;
+    aovWithCoupon: number;
+    aovWithoutCoupon: number;
+    couponOrdersCompleted: number;
+    withoutCouponOrdersCompleted: number;
+    totalDiscountCost: number;
+    previous: {
+      couponRevenueGenerated: number;
+      netRevenueAfterDiscounts: number;
+      newCustomersViaCoupons: number;
+      aovWithCoupon: number;
+      aovWithoutCoupon: number;
+      couponOrdersCompleted: number;
+      withoutCouponOrdersCompleted: number;
+      totalDiscountCost: number;
+    };
+  };
+  trend: CouponPerformanceTrendPoint[];
+  funnel: {
+    viewed: number;
+    applied: number;
+    completed: number;
+  };
+  topCoupons: Array<{
+    couponName: string;
+    uses: number;
+    revenue: number;
+  }>;
+  table: CouponPerformanceRow[];
+  alerts: CouponPerformanceAlert[];
+}
+
 export interface DashboardAnalyticsData {
   totalShops: number;
   totalRevenue: number;
@@ -62,12 +142,24 @@ export interface DashboardAnalyticsData {
     yearly: DashboardSaleHistoryItem[];
     custom?: DashboardSaleHistoryItem[];
   };
+  activeCouponDetails: {
+    today: DashboardCouponUsageDetail[];
+    weekly: DashboardCouponUsageDetail[];
+    monthly: DashboardCouponUsageDetail[];
+    yearly: DashboardCouponUsageDetail[];
+  };
 }
 
 export interface DashboardAnalyticsResponse {
   success: boolean;
   message: string;
   data?: Partial<DashboardAnalyticsData>;
+}
+
+export interface CouponPerformanceAnalyticsResponse {
+  success: boolean;
+  message: string;
+  data?: CouponPerformanceAnalyticsData;
 }
 
 export const EMPTY_DASHBOARD_SUMMARY_STATS: DashboardSummaryStats = {
@@ -118,10 +210,33 @@ export function getDashboardSummaryStats(
   }
 }
 
-export function useAnalyticsQuery(options?: { start_date?: string; end_date?: string; enabled?: boolean }) {
+export function useAnalyticsQuery(options?: {
+  start_date?: string;
+  end_date?: string;
+  granularity?: 'hour' | 'weekday' | 'month' | 'year';
+  year?: number;
+  years_range?: number | 'all';
+  enabled?: boolean;
+}) {
   return useQuery<DashboardAnalyticsResponse, Error>({
-    queryKey: [API_ENDPOINTS.ANALYTICS, { start_date: options?.start_date, end_date: options?.end_date }],
-    queryFn: () => dashboardClient.analytics({ start_date: options?.start_date, end_date: options?.end_date }),
+    queryKey: [
+      API_ENDPOINTS.ANALYTICS,
+      {
+        start_date: options?.start_date,
+        end_date: options?.end_date,
+        granularity: options?.granularity,
+        year: options?.year,
+        years_range: options?.years_range,
+      },
+    ],
+    queryFn: () =>
+      dashboardClient.analytics({
+        start_date: options?.start_date,
+        end_date: options?.end_date,
+        granularity: options?.granularity,
+        year: options?.year,
+        years_range: options?.years_range,
+      }),
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
@@ -129,6 +244,23 @@ export function useAnalyticsQuery(options?: { start_date?: string; end_date?: st
     staleTime: Infinity,
     gcTime: Infinity,
     enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCouponPerformanceAnalyticsQuery(options: {
+  rangeDays: 1 | 7 | 30 | 365;
+  enabled?: boolean;
+}) {
+  return useQuery<CouponPerformanceAnalyticsResponse, Error>({
+    queryKey: [API_ENDPOINTS.COUPON_PERFORMANCE_ANALYTICS, options.rangeDays],
+    queryFn: () => dashboardClient.couponPerformance(options.rangeDays),
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+    staleTime: 0,
+    gcTime: 1000 * 60 * 5,
+    enabled: options.enabled ?? true,
   });
 }
 

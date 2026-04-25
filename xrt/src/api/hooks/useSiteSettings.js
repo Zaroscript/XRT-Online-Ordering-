@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { API_ENDPOINTS } from "../endpoints";
 import { getSiteSettings } from "../siteSettings";
+import { resolveOperationsState } from "../../utils/operations";
 
 const SITE_SETTINGS_QUERY_KEY = [API_ENDPOINTS.PUBLIC_SITE_SETTINGS];
 
@@ -12,12 +13,14 @@ export function useSiteSettingsQuery(options = {}) {
   const query = useQuery({
     queryKey: SITE_SETTINGS_QUERY_KEY,
     queryFn: getSiteSettings,
-    staleTime: 0, // Fetch fresh data immediately
-    refetchOnWindowFocus: true,
+    staleTime: 60 * 1000, // Keep data fresh enough without hammering API
+    refetchOnWindowFocus: false,
+    retry: 1,
     ...options,
   });
 
   const d = query.data;
+  const operationsState = resolveOperationsState(d || {});
 
   return {
     ...query,
@@ -26,9 +29,12 @@ export function useSiteSettingsQuery(options = {}) {
     siteSubtitle: d?.siteSubtitle ?? "",
     termsPage: d?.termsPage ?? { title: "", body: "" },
     logo: d?.logo ?? null,
+    favicon: d?.favicon ?? null,
     operating_hours: d?.operating_hours ?? null,
     seo: d?.seo ?? null,
     isUnderMaintenance: Boolean(d?.isUnderMaintenance),
+    operationsSettings: d?.operationsSettings ?? null,
+    operationsState: d?.operationsState ?? operationsState,
     maintenance: d?.maintenance ?? null,
     contactDetails: d?.contactDetails ?? null,
     showMenuSection: d?.showMenuSection !== false, // default true when settings not yet loaded

@@ -17,7 +17,7 @@ const TransactionSchema = new Schema<TransactionDocument>(
     gateway: { type: String, enum: ['nmi', 'authorize_net'], required: true },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'failed', 'refunded'],
+      enum: ['pending', 'completed', 'failed', 'refunded', 'voided'],
       default: 'pending',
     },
     payment_method: { type: String, required: true },

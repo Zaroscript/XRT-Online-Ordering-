@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   MapContainer,
@@ -36,6 +36,16 @@ import { restaurantLocation } from "@/constants/business";
 import { useLoyalty } from "../hooks/useLoyalty";
 import { LoyaltyJoinCheckbox } from "../components/checkout/LoyaltyJoinCheckbox";
 import { LoyaltyPointsWidget } from "../components/checkout/LoyaltyPointsWidget";
+import {
+  getDateInputBounds,
+  formatDateLabel,
+  formatTimeLabel,
+  getAvailableDates,
+  getAvailableTimeSlots,
+  isDateSelectable,
+  parseDateValue,
+  resolveOperationsState,
+} from "../utils/operations";
 
 // Fix Leaflet icon issue
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -147,6 +157,16 @@ const Checkout = () => {
     siteSettings?.taxes?.sales_tax != null
       ? siteSettings.taxes.sales_tax / 100
       : DEFAULT_TAX_RATE;
+  const operationsState = resolveOperationsState(siteSettings || {});
+  const canAsap = operationsState.acceptsAsap;
+  const canSchedule = operationsState.acceptsScheduled;
+  const canCheckout = operationsState.allowsCheckout;
+  const modeMessage =
+    operationsState.mode === "SCHEDULED_ONLY"
+      ? "We are currently accepting scheduled orders only."
+      : operationsState.mode === "ORDERS_PAUSED"
+        ? "Online ordering is temporarily paused."
+        : "";
 
   const [orderType, setOrderType] = useState(contextOrderType || "delivery");
 
@@ -171,6 +191,25 @@ const Checkout = () => {
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
   const [asapTime, setAsapTime] = useState("");
+
+  const maxScheduleDays = useMemo(
+    () => Number(siteSettings?.orders?.maxDays ?? 30),
+    [siteSettings?.orders?.maxDays],
+  );
+  const availableDates = useMemo(
+    () =>
+      getAvailableDates(siteSettings || {}, {
+        maxDays: maxScheduleDays,
+        limitOpenDays: 180,
+      }),
+    [siteSettings, maxScheduleDays],
+  );
+  const selectedScheduleDate = scheduledDate ? parseDateValue(scheduledDate) : null;
+  const availableTimes = getAvailableTimeSlots(siteSettings || {}, selectedScheduleDate);
+  const dateInputBounds = useMemo(
+    () => getDateInputBounds(siteSettings || {}, new Date()),
+    [siteSettings],
+  );
 
 
   // Sync map center
@@ -253,11 +292,78 @@ const Checkout = () => {
     setAsapTime(calculateAsapTime());
   }, []);
 
+  useEffect(() => {
+    if (!canAsap && canSchedule) {
+      setOrderTimeType("later");
+    }
+    if (!canSchedule && orderTimeType === "later") {
+      setOrderTimeType("asap");
+    }
+  }, [canAsap, canSchedule, orderTimeType]);
+
+  useEffect(() => {
+    if (orderTimeType !== "later") return;
+    if (!availableDates.length) {
+      setScheduledDate("");
+      setScheduledTime("");
+      return;
+    }
+    const parsedDate = scheduledDate ? parseDateValue(scheduledDate) : null;
+    if (
+      !scheduledDate ||
+      !parsedDate ||
+      !isDateSelectable(siteSettings || {}, parsedDate)
+    ) {
+      setScheduledDate(dateInputBounds.min);
+      setScheduledTime("");
+    }
+  }, [
+    orderTimeType,
+    availableDates.length,
+    scheduledDate,
+    siteSettings,
+    dateInputBounds.min,
+  ]);
+
+  useEffect(() => {
+    if (orderTimeType !== "later") return;
+    if (!scheduledTime) return;
+    if (!availableTimes.includes(scheduledTime)) {
+      setScheduledTime("");
+    }
+  }, [orderTimeType, scheduledTime, availableTimes]);
+
   const handleSetOrderTimeType = (type) => {
+    if (type === "asap" && !canAsap) return;
+    if (type === "later" && !canSchedule) return;
     if (type === "asap") {
       setAsapTime(calculateAsapTime());
     }
     setOrderTimeType(type);
+  };
+
+  const handleScheduledDateChange = (dateValue) => {
+    const parsedDate = parseDateValue(dateValue);
+    if (!parsedDate || !isDateSelectable(siteSettings || {}, parsedDate)) {
+      setSubmitError("Selected date is outside operating hours.");
+      return;
+    }
+    setSubmitError("");
+    setScheduledDate(dateValue);
+    setScheduledTime("");
+  };
+
+  const handleScheduledTimeChange = (timeValue) => {
+    if (!timeValue) {
+      setScheduledTime("");
+      return;
+    }
+    if (!availableTimes.includes(timeValue)) {
+      setSubmitError("Selected time is not available.");
+      return;
+    }
+    setSubmitError("");
+    setScheduledTime(timeValue);
   };
 
   const handleChange = (e) => {
@@ -534,6 +640,20 @@ const Checkout = () => {
   };
 
   const handleSubmitOrder = () => {
+    if (!canCheckout) {
+      setSubmitError(modeMessage || "Online ordering is currently unavailable.");
+      return;
+    }
+
+    if (orderTimeType === "asap" && !canAsap) {
+      setSubmitError("ASAP ordering is currently unavailable.");
+      return;
+    }
+    if (orderTimeType === "later" && !canSchedule) {
+      setSubmitError("Scheduled ordering is currently unavailable.");
+      return;
+    }
+
     // Validate required fields
     if (!form.phone.trim()) {
       setSubmitError("Phone number is required");
@@ -568,6 +688,22 @@ const Checkout = () => {
       }
     }
 
+    if (orderTimeType === "later") {
+      if (!scheduledDate || !scheduledTime) {
+        setSubmitError("Please choose a valid schedule date and time.");
+        return;
+      }
+      const parsedDate = parseDateValue(scheduledDate);
+      if (!parsedDate || !isDateSelectable(siteSettings || {}, parsedDate)) {
+        setSubmitError("Selected date is outside operating hours.");
+        return;
+      }
+      if (!availableTimes.includes(scheduledTime)) {
+        setSubmitError("Selected time is not available.");
+        return;
+      }
+    }
+
     setSubmitError("");
 
     // Save customer data for next visit
@@ -585,7 +721,7 @@ const Checkout = () => {
       service_time_type: orderTimeType === "asap" ? "ASAP" : "Schedule",
       schedule_time:
         orderTimeType === "later" && scheduledDate && scheduledTime
-          ? new Date(`${scheduledDate}T${scheduledTime}`).toISOString()
+          ? new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString()
           : null,
       money: {
         subtotal: subtotal,
@@ -596,8 +732,9 @@ const Checkout = () => {
         total_amount: total,
         currency: siteSettings?.currency || "USD",
         coupon_code: promoApplied ? promoCode : undefined,
-        loyalty_discount: loyaltyDiscount > 0 ? loyaltyDiscount : undefined,
-        loyalty_points_redeemed:
+        loyalty_discount_amount:
+          loyaltyDiscount > 0 ? loyaltyDiscount : undefined,
+        rewards_points_used:
           loyaltyPointsRedeemed > 0 ? loyaltyPointsRedeemed : undefined,
         // Payment type/token will be injected by the dedicated Payment screen
       },
@@ -690,6 +827,12 @@ const Checkout = () => {
             Finish your {orderType === "delivery" ? "delivery" : "pickup"} order
           </p>
         </div>
+
+        {modeMessage ? (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+            {modeMessage}
+          </div>
+        ) : null}
 
         {/* Two-Column Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
@@ -868,21 +1011,23 @@ const Checkout = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleSetOrderTimeType("asap")}
+                    disabled={!canAsap}
                     className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
                       orderTimeType === "asap"
                         ? "bg-primary text-white border-primary"
                         : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                    }`}
+                    } ${!canAsap ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     ASAP {asapTime && `(${asapTime})`}
                   </button>
                   <button
                     onClick={() => handleSetOrderTimeType("later")}
+                    disabled={!canSchedule}
                     className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
                       orderTimeType === "later"
                         ? "bg-primary text-white border-primary"
                         : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                    }`}
+                    } ${!canSchedule ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     Later
                   </button>
@@ -903,7 +1048,9 @@ const Checkout = () => {
                       name="scheduledDate"
                       type="date"
                       value={scheduledDate}
-                      onChange={(e) => setScheduledDate(e.target.value)}
+                      min={dateInputBounds.min}
+                      max={dateInputBounds.max}
+                      onChange={(e) => handleScheduledDateChange(e.target.value)}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                     />
                   </div>
@@ -918,13 +1065,31 @@ const Checkout = () => {
                       id="scheduledTime"
                       name="scheduledTime"
                       type="time"
+                      step={900}
+                      list="scheduled-time-options"
                       value={scheduledTime}
-                      onChange={(e) => setScheduledTime(e.target.value)}
+                      onChange={(e) => handleScheduledTimeChange(e.target.value)}
+                      disabled={!scheduledDate || availableTimes.length === 0}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                     />
+                    <datalist id="scheduled-time-options">
+                      {availableTimes.map((timeValue) => (
+                        <option key={timeValue} value={timeValue} />
+                      ))}
+                    </datalist>
+                    {scheduledDate && availableTimes.length === 0 ? (
+                      <p className="mt-2 text-xs text-gray-500">
+                        No valid slots available for this date.
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               )}
+              {orderTimeType === "later" && scheduledDate && scheduledTime ? (
+                <p className="mt-4 text-sm font-medium text-gray-700">
+                  {`${orderType === "delivery" ? "Delivery" : "Pickup"} on ${formatDateLabel(parseDateValue(scheduledDate))} at ${formatTimeLabel(scheduledTime)}`}
+                </p>
+              ) : null}
             </section>
 
             {/* Delivery Map & Zone Selection */}
@@ -1475,10 +1640,11 @@ const Checkout = () => {
               <div className="mt-6 mb-6">
                 <button
                   onClick={handleSubmitOrder}
-                  className="w-full py-4 bg-primary text-white font-bold text-lg rounded-xl flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-primary/20 transform hover:-translate-y-0.5 active:translate-y-0"
+                  disabled={!canCheckout}
+                  className="w-full py-4 bg-primary text-white font-bold text-lg rounded-xl flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-primary/20 transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 >
                   <ShieldCheck size={20} />
-                  Proceed to Payment
+                  {canCheckout ? "Proceed to Payment" : "Ordering Unavailable"}
                 </button>
               </div>
 

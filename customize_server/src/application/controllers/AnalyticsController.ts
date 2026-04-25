@@ -5,10 +5,84 @@ import { sendSuccess } from '../../shared/utils/response';
 import { OrderModel } from '../../infrastructure/database/models/OrderModel';
 import { BusinessModel } from '../../infrastructure/database/models/BusinessModel';
 import { ItemModel } from '../../infrastructure/database/models/ItemModel';
+import { CouponModel } from '../../infrastructure/database/models/CouponModel';
 import moment from 'moment';
+import { CouponPerformanceAnalyticsService } from '../services/analytics/CouponPerformanceAnalyticsService';
+
+interface ActiveCouponDetail {
+  code: string;
+  description?: string;
+  type: string;
+  amount: number;
+  activeFrom: string;
+  expireAt: string;
+  minimumCartAmount: number;
+  maxConversions: number | null;
+  isApproved: boolean;
+  usageCount: number;
+  uniqueCustomers: number;
+  totalDiscount: number;
+}
 
 export class AnalyticsController {
+  private readonly couponPerformanceService = new CouponPerformanceAnalyticsService();
+
   getAnalytics = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const granularity = String(req.query.granularity || '').toLowerCase().trim();
+    if (granularity) {
+      if (granularity === 'hour') {
+        const hourlySales = await this.getTodaySaleByHour();
+        return sendSuccess(res, 'Hourly analytics retrieved', {
+          salesHistory: {
+            custom: hourlySales,
+          },
+        });
+      }
+
+      if (granularity === 'weekday') {
+        const weekdaySales = await this.getWeekdaySaleBreakdown();
+        return sendSuccess(res, 'Weekly analytics retrieved', {
+          salesHistory: {
+            custom: weekdaySales,
+          },
+        });
+      }
+
+      if (granularity === 'month') {
+        const selectedYear = Number(req.query.year || moment().year());
+        const year = Number.isFinite(selectedYear) && selectedYear > 1970
+          ? selectedYear
+          : moment().year();
+        const monthlyByYear = await this.getMonthlySaleBreakdownForYear(year);
+        return sendSuccess(res, 'Monthly analytics retrieved', {
+          salesHistory: {
+            custom: monthlyByYear,
+          },
+          meta: { year },
+        });
+      }
+
+      if (granularity === 'year') {
+        const yearsRangeRaw = String(req.query.years_range || '').toLowerCase().trim();
+        const yearsRangeNumber = Number(req.query.years_range);
+        const yearsRange =
+          yearsRangeRaw === 'all'
+            ? undefined
+            : Number.isFinite(yearsRangeNumber) && yearsRangeNumber > 0
+              ? yearsRangeNumber
+              : 5;
+        const yearlySeries = await this.getYearlySaleBreakdownByYear(yearsRange);
+        return sendSuccess(res, 'Yearly analytics retrieved', {
+          salesHistory: {
+            custom: yearlySeries,
+          },
+          meta: {
+            years_range: yearsRangeRaw === 'all' ? 'all' : yearsRange,
+          },
+        });
+      }
+    }
+
     const startOfToday = moment().startOf('day').toDate();
     const startOfWeek = moment().subtract(6, 'days').startOf('day').toDate();
     const startOfMonth = moment().subtract(29, 'days').startOf('day').toDate();
@@ -26,6 +100,10 @@ export class AnalyticsController {
       monthlySales,
       yearlySales,
       totalRefunds,
+      todayActiveCouponDetails,
+      weeklyActiveCouponDetails,
+      monthlyActiveCouponDetails,
+      yearlyActiveCouponDetails,
     ] = await Promise.all([
       this.getStatsForRange(startOfToday),
       this.getStatsForRange(startOfWeek),      // rolling 7 days — matches salesHistory.weekly
@@ -38,6 +116,10 @@ export class AnalyticsController {
       this.getSaleBreakdownByRange(startOfMonth, 'day'),
       this.getYearlySaleBreakdown(),
       this.getTotalRefunds(),
+      this.getActiveCouponDetailsForRange(startOfToday),
+      this.getActiveCouponDetailsForRange(startOfWeek),
+      this.getActiveCouponDetailsForRange(startOfMonth),
+      this.getActiveCouponDetailsForRange(startOfYear),
     ]);
 
     const response = {
@@ -58,6 +140,12 @@ export class AnalyticsController {
         weekly: weeklySales,
         monthly: monthlySales,
         yearly: yearlySales
+      },
+      activeCouponDetails: {
+        today: todayActiveCouponDetails,
+        weekly: weeklyActiveCouponDetails,
+        monthly: monthlyActiveCouponDetails,
+        yearly: yearlyActiveCouponDetails,
       },
 
       totalYearSaleByMonth: yearlySales,
@@ -83,6 +171,12 @@ export class AnalyticsController {
     }
 
     return sendSuccess(res, 'Analytics retrieved successfully', response);
+  });
+
+  getCouponPerformance = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const rangeDays = Number(req.query.range_days || 1);
+    const data = await this.couponPerformanceService.getByRange(rangeDays);
+    return sendSuccess(res, 'Coupon performance analytics retrieved successfully', data);
   });
 
   getPopularItems = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -235,6 +329,7 @@ export class AnalyticsController {
                     $cond: [
                       { 
                         $and: [
+                          { $eq: ['$status', 'completed'] },
                           { $ne: ['$money.coupon_code', null] },
                           { $ne: ['$money.coupon_code', ''] }
                         ] 
@@ -331,6 +426,155 @@ export class AnalyticsController {
     });
 
     return hours;
+  }
+
+  private async getWeekdaySaleBreakdown() {
+    const startOfWeek = moment().startOf('isoWeek').toDate();
+    const endOfWeek = moment().endOf('isoWeek').toDate();
+    const sales = await OrderModel.aggregate([
+      {
+        $match: {
+          created_at: { $gte: startOfWeek, $lte: endOfWeek },
+          status: 'completed',
+        },
+      },
+      {
+        $group: {
+          _id: { $isoDayOfWeek: '$created_at' }, // 1=Mon ... 7=Sun
+          items: { $sum: '$money.subtotal' },
+          tax: { $sum: '$money.tax_total' },
+          tips: { $sum: '$money.tips' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return weekdays.map((name, idx) => {
+      const dayData = sales.find((s) => s._id === idx + 1);
+      const items = dayData ? Number(Number(dayData.items).toFixed(2)) : 0;
+      const tax = dayData ? Number(Number(dayData.tax).toFixed(2)) : 0;
+      const tips = dayData ? Number(Number(dayData.tips).toFixed(2)) : 0;
+      return {
+        label: name,
+        items,
+        tax,
+        tips,
+        total: Number((items + tax + tips).toFixed(2)),
+      };
+    });
+  }
+
+  private async getMonthlySaleBreakdownForYear(year: number) {
+    const startOfYear = moment().year(year).startOf('year').toDate();
+    const endOfYear = moment().year(year).endOf('year').toDate();
+    const sales = await OrderModel.aggregate([
+      {
+        $match: {
+          created_at: { $gte: startOfYear, $lte: endOfYear },
+          status: 'completed',
+        },
+      },
+      {
+        $group: {
+          _id: { $month: '$created_at' },
+          items: { $sum: '$money.subtotal' },
+          tax: { $sum: '$money.tax_total' },
+          tips: { $sum: '$money.tips' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months.map((name, index) => {
+      const monthData = sales.find((s) => s._id === index + 1);
+      const items = monthData ? Number(Number(monthData.items).toFixed(2)) : 0;
+      const tax = monthData ? Number(Number(monthData.tax).toFixed(2)) : 0;
+      const tips = monthData ? Number(Number(monthData.tips).toFixed(2)) : 0;
+      return {
+        label: name,
+        tooltipLabel: `${name} ${year}`,
+        items,
+        tax,
+        tips,
+        total: Number((items + tax + tips).toFixed(2)),
+      };
+    });
+  }
+
+  private async getYearlySaleBreakdownByYear(yearsRange?: number) {
+    const currentYear = moment().year();
+    const startBoundary = yearsRange && yearsRange > 0
+      ? moment().subtract(yearsRange - 1, 'years').startOf('year').toDate()
+      : undefined;
+    const endBoundary = yearsRange && yearsRange > 0
+      ? moment().endOf('year').toDate()
+      : undefined;
+
+    const sales = await OrderModel.aggregate([
+      {
+        $addFields: {
+          analytics_created_at: { $ifNull: ['$created_at', '$createdAt'] },
+        },
+      },
+      {
+        $match: {
+          status: 'completed',
+          analytics_created_at: {
+            $ne: null,
+            ...(startBoundary ? { $gte: startBoundary } : {}),
+            ...(endBoundary ? { $lte: endBoundary } : {}),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $year: '$analytics_created_at' },
+          items: { $sum: '$money.subtotal' },
+          tax: { $sum: '$money.tax_total' },
+          tips: { $sum: '$money.tips' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const saleByYear = new Map<number, { items: number; tax: number; tips: number }>();
+    sales.forEach((yearData) => {
+      saleByYear.set(yearData._id, {
+        items: Number(Number(yearData.items).toFixed(2)),
+        tax: Number(Number(yearData.tax).toFixed(2)),
+        tips: Number(Number(yearData.tips).toFixed(2)),
+      });
+    });
+
+    let startYear = currentYear;
+    let endYear = currentYear;
+
+    if (yearsRange && yearsRange > 0) {
+      startYear = currentYear - (yearsRange - 1);
+      endYear = currentYear;
+    } else if (sales.length) {
+      startYear = Math.min(...sales.map((s) => s._id));
+      endYear = Math.max(...sales.map((s) => s._id));
+    }
+
+    const buckets = [];
+    for (let year = startYear; year <= endYear; year += 1) {
+      const yearData = saleByYear.get(year);
+      const items = yearData?.items ?? 0;
+      const tax = yearData?.tax ?? 0;
+      const tips = yearData?.tips ?? 0;
+      buckets.push({
+        label: String(year),
+        items,
+        tax,
+        tips,
+        total: Number((items + tax + tips).toFixed(2)),
+      });
+    }
+
+    return buckets;
   }
 
   private async getSaleBreakdownByRange(startDate: Date, unit: 'day' | 'month', endDate?: Date) {
@@ -435,5 +679,117 @@ export class AnalyticsController {
       },
     ]);
     return result[0] ? Number(Number(result[0].total).toFixed(2)) : 0;
+  }
+
+  private async getActiveCouponDetailsForRange(
+    startDate: Date,
+    endDate?: Date,
+  ): Promise<ActiveCouponDetail[]> {
+    const matchQuery: any = {
+      created_at: { $gte: startDate },
+      status: { $ne: 'canceled' },
+      'money.coupon_code': { $nin: [null, ''] },
+    };
+    if (endDate) {
+      matchQuery.created_at.$lte = endDate;
+    }
+
+    const couponUsage = await OrderModel.aggregate([
+      { $match: matchQuery },
+      {
+        $project: {
+          couponCode: { $trim: { input: { $toUpper: '$money.coupon_code' } } },
+          discount: { $ifNull: ['$money.discount', 0] },
+          customerId: '$customer_id',
+        },
+      },
+      { $match: { couponCode: { $ne: '' } } },
+      {
+        $group: {
+          _id: '$couponCode',
+          usageCount: { $sum: 1 },
+          totalDiscount: { $sum: '$discount' },
+          uniqueCustomers: { $addToSet: '$customerId' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          code: '$_id',
+          usageCount: 1,
+          totalDiscount: { $round: ['$totalDiscount', 2] },
+          uniqueCustomers: { $size: '$uniqueCustomers' },
+        },
+      },
+      { $match: { usageCount: { $gte: 1 } } },
+      { $sort: { usageCount: -1, totalDiscount: -1 } },
+    ]);
+
+    if (!couponUsage.length) {
+      return [];
+    }
+
+    const normalizedCodes = couponUsage.map((item) => item.code);
+    const coupons = await CouponModel.aggregate([
+      { $match: { is_approve: true } },
+      {
+        $project: {
+          code: 1,
+          description: 1,
+          type: 1,
+          amount: 1,
+          active_from: 1,
+          expire_at: 1,
+          minimum_cart_amount: 1,
+          max_conversions: 1,
+          is_approve: 1,
+          normalizedCode: { $trim: { input: { $toUpper: '$code' } } },
+        },
+      },
+      { $match: { normalizedCode: { $in: normalizedCodes } } },
+    ]);
+
+    if (!coupons.length) {
+      return [];
+    }
+
+    const now = moment();
+    const couponsByCode = new Map(
+      coupons.map((coupon) => [coupon.normalizedCode, coupon]),
+    );
+
+    return couponUsage
+      .map((usage) => {
+        const coupon = couponsByCode.get(usage.code);
+        if (!coupon) {
+          return null;
+        }
+
+        const startsAt = moment(coupon.active_from).startOf('day');
+        const expiresAt = moment(coupon.expire_at).endOf('day');
+        if (
+          !startsAt.isValid() ||
+          !expiresAt.isValid() ||
+          !now.isBetween(startsAt, expiresAt, undefined, '[]')
+        ) {
+          return null;
+        }
+
+        return {
+          code: coupon.code,
+          description: coupon.description,
+          type: coupon.type,
+          amount: coupon.amount ?? 0,
+          activeFrom: coupon.active_from,
+          expireAt: coupon.expire_at,
+          minimumCartAmount: coupon.minimum_cart_amount ?? 0,
+          maxConversions: coupon.max_conversions ?? null,
+          isApproved: coupon.is_approve,
+          usageCount: usage.usageCount,
+          uniqueCustomers: usage.uniqueCustomers,
+          totalDiscount: usage.totalDiscount ?? 0,
+        } as ActiveCouponDetail;
+      })
+      .filter((item): item is ActiveCouponDetail => item !== null);
   }
 }

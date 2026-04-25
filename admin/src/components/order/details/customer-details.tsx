@@ -47,8 +47,10 @@ export default function CustomerDetails({ order }: CustomerDetailsProps) {
   const phoneNumber = useFormatPhoneNumber({
     customer_contact: customerContact,
   });
-  const shippingAddress = formatAddress(order?.shipping_address) || '';
-  const billingAddress = formatAddress(order?.billing_address) || '';
+  const shippingAddress =
+    formatAddress(order?.shipping_address) || formatAddress(order?.delivery?.address) || '';
+  const billingAddress =
+    formatAddress(order?.billing_address) || formatAddress(order?.customer?.address) || '';
   const primaryAddress =
     order?.order_type === 'delivery'
       ? shippingAddress || billingAddress
@@ -94,7 +96,22 @@ export default function CustomerDetails({ order }: CustomerDetailsProps) {
             />
           ) : null}
         </div>
-      ) : null}
+      ) : (
+        <div className="mt-5">
+          <AddressBlock
+            title={
+              order?.order_type === 'delivery'
+                ? t('text-delivery-address')
+                : t('text-billing-address')
+            }
+            value={
+              order?.order_type === 'pickup'
+                ? 'Pickup / No delivery address required'
+                : 'N/A'
+            }
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,19 +1,4 @@
-export function adjustColorBrightness(hex, amount) {
-  if (!hex) return hex;
-  hex = hex.replace(/^#/, "");
-  if (hex.length === 3) hex = hex.split("").map((char) => char + char).join("");
 
-  let r = parseInt(hex.substring(0, 2), 16);
-  let g = parseInt(hex.substring(2, 4), 16);
-  let b = parseInt(hex.substring(4, 6), 16);
-
-  r = Math.max(0, Math.min(255, r + amount));
-  g = Math.max(0, Math.min(255, g + amount));
-  b = Math.max(0, Math.min(255, b + amount));
-
-  const toHex = (c) => c.toString(16).padStart(2, "0");
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
 
 export function getContrastColor(hexColor) {
   if (!hexColor) return "black";
@@ -55,7 +40,6 @@ export function hexToRgb(hex) {
 export const DEFAULT_PRIMARY_COLOR = "#5C9963";
 export const DEFAULT_SECONDARY_COLOR = "#2F3E30";
 
-const HEX_COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 export function normalizeThemeColor(value, fallback) {
   if (!value || typeof value !== "string") {
@@ -63,46 +47,22 @@ export function normalizeThemeColor(value, fallback) {
   }
 
   const trimmed = value.trim();
-  return HEX_COLOR_PATTERN.test(trimmed) ? trimmed : fallback;
+  // Allow any truthy string directly to support named colors like 'black' or 'red'
+  return trimmed || fallback;
 }
 
-export function mixHexColors(colorA, colorB, weight) {
-  const normalizedWeight = Math.max(0, Math.min(1, weight));
-  const expandHex = (hex) =>
-    hex.length === 3 ? hex.split("").map((char) => char + char).join("") : hex;
 
-  const start = expandHex(
-    normalizeThemeColor(colorA, DEFAULT_PRIMARY_COLOR).replace(/^#/, ""),
-  );
-  const end = expandHex(
-    normalizeThemeColor(colorB, DEFAULT_SECONDARY_COLOR).replace(/^#/, ""),
-  );
-
-  const mixChannel = (index) => {
-    const startValue = parseInt(start.substring(index, index + 2), 16);
-    const endValue = parseInt(end.substring(index, index + 2), 16);
-    return Math.round(startValue + (endValue - startValue) * normalizedWeight);
-  };
-
-  const red = mixChannel(0);
-  const green = mixChannel(2);
-  const blue = mixChannel(4);
-
-  return `#${[red, green, blue]
-    .map((channel) => channel.toString(16).padStart(2, "0"))
-    .join("")}`;
-}
 
 export function buildWebsiteBrandTheme(primaryInput, secondaryInput) {
   const primary = normalizeThemeColor(primaryInput, DEFAULT_PRIMARY_COLOR);
   const secondary = normalizeThemeColor(secondaryInput, DEFAULT_SECONDARY_COLOR);
-  const primaryHover = mixHexColors(primary, secondary, 0.22);
-  const secondaryHover = mixHexColors(secondary, "#000000", 0.14);
+  const primaryHover = primary;
+  const secondaryHover = secondary;
   const headerBg = secondary;
-  const footerBg = mixHexColors(secondary, "#000000", 0.14);
-  const gradientStart = mixHexColors(primary, "#ffffff", 0.12);
+  const footerBg = secondary;
+  const gradientStart = primary;
   const gradientEnd = secondary;
-  const shadow = mixHexColors(secondary, "#000000", 0.5);
+  const shadow = "#000000";
 
   return {
     primary,

@@ -1,153 +1,225 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import dynamic from 'next/dynamic';
-import cn from 'classnames';
-import Button from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import type { DashboardAnalyticsData } from '@/data/dashboard';
-import { getDashboardSummaryStats } from '@/data/dashboard';
-import usePrice from '@/utils/use-price';
-import { CouponIcon } from '@/components/icons/coupon-icon';
-
-const Chart = dynamic(() => import('@/components/ui/chart'), { ssr: false });
+import {
+  useCouponPerformanceAnalyticsQuery,
+  type DashboardAnalyticsData,
+} from '@/data/dashboard';
+import KpiCard from '@/components/dashboard/promotion-performance/kpi-card';
+import ConversionFunnelCard from '@/components/dashboard/promotion-performance/conversion-funnel-card';
+import RevenueDiscountTrendChart from '@/components/dashboard/promotion-performance/revenue-discount-trend-chart';
+import TopPerformingCouponsChart from '@/components/dashboard/promotion-performance/top-performing-coupons-chart';
+import AlertsPanel from '@/components/dashboard/promotion-performance/alerts-panel';
+import PerformanceTable from '@/components/dashboard/promotion-performance/performance-table';
+import TimeRangeFilter, {
+  TimeRangeOption,
+  TimeRangeValue,
+} from '@/components/dashboard/promotion-performance/time-range-filter';
+import type {
+  CouponPerformanceRow,
+  PromotionFunnelData,
+  PromotionKpi,
+  RevenueDiscountPoint,
+  SmartAlert,
+} from '@/components/dashboard/promotion-performance/types';
 
 interface CouponAnalysisProps {
   analyticsData?: Partial<DashboardAnalyticsData>;
 }
 
-const TIME_FRAMES = [
-  { labelKey: 'text-today' as const,   day: 1   },
-  { labelKey: 'text-weekly' as const,  day: 7   },
-  { labelKey: 'text-monthly' as const, day: 30  },
-  { labelKey: 'text-yearly' as const,  day: 365 },
+const TIME_FRAMES: Array<{ labelKey: 'text-today' | 'text-weekly' | 'text-monthly' | 'text-yearly'; day: TimeRangeValue }> = [
+  { labelKey: 'text-today', day: 1 },
+  { labelKey: 'text-weekly', day: 7 },
+  { labelKey: 'text-monthly', day: 30 },
+  { labelKey: 'text-yearly', day: 365 },
 ];
 
-export default function CouponAnalysis({ analyticsData }: CouponAnalysisProps) {
+function formatMoney(amount: number) {
+  return `$${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+}
+
+function getDeltaPercent(current: number, previous: number): number {
+  if (previous === 0) return current === 0 ? 0 : 100;
+  return ((current - previous) / Math.abs(previous)) * 100;
+}
+
+export default function CouponAnalysis(_: CouponAnalysisProps) {
   const { t } = useTranslation('common');
-  const [activeTimeFrame, setActiveTimeFrame] = useState<number>(1);
+  const [activeTimeFrame, setActiveTimeFrame] = useState<TimeRangeValue>(1);
+  const [comparePreviousPeriod, setComparePreviousPeriod] = useState(false);
+  const {
+    data: couponAnalyticsResponse,
+    isPending,
+    isFetching,
+    isError,
+    error,
+  } = useCouponPerformanceAnalyticsQuery({ rangeDays: activeTimeFrame });
+  const couponAnalytics = couponAnalyticsResponse?.data;
+  const tt = (key: string, fallback: string) => {
+    const translated = t(key);
+    return translated === key ? fallback : translated;
+  };
+  const showSkeleton = isPending || (!couponAnalytics && isFetching);
+  const timeRangeOptions: TimeRangeOption[] = TIME_FRAMES.map((item) => ({
+    value: item.day,
+    label: tt(item.labelKey, item.labelKey.replace('text-', '')),
+  }));
 
-  const stats = getDashboardSummaryStats(analyticsData, activeTimeFrame);
+  const performanceRows = useMemo<CouponPerformanceRow[]>(
+    () => couponAnalytics?.table ?? [],
+    [couponAnalytics?.table],
+  );
 
-  const { price: formattedTotalDiscounts } = usePrice({
-    amount: stats.totalDiscounts ?? 0,
-  });
+  const kpiData = useMemo<PromotionKpi[]>(() => {
+    const summary = couponAnalytics?.summary;
+    if (!summary) return [];
+    const aovLift = getDeltaPercent(summary.aovWithCoupon, summary.aovWithoutCoupon);
 
-  const usageRate = stats.completedOrders > 0
-    ? Math.round((stats.couponUsage / stats.completedOrders) * 100)
-    : 0;
-
-  const chartOptions = {
-    chart: {
-      type: 'radialBar' as const,
-      fontFamily: "'Inter', sans-serif",
-    },
-    plotOptions: {
-      radialBar: {
-        hollow: { size: '65%' },
-        dataLabels: {
-          name: {
-            show: true,
-            color: '#6B7280',
-            fontSize: '13px',
-          },
-          value: {
-            show: true,
-            color: '#1F2937',
-            fontSize: '30px',
-            fontWeight: 600,
-            formatter: (val: number) => `${val}%`,
-          },
+    return [
+      {
+        title: 'Coupon Revenue Generated',
+        value: formatMoney(summary.couponRevenueGenerated),
+        trendLabel: 'Completed orders with coupon',
+        trendValue: getDeltaPercent(
+          summary.couponRevenueGenerated,
+          summary.previous.couponRevenueGenerated,
+        ),
+        icon: 'revenue',
+      },
+      {
+        title: 'Net Revenue After Discounts',
+        value: formatMoney(summary.netRevenueAfterDiscounts),
+        trendLabel: 'Revenue - discount cost',
+        trendValue: getDeltaPercent(
+          summary.netRevenueAfterDiscounts,
+          summary.previous.netRevenueAfterDiscounts,
+        ),
+        icon: 'net',
+      },
+      {
+        title: 'New Customers via Coupons',
+        value: summary.newCustomersViaCoupons.toLocaleString(),
+        trendLabel: 'First paid order used coupon',
+        trendValue: getDeltaPercent(
+          summary.newCustomersViaCoupons,
+          summary.previous.newCustomersViaCoupons,
+        ),
+        icon: 'customers',
+      },
+      {
+        title: 'Avg Order Value',
+        trendLabel: 'Coupon orders vs regular orders',
+        trendValue: getDeltaPercent(summary.aovWithCoupon, summary.previous.aovWithCoupon),
+        icon: 'aov',
+        badgeLabel: `${aovLift >= 0 ? '+' : ''}${aovLift.toFixed(1)}% ${
+          aovLift >= 0 ? 'Higher' : 'Lower'
+        }`,
+        valueComparison: {
+          leftLabel: 'Coupon Orders',
+          leftValue: formatMoney(summary.aovWithCoupon),
+          leftMeta: `${summary.couponOrdersCompleted} ${
+            summary.couponOrdersCompleted === 1 ? 'order' : 'orders'
+          }`,
+          rightLabel: 'Regular Orders',
+          rightValue: formatMoney(summary.aovWithoutCoupon),
+          rightMeta: `${summary.withoutCouponOrdersCompleted} ${
+            summary.withoutCouponOrdersCompleted === 1 ? 'order' : 'orders'
+          }`,
         },
       },
-    },
-    colors: ['#00E396'],
-    labels: [t('text-usage-rate') || 'Usage Rate'],
-    stroke: { lineCap: 'round' as const },
-  };
+    ];
+  }, [couponAnalytics?.summary]);
+
+  const funnelData = useMemo<PromotionFunnelData>(
+    () => couponAnalytics?.funnel ?? { viewed: 0, applied: 0, completed: 0 },
+    [couponAnalytics?.funnel],
+  );
+
+  const trendData = useMemo<RevenueDiscountPoint[]>(
+    () =>
+      (couponAnalytics?.trend ?? []).map((point) => ({
+        label: point.label,
+        revenue: point.revenue,
+        discount: point.discount,
+        previousRevenue: point.previousRevenue,
+        previousDiscount: point.previousDiscount,
+      })),
+    [couponAnalytics?.trend],
+  );
+
+  const alerts = useMemo<SmartAlert[]>(() => couponAnalytics?.alerts ?? [], [couponAnalytics?.alerts]);
 
   return (
-    <div className="h-full w-full overflow-hidden rounded-lg bg-light p-6 shadow-sm md:p-7">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="h-full w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
+      <div className="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="before:content-[''] relative mt-1 bg-light text-lg font-semibold text-heading before:absolute before:-top-px before:h-7 before:w-1 before:rounded-tr-md before:rounded-br-md before:bg-accent ltr:before:-left-6 rtl:before:-right-6 md:before:-top-0.5 md:ltr:before:-left-7 md:rtl:before:-right-7 lg:before:h-8">
-            {t('text-coupon-analysis') || 'Active Coupons Analysis'}
+          <h3 className="text-xl font-semibold text-gray-900">
+            Promotion Performance Dashboard
           </h3>
-          <p className="mt-1 text-sm text-body">
-            {t('text-coupon-analysis-guide') || 'Coupon usage and total customer discounts'}
+          <p className="mt-1 text-sm text-gray-500">
+            Revenue, conversion, and profitability insights for smarter promotion decisions.
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="inline-flex rounded-full bg-gray-100/80 p-1.5 overflow-x-auto whitespace-nowrap hide-scrollbar">
-            {TIME_FRAMES.map((tf) => (
-              <div key={tf.day} className="relative">
-                <Button
-                  className={cn(
-                    '!focus:ring-0 relative z-10 !h-7 rounded-full !px-2.5 text-sm font-medium text-gray-500',
-                    tf.day === activeTimeFrame ? 'text-accent' : '',
-                  )}
-                  type="button"
-                  onClick={() => setActiveTimeFrame(tf.day)}
-                  variant="custom"
-                >
-                  {t(tf.labelKey) || tf.labelKey.replace('text-', '')}
-                </Button>
-                {tf.day === activeTimeFrame && (
-                  <motion.div className="absolute bottom-0 left-0 right-0 z-0 h-full rounded-3xl bg-accent/10" />
-                )}
-              </div>
+        <TimeRangeFilter
+          value={activeTimeFrame}
+          onChange={setActiveTimeFrame}
+          options={timeRangeOptions}
+          compareEnabled={comparePreviousPeriod}
+          onCompareChange={setComparePreviousPeriod}
+        />
+      </div>
+
+      {isError ? (
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-sm text-red-700">
+          {error?.message || 'Failed to load coupon performance analytics.'}
+        </div>
+      ) : showSkeleton ? (
+        <div className="space-y-5 animate-pulse">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {[1, 2, 3, 4].map((item) => (
+              <div key={item} className="h-28 rounded-2xl bg-gray-100" />
             ))}
           </div>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div className="h-80 rounded-2xl bg-gray-100" />
+            <div className="h-80 rounded-2xl bg-gray-100" />
+          </div>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div className="h-56 rounded-2xl bg-gray-100" />
+            <div className="h-56 rounded-2xl bg-gray-100" />
+          </div>
+          <div className="h-80 rounded-2xl bg-gray-100" />
         </div>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
-        
-        {/* Data Part */}
-        <div className="w-full md:w-1/2 flex flex-col gap-5">
-          <div className="flex items-center gap-5 rounded border border-border-200 bg-gray-50/50 p-6 h-full">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded bg-teal-100/80 text-teal-600">
-              <CouponIcon className="h-8 w-8" />
-            </div>
-            <div className="flex w-full flex-col">
-              <span className="mb-1 text-sm font-medium text-body">
-                {t('text-active-coupons-usage') || 'Active Coupons Usage'}
-              </span>
-              <span className="text-3xl font-bold text-heading">
-                {stats.couponUsage ?? 0}
-              </span>
-            </div>
+      ) : (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {kpiData.map((item) => (
+              <KpiCard key={item.title} item={item} />
+            ))}
           </div>
 
-          <div className="flex items-center gap-5 rounded border border-border-200 bg-gray-50/50 p-6 h-full">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded bg-pink-100/80 text-pink-600">
-              <span className="text-3xl font-black">%</span>
-            </div>
-            <div className="flex w-full flex-col">
-              <span className="mb-1 text-sm font-medium text-body">
-                {t('text-total-discounts') || 'Total Discounts Given'}
-              </span>
-              <span className="text-3xl font-bold text-heading">
-                {formattedTotalDiscounts}
-              </span>
-            </div>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <RevenueDiscountTrendChart
+              data={trendData}
+              compareEnabled={comparePreviousPeriod}
+            />
+            <TopPerformingCouponsChart rows={performanceRows} />
           </div>
-        </div>
 
-        {/* Chart Part */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center items-center rounded border border-border-200 bg-gray-50/50 p-6 min-h-[250px] h-full">
-          <span className="text-sm font-medium text-body mb-2 block w-full text-center">
-            {t('text-coupon-penetration') || 'Coupon Penetration Rate'}
-          </span>
-          <Chart
-            options={chartOptions}
-            series={[usageRate]}
-            height={220}
-            type="radialBar"
-          />
-        </div>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <ConversionFunnelCard data={funnelData} />
+            <AlertsPanel alerts={alerts} />
+          </div>
 
-      </div>
+          <PerformanceTable rows={performanceRows} />
+
+          {!performanceRows.length && (
+            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500">
+              No coupon activity for selected period.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -14,6 +14,13 @@ import { CreateOrderUseCase } from '../../domain/usecases/order/CreateOrderUseCa
 import { TransactionRepository } from '../../infrastructure/repositories/TransactionRepository';
 import { CouponRepository } from '../../infrastructure/repositories/CouponRepository';
 import { CustomerOrderNotificationService } from '../../services/order/CustomerOrderNotificationService';
+import {
+  DEFAULT_OPERATIONS_SETTINGS,
+  normalizeOperationsSettings,
+  resolveOperationsState,
+  isBusinessOpenAt,
+  isScheduledTimeAllowed,
+} from '../../shared/utils/operations';
 
 function getBaseUrl(req: Request): string {
   const fromEnv = (env as any).PUBLIC_ORIGIN;
@@ -54,6 +61,14 @@ function normalizeBoolean(value: unknown, fallback = true): boolean {
   return fallback;
 }
 
+function normalizePhoneForStorage(phone: unknown): string {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  // Keep US/Canada numbers in canonical 11-digit form with leading 1.
+  if (digits.length === 10) return `1${digits}`;
+  return digits;
+}
+
 function hasVisibleRichTextContent(value: unknown): boolean {
   if (typeof value !== 'string') return false;
   const visibleText = value
@@ -92,6 +107,7 @@ function getDefaultPublicSiteSettings() {
     },
     logo: null as any,
     collapseLogo: null as any,
+    favicon: null as any,
     promoPopup: null as any,
     seo: {
       metaTitle: '',
@@ -105,6 +121,10 @@ function getDefaultPublicSiteSettings() {
       canonicalUrl: '',
     },
     isUnderMaintenance: false,
+    operationsSettings: {
+      ...DEFAULT_OPERATIONS_SETTINGS,
+      updatedAt: new Date().toISOString(),
+    },
     maintenance: null as any,
   };
 }
@@ -196,6 +216,17 @@ export class PublicController {
               imageUrlForRequest(collapseLogoRaw.original, req),
           }
         : collapseLogoRaw;
+    const faviconRaw = (settings as any).favicon;
+    const faviconNormalized =
+      faviconRaw && typeof faviconRaw === 'object' && faviconRaw.original
+        ? {
+            ...faviconRaw,
+            original: imageUrlForRequest(faviconRaw.original, req),
+            thumbnail:
+              imageUrlForRequest(faviconRaw.thumbnail, req) ||
+              imageUrlForRequest(faviconRaw.original, req),
+          }
+        : faviconRaw;
     const promoPopup = settings.promoPopup;
     const promoPopupNormalized =
       promoPopup && typeof promoPopup === 'object' && (promoPopup as any).image?.original
@@ -283,6 +314,12 @@ export class PublicController {
                 : maint.image,
           }
         : maint ?? null;
+    const operationsState = resolveOperationsState({
+      operationsSettings: (settings as any).operationsSettings,
+      isUnderMaintenance: settings.isUnderMaintenance,
+      orders: settings.orders,
+      operating_hours: settings.operating_hours,
+    });
 
     const publicSettings = {
       heroSlides,
@@ -292,6 +329,7 @@ export class PublicController {
       termsPage: normalizeTermsPage((settings as any).termsPage),
       logo: logoNormalized ?? null,
       collapseLogo: collapseLogoNormalized ?? null,
+      favicon: faviconNormalized ?? logoNormalized ?? null,
       promoPopup: promoPopupNormalized ?? null,
       contactDetails,
       footer_text: settings.footer_text ?? '',
@@ -338,7 +376,21 @@ export class PublicController {
         metaTags: (seoRaw as any).metaTags ?? '',
         canonicalUrl: (seoRaw as any).canonicalUrl ?? '',
       },
-      isUnderMaintenance: settings.isUnderMaintenance ?? false,
+      isUnderMaintenance: operationsState.isUnderMaintenance,
+      operationsSettings: {
+        ...normalizeOperationsSettings({
+          operationsSettings: (settings as any).operationsSettings,
+          isUnderMaintenance: settings.isUnderMaintenance,
+          orders: settings.orders,
+        }),
+      },
+      operationsState: {
+        mode: operationsState.mode,
+        reason: operationsState.reason,
+        acceptsAsap: operationsState.acceptsAsap,
+        acceptsScheduled: operationsState.acceptsScheduled,
+        isOpenNow: isBusinessOpenAt(settings.operating_hours?.schedule, new Date()),
+      },
       maintenance: maintenanceNormalized,
       primary_color: settings.primary_color ?? "#5C9963",
       secondary_color: settings.secondary_color ?? "#2F3E30",
@@ -646,9 +698,63 @@ export class PublicController {
       return res.status(500).json({ success: false, message: 'Business not configured' });
     }
 
+    const operationsSettingsRepository = new BusinessSettingsRepository();
+    const settings = await operationsSettingsRepository.findByBusinessId(business.id);
+    const operationsState = resolveOperationsState({
+      operationsSettings: (settings as any)?.operationsSettings,
+      isUnderMaintenance: settings?.isUnderMaintenance,
+      orders: settings?.orders,
+      operating_hours: settings?.operating_hours,
+    });
+    const serviceTimeType = String(service_time_type || 'ASAP');
+
+    if (operationsState.mode === 'FULL_MAINTENANCE') {
+      return res.status(503).json({
+        success: false,
+        message: 'Online ordering is temporarily unavailable due to maintenance.',
+      });
+    }
+    if (operationsState.mode === 'ORDERS_PAUSED') {
+      return res.status(403).json({
+        success: false,
+        message: 'Online ordering is temporarily paused.',
+      });
+    }
+    if (operationsState.mode === 'SCHEDULED_ONLY' && serviceTimeType === 'ASAP') {
+      return res.status(403).json({
+        success: false,
+        message: 'We are currently accepting scheduled orders only.',
+      });
+    }
+    if (serviceTimeType === 'Schedule') {
+      if (!schedule_time) {
+        return res.status(400).json({
+          success: false,
+          message: 'A schedule time is required for scheduled orders.',
+        });
+      }
+      const requestedTime = new Date(schedule_time);
+      const isAllowed = isScheduledTimeAllowed(
+        {
+          operating_hours: settings?.operating_hours,
+          orders: settings?.orders,
+        },
+        requestedTime,
+      );
+      if (!isAllowed) {
+        return res.status(400).json({
+          success: false,
+          message: 'Selected schedule time is outside business hours or no longer available.',
+        });
+      }
+    }
+
     // 2. Find or create customer by phone number
     const customerRepository = new CustomerRepository();
-    const customerPhone = String(customer.phone);
+    const customerPhone = normalizePhoneForStorage(customer.phone);
+    if (!customerPhone) {
+      return res.status(400).json({ success: false, message: 'Customer phone number is required' });
+    }
     const acceptsMarketingMessages = normalizeBoolean(
       customer?.accepts_marketing_messages,
       true
@@ -666,7 +772,7 @@ export class PublicController {
       existingCustomer = await customerRepository.create({
         business_id: business.id,
         name: customer.name || 'Guest',
-        email: customer.email || `${customerPhone.replace(/\D/g, '')}@guest.local`,
+        email: customer.email || `${customerPhone}@guest.local`,
         phoneNumber: customerPhone,
         accepts_marketing_messages: acceptsMarketingMessages,
         accepts_order_updates: acceptsOrderUpdates,
@@ -678,6 +784,11 @@ export class PublicController {
       // Update name if currently Guest or missing
       if (customer.name && customer.name !== 'Guest' && existingCustomer.name !== customer.name) {
         updates.name = customer.name;
+      }
+
+      // Normalize and persist canonical phone format over time.
+      if (existingCustomer.phoneNumber !== customerPhone) {
+        updates.phoneNumber = customerPhone;
       }
       
       // Update email if current is placeholder and new one is valid
@@ -708,9 +819,6 @@ export class PublicController {
       if (!money.paymentToken) {
         return res.status(400).json({ success: false, message: 'NMI payment token is required' });
       }
-
-      const businessSettingsRepository = new BusinessSettingsRepository();
-      const settings = await businessSettingsRepository.findByBusinessId(business.id);
 
       const nmiPrivateKey = settings?.nmiPrivateKey;
       if (!nmiPrivateKey) {
@@ -926,8 +1034,10 @@ export class PublicController {
           }
         }
       } catch (err: any) {
-        return res
-          .json({ success: false, message: err.message || 'Payment gateway error' });
+        return res.status(400).json({
+          success: false,
+          message: err.message || 'Payment gateway error',
+        });
       }
     }
 
@@ -985,7 +1095,10 @@ export class PublicController {
         payment_id: nmiTransactionId || undefined,
         payment_status: (nmiTransactionId ? 'paid' : 'pending') as 'paid' | 'pending',
         coupon_code: money?.coupon_code,
-        rewards_points_used: money?.rewards_points_used,
+        rewards_points_used:
+          money?.rewards_points_used ?? money?.loyalty_points_redeemed,
+        loyalty_discount_amount:
+          money?.loyalty_discount_amount ?? money?.loyalty_discount,
         card_type: money?.cardDetails?.cardType || req.body.cardDetails?.cardType,
         last_4: money?.cardDetails?.last4 || req.body.cardDetails?.last4,
       },

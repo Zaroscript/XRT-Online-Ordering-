@@ -56,6 +56,9 @@ const RoleDeleteView = dynamic(
 const UserDeleteView = dynamic(
   () => import('@/components/user/user-delete-view'),
 );
+const CustomerDeleteView = dynamic(
+  () => import('@/components/customer/customer-delete-view'),
+);
 
 const ProductDeleteView = dynamic(
   () => import('@/components/product/product-delete-view'),
@@ -245,6 +248,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <ItemPreviewView />;
     case 'DELETE_USER':
       return <UserDeleteView />;
+    case 'DELETE_CUSTOMER':
+      return <CustomerDeleteView />;
     case 'REFUND_ORDER':
       return <RefundModal />;
 

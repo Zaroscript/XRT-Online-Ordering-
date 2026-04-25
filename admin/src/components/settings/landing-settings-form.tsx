@@ -26,6 +26,7 @@ import SelectInput from '@/components/ui/select-input';
 type FormValues = {
   logo: any;
   collapseLogo: any;
+  favicon: any;
   footer_text: string;
   siteLink: string;
   copyrightText: string;
@@ -119,6 +120,7 @@ export default function LandingSettingsForm({ settings }: IProps) {
     defaultValues: {
       logo: options?.logo ?? '',
       collapseLogo: options?.collapseLogo ?? '',
+      favicon: options?.favicon ?? '',
       footer_text: options?.footer_text ?? '',
       siteLink: options?.siteLink ?? '',
       copyrightText: options?.copyrightText ?? '',
@@ -146,6 +148,7 @@ export default function LandingSettingsForm({ settings }: IProps) {
     reset({
       logo: options?.logo ?? '',
       collapseLogo: options?.collapseLogo ?? '',
+      favicon: options?.favicon ?? '',
       footer_text: options?.footer_text ?? '',
       siteLink: options?.siteLink ?? '',
       copyrightText: options?.copyrightText ?? '',
@@ -206,6 +209,7 @@ export default function LandingSettingsForm({ settings }: IProps) {
         ...options,
         logo: values.logo,
         collapseLogo: values.collapseLogo,
+        favicon: values.favicon,
         footer_text: values.footer_text,
         siteLink: values.siteLink,
         copyrightText: values.copyrightText,
@@ -262,6 +266,21 @@ export default function LandingSettingsForm({ settings }: IProps) {
               control={control}
               multiple={false}
               helperText={t('form:logo-collapse-uploader-text')}
+            />
+          </div>
+
+          <div className="mt-5">
+            <span className="block mb-2 text-sm font-medium text-heading">
+              Favicon
+            </span>
+            <p className="text-xs text-gray-500 mb-3">
+              Recommended 32 x 32 px or 64 x 64 px icon.
+            </p>
+            <FileInput
+              name="favicon"
+              control={control}
+              multiple={false}
+              helperText="Used for browser tab icon."
             />
           </div>
         </Card>

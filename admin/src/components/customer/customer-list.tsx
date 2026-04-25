@@ -35,6 +35,13 @@ const CustomerList = ({
     column: null,
   });
 
+  const getRewardsBadgeColor = (points: number) => {
+    if (points >= 500) return 'bg-amber-100 !text-amber-800';
+    if (points >= 100) return 'bg-emerald-100 !text-emerald-800';
+    if (points >= 1) return 'bg-red-100 !text-red-700';
+    return 'bg-gray-100 !text-gray-600';
+  };
+
   const onHeaderClick = (column: any | null) => ({
     onClick: () => {
       onSort((currentSortDirection: SortOrder) =>
@@ -136,23 +143,30 @@ const CustomerList = ({
         <TitleWithSort
           title="Rewards"
           ascending={
-            sortingObj.sort === SortOrder.Asc && sortingObj.column === 'rewards'
+            sortingObj.sort === SortOrder.Asc && sortingObj.column === 'loyaltyPoints'
           }
-          isActive={sortingObj.column === 'rewards'}
+          isActive={sortingObj.column === 'loyaltyPoints'}
         />
       ),
       className: 'cursor-pointer',
-      dataIndex: 'rewards',
-      key: 'rewards',
+      dataIndex: 'loyaltyPoints',
+      key: 'loyaltyPoints',
       align: 'center',
       width: 120,
-      onHeaderCell: () => onHeaderClick('rewards'),
-      render: (rewards: number) => (
+      onHeaderCell: () => onHeaderClick('loyaltyPoints'),
+      render: (loyaltyPoints: number, record: any) => {
+        const points = Number.isFinite(Number(loyaltyPoints))
+          ? Number(loyaltyPoints)
+          : Number(record?.rewards || 0);
+        return (
+          <span title="Current loyalty balance">
         <Badge
-          text={`${rewards} points`}
-          color="bg-accent/10 !text-accent"
+              text={`${points} points`}
+              color={getRewardsBadgeColor(points)}
         />
-      ),
+          </span>
+        );
+      },
     },
     {
       title: "Actions",
@@ -170,6 +184,9 @@ const CustomerList = ({
             id={customerId}
             deleteModalView="DELETE_CUSTOMER"
             editUrl={Routes.customer.edit(customerId, locale || 'en')}
+            data={{
+              customer_name: String(record?.name || ''),
+            }}
           />
         );
       },

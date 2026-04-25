@@ -57,6 +57,9 @@ export class TransactionRepository implements ITransactionRepository {
     const query: any = {};
     
     if (filters.customer_id) query.customer_id = filters.customer_id;
+    if (filters.order_id && Types.ObjectId.isValid(filters.order_id)) {
+      query.order_id = new Types.ObjectId(filters.order_id);
+    }
     if (filters.status) query.status = filters.status;
     if (filters.gateway) query.gateway = filters.gateway;
     
@@ -89,7 +92,7 @@ export class TransactionRepository implements ITransactionRepository {
         },
       },
       { $unwind: '$order_details' },
-      { $match: { 'order_details.status': { $in: ['completed', 'canceled'] } } },
+      { $match: { 'order_details.status': { $in: ['completed', 'canceled', 'cancelled'] } } },
       { $sort: { created_at: -1 } },
       {
         $facet: {

@@ -77,7 +77,7 @@ export default function LoyaltyTransactionsList({ accountId }: { accountId: stri
         ),
       },
     ],
-    [t]
+    [t, redeemRate]
   );
 
   if (loading) return <Loader text={t('common:text-loading')} />;

@@ -117,7 +117,7 @@ input[type="number"] {
 }
 
 .terms-page-content blockquote {
-  border-left: 4px solid color-mix(in srgb, var(--color-primary) 30%, white);
+  border-left: 4px solid var(--color-primary);
   color: #334155;
   margin: 0;
   padding-left: 1rem;

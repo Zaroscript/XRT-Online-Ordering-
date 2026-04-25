@@ -17,6 +17,8 @@
     "seed:orders": "tsx scripts/seedOrders.ts",
     "seed:demo": "tsx scripts/seedDemoData.ts",
     "migrate:item-images": "tsx scripts/migrateItemImages.ts",
+    "customers:dedupe:dry": "tsx scripts/mergeDuplicateCustomers.ts",
+    "customers:dedupe:apply": "tsx scripts/mergeDuplicateCustomers.ts --apply",
     "print:worker-once": "tsx scripts/printWorkerOnce.ts",
     "mock:printer-tcp": "tsx scripts/mockThermalTcpPrinter.ts"
   },

@@ -75,4 +75,11 @@ router.post(
   orderController.refundOrder
 );
 
+// Resolve refund action (refund vs void) based on settlement state
+router.get(
+  '/:id/refund-action',
+  // requireAuth,
+  orderController.getRefundAction
+);
+
 export default router;

@@ -6,53 +6,60 @@ import Categories from "./Categories_Footer";
 import Categories_2 from "./Categories_Footer_2";
 
 import { useSiteSettingsQuery } from "../../api/hooks/useSiteSettings";
+import { resolveImageUrl } from "../../utils/resolveImageUrl";
 import SocialLinks from "./SocialLinks";
 
 export default function FooterSection() {
   const { data: settings } = useSiteSettingsQuery();
   const socials = settings?.contactDetails?.socials;
+  const logoSrc = resolveImageUrl(settings?.logo?.original ?? settings?.logo?.thumbnail ?? "");
+  
   return (
     <>
       <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 px-4 py-12 md:px-8 lg:px-[70px]"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 px-4 py-16 md:px-8 lg:px-[70px]"
         style={{
-          backgroundColor: 'var(--color-footer-bg)',
+          backgroundColor: 'var(--color-secondary)',
           color: 'var(--color-footer-text)',
-          backgroundImage: `url(${footer_image.bg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
         }}
       >
-        <div className="text-center md:text-left" style={{ color: 'var(--color-footer-text)' }}>
+        <div className="text-center md:text-left flex flex-col gap-4" style={{ color: 'var(--color-footer-text)' }}>
+          {logoSrc && (
+            <div className="mb-4 flex justify-center md:justify-start">
+              <img src={logoSrc} alt="Website Logo" className="max-w-[120px] object-contain" />
+            </div>
+          )}
+          <h3 className="font-bold text-[18px] uppercase tracking-wider mb-2" style={{ color: 'var(--color-primary)' }}>About Us</h3>
           {settings?.footer_text && (
-             <p className="mb-4 text-2xl font-medium leading-7" style={{ color: COLORS.offerYellow }}>
+             <p className="text-[15px] leading-relaxed opacity-90 text-white">
                {settings?.footer_text}
              </p>
           )}
-          <span className="font-bold text-(--color-primary) text-[17px] block mb-2">STORE LOCATION</span>
-          <ul className="pt-2">
-            <Location />
-          </ul>
         </div>
         <div className="text-center md:text-left">
-            <span className="font-bold text-(--color-primary) text-[17px] block mb-4">QUICK LINKS</span>
-            <ul className="pt-0">
+            <h3 className="font-bold text-[18px] uppercase tracking-wider mb-6" style={{ color: 'var(--color-primary)' }}>Quick Links</h3>
+            <ul className="flex flex-col gap-3">
                 <My_Account/>
             </ul>
         </div>
-        <div className="text-center md:text-left xl:flex xl:flex-col xl:items-center xl:col-span-2">
-            <span className="font-bold text-[#FFA900] text-[17px] block mb-4 xl:w-full xl:text-center xl:pr-[40%]">CATEGORIES</span>
-          <ul className="pt-0 grid grid-cols-2 md:grid-cols-1 xl:grid-cols-2 xl:gap-x-8 xl:w-full xl:text-left xl:m-0 xl:p-0">
+        <div className="text-center md:text-left">
+            <h3 className="font-bold text-[18px] uppercase tracking-wider mb-6" style={{ color: 'var(--color-primary)' }}>Categories</h3>
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-3">
             <Categories/>
           </ul>
         </div>
+        <div className="text-center md:text-left">
+          <h3 className="font-bold text-[18px] uppercase tracking-wider mb-6" style={{ color: 'var(--color-primary)' }}>Contact Us</h3>
+          <ul className="flex flex-col gap-4">
+            <Location />
+          </ul>
+        </div>
       </div>
-      <div className="brightness-90 flex flex-col gap-4 py-6 md:py-4 px-4 md:px-8 lg:px-[70px] md:flex-row md:flex-wrap md:items-center md:justify-between" style={{ backgroundColor: 'var(--color-footer-bg)' }}>
+      <div className="flex flex-col gap-4 py-6 md:py-4 px-4 md:px-8 lg:px-[70px] md:flex-row md:flex-wrap md:items-center md:justify-between border-t border-white/10" style={{ backgroundColor: 'var(--color-secondary)' }}>
         <h2 className="text-[16px] text-center md:text-left order-2 md:order-1" style={{ color: 'var(--color-footer-text)' }}>
           {(() => {
             const text = settings?.copyrightText?.replace(/Powered by XRT/i, '').trim() || '';
-            const siteLink = settings?.siteLink || '#';
+            const siteLink = 'https://xrttech.com';
             return (
               <>
                 {text} {text && ' '}Powered by{' '}
@@ -61,7 +68,7 @@ export default function FooterSection() {
                   target="_blank" 
                   rel="noreferrer"
                   className="font-bold hover:underline"
-                  style={{ color: COLORS.offerYellow }}
+                  style={{ color: 'var(--color-primary)'}}
                 >
                   XRT
                 </a>

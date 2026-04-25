@@ -28,7 +28,7 @@ export default function SocialLinks({ socials, className = "" }) {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-white/10 p-2 text-[#E1E1E1] transition-colors hover:bg-white/20 hover:text-[#FFA900]"
+            className="rounded-full bg-white/10 p-2 text-[#E1E1E1] transition-colors hover:bg-white/20 hover:text-[(--color-primary)]"
             aria-label={label}
           >
             <Icon className="h-5 w-5" strokeWidth={1.75} />

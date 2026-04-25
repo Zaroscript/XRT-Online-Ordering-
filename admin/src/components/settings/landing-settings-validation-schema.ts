@@ -3,6 +3,7 @@ import * as yup from 'yup';
 export const landingSettingsValidationSchema = yup.object().shape({
   logo: yup.object().nullable(),
   collapseLogo: yup.object().nullable(),
+  favicon: yup.object().nullable(),
   footer_text: yup.string(),
   siteLink: yup.string(),
   copyrightText: yup.string(),

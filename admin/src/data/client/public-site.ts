@@ -6,6 +6,7 @@ export type PublicSiteSettings = {
   siteSubtitle?: string;
   logo?: { original?: string; thumbnail?: string; id?: string } | null;
   collapseLogo?: { original?: string; thumbnail?: string; id?: string } | null;
+  favicon?: { original?: string; thumbnail?: string; id?: string } | null;
   seo?: {
     metaTitle?: string;
     metaDescription?: string;
@@ -18,6 +19,22 @@ export type PublicSiteSettings = {
     canonicalUrl?: string;
   };
   isUnderMaintenance?: boolean;
+  operationsSettings?: {
+    mode?: 'OPEN_NORMAL' | 'SCHEDULED_ONLY' | 'ORDERS_PAUSED' | 'FULL_MAINTENANCE';
+    manualOverride?: boolean;
+    overrideUntil?: string | null;
+    messageTitle?: string;
+    messageBody?: string;
+    showCountdown?: boolean;
+    maintenanceTheme?: string;
+  } | null;
+  operationsState?: {
+    mode?: 'OPEN_NORMAL' | 'SCHEDULED_ONLY' | 'ORDERS_PAUSED' | 'FULL_MAINTENANCE';
+    reason?: string;
+    acceptsAsap?: boolean;
+    acceptsScheduled?: boolean;
+    isOpenNow?: boolean;
+  } | null;
   maintenance?: Record<string, unknown> | null;
   contactDetails?: { socials?: Array<{ icon?: string; url?: string }> };
   primary_color?: string;

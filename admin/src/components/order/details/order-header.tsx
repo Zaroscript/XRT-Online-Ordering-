@@ -47,12 +47,15 @@ export default function OrderHeader({
     (paymentStatus === 'partially_refunded'
       ? 'Partially Refunded'
       : formatOrderDisplayValue(order?.payment_status));
+  const refundButtonLabel = paymentStatus === 'pending' ? 'Void Payment' : 'Refund Order';
 
   const handleRefund = () => {
+    const preferredAction = paymentStatus === 'pending' ? 'void' : 'refund';
     openModal('REFUND_ORDER', {
       orderId: order?.id,
       totalAmount: order?.total,
       trackingNumber: order?.tracking_number,
+      preferredAction,
     });
   };
 
@@ -81,8 +84,10 @@ export default function OrderHeader({
       <div className="flex items-center gap-3 w-full sm:w-auto">
         {((order?.payment_status === 'paid' ||
           order?.payment_status === 'partially_refunded' ||
+          order?.payment_status === 'pending' ||
           order?.money?.payment_status === 'paid' ||
-          order?.money?.payment_status === 'partially_refunded') &&
+          order?.money?.payment_status === 'partially_refunded' ||
+          order?.money?.payment_status === 'pending') &&
           order?.payment_status !== 'refunded' &&
           order?.money?.payment_status !== 'refunded') && (
           <Button
@@ -90,7 +95,7 @@ export default function OrderHeader({
             variant="outline"
             className="!text-red-500 hover:!bg-red-50 border-red-500 hover:border-red-500 w-full sm:w-auto"
           >
-            Refund
+            {refundButtonLabel}
           </Button>
         )}
         <Button

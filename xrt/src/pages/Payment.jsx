@@ -7,6 +7,7 @@ import AuthorizeNetIframe from '../components/payment/AuthorizeNetIframe';
 import { useSiteSettingsQuery } from '../api/hooks/useSiteSettings';
 import { createOrder } from '../api/orders';
 import { useCart } from '../context/CartContext';
+import { useLoyalty } from '../hooks/useLoyalty';
 
 // Shared Colors
 const COLORS = {
@@ -21,6 +22,7 @@ const Payment = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { clearCart } = useCart();
+  const { handleOrderCompleted } = useLoyalty();
   const { data: siteSettings, isLoading: isSettingsLoading } = useSiteSettingsQuery();
 
   // Retrieve the prepared order payload from Checkout.jsx
@@ -76,6 +78,10 @@ const Payment = () => {
 
       const result = await createOrder(finalizedPayload);
       const orderNumber = result?.data?.order_number || result?.order_number || '';
+
+      // Loyalty redemption is cart-scoped only. Clear temporary redeem state
+      // and refresh persisted customer balance after successful order creation.
+      await handleOrderCompleted(orderPayload?.customer?.phone || '');
       
       // Clear cart on success
       clearCart();
@@ -83,7 +89,13 @@ const Payment = () => {
       navigate('/order-success', { state: { orderNumber } });
 
     } catch (error) {
-      const message = error?.response?.data?.message || 'Failed to place order. Please try again.';
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        (error?.code === 'ERR_NETWORK'
+          ? 'Cannot reach payment server. Please ensure backend is running on port 3001.'
+          : null) ||
+        'Failed to place order. Please try again.';
       setSubmitError(message);
       setIsSubmitting(false);
     }

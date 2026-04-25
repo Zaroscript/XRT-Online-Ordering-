@@ -29,6 +29,7 @@ export const useCustomersQuery = ({
     data,
     error,
     isPending: isLoading,
+    refetch,
   } = useQuery<any, Error>({
     queryKey: [
       API_ENDPOINTS.CUSTOMERS,
@@ -45,7 +46,10 @@ export const useCustomersQuery = ({
       }),
     placeholderData: (previousData: CustomerPaginator | undefined) =>
       previousData,
-    staleTime: 60 * 1000, // 1 minute
+    // Keep loyalty balances fresh when navigating back to Customers page.
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000,
   });
 
   // Handle backend response format: { success: true, data: { customers: [...], paginatorInfo: {...} } }
@@ -80,7 +84,7 @@ export const useCustomersQuery = ({
     data: transformedData,
     error,
     isLoading,
-    refetch: () => {},
+    refetch,
   };
 };
 

@@ -56,6 +56,7 @@ export class OrderRepository implements IOrderRepository {
         ? {
             name: populatedCustomer.name || populatedCustomer.firstName || '',
             phone: populatedCustomer.phoneNumber || populatedCustomer.phone || '',
+            address: populatedCustomer.address || undefined,
           }
         : undefined);
 
@@ -118,7 +119,7 @@ export class OrderRepository implements IOrderRepository {
   private static readonly CUSTOMER_POPULATE = {
     path: 'customer_id',
     model: 'Customer',
-    select: 'name phoneNumber email',
+    select: 'name phoneNumber email address',
   };
 
   async findById(id: string): Promise<Order | null> {
