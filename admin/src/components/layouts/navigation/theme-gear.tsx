@@ -125,9 +125,9 @@ export default function ThemeGear() {
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
               className="absolute bottom-16 right-0 w-[280px] overflow-hidden rounded-[32px] border border-white/40 dark:border-white/10 bg-white/80 dark:bg-dark-250/80 p-6 shadow-2xl backdrop-blur-2xl"
             >
