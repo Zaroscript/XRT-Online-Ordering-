@@ -6,7 +6,7 @@ export const UpdateRoleRequest = {
           permissions: {
             type: 'array',
             items: { type: 'string' },
-            example: ['content:read', 'content:create', 'content:update', 'content:delete'],
+            example: ['settings:read', 'settings:update', 'orders:read', 'orders:update'],
           },
         },
       };

@@ -5,7 +5,7 @@ export const UpdatePermissionsRequest = {
           permissions: {
             type: 'array',
             items: { type: 'string' },
-            example: ['users:read', 'content:create'],
+            example: ['users:read', 'settings:update'],
           },
         },
       };

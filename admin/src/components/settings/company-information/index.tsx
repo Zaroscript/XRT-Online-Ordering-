@@ -85,16 +85,23 @@ export default function CompanyInfoForm({ settings }: IProps) {
 
 
   async function onSubmit(values: any) {
+    const locationRaw = values?.contactDetails?.location ?? {};
+    const locationClean = omit(locationRaw, '__typename');
+
+    // Always build formattedAddress regardless of mode
+    const formattedAddress = isGoogleMapActive
+      ? locationClean.formattedAddress ?? ''
+      : formatAddress(locationClean as UserAddress);
+
+    const location = {
+      ...locationClean,
+      formattedAddress,
+    };
+
     const contactDetails = {
       ...values?.contactDetails,
-      location: isGoogleMapActive
-        ? { ...omit(values?.contactDetails?.location, '__typename') }
-        : {
-          ...values?.contactDetails?.location,
-          formattedAddress: formatAddress(
-            values?.contactDetails?.location as UserAddress,
-          ),
-        },
+      location,
+      formattedAddress, // also at root level for backward compatibility
       socials: options?.contactDetails?.socials,
     };
 

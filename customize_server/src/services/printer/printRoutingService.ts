@@ -10,6 +10,8 @@ import { logger } from '../../shared/utils/logger';
 import { env } from '../../shared/config/env';
 import { sendRenderedTemplatesToPrinter } from './directPrintService';
 import { recordPrinterLog } from './printerActivityLogger';
+import { Server as SocketIOServer } from 'socket.io';
+import { PrintJobNotifier } from './printJobNotifier';
 
 const DEFAULT_KITCHEN_LAYOUT: TemplateLayout = {
   header: [
@@ -25,6 +27,11 @@ const orderRepository = new OrderRepository();
 const printerRepository = new PrinterRepository();
 const printTemplateRepository = new PrintTemplateRepository();
 const printJobRepository = new PrintJobRepository();
+let printJobNotifier: PrintJobNotifier | null = null;
+
+export function setPrintJobNotifier(io: SocketIOServer): void {
+  printJobNotifier = new PrintJobNotifier(io);
+}
 
 /**
  * Route an order to all active printers for each kitchen section.
@@ -143,12 +150,20 @@ export async function routeOrderToPrinters(orderId: string): Promise<void> {
               });
             }
           } else {
-            const job = await printJobRepository.create({
+            const savedJob = await printJobRepository.create({
               orderId: order.id,
               printerId: printer.id,
               maxRetries: printer.maxRetries ?? 3,
               renderedTemplates,
             });
+            const restaurantId = order.business_id;
+            if (printJobNotifier) {
+              printJobNotifier.notify(restaurantId, {
+                id: savedJob.id,
+                renderedTemplates: savedJob.renderedTemplates,
+                printerInterface: printer.interface,
+              });
+            }
 
             await orderRepository.updatePrintStatus(orderId, printer.id, 'sent');
             routedOk = true;
@@ -164,7 +179,7 @@ export async function routeOrderToPrinters(orderId: string): Promise<void> {
               message: `Print job queued for order ${order.order_number}`,
               order_id: order.id,
               order_number: order.order_number,
-              print_job_id: job.id,
+              print_job_id: savedJob.id,
               metadata: { templates: renderedTemplates.length },
             });
           }

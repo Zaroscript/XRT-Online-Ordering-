@@ -14,31 +14,32 @@ const orderController = new OrderController();
 router.post(
   '/',
   writeRateLimitMiddleware,
-  // requireAuth,
-  // requirePermission('orders:create'),
+  requireAuth,
+  requirePermission('orders:create'),
   orderController.create
 );
 
 // Get all orders - requires orders:read permission
 router.get(
   '/',
-  // requireAuth,
-  // requirePermission('orders:read'),
+  requireAuth,
+  requirePermission('orders:read'),
   orderController.getAll
 );
 
 // Get single order
 router.get(
   '/:id',
-  // requireAuth,
-  // requirePermission('orders:read'),
+  requireAuth,
+  requirePermission('orders:read'),
   orderController.getById
 );
 
 // Get print logs for an order
 router.get(
   '/:id/print-logs',
-  // requireAuth,
+  requireAuth,
+  requirePermission('orders:read'),
   orderController.getPrintLogs
 );
 
@@ -46,8 +47,8 @@ router.get(
 router.put(
   '/:id/status',
   writeRateLimitMiddleware,
-  // requireAuth,
-  // requirePermission('orders:update'),
+  requireAuth,
+  requirePermission('orders:update'),
   orderController.updateStatus
 );
 
@@ -55,15 +56,16 @@ router.put(
 router.post(
   '/:id/reprint',
   writeRateLimitMiddleware,
-  // requireAuth,
+  requireAuth,
+  requirePermission('orders:reprint'),
   orderController.reprint
 );
 
 // Delete order - requires orders:delete permission
 router.delete(
   '/:id',
-  // requireAuth,
-  // requirePermission('orders:delete'),
+  requireAuth,
+  requirePermission('orders:delete'),
   orderController.delete
 );
 
@@ -71,14 +73,16 @@ router.delete(
 router.post(
   '/:id/refund',
   writeRateLimitMiddleware,
-  // requireAuth,
+  requireAuth,
+  requirePermission('orders:refund'),
   orderController.refundOrder
 );
 
 // Resolve refund action (refund vs void) based on settlement state
 router.get(
   '/:id/refund-action',
-  // requireAuth,
+  requireAuth,
+  requirePermission('orders:refund'),
   orderController.getRefundAction
 );
 

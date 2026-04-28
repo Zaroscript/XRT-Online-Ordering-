@@ -69,6 +69,20 @@ export default function PrintersPage() {
     });
   };
 
+  const getInterfaceLabel = (printer: Printer): string => {
+    if (printer.connection_type !== 'bluetooth') {
+      return printer.interface;
+    }
+
+    const webSerialMatch = /^web-serial-(\d+)$/i.exec(printer.interface || '');
+    if (webSerialMatch) {
+      const index = Number(webSerialMatch[1]) + 1;
+      return `Local USB printer #${index}`;
+    }
+
+    return printer.interface || 'Local USB printer';
+  };
+
   const columns = [
     {
       title: t('table:table-item-name'),
@@ -94,9 +108,9 @@ export default function PrintersPage() {
       dataIndex: 'interface',
       key: 'interface',
       align: 'left',
-      render: (val: string) => (
+      render: (_val: string, record: Printer) => (
         <span className="text-sm font-mono text-gray-600 bg-gray-50 px-2 py-1 rounded">
-          {val}
+          {getInterfaceLabel(record)}
         </span>
       ),
     },
