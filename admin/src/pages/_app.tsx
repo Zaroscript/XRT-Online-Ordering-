@@ -13,7 +13,12 @@ import { HydrationBoundary } from '@tanstack/react-query';
 import { useSettingsQuery } from '@/data/settings';
 import { usePublicSiteSettingsQuery } from '@/data/public-site-settings';
 import { mapPublicSiteToOptions } from '@/utils/map-public-site-to-options';
-import { applyAdminBrandTheme } from '@/utils/theme-utils';
+import {
+  applyAdminBrandTheme,
+  applyCachedAdminThemeColors,
+  readCachedAdminThemeColors,
+  saveCachedAdminThemeColors,
+} from '@/utils/theme-utils';
 import dynamic from 'next/dynamic';
 
 const ReactQueryDevtools = dynamic(
@@ -67,11 +72,33 @@ const AppSettings: React.FC<{ children?: React.ReactNode }> = (props) => {
   }, []);
 
   useEffect(() => {
-    if (settings?.options || publicOptions) {
-      const options = (settings?.options || publicOptions || {}) as any;
-      applyAdminBrandTheme(options);
+    // Authenticated dashboard should prefer browser-cached theme and
+    // only fallback to DB colors when no cache exists yet.
+    if (token) {
+      const cached = readCachedAdminThemeColors();
+      if (cached) {
+        applyAdminBrandTheme(cached);
+        return;
+      }
+
+      if (settings?.options) {
+        applyAdminBrandTheme(settings.options as any);
+        saveCachedAdminThemeColors(settings.options as any);
+      }
+      return;
     }
-  }, [settings, publicOptions]);
+
+    // Guest pages still use public settings (no local admin cache).
+    if (publicOptions) {
+      applyAdminBrandTheme(publicOptions as any);
+    }
+  }, [settings, publicOptions, token]);
+
+  useEffect(() => {
+    if (!token) return;
+    // Apply cached colors as early as possible on initial dashboard load.
+    applyCachedAdminThemeColors();
+  }, [token]);
 
   // Before mount: render same as server (no token-dependent branching) to avoid hydration mismatch
   if (!mounted) {

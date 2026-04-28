@@ -10,6 +10,7 @@ import {
   setMaintenanceDetails,
 } from '@/utils/maintenance-utils';
 import { getAuthCredentials } from '@/utils/auth-utils';
+import { saveCachedAdminThemeColors } from '@/utils/theme-utils';
 
 import { useRouter } from 'next/router';
 
@@ -70,6 +71,7 @@ export const useUpdateSettingsMutation = () => {
     onError: (error) => {},
     onSuccess: (data: any) => {
       updateSettings(data?.options || data);
+      saveCachedAdminThemeColors(data?.options || data);
       setMaintenanceDetails(
         Boolean(data?.options?.isUnderMaintenance),
         data?.options?.maintenance ?? (data as any)?.maintenance,

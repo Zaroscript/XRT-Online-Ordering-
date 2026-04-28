@@ -56,8 +56,14 @@ export function getContrastColor(hexColor: string): 'white' | 'black' {
 
 export const DEFAULT_PRIMARY_COLOR = '#5C9963';
 export const DEFAULT_SECONDARY_COLOR = '#2F3E30';
+export const ADMIN_THEME_CACHE_KEY = 'xrt_admin_theme_colors_v1';
 
 const HEX_COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+export interface AdminThemeColors {
+  primary_color: string;
+  secondary_color: string;
+}
 
 export function normalizeThemeColor(
   value: string | undefined | null,
@@ -167,4 +173,60 @@ export function applyAdminBrandTheme(options?: {
   root.style.setProperty('--color-accent-500', theme.accent500Rgb);
   root.style.setProperty('--color-accent-600', theme.accent600Rgb);
   root.style.setProperty('--color-accent-700', theme.accent700Rgb);
+}
+
+export function readCachedAdminThemeColors(): AdminThemeColors | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(ADMIN_THEME_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<AdminThemeColors>;
+
+    const primary = normalizeThemeColor(parsed.primary_color, '');
+    const secondary = normalizeThemeColor(parsed.secondary_color, '');
+
+    if (!primary || !secondary) {
+      return null;
+    }
+
+    return {
+      primary_color: primary,
+      secondary_color: secondary,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveCachedAdminThemeColors(options?: {
+  primary_color?: string | null;
+  secondary_color?: string | null;
+} | null): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const primary = normalizeThemeColor(options?.primary_color, '');
+  const secondary = normalizeThemeColor(options?.secondary_color, '');
+  if (!primary || !secondary) {
+    return;
+  }
+
+  const payload: AdminThemeColors = {
+    primary_color: primary,
+    secondary_color: secondary,
+  };
+
+  window.localStorage.setItem(ADMIN_THEME_CACHE_KEY, JSON.stringify(payload));
+}
+
+export function applyCachedAdminThemeColors(): boolean {
+  const cached = readCachedAdminThemeColors();
+  if (!cached) return false;
+
+  applyAdminBrandTheme(cached);
+  return true;
 }
