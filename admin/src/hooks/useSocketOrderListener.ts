@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAtom } from 'jotai';
 import { useQueryClient } from '@tanstack/react-query';
 import { pendingOrdersAtom } from '@/store/order-atoms';
+import { getAuthCredentials } from '@/utils/auth-utils';
 import {
   serverOrderToAdminOrder,
   ServerOrder,
@@ -36,9 +37,16 @@ export function useSocketOrderListener() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    const { token } = getAuthCredentials();
+    // Avoid connection churn/noise when user is not authenticated.
+    if (!token) {
+      return;
+    }
+
     const url = getSocketUrl();
     const socket = io(url, {
-      transports: ['websocket', 'polling'],
+      // Keep polling-first for better reverse-proxy compatibility in production.
+      transports: ['polling', 'websocket'],
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,
     });

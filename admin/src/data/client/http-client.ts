@@ -28,12 +28,13 @@ Axios.interceptors.request.use((config) => {
   }
 
   // Don't add Authorization header for auth endpoints (login, register, etc.)
+  const normalizedUrl = `/${String(config.url || '').replace(/^\/+/, '')}`;
   const isAuthEndpoint =
-    config.url?.includes('/auth/login') ||
-    config.url?.includes('/auth/register') ||
-    config.url?.includes('/auth/forgot-password') ||
-    config.url?.includes('/auth/reset-password') ||
-    config.url?.includes('/auth/refresh-token');
+    normalizedUrl.includes('/auth/login') ||
+    normalizedUrl.includes('/auth/register') ||
+    normalizedUrl.includes('/auth/forgot-password') ||
+    normalizedUrl.includes('/auth/reset-password') ||
+    normalizedUrl.includes('/auth/refresh-token');
 
   // Only add Authorization header if we have a token and it's not an auth endpoint
   if (token && !isAuthEndpoint) {
@@ -98,17 +99,19 @@ Axios.interceptors.response.use(
             { refreshToken },
           );
 
-          if (data && data.accessToken) {
+          // Backend sendSuccess shape: { success, message, data: { accessToken, refreshToken } }
+          const refreshPayload = data?.data || data;
+          if (refreshPayload && refreshPayload.accessToken) {
             setAuthCredentials(
-              data.accessToken,
+              refreshPayload.accessToken,
               permissions,
               role,
-              data.refreshToken || refreshToken, // Token rotation: use new if available, else keep old
+              refreshPayload.refreshToken || refreshToken, // Token rotation: use new if available, else keep old
             );
             originalRequest.headers['Authorization'] =
-              `Bearer ${data.accessToken}`;
+              `Bearer ${refreshPayload.accessToken}`;
 
-            processQueue(null, data.accessToken);
+            processQueue(null, refreshPayload.accessToken);
             return Axios(originalRequest);
           }
         } catch (refreshError) {

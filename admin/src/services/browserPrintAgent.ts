@@ -74,7 +74,7 @@ export class BrowserPrintAgent {
   ) {
     this.restaurantRoom = `restaurant:${restaurantId}`;
     this.socket = io(serverUrl, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,
       autoConnect: true,

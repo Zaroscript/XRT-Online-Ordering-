@@ -40,7 +40,7 @@ export default function ImportProgressBar({ userId }: ImportProgressBarProps) {
   useEffect(() => {
     const url = getSocketUrl();
     const socket = io(url, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,
     });
