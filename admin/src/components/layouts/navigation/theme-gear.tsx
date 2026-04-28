@@ -9,6 +9,7 @@ import {
   applyAdminBrandTheme,
   DEFAULT_PRIMARY_COLOR,
   DEFAULT_SECONDARY_COLOR,
+  saveCachedAdminThemeColors,
 } from '@/utils/theme-utils';
 import { useClickAway } from 'react-use';
 import cn from 'classnames';
@@ -75,6 +76,14 @@ export default function ThemeGear() {
       },
       {
         onSuccess: () => {
+          saveCachedAdminThemeColors({
+            primary_color: primaryColor,
+            secondary_color: secondaryColor,
+          });
+          applyAdminBrandTheme({
+            primary_color: primaryColor,
+            secondary_color: secondaryColor,
+          });
           setIsOpen(false);
         },
       },
