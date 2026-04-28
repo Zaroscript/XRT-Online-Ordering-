@@ -14,9 +14,13 @@ export default function Location() {
           <i className="fa-solid fa-location-dot text-[18px]" style={{ color: 'var(--color-primary)' }}></i>
         </div>
         <div className="leading-relaxed">
-          {contactDetails?.formattedAddress || 
-            (contactDetails?.address ? `${contactDetails.address.street || ''}, ${contactDetails.address.city || ''}` : '') ||
-            ""}
+          {[
+            contactDetails?.location?.street_address,
+            contactDetails?.location?.city,
+            contactDetails?.location?.state,
+            contactDetails?.location?.zip,
+            contactDetails?.location?.country,
+          ].filter(Boolean).join(", ") || ""}
         </div>
       </li>
       <li className="flex justify-center md:justify-start items-center gap-3">

@@ -146,7 +146,11 @@ export default function CouponAnalysis(_: CouponAnalysisProps) {
     [couponAnalytics?.trend],
   );
 
-  const alerts = useMemo<SmartAlert[]>(() => couponAnalytics?.alerts ?? [], [couponAnalytics?.alerts]);
+  const alerts = useMemo<SmartAlert[]>(() => {
+    const rawAlerts = couponAnalytics?.alerts ?? [];
+    // Filter out the redundant 'no activity' alert since we have a table empty state
+    return rawAlerts.filter(a => !a.text.toLowerCase().includes('no coupon activity'));
+  }, [couponAnalytics?.alerts]);
 
   return (
     <div className="h-full w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
@@ -164,8 +168,8 @@ export default function CouponAnalysis(_: CouponAnalysisProps) {
           value={activeTimeFrame}
           onChange={setActiveTimeFrame}
           options={timeRangeOptions}
-          compareEnabled={comparePreviousPeriod}
-          onCompareChange={setComparePreviousPeriod}
+          // compareEnabled={comparePreviousPeriod}
+          // onCompareChange={setComparePreviousPeriod}
         />
       </div>
 
@@ -198,6 +202,7 @@ export default function CouponAnalysis(_: CouponAnalysisProps) {
             ))}
           </div>
 
+          {/* Revenue vs Discount Trend — hidden
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <RevenueDiscountTrendChart
               data={trendData}
@@ -205,19 +210,21 @@ export default function CouponAnalysis(_: CouponAnalysisProps) {
             />
             <TopPerformingCouponsChart rows={performanceRows} />
           </div>
+          */}
 
+          <TopPerformingCouponsChart rows={performanceRows} />
+
+          {/* Coupon Conversion Funnel — hidden
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <ConversionFunnelCard data={funnelData} />
             <AlertsPanel alerts={alerts} />
           </div>
+          */}
+
+          {alerts.length > 0 && <AlertsPanel alerts={alerts} />}
 
           <PerformanceTable rows={performanceRows} />
 
-          {!performanceRows.length && (
-            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500">
-              No coupon activity for selected period.
-            </div>
-          )}
         </div>
       )}
     </div>

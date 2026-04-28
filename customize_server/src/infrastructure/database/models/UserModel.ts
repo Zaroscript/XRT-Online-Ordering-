@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { User } from '../../../domain/entities/User';
-import { UserRole } from '../../../shared/constants/roles';
+import { ALL_PERMISSIONS, UserRole } from '../../../shared/constants/roles';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -261,36 +261,7 @@ UserSchema.methods.hasPermission = async function (permission: string): Promise<
 
 UserSchema.methods.getAllPermissions = async function (): Promise<string[]> {
   if (this.role === 'super_admin') {
-    return [
-      'users:read',
-      'users:create',
-      'users:update',
-      'users:delete',
-      'users:approve',
-      'users:ban',
-      'content:read',
-      'content:create',
-      'content:update',
-      'content:delete',
-      'content:publish',
-      'system:read',
-      'system:update',
-      'system:backup',
-      'system:logs',
-      'profile:read',
-      'profile:update',
-      'admin:dashboard',
-      'admin:settings',
-      'admin:analytics',
-      'roles:read',
-      'roles:create',
-      'roles:update',
-      'roles:delete',
-      'items:read',
-      'items:create',
-      'items:update',
-      'items:delete',
-    ];
+    return [...ALL_PERMISSIONS];
   }
   return [...(this.permissions || [])];
 };
@@ -304,38 +275,9 @@ UserSchema.methods.hasAnyPermission = function (permissions: string[]): boolean 
 
 UserSchema.methods.setDefaultPermissions = function (): void {
   if (this.role === 'super_admin') {
-    this.permissions = [
-      'users:read',
-      'users:create',
-      'users:update',
-      'users:delete',
-      'users:approve',
-      'users:ban',
-      'content:read',
-      'content:create',
-      'content:update',
-      'content:delete',
-      'content:publish',
-      'system:read',
-      'system:update',
-      'system:backup',
-      'system:logs',
-      'profile:read',
-      'profile:update',
-      'admin:dashboard',
-      'admin:settings',
-      'admin:analytics',
-      'roles:read',
-      'roles:create',
-      'roles:update',
-      'roles:delete',
-      'items:read',
-      'items:create',
-      'items:update',
-      'items:delete',
-    ];
+    this.permissions = [...ALL_PERMISSIONS];
   } else if (this.role === 'client') {
-    this.permissions = ['profile:read', 'profile:update', 'content:read'];
+    this.permissions = ['profile:read', 'profile:update'];
   }
 };
 

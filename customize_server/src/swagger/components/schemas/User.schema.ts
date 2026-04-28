@@ -12,7 +12,7 @@ export const User = {
     permissions: {
       type: 'array',
       items: { type: 'string' },
-      example: ['users:read', 'content:create'],
+      example: ['users:read', 'settings:update'],
     },
     isApproved: { type: 'boolean', example: true },
     isBanned: { type: 'boolean', example: false },

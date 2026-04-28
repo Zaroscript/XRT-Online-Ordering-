@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
@@ -18,6 +17,11 @@ import {
 } from '@/data/role';
 import { useGroupedPermissionsQuery } from '@/data/permission';
 import { Role } from '@/types';
+import {
+  buildPermissionUiGroups,
+  collectKeysFromSections,
+  PermissionGroupSection,
+} from '@/utils/permission-groups';
 
 type FormValues = {
   name: string;
@@ -113,24 +117,43 @@ export default function RoleForm({ initialValues }: IProps) {
   };
 
   // Select all permissions for a module
-  const handleModuleSelect = (moduleName: string, modulePermissions: any[]) => {
-    const modulePermissionKeys = modulePermissions.map(p => p.key);
-    const allSelected = modulePermissionKeys.every((key: string) => currentPermissions.includes(key));
+  const handleModuleSelect = (modulePermissions: { key: string }[]) => {
+    const modulePermissionKeys = modulePermissions.map((p) => p.key);
+    const allSelected = modulePermissionKeys.every((key: string) =>
+      currentPermissions.includes(key),
+    );
 
     let newPermissions = [...currentPermissions];
 
     if (allSelected) {
-      // Deselect all
-      newPermissions = newPermissions.filter(p => !modulePermissionKeys.includes(p));
+      newPermissions = newPermissions.filter((p) => !modulePermissionKeys.includes(p));
     } else {
-      // Select all
-      // Add ones that aren't already included
-      const toAdd = modulePermissionKeys.filter((key: string) => !currentPermissions.includes(key));
+      const toAdd = modulePermissionKeys.filter(
+        (key: string) => !currentPermissions.includes(key),
+      );
       newPermissions = [...newPermissions, ...toAdd];
     }
 
     setValue('permissions', newPermissions, { shouldValidate: true });
   };
+
+  const handleGroupToggle = (section: PermissionGroupSection) => {
+    const keys = collectKeysFromSections(section.moduleSections);
+    const allSelected = keys.every((k) => currentPermissions.includes(k));
+    let next = [...currentPermissions];
+    if (allSelected) {
+      next = next.filter((p) => !keys.includes(p));
+    } else {
+      const toAdd = keys.filter((k) => !next.includes(k));
+      next = [...next, ...toAdd];
+    }
+    setValue('permissions', next, { shouldValidate: true });
+  };
+
+  const groupedUi = buildPermissionUiGroups(
+    permissionsData?.modules ?? [],
+    permissionsData?.permissionsByModule ?? {},
+  );
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -186,53 +209,101 @@ export default function RoleForm({ initialValues }: IProps) {
             {loadingPermissions ? (
               <div className="py-4 text-center">Loading permissions...</div>
             ) : (
-              <div className="space-y-6">
-                {(permissionsData?.modules || []).map((module) => {
-                  const modulePermissions = permissionsData?.permissionsByModule[module] || [];
-                  const allSelected = modulePermissions.every(p => currentPermissions.includes(p.key));
-                  const someSelected = modulePermissions.some(p => currentPermissions.includes(p.key));
+              <div className="space-y-8">
+                {groupedUi.map((section) => {
+                  const groupKeys = collectKeysFromSections(section.moduleSections);
+                  const groupCount = groupKeys.length;
+                  const allInGroup = groupCount > 0 && groupKeys.every((k) => currentPermissions.includes(k));
 
                   return (
-                    <div key={module} className="border rounded-md p-4 bg-gray-50/50">
-                      <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
-                        <div className="flex items-center gap-2">
+                    <section
+                      key={section.groupId}
+                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
+                    >
+                      <div className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-gray-100 pb-3">
+                        <div className="flex items-start gap-2">
                           <Checkbox
-                            name={`module-${module}`}
+                            name={`group-${section.groupId}`}
                             label=""
-                            checked={allSelected}
-                            /* indeterminate prop not supported by Checkbox component currently */
-                            onChange={() => handleModuleSelect(module, modulePermissions)}
-                            className="mt-0.5"
+                            checked={allInGroup}
+                            onChange={() => handleGroupToggle(section)}
+                            disabled={isLoading || groupCount === 0}
+                            className="mt-1"
                           />
-                          <h3 className="text-base font-semibold text-heading capitalize">
-                            {module.replace(/_/g, ' ')}
-                          </h3>
+                          <div>
+                            <h3 className="text-base font-semibold text-heading">
+                              {t(`common:${section.titleKey}`)}
+                            </h3>
+                            <p className="text-xs text-gray-500">
+                              {section.moduleSections.length}{' '}
+                              {section.moduleSections.length === 1
+                                ? 'module'
+                                : 'modules'}{' '}
+                              · {groupCount}{' '}
+                              {groupCount === 1 ? 'permission' : 'permissions'}
+                            </p>
+                          </div>
                         </div>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                          {modulePermissions.length} permissions
-                        </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-6">
-                        {modulePermissions.map((permission) => {
-                          const isChecked = currentPermissions.includes(permission.key);
-                          const label = permission.description || permission.action.replace(/_/g, ' ');
-
+                      <div className="space-y-5">
+                        {section.moduleSections.map(({ module, permissions: modulePermissions }) => {
+                          const allSelected = modulePermissions.every((p) =>
+                            currentPermissions.includes(p.key),
+                          );
                           return (
-                            <Checkbox
-                              key={permission.key}
-                              id={`permission-${permission.key}`}
-                              name={`permissions.${permission.key}`}
-                              label={label}
-                              checked={isChecked}
-                              onChange={() => handlePermissionChange(permission.key)}
-                              disabled={isLoading}
-                              className="flex items-start"
-                            />
+                            <div
+                              key={module}
+                              className="rounded-md border border-gray-100 bg-gray-50/60 p-4"
+                            >
+                              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <Checkbox
+                                    name={`module-${module}`}
+                                    label=""
+                                    checked={allSelected}
+                                    onChange={() => handleModuleSelect(modulePermissions)}
+                                    className="mt-0.5"
+                                    disabled={isLoading}
+                                  />
+                                  <h4 className="text-sm font-semibold capitalize text-body-dark">
+                                    {module.replace(/_/g, ' ')}
+                                  </h4>
+                                </div>
+                                <span className="text-xs text-gray-500">
+                                  {modulePermissions.length}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                {modulePermissions.map((permission) => {
+                                  const isChecked = currentPermissions.includes(
+                                    permission.key,
+                                  );
+                                  const label =
+                                    permission.description ||
+                                    permission.action.replace(/_/g, ' ');
+
+                                  return (
+                                    <Checkbox
+                                      key={permission.key}
+                                      id={`permission-${permission.key}`}
+                                      name={`permissions.${permission.key}`}
+                                      label={label}
+                                      checked={isChecked}
+                                      onChange={() =>
+                                        handlePermissionChange(permission.key)
+                                      }
+                                      disabled={isLoading}
+                                      className="flex items-start text-sm"
+                                    />
+                                  );
+                                })}
+                              </div>
+                            </div>
                           );
                         })}
                       </div>
-                    </div>
+                    </section>
                   );
                 })}
               </div>

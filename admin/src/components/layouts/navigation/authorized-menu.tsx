@@ -9,7 +9,7 @@ import { useMeQuery } from '@/data/user';
 import { getIcon } from '@/utils/get-icon';
 import * as sidebarIcons from '@/components/icons/sidebar';
 import { useRouter } from 'next/router';
-import { getAuthCredentials, hasAccess } from '@/utils/auth-utils';
+import { getAuthCredentials, hasAccessControl } from '@/utils/auth-utils';
 
 export default function AuthorizedMenu() {
   const { data } = useMeQuery();
@@ -87,7 +87,7 @@ export default function AuthorizedMenu() {
           <div className="space-y-0.5 py-2">
             {siteSettings?.authorizedLinks?.map(
               ({ href, labelTransKey, icon, permission }, index) => {
-                const hasPermission = hasAccess(permission, role);
+                const hasPermission = hasAccessControl(permission, role, permissions);
                 return (
                   <Fragment key={index}>
                     {hasPermission && (

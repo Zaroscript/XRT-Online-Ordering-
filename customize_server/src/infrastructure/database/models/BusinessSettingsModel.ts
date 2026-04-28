@@ -130,7 +130,7 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
       default: {},
     },
     contactDetails: {
-      location: { type: Object, default: {} },
+      location: { type: Schema.Types.Mixed, default: null },
       contact: { type: String, default: '' },
       contacts: [{ type: String }],
       socials: [

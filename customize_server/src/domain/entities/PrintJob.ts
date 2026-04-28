@@ -1,4 +1,4 @@
-export type PrintJobStatus = 'pending' | 'printing' | 'printed' | 'failed';
+export type PrintJobStatus = 'pending' | 'printing' | 'printed' | 'sent' | 'failed';
 
 export interface RenderedTemplate {
   templateId: string;
@@ -15,6 +15,7 @@ export interface PrintJob {
   maxRetries: number;
   renderedTemplates: RenderedTemplate[];
   errorMessage: string | null;
+  sentAt: Date | null;
   created_at: Date;
   updated_at: Date;
   lockedAt: Date | null;
@@ -32,6 +33,7 @@ export interface UpdatePrintJobDTO {
   retryCount?: number;
   errorMessage?: string | null;
   lockedAt?: Date | null;
+  sentAt?: Date | null;
 }
 
 export interface PrintJobFilters {

@@ -24,6 +24,7 @@ export class PrintJobRepository {
         autoCut: rt.autoCut,
       })),
       errorMessage: doc.errorMessage,
+      sentAt: doc.sentAt ?? null,
       created_at: doc.created_at,
       updated_at: doc.updated_at,
       lockedAt: doc.lockedAt,

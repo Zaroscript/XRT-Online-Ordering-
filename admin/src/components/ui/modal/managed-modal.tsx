@@ -1,6 +1,7 @@
 import Modal from '@/components/ui/modal/modal';
 import dynamic from 'next/dynamic';
 import { MODAL_VIEWS, useModalAction, useModalState } from './modal.context';
+import RoleDeleteView from '@/components/role/role-delete-view';
 
 const TestimonialDeleteView = dynamic(
   () => import('@/components/testimonials/testimonial-delete-view'),
@@ -49,9 +50,6 @@ const ClearImportHistoryView = dynamic(
 );
 const CouponDeleteView = dynamic(
   () => import('@/components/coupon/coupon-delete-view'),
-);
-const RoleDeleteView = dynamic(
-  () => import('@/components/role/role-delete-view'),
 );
 const UserDeleteView = dynamic(
   () => import('@/components/user/user-delete-view'),

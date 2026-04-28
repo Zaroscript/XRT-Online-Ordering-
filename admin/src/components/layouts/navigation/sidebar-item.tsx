@@ -6,9 +6,15 @@ import { useRouter } from 'next/router';
 import cn from 'classnames';
 import { useTranslation } from 'next-i18next';
 import { ChevronRight } from '@/components/icons/chevron-right';
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { getAuthCredentials, hasAccess } from '@/utils/auth-utils';
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useId,
+} from 'react';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { getAuthCredentials, hasAccessControl } from '@/utils/auth-utils';
 import AdvancePopover from '@/components/ui/advance-popover';
 import { useWindowSize } from '@/utils/use-window-size';
 import { RESPONSIVE_WIDTH } from '@/utils/constants';
@@ -18,6 +24,7 @@ function SidebarShortItem({
   shop,
   label,
   currentUserRole,
+  currentUserPermissions,
   icon,
   miniSidebar,
 }: {
@@ -25,6 +32,7 @@ function SidebarShortItem({
   shop: any;
   label: string;
   currentUserRole: string | null;
+  currentUserPermissions: string[] | null;
   icon: string;
   miniSidebar: boolean;
 }) {
@@ -43,8 +51,12 @@ function SidebarShortItem({
         <>
           {childMenu?.map((item: any, index: number) => {
             if (
-              shop &&
-              !hasAccess(item?.permissions || item?.permission, currentUserRole)
+              (item?.permissions || item?.permission) &&
+              !hasAccessControl(
+                item?.permissions || item?.permission,
+                currentUserRole,
+                currentUserPermissions,
+              )
             )
               return null;
             return (
@@ -107,14 +119,16 @@ const SidebarItem = ({
   miniSidebar,
   permission,
   currentUserRole: propUserRole,
+  currentUserPermissions: propUserPermissions,
 }: {
   href: any;
   icon: any;
   label: string;
-  childMenu: [];
+  childMenu?: any[];
   miniSidebar?: boolean;
   permission?: any;
   currentUserRole?: string | null;
+  currentUserPermissions?: string[] | null;
 }) => {
   const { closeSidebar } = useUI();
   const { t } = useTranslation();
@@ -127,15 +141,21 @@ const SidebarItem = ({
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(
     propUserRole || null,
   );
+  const [currentUserPermissions, setCurrentUserPermissions] = useState<string[] | null>(
+    propUserPermissions || null,
+  );
 
   useEffect(() => {
     setIsMounted(true);
     // Only get auth credentials after mount to prevent SSR/client mismatch
     if (!propUserRole) {
-      const { role: authRole } = getAuthCredentials();
+      const { role: authRole, permissions: authPermissions } = getAuthCredentials();
       setCurrentUserRole(authRole);
+      setCurrentUserPermissions(authPermissions);
     }
   }, [propUserRole]);
+
+  const sidebarCollapseGroupId = useId();
 
   // Use a default width during SSR to ensure consistent rendering
   const effectiveWidth = isMounted ? width : 0;
@@ -188,7 +208,11 @@ const SidebarItem = ({
 
   // Check if user has permission to view this menu item
   // Only check after mount to prevent hydration mismatch
-  if (isMounted && permission && !hasAccess(permission, currentUserRole)) {
+  if (
+    isMounted &&
+    permission &&
+    !hasAccessControl(permission, currentUserRole, currentUserPermissions)
+  ) {
     return null;
   }
 
@@ -203,6 +227,7 @@ const SidebarItem = ({
         {showMiniSidebar ? (
           <SidebarShortItem
             currentUserRole={currentUserRole}
+            currentUserPermissions={currentUserPermissions}
             shop={shop}
             label={label}
             childMenu={childMenu}
@@ -239,28 +264,37 @@ const SidebarItem = ({
             <AnimatePresence initial={false}>
               {isOpen ? (
                 <motion.div
-                  key="content"
+                  key={`nav-panel-${label}`}
                   initial="collapsed"
                   animate="open"
                   exit="collapsed"
                   variants={{
-                    open: { opacity: 1, height: 'auto' },
-                    collapsed: { opacity: 0, height: 0 },
+                    // maxHeight (not height: 'auto') animates reliably when nested SidebarItems expand/collapse (Settings, Website Page Setup, etc.)
+                    open: {
+                      opacity: 1,
+                      maxHeight: 4800,
+                    },
+                    collapsed: {
+                      opacity: 0,
+                      maxHeight: 0,
+                    },
                   }}
                   transition={{
-                    duration: 0.35,
+                    duration: 0.38,
                     ease: [0.33, 1, 0.68, 1],
                   }}
-                  className="!mt-0"
+                  className="!mt-0 min-h-0 overflow-hidden"
                 >
-                  <div className="pt-2 ltr:pl-5 rtl:pr-5">
-                    <div className="space-y-1 border-0 border-l border-dashed border-slate-300 ltr:pl-1 rtl:pr-1">
+                  <LayoutGroup id={sidebarCollapseGroupId}>
+                    <motion.div layout="position" className="min-h-0 pt-2 ltr:pl-5 rtl:pr-5">
+                      <div className="space-y-1 border-0 border-l border-dashed border-slate-300 ltr:pl-1 rtl:pr-1">
                       {childMenu?.map((item: any, index: number) => {
                         if (
-                          shop &&
-                          !hasAccess(
+                          (item?.permissions || item?.permission) &&
+                          !hasAccessControl(
                             item?.permissions || item?.permission,
                             currentUserRole,
+                            currentUserPermissions,
                           )
                         )
                           return null;
@@ -268,7 +302,8 @@ const SidebarItem = ({
                         // If this item has its own childMenu, render it as a nested SidebarItem
                         if (item?.childMenu && item.childMenu.length > 0) {
                           return (
-                            <div
+                            <motion.div
+                              layout="position"
                               key={index}
                               className="relative before:absolute before:-left-0.5 before:top-[18px] before:h-px before:w-3 before:border-t before:border-dashed before:border-gray-300 before:content-['']"
                             >
@@ -280,8 +315,9 @@ const SidebarItem = ({
                                 miniSidebar={miniSidebar}
                                 permission={item.permissions || item.permission}
                                 currentUserRole={currentUserRole}
+                                currentUserPermissions={currentUserPermissions}
                               />
-                            </div>
+                            </motion.div>
                           );
                         }
 
@@ -323,8 +359,9 @@ const SidebarItem = ({
                           </div>
                         );
                       })}
-                    </div>
-                  </div>
+                      </div>
+                    </motion.div>
+                  </LayoutGroup>
                 </motion.div>
               ) : null}
             </AnimatePresence>

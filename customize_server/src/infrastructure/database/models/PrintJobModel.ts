@@ -22,7 +22,7 @@ const PrintJobSchema = new Schema<PrintJobDocument>(
     printerId: { type: String, required: true, index: true },
     status: {
       type: String,
-      enum: ['pending', 'printing', 'printed', 'failed'],
+      enum: ['pending', 'printing', 'printed', 'sent', 'failed'],
       default: 'pending',
       required: true,
       index: true,
@@ -31,6 +31,7 @@ const PrintJobSchema = new Schema<PrintJobDocument>(
     maxRetries: { type: Number, default: 3, required: true },
     renderedTemplates: { type: [RenderedTemplateSchema], required: true },
     errorMessage: { type: String, default: null },
+    sentAt: { type: Date, default: null, index: true },
     lockedAt: { type: Date, default: null, index: true },
   },
   {

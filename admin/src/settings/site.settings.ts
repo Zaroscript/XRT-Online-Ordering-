@@ -4,6 +4,7 @@ import {
   adminOwnerAndStaffOnly,
   ownerAndStaffOnly,
 } from '@/utils/auth-utils';
+import { PERMISSION_KEYS } from '@/utils/constants';
 import { Routes } from '@/config/routes';
 
 export const siteSettings = {
@@ -63,6 +64,7 @@ export const siteSettings = {
             href: Routes.dashboard,
             label: 'sidebar-nav-item-dashboard',
             icon: 'DashboardIcon',
+            permission: [PERMISSION_KEYS.DASHBOARD_VIEW],
           },
         ],
       },
@@ -104,16 +106,19 @@ export const siteSettings = {
         href: Routes.order.list,
         label: 'text-order-management',
         icon: 'OrdersIcon',
+        permission: [PERMISSION_KEYS.DASHBOARD_ORDERS_SECTION],
         childMenu: [
           {
             href: Routes.order.list,
             label: 'sidebar-nav-item-orders',
             icon: 'OrdersIcon',
+            permission: [PERMISSION_KEYS.ORDERS_READ],
           },
           {
             href: Routes.orderHistory,
             label: 'text-order-history',
             icon: 'TransactionsIcon',
+            permission: [PERMISSION_KEYS.ORDERS_READ],
           },
         ],
       },
@@ -122,6 +127,7 @@ export const siteSettings = {
         href: '',
         label: 'text-content-management',
         icon: 'ProductsIcon',
+        permission: [PERMISSION_KEYS.DASHBOARD_MENU_SECTION],
         childMenu: [
           {
             href: '',
@@ -132,11 +138,13 @@ export const siteSettings = {
                 href: Routes.category.list,
                 label: 'sidebar-nav-item-categories',
                 icon: 'CategoriesIcon',
+                permission: [PERMISSION_KEYS.CATEGORIES_READ],
               },
               {
                 href: Routes.item.list,
                 label: 'sidebar-nav-item-categories-items',
                 icon: 'ProductsIcon',
+                permission: [PERMISSION_KEYS.ITEMS_READ],
               },
               {
                 href: Routes.priceUpdates.list,
@@ -147,6 +155,7 @@ export const siteSettings = {
                 href: Routes.itemSize.list,
                 label: 'sidebar-nav-item-items-sizes',
                 icon: 'ProductsIcon',
+                permission: [PERMISSION_KEYS.ITEMS_READ],
               },
               {
                 href: '',
@@ -157,11 +166,13 @@ export const siteSettings = {
                     href: Routes.modifierGroup.list,
                     label: 'form:input-label-modifier-groups',
                     icon: 'AttributeIcon',
+                    permission: [PERMISSION_KEYS.MODIFIER_GROUPS_READ],
                   },
                   {
                     href: Routes.modifier.list,
                     label: 'sidebar-nav-item-modifier-items',
                     icon: 'AttributeIcon',
+                    permission: [PERMISSION_KEYS.MODIFIERS_READ],
                   },
                 ],
               },
@@ -169,6 +180,7 @@ export const siteSettings = {
                 href: Routes.import.list,
                 label: 'Import / Export',
                 icon: 'UploadIcon', // Using UploadIcon as placeholder for Import/Export
+                permission: [PERMISSION_KEYS.IMPORTS_READ],
               },
             ],
           },
@@ -179,44 +191,25 @@ export const siteSettings = {
         href: '',
         label: 'Printing',
         icon: 'OrdersIcon',
+        permission: [PERMISSION_KEYS.DASHBOARD_PRINTING_SECTION],
         childMenu: [
           {
             href: Routes.printers.list,
             label: 'Printers',
             icon: 'OrdersIcon',
+            permission: [PERMISSION_KEYS.PRINTERS_READ],
           },
           {
             href: Routes.printTemplates.list,
             label: 'Templates',
             icon: 'ProductsIcon',
+            permission: [PERMISSION_KEYS.PRINT_TEMPLATES_READ],
           },
           {
             href: Routes.kitchenSections.list,
             label: 'Kitchen Sections',
             icon: 'CategoriesIcon',
-          },
-        ],
-      },
-
-      layout: {
-        href: '',
-        label: 'text-landing-control',
-        icon: 'SettingsIcon',
-        childMenu: [
-          {
-            href: Routes.landingSettings,
-            label: 'text-landing-settings',
-            icon: 'HomeIcon',
-          },
-          {
-            href: Routes.testimonials.list,
-            label: 'sidebar-nav-item-testimonials',
-            icon: 'ReviewIcon',
-          },
-          {
-            href: Routes.termsAndCondition.list,
-            label: 'text-terms-conditions',
-            icon: 'TermsIcon',
+            permission: [PERMISSION_KEYS.KITCHEN_SECTIONS_READ],
           },
         ],
       },
@@ -225,22 +218,26 @@ export const siteSettings = {
         href: '',
         label: 'text-user-control',
         icon: 'SettingsIcon',
+        permission: [PERMISSION_KEYS.DASHBOARD_USERS_SECTION],
         childMenu: [
           {
             href: Routes.adminList,
             label: 'text-admin-list',
             icon: 'AdminListIcon',
+            permission: [PERMISSION_KEYS.USERS_READ],
           },
 
           {
             href: Routes.customerList,
             label: 'text-customers',
             icon: 'CustomersIcon',
+            permission: [PERMISSION_KEYS.CUSTOMERS_READ],
           },
           {
             href: Routes.role.list,
             label: 'Roles',
             icon: 'UsersIcon',
+            permission: [PERMISSION_KEYS.ROLES_READ],
           },
         ],
       },
@@ -249,6 +246,7 @@ export const siteSettings = {
         href: '',
         label: 'text-promotional-management',
         icon: 'SettingsIcon',
+        permission: [PERMISSION_KEYS.DASHBOARD_PROMOTIONAL_SECTION],
         childMenu: [
           {
             href: '',
@@ -259,11 +257,13 @@ export const siteSettings = {
                 href: Routes.coupon.list,
                 label: 'text-all-coupons',
                 icon: 'CouponsIcon',
+                permission: [PERMISSION_KEYS.COUPONS_READ],
               },
               {
                 href: Routes.coupon.create,
                 label: 'text-new-coupon',
                 icon: 'CouponsIcon',
+                permission: [PERMISSION_KEYS.COUPONS_CREATE],
               },
             ],
           },
@@ -276,11 +276,13 @@ export const siteSettings = {
                 href: Routes.loyalty.settings,
                 label: 'Settings',
                 icon: 'SettingsIcon',
+                permission: [PERMISSION_KEYS.LOYALTY_READ],
               },
               {
                 href: Routes.loyalty.members,
                 label: 'Members',
                 icon: 'UsersIcon',
+                permission: [PERMISSION_KEYS.LOYALTY_READ],
               },
             ],
           },
@@ -302,21 +304,25 @@ export const siteSettings = {
         href: '',
         label: 'text-marketing-management',
         icon: 'SettingsIcon',
+        permission: [PERMISSION_KEYS.DASHBOARD_MARKETING_SECTION],
         childMenu: [
           {
             href: Routes.message.list,
             label: 'sidebar-nav-item-message',
             icon: 'ChatIcon',
+            permission: [PERMISSION_KEYS.EMAILS_READ, PERMISSION_KEYS.SMS_READ],
           },
           {
             href: Routes.emails.list,
             label: 'sidebar-nav-item-emails',
             icon: 'StoreNoticeIcon',
+            permission: [PERMISSION_KEYS.EMAILS_READ],
           },
           {
             href: Routes.sms.list,
             label: 'sidebar-nav-item-sms',
             icon: 'ChatIcon',
+            permission: [PERMISSION_KEYS.SMS_READ],
           },
         ],
       },
@@ -325,7 +331,9 @@ export const siteSettings = {
         href: '',
         label: 'text-site-management',
         icon: 'SettingsIcon',
+        permission: [PERMISSION_KEYS.DASHBOARD_SETTINGS_SECTION],
         childMenu: [
+
           {
             href: Routes.settings,
             label: 'sidebar-nav-item-settings',
@@ -335,26 +343,56 @@ export const siteSettings = {
                 href: Routes.shopSettings,
                 label: 'text-shop-settings',
                 icon: 'RefundsIcon',
+                permission: [PERMISSION_KEYS.SETTINGS_READ],
               },
               {
                 href: Routes.paymentSettings,
                 label: 'text-payment-settings',
                 icon: 'RefundsIcon',
+                permission: [PERMISSION_KEYS.SETTINGS_READ],
               },
               {
                 href: Routes.seoSettings,
                 label: 'text-seo-settings',
                 icon: 'StoreNoticeIcon',
+                permission: [PERMISSION_KEYS.SETTINGS_READ],
               },
               {
                 href: Routes?.maintenance,
                 label: 'text-maintenance-settings',
                 icon: 'InformationIcon',
+                permission: [PERMISSION_KEYS.SETTINGS_UPDATE],
               },
               {
                 href: Routes?.socialSettings,
                 label: 'Social Settings',
                 icon: 'RefundsIcon',
+                permission: [PERMISSION_KEYS.SETTINGS_UPDATE],
+              },
+              {
+                href: '',
+                label: 'text-landing-control',
+                icon: 'HomeIcon',
+                childMenu: [
+                  {
+                    href: Routes.landingSettings,
+                    label: 'text-landing-settings',
+                    icon: 'HomeIcon',
+                    permission: [PERMISSION_KEYS.SETTINGS_UPDATE],
+                  },
+                  {
+                    href: Routes.testimonials.list,
+                    label: 'sidebar-nav-item-testimonials',
+                    icon: 'ReviewIcon',
+                    permission: [PERMISSION_KEYS.SETTINGS_READ],
+                  },
+                  {
+                    href: Routes.termsAndCondition.list,
+                    label: 'text-terms-conditions',
+                    icon: 'TermsIcon',
+                    permission: [PERMISSION_KEYS.SETTINGS_READ],
+                  },
+                ],
               },
             ],
           },

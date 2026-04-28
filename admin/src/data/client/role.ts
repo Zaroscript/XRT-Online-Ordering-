@@ -28,6 +28,9 @@ export const roleClient = {
     return response?.data?.role || response?.data || response;
   },
   delete: async ({ id }: { id: string }) => {
+    if (!id || id === 'undefined' || id === 'null') {
+      throw new Error('Invalid role id');
+    }
     const response = await HttpClient.delete<any>(`${API_ENDPOINTS.ROLES}/${id}`);
     return response?.data || response;
   },

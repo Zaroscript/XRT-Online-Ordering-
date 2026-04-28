@@ -242,46 +242,18 @@ export class PublicController {
           }
         : promoPopup;
 
-    // Restaurant location/address: prefer Business model (GeoJSON), fallback to BusinessSettings.contactDetails.location
+    // Pass contactDetails directly from BusinessSettings — no overrides or fallbacks
     const contactDetailsFromSettings = settings.contactDetails ?? null;
     const contactDetails = (() => {
-      const base =
-        contactDetailsFromSettings && typeof contactDetailsFromSettings === 'object'
-          ? { ...contactDetailsFromSettings }
-          : ({} as Record<string, unknown>);
-      // 1) Business.location is GeoJSON Point: coordinates = [longitude, latitude]
-      const businessCoords = (business as any).location?.coordinates;
-      if (Array.isArray(businessCoords) && businessCoords.length >= 2) {
-        base.location = { lat: Number(businessCoords[1]), lng: Number(businessCoords[0]) };
-      } else {
-        // 2) Use BusinessSettings.contactDetails.location (e.g. from admin map: { lat, lng } or coordinates)
-        const loc =
-          contactDetailsFromSettings && typeof contactDetailsFromSettings === 'object'
-            ? (contactDetailsFromSettings as any).location
-            : undefined;
-        if (loc && typeof loc === 'object') {
-          const lat = Number(loc.lat);
-          const lng = Number(loc.lng);
-          if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            base.location = { lat, lng };
-          } else if (Array.isArray(loc.coordinates) && loc.coordinates.length >= 2) {
-            base.location = { lat: Number(loc.coordinates[1]), lng: Number(loc.coordinates[0]) };
-          }
-        }
+      if (!contactDetailsFromSettings || typeof contactDetailsFromSettings !== 'object') return null;
+      const base = { ...contactDetailsFromSettings } as any;
+      const loc = base.location && typeof base.location === 'object' ? { ...base.location } : null;
+      base.location = loc;
+      // Hoist formattedAddress to root if only present inside location
+      if (!base.formattedAddress && loc?.formattedAddress) {
+        base.formattedAddress = loc.formattedAddress;
       }
-      // Business.address for restaurant address string (map popup / display)
-      const addr = (business as any).address;
-      if (addr && typeof addr === 'object') {
-        const parts = [
-          addr.street,
-          [addr.city, addr.state].filter(Boolean).join(', '),
-          addr.zipCode,
-          addr.country,
-        ].filter(Boolean);
-        (base as any).address = addr;
-        (base as any).formattedAddress = parts.join(', ');
-      }
-      return Object.keys(base).length ? base : null;
+      return base;
     })();
 
     const seoRaw = settings.seo ?? ({} as Record<string, unknown>);

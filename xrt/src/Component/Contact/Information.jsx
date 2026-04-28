@@ -24,14 +24,13 @@ export default function Information() {
     ? [...schedule].sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day))
     : [];
 
-  const address = contactDetails?.location?.formattedAddress || 
-    contactDetails?.formattedAddress || 
-    (contactDetails?.address ? `${contactDetails.address.street || ''}, ${contactDetails.address.city || ''}` : '') ||
-    [
-      contactDetails?.location?.street_address,
-      contactDetails?.location?.city,
-      contactDetails?.location?.state
-    ].filter(Boolean).join(", ") + (contactDetails?.location?.zip ? ` ${contactDetails.location.zip}` : "");
+  const address = [
+    contactDetails?.location?.street_address,
+    contactDetails?.location?.city,
+    contactDetails?.location?.state,
+    contactDetails?.location?.zip,
+    contactDetails?.location?.country,
+  ].filter(Boolean).join(", ");
 
   return (
     <>

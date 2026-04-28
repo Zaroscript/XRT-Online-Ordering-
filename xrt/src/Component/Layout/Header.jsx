@@ -28,9 +28,13 @@ const Header = () => {
       : settings?.messages?.not_accepting_orders_message || "We are currently not accepting orders.";
 
   const contactDetails = settings?.contactDetails;
-  const address = contactDetails?.formattedAddress || 
-    (contactDetails?.address ? `${contactDetails.address.street || ''}, ${contactDetails.address.city || ''}` : '') ||
-    "";
+  const address = [
+    contactDetails?.location?.street_address,
+    contactDetails?.location?.city,
+    contactDetails?.location?.state,
+    contactDetails?.location?.zip,
+    contactDetails?.location?.country,
+  ].filter(Boolean).join(", ");
   const email = contactDetails?.emailAddress || "";
   const phone = contactDetails?.contact || "";
 
