@@ -13,6 +13,8 @@ import { CategoryRepository } from '../../infrastructure/repositories/CategoryRe
 import { CreateOrderUseCase } from '../../domain/usecases/order/CreateOrderUseCase';
 import { TransactionRepository } from '../../infrastructure/repositories/TransactionRepository';
 import { CouponRepository } from '../../infrastructure/repositories/CouponRepository';
+import { PromotionRepository } from '../../infrastructure/repositories/PromotionRepository';
+import { PromotionController } from './PromotionController';
 import { CustomerOrderNotificationService } from '../../services/order/CustomerOrderNotificationService';
 import {
   DEFAULT_OPERATIONS_SETTINGS,
@@ -189,6 +191,7 @@ export class PublicController {
         description: card?.description ?? '',
         couponCode: card?.couponCode ?? '',
         showCouponCode: card?.showCouponCode ?? false,
+        promotionId: card?.promotionId ? String(card.promotionId) : '',
         image: normalized ? { original: normalized, thumbnail: normalized } : {},
       };
     });
@@ -408,6 +411,14 @@ export class PublicController {
       amount: coupon.amount,
       minimum_cart_amount: coupon.minimum_cart_amount,
     });
+  });
+
+  listPromotions = asyncHandler(async (req: Request, res: Response) => {
+    return PromotionController.listWebsitePromotions(req, res);
+  });
+
+  selectPromotion = asyncHandler(async (req: Request, res: Response) => {
+    return PromotionController.selectPromotion(req, res);
   });
 
   getAuthorizeNetEnvironment = asyncHandler(async (req: Request, res: Response) => {
@@ -1019,12 +1030,14 @@ export class PublicController {
     const categoryRepository = new CategoryRepository();
     const businessSettingsRepository = new BusinessSettingsRepository();
     const couponRepository = new CouponRepository();
+    const promotionRepository = new PromotionRepository();
     const createOrderUseCase = new CreateOrderUseCase(
       orderRepository,
       itemRepository,
       categoryRepository,
       businessSettingsRepository,
       couponRepository,
+      promotionRepository,
       customerRepository
     );
     
@@ -1067,6 +1080,7 @@ export class PublicController {
         payment_id: nmiTransactionId || undefined,
         payment_status: (nmiTransactionId ? 'paid' : 'pending') as 'paid' | 'pending',
         coupon_code: money?.coupon_code,
+        promotion_id: money?.promotion_id,
         rewards_points_used:
           money?.rewards_points_used ?? money?.loyalty_points_redeemed,
         loyalty_discount_amount:

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Handbag, Sparkles } from 'lucide-react';
+import { X, Handbag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useLoyalty } from '../hooks/useLoyalty';
 import ProductCustomizer from './Product/ProductCustomizer';
+import LoyaltyRewardsTeaser from './Product/LoyaltyRewardsTeaser';
 import { COLORS } from '../config/colors';
 import { computeTotalPrice } from '../utils/priceUtils';
 import {
@@ -15,7 +15,6 @@ import {
 
 const ProductModal = ({ isOpen, onClose, product }) => {
   const { addToCart } = useCart();
-  const { isEnrolled, isActive } = useLoyalty();
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedModifiers, setSelectedModifiers] = useState({});
   const [quantity, setQuantity] = useState(1);
@@ -212,27 +211,7 @@ const ProductModal = ({ isOpen, onClose, product }) => {
                    />
                 </div>
 
-                {/* Loyalty Rewards Teaser */}
-                {isActive && !isEnrolled && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8 p-4 rounded-xl border border-(--primary)/20 bg-(--primary)/5 flex items-center justify-between gap-4"
-                  >
-                    <div className="flex items-center gap-3">
-                       <div className="p-2 bg-white rounded-lg shadow-sm">
-                          <Sparkles size={20} className="text-(--primary)" />
-                       </div>
-                       <div>
-                          <p className="font-bold text-secondary text-sm">Join Rewards & Save</p>
-                          <p className="text-xs text-gray-500">Earn points on this item and unlock future discounts!</p>
-                       </div>
-                    </div>
-                    <div className="text-[10px] font-black uppercase tracking-wider text-(--primary) bg-white px-2 py-1 rounded shadow-sm">
-                       +Points
-                    </div>
-                  </motion.div>
-                )}
+                <LoyaltyRewardsTeaser />
 
                 {/* Bottom: Cart Controls */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-100">

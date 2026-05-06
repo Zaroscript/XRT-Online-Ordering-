@@ -19,7 +19,7 @@ export default function Testimonials() {
         ? [] // Show skeleton while loading
         : Testimonials_content; // Fallback to constants on error or empty
 
-  // Loading skeleton (quote, text lines, avatar, name/role)
+  // Loading skeleton (quote, text lines, name/role)
   if (isLoading) {
     return (
       <div
@@ -32,7 +32,6 @@ export default function Testimonials() {
             <div className="h-5 bg-white/20 rounded mx-auto w-[90%]" />
             <div className="h-5 bg-white/15 rounded mx-auto w-[70%]" />
           </div>
-          <div className="w-[80px] h-[80px] rounded-full bg-white/25 mb-5" />
           <div className="h-5 w-32 bg-white/20 rounded mb-1" />
           <div className="h-4 w-24 bg-white/15 rounded" />
         </div>

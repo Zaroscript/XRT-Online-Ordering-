@@ -5,9 +5,9 @@ import Footer from "./Component/Footer/FooterSection.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { LoyaltyProvider } from "./context/LoyaltyContext.jsx";
-import AdsPopup from "./Component/Ads/AdsPopup.jsx";
 import LoadingPage from "./Component/UI/LoadingPage.jsx";
 import MaintenanceScreen from "./Component/Maintenance/MaintenanceScreen.jsx";
+import AdsPopup from "./Component/Ads/AdsPopup.jsx";
 
 import { useEffect } from "react";
 import { useSiteSettingsQuery } from "./api/hooks/useSiteSettings";
@@ -64,10 +64,10 @@ function App() {
   return (
     <LoyaltyProvider>
       <CartProvider>
-        <AdsPopup />
         <Header />
         <AppRoutes />
         <Footer />
+        <AdsPopup />
         {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
       </CartProvider>
     </LoyaltyProvider>

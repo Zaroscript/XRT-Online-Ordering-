@@ -8,6 +8,7 @@ import ProductCustomizer from '../Component/Product/ProductCustomizer';
 import { COLORS } from '../config/colors';
 import { Handbag } from 'lucide-react';
 import SignatureProducts from '../Component/Product/SignatureProducts';
+import LoyaltyRewardsTeaser from '../Component/Product/LoyaltyRewardsTeaser';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -177,6 +178,8 @@ const ProductDetails = () => {
                      updateModifierPlacement={updateModifierPlacement}
                    />
                 </div>
+
+                <LoyaltyRewardsTeaser />
 
                 {/* Bottom: Cart Controls */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-100">

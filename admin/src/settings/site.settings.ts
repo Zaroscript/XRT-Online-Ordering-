@@ -250,20 +250,26 @@ export const siteSettings = {
         childMenu: [
           {
             href: '',
-            label: 'sidebar-nav-item-coupons',
+            label: 'Promotions',
             icon: 'CouponsIcon',
             childMenu: [
               {
-                href: Routes.coupon.list,
-                label: 'text-all-coupons',
+                href: Routes.promotion.list,
+                label: 'All promotions',
                 icon: 'CouponsIcon',
                 permission: [PERMISSION_KEYS.COUPONS_READ],
               },
               {
-                href: Routes.coupon.create,
-                label: 'text-new-coupon',
+                href: Routes.promotion.create,
+                label: 'New promotion',
                 icon: 'CouponsIcon',
                 permission: [PERMISSION_KEYS.COUPONS_CREATE],
+              },
+              {
+                href: Routes.coupon.list,
+                label: 'Coupon codes',
+                icon: 'CouponsIcon',
+                permission: [PERMISSION_KEYS.COUPONS_READ],
               },
             ],
           },

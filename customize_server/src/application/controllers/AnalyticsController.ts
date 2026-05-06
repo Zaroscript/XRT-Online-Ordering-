@@ -24,6 +24,57 @@ interface ActiveCouponDetail {
   totalDiscount: number;
 }
 
+/** Orders collection name — match mongoose.model('Order') default pluralization */
+const ORDERS_COLLECTION = OrderModel.collection.name;
+
+/** Join completed order lines to catalog items; compare IDs as strings so ObjectId/string data both match */
+function itemCompletedOrdersLookupStage() {
+  return {
+    $lookup: {
+      from: ORDERS_COLLECTION,
+      let: { itemId: '$_id' },
+      pipeline: [
+        { $match: { status: 'completed' } },
+        { $unwind: '$items' },
+        {
+          $match: {
+            $expr: {
+              $eq: [
+                { $toString: { $ifNull: ['$items.menu_item_id', ''] } },
+                { $toString: { $ifNull: ['$$itemId', ''] } },
+              ],
+            },
+          },
+        },
+      ],
+      as: 'orderItems',
+    },
+  };
+}
+
+/** Sum line quantities from matched order rows ($sum + dotted path on lookup output is unreliable across Mongo versions) */
+const ITEM_ANALYTICS_PROJECT_STAGE = {
+  $project: {
+    id: '$_id',
+    name: 1,
+    description: 1,
+    price: '$base_price',
+    sale_price: '$base_price',
+    image: 1,
+    type: { name: 'Item' },
+    product_type: 'simple',
+    orders_count: {
+      $reduce: {
+        input: '$orderItems',
+        initialValue: 0,
+        in: {
+          $add: ['$$value', { $ifNull: ['$$this.items.quantity', 0] }],
+        },
+      },
+    },
+  },
+};
+
 export class AnalyticsController {
   private readonly couponPerformanceService = new CouponPerformanceAnalyticsService();
 
@@ -176,7 +227,31 @@ export class AnalyticsController {
   getCouponPerformance = asyncHandler(async (req: AuthRequest, res: Response) => {
     const rangeDays = Number(req.query.range_days || 1);
     const data = await this.couponPerformanceService.getByRange(rangeDays);
-    return sendSuccess(res, 'Coupon performance analytics retrieved successfully', data);
+    const normalizedRange = data.rangeDays;
+    const endDate = moment().endOf('day');
+    const startDate = moment(endDate)
+      .subtract(normalizedRange - 1, 'days')
+      .startOf('day')
+      .toDate();
+    const promotion_breakdown = await OrderModel.aggregate([
+      {
+        $match: {
+          created_at: { $gte: startDate },
+          'money.promotion_id': { $exists: true, $nin: [null, ''] },
+        },
+      },
+      {
+        $group: {
+          _id: '$money.promotion_id',
+          orders: { $sum: 1 },
+          discount_total: { $sum: { $ifNull: ['$money.discount', 0] } },
+        },
+      },
+    ]);
+    return sendSuccess(res, 'Coupon performance analytics retrieved successfully', {
+      ...data,
+      promotion_breakdown,
+    });
   });
 
   getPopularItems = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -187,37 +262,18 @@ export class AnalyticsController {
     const topHalfLimit = Math.ceil(totalItems / 2);
     const effectiveLimit = Math.min(limit, topHalfLimit);
 
+    if (totalItems === 0 || effectiveLimit <= 0) {
+      return sendSuccess(res, 'Popular items retrieved', []);
+    }
+
     const popularItems = await ItemModel.aggregate([
       { $match: { is_active: true } },
-      {
-        $lookup: {
-          from: 'orders',
-          let: { itemId: '$_id' },
-          pipeline: [
-            { $match: { status: 'completed' } },
-            { $unwind: '$items' },
-            { $match: { $expr: { $eq: ['$items.menu_item_id', '$$itemId'] } } }
-          ],
-          as: 'orderItems'
-        }
-      },
-      {
-        $project: {
-          id: '$_id',
-          name: 1,
-          description: 1,
-          price: '$base_price',
-          sale_price: '$base_price',
-          image: 1,
-          type: { name: 'Item' },
-          product_type: 'simple',
-          orders_count: { $sum: '$orderItems.items.quantity' }
-        }
-      },
+      itemCompletedOrdersLookupStage(),
+      ITEM_ANALYTICS_PROJECT_STAGE,
       // Sort descending: highest sales first
       { $sort: { orders_count: -1 } },
       // Take only the TOP half — guaranteed no overlap with less-sold
-      { $limit: effectiveLimit }
+      { $limit: effectiveLimit },
     ]);
 
     return sendSuccess(res, 'Popular items retrieved', popularItems);
@@ -232,39 +288,20 @@ export class AnalyticsController {
     const bottomHalfCount = totalItems - topHalfCount;
     const effectiveLimit = Math.min(limit, bottomHalfCount);
 
+    if (totalItems === 0 || bottomHalfCount <= 0 || effectiveLimit <= 0) {
+      return sendSuccess(res, 'Less sold items retrieved', []);
+    }
+
     const lessSoldItems = await ItemModel.aggregate([
       { $match: { is_active: true } },
-      {
-        $lookup: {
-          from: 'orders',
-          let: { itemId: '$_id' },
-          pipeline: [
-            { $match: { status: 'completed' } },
-            { $unwind: '$items' },
-            { $match: { $expr: { $eq: ['$items.menu_item_id', '$$itemId'] } } }
-          ],
-          as: 'orderItems'
-        }
-      },
-      {
-        $project: {
-          id: '$_id',
-          name: 1,
-          description: 1,
-          price: '$base_price',
-          sale_price: '$base_price',
-          image: 1,
-          type: { name: 'Item' },
-          product_type: 'simple',
-          orders_count: { $sum: '$orderItems.items.quantity' }
-        }
-      },
+      itemCompletedOrdersLookupStage(),
+      ITEM_ANALYTICS_PROJECT_STAGE,
       // Sort descending so $skip correctly skips the top performers
       { $sort: { orders_count: -1 } },
       // Skip the top half (those are in the Most Sold list)
       { $skip: topHalfCount },
       // Take only from the bottom half — guaranteed no overlap with most-sold
-      { $limit: effectiveLimit }
+      { $limit: effectiveLimit },
     ]);
 
     return sendSuccess(res, 'Less sold items retrieved', lessSoldItems);

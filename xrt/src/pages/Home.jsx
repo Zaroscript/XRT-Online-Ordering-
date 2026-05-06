@@ -1,11 +1,10 @@
-import Sliderfun from "../Component/Slider/Slider";
 import Categories from "../Component/Categories/Categories";
-import AdsList from "../Component/Ads/AdsList";
 import Menulist from "../Component/Menu_Items/Menulist";
 import { ProductGridSkeleton } from "../Component/Menu_Items/ProductSkeleton";
 import TopRated from "../Component/TopRated/TopRated";
 import Testimonials from "../Component/Testimonials/Testimonials";
 import { useCategoriesQuery, useProductsQuery, useSiteSettingsQuery } from "@/api";
+import HomePromotionsStrip from "../Component/Ads/HomePromotionsStrip";
 
 const Home = () => {
   const { categories, loading: categoriesLoading } = useCategoriesQuery();
@@ -26,9 +25,8 @@ const Home = () => {
 
   return (
     <>
-      <Sliderfun />
       <Categories categories={categories} />
-      <AdsList loading={loading} />
+      <HomePromotionsStrip />
       {showMenuSection && (
         loading ? (
           <div className="px-4 md:px-8 lg:px-[70px] mt-4 mb-6">

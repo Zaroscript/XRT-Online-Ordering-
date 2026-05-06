@@ -14,6 +14,12 @@ router.get('/categories', publicController.getCategories);
 router.get('/products', publicController.getProducts);
 router.post('/orders', writeRateLimitMiddleware, publicController.createOrder);
 router.post('/coupons/verify', writeRateLimitMiddleware, publicController.verifyCoupon);
+router.get('/promotions', publicController.listPromotions);
+router.post(
+  '/promotions/:id/select',
+  writeRateLimitMiddleware,
+  publicController.selectPromotion
+);
 router.post(
   '/authorize-net/iframe-token',
   writeRateLimitMiddleware,

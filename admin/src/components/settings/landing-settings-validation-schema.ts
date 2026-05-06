@@ -52,8 +52,7 @@ export const landingSettingsValidationSchema = yup.object().shape({
       title: yup.string().required('form:error-title-required'),
       description: yup.string(),
       image: yup.mixed().required('form:error-image-required'),
-      couponCode: yup.mixed().nullable().optional(),
-      showCouponCode: yup.boolean().default(false),
+      promotionId: yup.mixed().nullable().optional(),
     }),
   ),
 });

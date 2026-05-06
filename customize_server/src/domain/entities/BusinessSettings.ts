@@ -86,6 +86,8 @@ export interface BusinessSettings {
     image?: any;
     couponCode?: string;
     showCouponCode?: boolean;
+    /** Storefront promotion Mongo id — takes precedence over coupon deep-link when set */
+    promotionId?: string;
   }>;
   currencyOptions?: {
     formation?: string;

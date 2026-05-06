@@ -51,6 +51,9 @@ const ClearImportHistoryView = dynamic(
 const CouponDeleteView = dynamic(
   () => import('@/components/coupon/coupon-delete-view'),
 );
+const PromotionDeleteView = dynamic(
+  () => import('@/components/promotion/promotion-delete-view'),
+);
 const UserDeleteView = dynamic(
   () => import('@/components/user/user-delete-view'),
 );
@@ -315,6 +318,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <DisApproveCouponView />;
     case 'DELETE_COUPON':
       return <CouponDeleteView />;
+    case 'DELETE_PROMOTION':
+      return <PromotionDeleteView />;
     case 'TRANSFER_SHOP_OWNERSHIP_VIEW':
       return <TransferShopOwnershipView />;
     case 'DELETE_OWNERSHIP_TRANSFER_REQUEST':

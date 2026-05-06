@@ -2,15 +2,13 @@ import React from "react";
 
 const AdsCardSkeleton = () => {
   return (
-    <div className="bg-gray-200 p-8 rounded-[10px] pb-[60px] relative w-full h-[200px] md:h-[220px] lg:h-[240px] animate-pulse">
-      <div className="relative z-10 space-y-4">
-        {/* Title skeleton */}
-        <div className="h-6 bg-gray-300 rounded w-[160px]"></div>
-        {/* Offer skeleton */}
-        <div className="h-4 bg-gray-300 rounded w-[80px]"></div>
-        {/* Button skeleton */}
-        <div className="mt-[30px] h-4 bg-gray-300 rounded w-[100px]"></div>
+    <div className="flex h-full min-h-[268px] w-full flex-col justify-between overflow-hidden rounded-2xl border border-[var(--color-primary)]/20 bg-gradient-to-br from-[#eef5ef] to-[#dfe8e1] p-6 shadow-[0_10px_36px_-14px_rgba(47,62,48,0.2)] animate-pulse sm:min-h-[304px] lg:min-h-[360px] sm:p-7">
+      <div className="space-y-3">
+        <div className="h-3 w-20 rounded-full bg-[var(--color-primary)]/25" />
+        <div className="h-7 w-[88%] max-w-md rounded-lg bg-[var(--color-secondary)]/15" />
+        <div className="h-4 w-[55%] rounded-lg bg-[var(--color-secondary)]/12" />
       </div>
+      <div className="mt-6 h-12 w-full rounded-xl bg-[var(--color-primary)]/20" />
     </div>
   );
 };

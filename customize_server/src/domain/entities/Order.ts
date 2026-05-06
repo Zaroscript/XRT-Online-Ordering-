@@ -50,6 +50,7 @@ export interface OrderMoney {
   payment_id?: string;
   payment_status?: 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
   coupon_code?: string;
+  promotion_id?: string;
   rewards_points_used?: number;
   loyalty_discount_amount?: number;
   refunded_amount?: number;

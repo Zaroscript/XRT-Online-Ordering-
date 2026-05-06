@@ -5,12 +5,23 @@ import { CreateOrderDTO, Order, OrderItem } from '../../entities/Order';
 
 import { IBusinessSettingsRepository } from '../../repositories/IBusinessSettingsRepository';
 import { ICouponRepository } from '../../repositories/ICouponRepository';
+import { IPromotionRepository } from '../../repositories/IPromotionRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
 import { LoyaltyService } from '../../services/LoyaltyService';
 import { LoyaltyProgramRepository } from '../../../infrastructure/repositories/LoyaltyProgramRepository';
 import { LoyaltyAccountRepository } from '../../../infrastructure/repositories/LoyaltyAccountRepository';
 import { LoyaltyTransactionRepository } from '../../../infrastructure/repositories/LoyaltyTransactionRepository';
 import { ValidationError } from '../../../shared/errors/AppError';
+import {
+  applyPromotionToCart,
+  assertPromotionWindowAndLimits,
+} from '../../services/PromotionApplicationService';
+import {
+  assertCouponMinimumCart,
+  assertCouponScheduleAndUsage,
+  computeCouponCartImpact,
+  couponMatchesBusiness,
+} from '../../services/couponApplyHelpers';
 
 const KITCHEN_SECTION_UNASSIGNED = 'Unassigned';
 
@@ -21,6 +32,7 @@ export class CreateOrderUseCase {
     private categoryRepository: ICategoryRepository,
     private businessSettingsRepository: IBusinessSettingsRepository,
     private couponRepository: ICouponRepository,
+    private promotionRepository: IPromotionRepository,
     private customerRepository: ICustomerRepository
   ) {
     this.loyaltyService = new LoyaltyService(
@@ -83,35 +95,121 @@ export class CreateOrderUseCase {
     // 2. Sum up subtotals
     const computedSubtotal = calculatedItems.reduce((acc, item) => acc + item.line_subtotal, 0);
 
-    // 2.5 Verify coupon if provided
+    let effectiveDeliveryFee = Number(orderData.money.delivery_fee || 0);
+
+    const promoIdRaw = orderData.money.promotion_id;
+    const promoId =
+      typeof promoIdRaw === 'string' && promoIdRaw.trim() ? promoIdRaw.trim() : undefined;
+    const couponCode =
+      typeof orderData.money.coupon_code === 'string' && orderData.money.coupon_code.trim()
+        ? orderData.money.coupon_code.trim()
+        : undefined;
+
+    const promotion = promoId ? await this.promotionRepository.findById(promoId) : null;
+
+    if (promoId && couponCode) {
+      const linkedOk =
+        promotion?.template === 'linked_coupon' &&
+        String((promotion.rules as { coupon_code?: string })?.coupon_code || '')
+          .trim()
+          .toLowerCase() === couponCode.toLowerCase();
+      if (!linkedOk) {
+        throw new ValidationError(
+          'Only one promotion applies per order. Use website promotions, or a legacy coupon — not both.'
+        );
+      }
+    }
+
     let verifiedDiscount = 0;
-    if (orderData.money.coupon_code) {
-      const coupon = await this.couponRepository.verify(orderData.money.coupon_code);
-      if (!coupon) {
+    let resolvedCouponCode: string | undefined;
+
+    if (promoId) {
+      if (!promotion || promotion.business_id !== orderData.business_id) {
+        throw new ValidationError('Invalid promotion');
+      }
+      if (!promotion.is_active_on_website) {
+        throw new ValidationError('Promotion is not available');
+      }
+
+      const cartLines = calculatedItems.map((item) => ({
+        menu_item_id: item.menu_item_id,
+        quantity: item.quantity,
+        line_subtotal: item.line_subtotal,
+      }));
+
+      if (promotion.template === 'linked_coupon') {
+        const code = String((promotion.rules as { coupon_code?: string })?.coupon_code || '').trim();
+        if (!code) {
+          throw new ValidationError('This promotion is missing a linked coupon code');
+        }
+        const coupon = await this.couponRepository.verify(code);
+        if (!coupon || !couponMatchesBusiness(coupon, orderData.business_id)) {
+          throw new ValidationError('Invalid promotion');
+        }
+
+        assertPromotionWindowAndLimits(promotion);
+        assertCouponScheduleAndUsage(coupon);
+
+        const minCart = Math.max(
+          promotion.minimum_cart_amount || 0,
+          coupon.minimum_cart_amount || 0
+        );
+        if (computedSubtotal < minCart) {
+          throw new ValidationError(`Minimum order for this promotion is ${minCart}`);
+        }
+
+        const impact = computeCouponCartImpact(
+          coupon,
+          computedSubtotal,
+          orderData.order_type,
+          effectiveDeliveryFee
+        );
+        verifiedDiscount = impact.discount;
+        effectiveDeliveryFee = impact.deliveryFeeAfter;
+        orderData.money.promotion_id = promoId;
+        orderData.money.coupon_code = code;
+        resolvedCouponCode = code;
+      } else {
+        const applied = applyPromotionToCart({
+          promotion,
+          lines: cartLines,
+          cartSubtotal: computedSubtotal,
+          orderType: orderData.order_type,
+          deliveryFee: effectiveDeliveryFee,
+        });
+
+        verifiedDiscount = applied.discount;
+        effectiveDeliveryFee = applied.deliveryFeeAfter;
+
+        orderData.money.promotion_id = promoId;
+        orderData.money.coupon_code = undefined;
+        resolvedCouponCode = undefined;
+      }
+    } else if (couponCode) {
+      const coupon = await this.couponRepository.verify(couponCode);
+      if (!coupon || !couponMatchesBusiness(coupon, orderData.business_id)) {
         throw new ValidationError('Invalid or expired coupon');
       }
 
-      // Check minimum cart amount
-      if (computedSubtotal < (coupon.minimum_cart_amount || 0)) {
-        throw new ValidationError(
-          `Minimum order for this coupon is ${coupon.minimum_cart_amount}`,
-        );
-      }
+      assertCouponScheduleAndUsage(coupon);
+      assertCouponMinimumCart(coupon, computedSubtotal);
 
-      // Calculate discount
-      if (coupon.type === 'percentage') {
-        verifiedDiscount = (computedSubtotal * coupon.amount) / 100;
-      } else {
-        verifiedDiscount = coupon.amount;
-      }
+      const impact = computeCouponCartImpact(
+        coupon,
+        computedSubtotal,
+        orderData.order_type,
+        effectiveDeliveryFee
+      );
+      verifiedDiscount = impact.discount;
+      effectiveDeliveryFee = impact.deliveryFeeAfter;
 
-      // Ensure discount doesn't exceed subtotal
       verifiedDiscount = Math.min(verifiedDiscount, computedSubtotal);
+      orderData.money.coupon_code = couponCode;
+      orderData.money.promotion_id = undefined;
+      resolvedCouponCode = couponCode;
     }
 
-    const rewardsPointsUsed = Math.floor(
-      Number(orderData.money.rewards_points_used || 0)
-    );
+    const rewardsPointsUsed = Math.floor(Number(orderData.money.rewards_points_used || 0));
 
     // 2.6 Validate Loyalty Points if requested
     let loyaltyDiscount = 0;
@@ -132,7 +230,7 @@ export class CreateOrderUseCase {
     // 3. Verify calculated vs provided total to ensure consistency
     const expectedTotal =
       computedSubtotal +
-      orderData.money.delivery_fee +
+      effectiveDeliveryFee +
       orderData.money.tax_total +
       orderData.money.tips -
       verifiedDiscount -
@@ -141,10 +239,13 @@ export class CreateOrderUseCase {
     const sanitizedMoney = {
       ...orderData.money,
       subtotal: computedSubtotal,
-      discount: verifiedDiscount, // Use verified discount
+      discount: verifiedDiscount,
+      delivery_fee: effectiveDeliveryFee,
       loyalty_discount_amount: loyaltyDiscount,
       rewards_points_used: rewardsPointsUsed > 0 ? rewardsPointsUsed : undefined,
       total_amount: Math.max(0, expectedTotal),
+      coupon_code: resolvedCouponCode,
+      promotion_id: promoId || undefined,
     };
 
     // 4. Check for auto-accept settings and business ID consistency
@@ -155,6 +256,14 @@ export class CreateOrderUseCase {
     };
 
     const order = await this.orderRepository.create(sanitizedData);
+
+    if (promoId && order.id) {
+      try {
+        await this.promotionRepository.appendOrderId(promoId, order.id);
+      } catch (e) {
+        console.warn('[CreateOrderUseCase] Could not append promotion order ref:', e);
+      }
+    }
 
     // 5. Safely deduct loyalty points matching validation check
     if (rewardsPointsUsed > 0 && orderData.customer_id && order.id) {
