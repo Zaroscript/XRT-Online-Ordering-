@@ -7,6 +7,7 @@ import AuthorizeNetIframe from '../components/payment/AuthorizeNetIframe';
 import { useSiteSettingsQuery } from '../api/hooks/useSiteSettings';
 import { createOrder } from '../api/orders';
 import { useCart } from '../context/CartContext';
+import { clearAppliedPromotion } from '../utils/promotionStorage';
 import { useLoyalty } from '../hooks/useLoyalty';
 
 // Shared Colors
@@ -85,7 +86,8 @@ const Payment = () => {
       
       // Clear cart on success
       clearCart();
-      
+      clearAppliedPromotion();
+
       navigate('/order-success', { state: { orderNumber } });
 
     } catch (error) {

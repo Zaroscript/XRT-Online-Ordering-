@@ -44,9 +44,10 @@ function normalizeServerUrl(serverUrl: string): string {
   return serverUrl.endsWith('/') ? serverUrl : `${serverUrl}/`;
 }
 
-function buildAckUrl(serverUrl: string, jobId: string): string {
-  const base = normalizeServerUrl(serverUrl);
-  return new URL(`/api/print-jobs/${encodeURIComponent(jobId)}/ack`, base).toString();
+/** REST API base including version prefix, e.g. http://host:3001/api/v1 */
+function buildAckUrl(restApiBaseUrl: string, jobId: string): string {
+  const base = normalizeServerUrl(restApiBaseUrl);
+  return new URL(`print-jobs/${encodeURIComponent(jobId)}/ack`, base).toString();
 }
 
 function decodeBase64ToBytes(base64: string): Uint8Array {
@@ -182,7 +183,7 @@ export class BrowserPrintAgent {
   }
 
   private async acknowledgeJob(jobId: string): Promise<void> {
-    const ackUrl = buildAckUrl(this.serverUrl, jobId);
+    const ackUrl = buildAckUrl(this.restApiBaseUrl, jobId);
     try {
       const response = await fetch(ackUrl, {
         method: 'PATCH',

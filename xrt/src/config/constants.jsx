@@ -166,6 +166,12 @@ export const cards_items = [
     offer: "- 25% OFF",
     offer_color: COLORS.offerRed,
   },
+  {
+    src: card1,
+    title: "Chef Specials",
+    offer: "- 20% OFF",
+    offer_color: COLORS.white,
+  },
 ];
 
 const modifiersList = [

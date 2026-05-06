@@ -128,6 +128,8 @@ export const API_ENDPOINTS = {
   AUTHORS: 'authors',
   TAGS: 'tags',
   COUPONS: 'coupons',
+  PROMOTIONS: 'promotions',
+  PROMOTIONS_SORT_ORDER: 'promotions/sort-order',
   VERIFY_COUPONS: 'coupons/verify',
   APPROVE_COUPON: 'coupons/approve',
   DISAPPROVE_COUPON: 'coupons/disapprove',

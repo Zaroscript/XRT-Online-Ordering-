@@ -14,7 +14,6 @@ import {
   ArrowLeft,
   ShoppingBag,
   MapPin,
-  Ticket,
   Heart,
   Minus,
   Plus,
@@ -26,8 +25,12 @@ import {
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useSiteSettingsQuery } from "../api/hooks/useSiteSettings";
-import { useVerifyCouponMutation } from "../api/hooks/useCoupons";
+import { selectPromotion } from "../api/promotions";
 import { formatPrice, getPriceValue } from "../utils/priceUtils";
+import {
+  getAppliedPromotion,
+  clearAppliedPromotion,
+} from "../utils/promotionStorage";
 import { calculateDistance } from "../utils/distanceUtils";
 import { loadSavedCustomer, saveCustomerData } from "../utils/customerStorage";
 import { geocodeAddress, buildAddressString } from "../utils/geocode";
@@ -180,11 +183,8 @@ const Checkout = () => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoError, setPromoError] = useState("");
-  const [couponData, setCouponData] = useState(null);
-  const verifyCouponMutation = useVerifyCouponMutation();
+  const [promoPreview, setPromoPreview] = useState(null);
+  const [promoPreviewError, setPromoPreviewError] = useState("");
   const [selectedTip, setSelectedTip] = useState(null);
   const [customTip, setCustomTip] = useState("");
   const [orderTimeType, setOrderTimeType] = useState("asap");
@@ -374,24 +374,6 @@ const Checkout = () => {
     }));
   };
 
-  const handleApplyPromo = () => {
-    if (!promoCode.trim()) return;
-    setPromoError("");
-
-    verifyCouponMutation.mutate(promoCode.trim(), {
-      onSuccess: (data) => {
-        setCouponData(data);
-        setPromoApplied(true);
-        setPromoError("");
-      },
-      onError: (error) => {
-        setPromoApplied(false);
-        setCouponData(null);
-        setPromoError(error?.response?.data?.message || "Invalid promo code");
-      },
-    });
-  };
-
   // Geocode typed address and set pin on map
   const handleLocateAddressOnMap = async () => {
     const address = buildAddressString(deliveryDetails);
@@ -455,16 +437,6 @@ const Checkout = () => {
 
   const subtotal = cartTotal;
 
-  // Calculate discount
-  let discount = 0;
-  if (promoApplied && couponData) {
-    if (couponData.type === "percentage") {
-      discount = (subtotal * couponData.amount) / 100;
-    } else {
-      discount = couponData.amount;
-    }
-  }
-
   const tax = subtotal * taxRate;
   const tipAmount = customTip
     ? Number(customTip) || 0
@@ -473,8 +445,6 @@ const Checkout = () => {
       : 0;
 
   const deliveryFee = orderType === "delivery" ? (matchedZone?.fee ?? 0) : 0;
-  const total = subtotal + tax + tipAmount + deliveryFee - discount - loyaltyDiscount;
-
   // Build delivery address string
   const deliveryAddress = deliveryDetails
     ? [
@@ -639,6 +609,83 @@ const Checkout = () => {
     });
   };
 
+  const promotionCartLines = useMemo(() => {
+    const items = mapCartItemsToOrderItems();
+    return items.map((oi) => {
+      const modSum = (oi.modifiers || []).reduce(
+        (s, m) => s + Number(m.unit_price_delta || 0),
+        0,
+      );
+      return {
+        menu_item_id: oi.menu_item_id,
+        quantity: oi.quantity,
+        line_subtotal: (Number(oi.unit_price) + modSum) * Number(oi.quantity),
+      };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartItems]);
+
+  const promotionId = getAppliedPromotion()?.id;
+
+  useEffect(() => {
+    if (!promotionId) {
+      setPromoPreview(null);
+      setPromoPreviewError("");
+      return;
+    }
+    let cancelled = false;
+    const baseDelivery = orderType === "delivery" ? (matchedZone?.fee ?? 0) : 0;
+    selectPromotion(promotionId, {
+      lines: promotionCartLines,
+      order_type: orderType,
+      delivery_fee: baseDelivery,
+    })
+      .then((payload) => {
+        if (cancelled) return;
+        const pv = payload?.preview;
+        if (pv) {
+          const rawDel = pv.delivery_fee_after;
+          const del =
+            rawDel != null && rawDel !== ""
+              ? Number(rawDel)
+              : baseDelivery;
+          setPromoPreview({
+            discount: Number(pv.discount) || 0,
+            delivery_fee_after: Number.isFinite(del) ? del : baseDelivery,
+          });
+        } else
+          setPromoPreview({
+            discount: 0,
+            delivery_fee_after: baseDelivery,
+          });
+        setPromoPreviewError("");
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        clearAppliedPromotion();
+        setPromoPreview(null);
+        setPromoPreviewError(
+          err?.response?.data?.message ||
+            "Promotion not applicable to this cart.",
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [promotionId, promotionCartLines, orderType, matchedZone?.fee]);
+
+  const promoDiscount = promoPreview?.discount ?? 0;
+  const effectiveDeliveryFee =
+    promoPreview != null ? promoPreview.delivery_fee_after : deliveryFee;
+  const discount = promoDiscount;
+  const total =
+    subtotal +
+    tax +
+    tipAmount +
+    effectiveDeliveryFee -
+    promoDiscount -
+    loyaltyDiscount;
+
   const handleSubmitOrder = () => {
     if (!canCheckout) {
       setSubmitError(modeMessage || "Online ordering is currently unavailable.");
@@ -706,6 +753,13 @@ const Checkout = () => {
 
     setSubmitError("");
 
+    if (promotionId && promoPreviewError) {
+      setSubmitError(
+        "Selected promotion is no longer valid. Please choose another offer.",
+      );
+      return;
+    }
+
     // Save customer data for next visit
     saveCustomerData(form);
 
@@ -726,12 +780,12 @@ const Checkout = () => {
       money: {
         subtotal: subtotal,
         discount: discount,
-        delivery_fee: deliveryFee,
+        delivery_fee: effectiveDeliveryFee,
         tax_total: tax,
         tips: tipAmount,
         total_amount: total,
         currency: siteSettings?.currency || "USD",
-        coupon_code: promoApplied ? promoCode : undefined,
+        promotion_id: promotionId || undefined,
         loyalty_discount_amount:
           loyaltyDiscount > 0 ? loyaltyDiscount : undefined,
         rewards_points_used:
@@ -1356,53 +1410,55 @@ const Checkout = () => {
               </section>
             )}
 
-            {/* Promo Code */}
+            {/* Promotion (from menu — one per order) */}
             <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
               <h2 className="text-xl font-bold text-(--text-primary) mb-6 flex items-center gap-2">
                 <span className="w-8 h-8 rounded-full bg-(--primary) text-white text-sm font-bold flex items-center justify-center">
                   {orderType === "delivery" ? "4" : "3"}
                 </span>
-                Promo Code
+                Promotion
               </h2>
 
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <Ticket
-                    size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Enter promo code"
-                    value={promoCode}
-                    onChange={(e) => {
-                      setPromoCode(e.target.value);
-                      if (promoApplied) setPromoApplied(false);
-                    }}
-                    className="w-full pl-11 pr-4 py-3 bg-linear-to-br from-(--primary)/5 to-transparent border-l-4 border-(--primary) rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
-                  />
+              {!promotionId ? (
+                <p className="text-sm text-gray-600">
+                  Choose a promotion on the menu page — only one can apply per
+                  order.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-(--primary)/25 bg-(--primary)/5 p-4 flex justify-between gap-3 items-start">
+                    <div>
+                      <p className="font-bold text-(--text-primary)">
+                        {getAppliedPromotion()?.headline || "Selected promotion"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Saved for this checkout · clears after order is placed.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="text-sm font-semibold text-red-600 hover:underline shrink-0"
+                      onClick={() => {
+                        clearAppliedPromotion();
+                        setPromoPreview(null);
+                        setPromoPreviewError("");
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  {promoPreviewError && (
+                    <p className="text-sm text-red-600 font-medium">
+                      {promoPreviewError}
+                    </p>
+                  )}
+                  {promotionId && !promoPreviewError && promoPreview && (
+                    <p className="text-sm text-green-700 font-medium">
+                      Promotion applied to this cart preview — totals update on
+                      the right.
+                    </p>
+                  )}
                 </div>
-                <button
-                  onClick={handleApplyPromo}
-                  disabled={!promoCode.trim() || verifyCouponMutation.isPending}
-                  className="px-6 py-3 bg-(--primary) text-white font-bold rounded-xl hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
-                >
-                  {verifyCouponMutation.isPending ? "Checking..." : "Apply"}
-                </button>
-              </div>
-              {promoError && (
-                <p className="mt-3 text-sm text-red-500 font-medium">
-                  {promoError}
-                </p>
-              )}
-              {promoApplied && couponData && (
-                <p className="mt-3 text-sm text-green-600 font-medium flex items-center gap-1">
-                  <Ticket size={14} />
-                  Applied!{" "}
-                  {couponData.type === "percentage"
-                    ? `${couponData.amount}% off`
-                    : `${formatPrice(couponData.amount, siteSettings)} off`}
-                </p>
               )}
             </section>
 
@@ -1595,7 +1651,7 @@ const Checkout = () => {
                   <div className="flex justify-between text-gray-600">
                     <span>Delivery Fee</span>
                     <span className="font-semibold">
-                      {formatPrice(deliveryFee, siteSettings)}
+                      {formatPrice(effectiveDeliveryFee, siteSettings)}
                     </span>
                   </div>
                 )}

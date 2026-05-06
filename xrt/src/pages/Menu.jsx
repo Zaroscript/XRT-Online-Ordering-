@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Menulist from "../Component/Menu_Items/Menulist";
 import ViewItems from "../Component/Menu_Items/ViewItems";
 import MenuCategories from "../Component/Menu_Items/MenuCategories";
 import { ProductGridSkeleton } from "../Component/Menu_Items/ProductSkeleton";
+import { selectPromotion } from "../api/promotions";
+import { setAppliedPromotion } from "../utils/promotionStorage";
 import { useCategoriesQuery, useProductsQuery } from "@/api";
 
 export default function Menu() {
@@ -13,6 +15,39 @@ export default function Menu() {
   const menuListRef = useRef(null);
   const menuProducts = products || [];
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const promoId = new URLSearchParams(location.search).get("promotion");
+    if (!promoId?.trim()) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await selectPromotion(promoId.trim(), {});
+        const promo = res?.promotion;
+        if (!cancelled && promo?.id) {
+          setAppliedPromotion({
+            id: promo.id,
+            headline: promo.headline,
+            image_url: promo.image_url,
+            template: promo.template,
+            cta_label: promo.cta_label,
+          });
+        }
+      } catch {
+        // Invalid / inactive promotion — still strip query to avoid loops
+      } finally {
+        if (!cancelled) {
+          navigate({ pathname: location.pathname, search: "" }, { replace: true });
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.search, location.pathname, navigate]);
 
   // Set initial active category when categories are loaded
   useEffect(() => {

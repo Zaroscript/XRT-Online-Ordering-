@@ -33,6 +33,19 @@ export function setPrintJobNotifier(io: SocketIOServer): void {
   printJobNotifier = new PrintJobNotifier(io);
 }
 
+/** Socket push for queued jobs (browser Web Serial agent or future workers). */
+export function notifyQueuedPrintJob(
+  restaurantId: string,
+  job: {
+    id: string;
+    renderedTemplates: Array<{ renderedContent: string }>;
+    printerInterface: string;
+  }
+): void {
+  if (!restaurantId || !printJobNotifier) return;
+  printJobNotifier.notify(restaurantId, job);
+}
+
 /**
  * Route an order to all active printers for each kitchen section.
  * Groups items by section, finds printers per section, renders template,

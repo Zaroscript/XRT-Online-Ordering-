@@ -1,19 +1,20 @@
-import React from 'react';
-import { products } from '../../config/constants';
+import React, { useMemo } from 'react';
 import { useCart } from '../../context/CartContext';
+import { useProductsQuery } from '@/api';
 import ProductCard from '../Menu_Items/ViewItems';
 
 const SignatureProducts = () => {
   const { cartItems } = useCart();
-  
-  // Create cart id list
-  const cartIds = cartItems.map(c => c.id);
+  const { products = [], loading } = useProductsQuery();
 
-  // Filter signature items not in cart
-  const signatureItems = products
-    .filter(p => p.is_signature && !cartIds.includes(p.id))
-    .slice(0, 6);
+  const signatureItems = useMemo(() => {
+    const cartIds = new Set(cartItems.map((c) => String(c.id)));
+    return products
+      .filter((p) => p.is_signature && !cartIds.has(String(p.id)))
+      .slice(0, 6);
+  }, [products, cartItems]);
 
+  if (loading) return null;
   if (signatureItems.length === 0) return null;
 
   return (

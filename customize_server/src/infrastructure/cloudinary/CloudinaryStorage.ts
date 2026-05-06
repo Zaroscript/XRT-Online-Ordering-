@@ -40,6 +40,7 @@ export const storage = createCloudinaryStorage({
         'products',
         'shops',
         'coupons',
+        'promotions',
         'attributes',
         'groups',
         'tags',

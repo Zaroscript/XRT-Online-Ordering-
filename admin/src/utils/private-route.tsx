@@ -25,6 +25,7 @@ function resolvePagePermission(pathname: string): string | null {
     { prefix: '/roles', permission: PERMISSION_KEYS.ROLES_READ },
     { prefix: '/customers', permission: PERMISSION_KEYS.CUSTOMERS_READ },
     { prefix: '/coupons', permission: PERMISSION_KEYS.COUPONS_READ },
+    { prefix: '/promotions', permission: PERMISSION_KEYS.COUPONS_READ },
     { prefix: '/loyalty', permission: PERMISSION_KEYS.LOYALTY_READ },
     { prefix: '/emails', permission: PERMISSION_KEYS.EMAILS_READ },
     { prefix: '/sms', permission: PERMISSION_KEYS.SMS_READ },

@@ -164,6 +164,7 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
         image: { type: Object, default: {} },
         couponCode: { type: String, default: '' },
         showCouponCode: { type: Boolean, default: false },
+        promotionId: { type: String, default: '' },
       },
     ],
     currencyOptions: {

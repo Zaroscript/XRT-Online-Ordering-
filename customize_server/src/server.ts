@@ -35,6 +35,7 @@ import kitchenSectionRoutes from './application/routes/kitchen-section.routes';
 import taxRoutes from './application/routes/tax.routes';
 import shippingRoutes from './application/routes/shipping.routes';
 import couponRoutes from './application/routes/coupon.routes';
+import promotionRoutes from './application/routes/promotion.routes';
 import testimonialRoutes from './application/routes/testimonial.routes';
 import orderRoutes from './application/routes/order.routes';
 import templateRoutes from './application/routes/template.routes';
@@ -50,6 +51,7 @@ import webhookRoutes from './application/routes/webhook.routes';
 import { env } from './shared/config/env';
 import { logger } from './shared/utils/logger';
 import { registerOrderPrintHandler } from './services/printer/orderPrintEvents';
+import { setPrintJobNotifier } from './services/printer/printRoutingService';
 import { startPrinterStatusMonitor } from './services/printer/printerStatusMonitor';
 // Import swagger config - using relative path from src to config directory
 import { specs } from './swagger';
@@ -206,6 +208,7 @@ app.use(`${env.API_BASE_URL}`, mockRoutes);
 app.use(`${env.API_BASE_URL}/taxes`, taxRoutes);
 app.use(`${env.API_BASE_URL}/shippings`, shippingRoutes);
 app.use(`${env.API_BASE_URL}/coupons`, couponRoutes);
+app.use(`${env.API_BASE_URL}/promotions`, promotionRoutes);
 app.use(`${env.API_BASE_URL}/testimonials`, testimonialRoutes);
 app.use(`${env.API_BASE_URL}/orders`, orderRoutes);
 app.use(`${env.API_BASE_URL}/templates`, templateRoutes);
@@ -257,6 +260,7 @@ const startServer = async () => {
         pingInterval: 25000,
       });
       app.set('io', io);
+      setPrintJobNotifier(io);
 
       io.on('connection', (socket) => {
         socket.on('join', (userId: string) => {

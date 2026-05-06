@@ -10,12 +10,17 @@ type Props = {
   restaurantId: string;
 };
 
-function getSocketServerUrl(): string {
-  const apiUrl = process.env.NEXT_PUBLIC_REST_API_ENDPOINT || 'http://localhost:3001/api/v1';
+function getApiAndSocketUrls(): { restApiBase: string; socketOrigin: string } {
+  const restApiBase =
+    process.env.NEXT_PUBLIC_REST_API_ENDPOINT || 'http://localhost:3001/api/v1';
   try {
-    return new URL(apiUrl).origin;
+    const socketOrigin = new URL(restApiBase).origin;
+    return { restApiBase, socketOrigin };
   } catch {
-    return 'http://localhost:3001';
+    return {
+      restApiBase: 'http://localhost:3001/api/v1',
+      socketOrigin: 'http://localhost:3001',
+    };
   }
 }
 
@@ -59,8 +64,8 @@ export default function PrintAgentStatus({ restaurantId }: Props) {
     setIsWebSerialAvailable(available);
 
     try {
-      const serverUrl = getSocketServerUrl();
-      agentRef.current = new BrowserPrintAgent(restaurantId, serverUrl);
+      const { restApiBase, socketOrigin } = getApiAndSocketUrls();
+      agentRef.current = new BrowserPrintAgent(restaurantId, socketOrigin, restApiBase);
       setStatus('disconnected');
       setErrorMessage('');
     } catch (error: unknown) {

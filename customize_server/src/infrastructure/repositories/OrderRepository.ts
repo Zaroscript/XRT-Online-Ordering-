@@ -85,6 +85,7 @@ export class OrderRepository implements IOrderRepository {
         payment_id: obj.money?.payment_id,
         payment_status: obj.money?.payment_status || obj.payment_status,
         coupon_code: obj.money?.coupon_code,
+        promotion_id: obj.money?.promotion_id,
         rewards_points_used: obj.money?.rewards_points_used,
         card_type: obj.money?.card_type,
         last_4: obj.money?.last_4,

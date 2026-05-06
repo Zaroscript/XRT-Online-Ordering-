@@ -19,6 +19,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { BusinessSettingsRepository } from '../../infrastructure/repositories/BusinessSettingsRepository';
 import { BusinessRepository } from '../../infrastructure/repositories/BusinessRepository';
 import { CouponRepository } from '../../infrastructure/repositories/CouponRepository';
+import { PromotionRepository } from '../../infrastructure/repositories/PromotionRepository';
 import { CustomerRepository } from '../../infrastructure/repositories/CustomerRepository';
 import { TransactionRepository } from '../../infrastructure/repositories/TransactionRepository';
 import * as AuthorizeNet from 'authorizenet';
@@ -141,6 +142,7 @@ export class OrderController {
     const categoryRepository = new CategoryRepository();
     const businessSettingsRepository = new BusinessSettingsRepository();
     const couponRepository = new CouponRepository();
+    const promotionRepository = new PromotionRepository();
     const customerRepository = new CustomerRepository();
     this.createOrderUseCase = new CreateOrderUseCase(
       orderRepository,
@@ -148,6 +150,7 @@ export class OrderController {
       categoryRepository,
       businessSettingsRepository,
       couponRepository,
+      promotionRepository,
       customerRepository
     );
     this.getOrderUseCase = new GetOrderUseCase(orderRepository);

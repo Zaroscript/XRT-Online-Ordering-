@@ -551,6 +551,70 @@ export interface Coupon {
   max_conversions?: number;
 }
 
+export type PromotionTemplateId =
+  | 'percent_cart'
+  | 'percent_selected_items'
+  | 'free_delivery'
+  | 'bogo'
+  | 'fixed_cart'
+  | 'free_item'
+  | 'meal_bundle'
+  | 'buy_n_get_one_free'
+  | 'percent_combo'
+  | 'linked_coupon';
+
+export interface PromotionRules {
+  percentage?: number;
+  amount?: number;
+  menu_item_ids?: string[];
+  free_quantity?: number;
+  n?: number;
+  bundle_price?: number;
+  components?: { menu_item_id: string; min_quantity: number }[];
+  group_a_ids?: string[];
+  group_b_ids?: string[];
+  discount_cheapest_percent?: number;
+  order_types?: ('pickup' | 'delivery')[];
+  /** linked_coupon — must match Coupon.code */
+  coupon_code?: string;
+}
+
+export interface Promotion {
+  id: string;
+  business_id: string;
+  template: PromotionTemplateId;
+  headline: string;
+  description?: string;
+  image_url?: string;
+  rules: PromotionRules;
+  active_from: string;
+  expire_at: string;
+  minimum_cart_amount: number;
+  max_conversions?: number | null;
+  is_active_on_website: boolean;
+  sort_order: number;
+  /** Storefront card button label */
+  cta_label?: string;
+  orders?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PromotionInput {
+  template: PromotionTemplateId;
+  headline: string;
+  description?: string;
+  image_url?: string;
+  rules: PromotionRules;
+  active_from: string | Date;
+  expire_at: string | Date;
+  minimum_cart_amount?: number;
+  max_conversions?: number | null;
+  is_active_on_website?: boolean;
+  sort_order?: number;
+  cta_label?: string;
+}
+
 export interface CouponInput {
   code: string;
   type: CouponType;
@@ -1381,6 +1445,15 @@ export interface SettingsOptions {
   externalLink?: string;
   timezone?: string;
   heroSlides?: HeroSlide[];
+  offerCards?: Array<{
+    title?: string;
+    description?: string;
+    image?: any;
+    couponCode?: string;
+    showCouponCode?: boolean;
+    promotionId?: string;
+  }>;
+  showMenuSection?: boolean;
   nmiPublicKey?: string;
   nmiPrivateKey?: string;
   authorizeNetPublicKey?: string;
@@ -1567,6 +1640,9 @@ export interface SettingsOptionsInput {
   primary_color?: string;
   secondary_color?: string;
   operationsSettings?: OperationsSettings;
+  heroSlides?: HeroSlide[];
+  offerCards?: SettingsOptions['offerCards'];
+  showMenuSection?: boolean;
 }
 
 export interface DeliveryTime {
@@ -1974,6 +2050,10 @@ export interface CouponQueryOptions extends QueryOptions {
   code: string;
   shop_id: string;
 }
+export interface PromotionQueryOptions extends QueryOptions {
+  headline?: string;
+  template?: string;
+}
 export interface StoreNoticeQueryOptions extends QueryOptions {
   notice: string;
   shops: string;
@@ -2106,6 +2186,11 @@ export interface OrderPaginator extends PaginatorInfo<Order> {}
 export interface NotifyLogsPaginator extends PaginatorInfo<NotifyLogs> {}
 
 export interface CouponPaginator extends PaginatorInfo<Coupon> {}
+
+export interface PromotionPaginator extends PaginatorInfo<Promotion> {
+  website_active_count?: number;
+  website_active_max?: number;
+}
 
 export interface StoreNoticePaginator extends PaginatorInfo<StoreNotice> {}
 

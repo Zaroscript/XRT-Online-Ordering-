@@ -9,18 +9,17 @@ import TextArea from '@/components/ui/text-area';
 import { useUpdateSettingsMutation } from '@/data/settings';
 import { formatAddress } from '@/utils/format-address';
 import { siteSettings } from '@/settings/site.settings';
-import { Settings, UserAddress } from '@/types';
-import { HeroSlide } from '@/types';
+import { Settings, UserAddress, HeroSlide, Promotion } from '@/types';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { landingSettingsValidationSchema } from './landing-settings-validation-schema';
 import Radio from '@/components/ui/radio/radio';
 import Label from '@/components/ui/label';
 import TooltipLabel from '@/components/ui/tooltip-label';
-import { useCouponsQuery } from '@/data/coupon';
+import { usePromotionsQuery } from '@/data/promotion';
 import SelectInput from '@/components/ui/select-input';
 
 type FormValues = {
@@ -52,8 +51,7 @@ type FormValues = {
     title: string;
     description: string;
     image: any;
-    couponCode: string;
-    showCouponCode: boolean;
+    promotionId?: string;
   }>;
   primary_color: string;
   secondary_color: string;
@@ -68,11 +66,18 @@ export default function LandingSettingsForm({ settings }: IProps) {
   const { locale } = useRouter();
   const { mutate: updateSettingsMutation, isPending: loading } =
     useUpdateSettingsMutation();
-  const { coupons } = useCouponsQuery({ limit: 100 });
-  const couponOptions = coupons?.map((coupon: any) => ({
-    label: coupon.code,
-    value: coupon.code,
-  })) ?? [];
+  const { promotions } = usePromotionsQuery({
+    limit: 100,
+    language: (locale as string) || 'en',
+  });
+  const promotionOptions = useMemo(
+    () =>
+      promotions?.map((p: Promotion) => ({
+        label: p.headline ? `${p.headline}` : p.id,
+        value: p.id,
+      })) ?? [],
+    [promotions],
+  );
 
   const options = settings?.options ?? {};
   const max_fileSize = options?.server_info?.upload_max_filesize
@@ -226,10 +231,12 @@ export default function LandingSettingsForm({ settings }: IProps) {
         })),
         offerCards: values.offerCards.map((card: any) => ({
           ...card,
-          couponCode:
-            typeof card.couponCode === 'object'
-              ? card.couponCode?.value
-              : card.couponCode,
+          couponCode: '',
+          showCouponCode: false,
+          promotionId:
+            typeof card.promotionId === 'object'
+              ? card.promotionId?.value
+              : card.promotionId,
         })),
         primary_color: values.primary_color,
         secondary_color: values.secondary_color,
@@ -625,29 +632,24 @@ export default function LandingSettingsForm({ settings }: IProps) {
                     />
                   </div>
 
-                    <SelectInput
-                      name={`offerCards.${index}.couponCode`}
-                      label={t('form:input-label-offer-card-coupon')}
-                      control={control}
-                      options={couponOptions}
-                      isClearable
-                      placeholder={t('form:input-placeholder-select-coupon')}
-                    />
-
-                    <div className="mt-2">
-                      <SwitchInput
-                        name={`offerCards.${index}.showCouponCode`}
-                        control={control}
-                        label={t('form:input-label-show-coupon-code')}
-                        toolTipText={t('form:input-tooltip-show-coupon-code')}
-                      />
-                    </div>
-                  </div>
+                  <SelectInput
+                    name={`offerCards.${index}.promotionId`}
+                    label="Storefront promotion"
+                    control={control}
+                    options={promotionOptions}
+                    isClearable
+                    placeholder="Link a promotion (recommended — uses checkout selection)"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Coupon-based discounts use the Promotions → Linked coupon template with an
+                    underlying coupon code; offer cards only deep-link by promotion ID.
+                  </p>
                 </div>
+              </div>
               ))}
           </div>
 
-          {offerCardFields.length < 3 && (
+          {offerCardFields.length < 4 && (
             <Button
               type="button"
               onClick={() =>
@@ -655,8 +657,7 @@ export default function LandingSettingsForm({ settings }: IProps) {
                   title: '',
                   description: '',
                   image: null,
-                  couponCode: '',
-                  showCouponCode: false,
+                  promotionId: '',
                 })
               }
               className="w-full sm:w-auto mt-4"

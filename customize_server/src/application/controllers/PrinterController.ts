@@ -15,6 +15,8 @@ import { AppError, NotFoundError } from '../../shared/errors/AppError';
 import { env } from '../../shared/config/env';
 import { sendRenderedTemplatesToPrinter } from '../../services/printer/directPrintService';
 import { recordPrinterLog } from '../../services/printer/printerActivityLogger';
+import { notifyQueuedPrintJob } from '../../services/printer/printRoutingService';
+import { BusinessRepository } from '../../infrastructure/repositories/BusinessRepository';
 
 const ESC_INIT = '\x1b\x40';
 
@@ -144,6 +146,16 @@ export class PrinterController {
       message: 'Test print job queued',
       print_job_id: job.id,
     });
+
+    const businessRepository = new BusinessRepository();
+    const business = await businessRepository.findOne();
+    if (business) {
+      notifyQueuedPrintJob(business.id, {
+        id: job.id,
+        renderedTemplates: job.renderedTemplates,
+        printerInterface: printer.interface,
+      });
+    }
 
     return sendSuccess(res, 'Test print queued successfully', { printerId: id });
   });
