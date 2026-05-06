@@ -29,6 +29,10 @@ import { Tabs, TabList, Tab, TabPanel } from '@/components/ui/tabs';
 import { useItemSizesQuery } from '@/data/item-size';
 import QuantityLevelField from '@/components/modifier-group/quantity-level-field';
 import { TrashIcon } from '@/components/icons/trash';
+import TooltipLabel from '@/components/ui/tooltip-label';
+
+/** Default allowed sides when user turns on sides configuration */
+const ALL_MODIFIER_SIDES = ['LEFT', 'RIGHT', 'WHOLE'] as const;
 
 type FormValues = {
   name: string;
@@ -339,11 +343,46 @@ export default function CreateOrUpdateModifierForm({
 
                 <div className="mb-5 p-4 border border-border-200 rounded-lg bg-gray-50">
                   <div className="mb-3">
-                    <SwitchInput
-                      name="sides_config.enabled"
-                      control={control}
-                      label={t('form:input-label-enable-sides')}
-                    />
+                    <div className="flex items-center gap-x-4">
+                      <Controller
+                        name="sides_config.enabled"
+                        control={control}
+                        render={({ field: { value, onChange } }) => (
+                          <Switch
+                            checked={!!value}
+                            onChange={(checked: boolean) => {
+                              onChange(checked);
+                              if (checked) {
+                                setValue(
+                                  'sides_config.allowed_sides',
+                                  [...ALL_MODIFIER_SIDES],
+                                );
+                              }
+                            }}
+                            className={`${
+                              value ? 'bg-accent' : 'bg-gray-300'
+                            } relative inline-flex h-6 w-11 items-center rounded-full focus:outline-none`}
+                            dir="ltr"
+                            id="sides_config.enabled"
+                            type="button"
+                          >
+                            <span className="sr-only">
+                              {t('form:input-label-enable-sides')}
+                            </span>
+                            <span
+                              className={`${
+                                value ? 'translate-x-6' : 'translate-x-1'
+                              } inline-block h-4 w-4 transform rounded-full bg-light transition-transform`}
+                            />
+                          </Switch>
+                        )}
+                      />
+                      <TooltipLabel
+                        htmlFor="sides_config.enabled"
+                        className="mb-0"
+                        label={t('form:input-label-enable-sides')}
+                      />
+                    </div>
                     <p className="text-xs text-gray-500 mt-1">
                       {t('form:sides-config-helper')}
                     </p>
@@ -353,7 +392,7 @@ export default function CreateOrUpdateModifierForm({
                       <Label className="mb-3 block text-sm font-medium">
                         {t('form:input-label-allowed-sides')}
                       </Label>
-                      {['LEFT', 'RIGHT', 'WHOLE'].map((side) => (
+                      {ALL_MODIFIER_SIDES.map((side) => (
                         <div
                           key={side}
                           className="flex items-center justify-between"

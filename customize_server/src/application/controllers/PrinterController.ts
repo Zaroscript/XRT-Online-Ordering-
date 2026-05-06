@@ -102,7 +102,10 @@ export class PrinterController {
         level: 'info',
         message: 'Test print simulated (PRINT_MODE=mock)',
       });
-      return sendSuccess(res, 'Test print simulated (PRINT_MODE=mock)', { printerId: id });
+      return sendSuccess(res, 'Test print simulated (PRINT_MODE=mock)', {
+        printerId: id,
+        delivery: 'mock',
+      });
     }
 
     if (env.PRINT_DELIVERY === 'direct') {
@@ -115,7 +118,10 @@ export class PrinterController {
           level: 'success',
           message: 'Test print sent directly to printer',
         });
-        return sendSuccess(res, 'Test print sent directly to printer', { printerId: id });
+        return sendSuccess(res, 'Test print sent directly to printer', {
+          printerId: id,
+          delivery: 'direct',
+        });
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         void recordPrinterLog({
@@ -157,7 +163,11 @@ export class PrinterController {
       });
     }
 
-    return sendSuccess(res, 'Test print queued successfully', { printerId: id });
+    return sendSuccess(res, 'Test print queued successfully', {
+      printerId: id,
+      printJobId: job.id,
+      delivery: 'queue',
+    });
   });
 
   /**

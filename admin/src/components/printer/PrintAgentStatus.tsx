@@ -43,6 +43,8 @@ export default function PrintAgentStatus({ restaurantId }: Props) {
   const agentRef = useRef<BrowserPrintAgent | null>(null);
   const [status, setStatus] = useState<AgentStatus>('disconnected');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  /** Socket/serial connect errors vs last print job failure (keep Ready dot if printer still open). */
+  const [printJobError, setPrintJobError] = useState<string>('');
   const [isWebSerialAvailable, setIsWebSerialAvailable] = useState(false);
 
   useEffect(() => {
@@ -65,9 +67,17 @@ export default function PrintAgentStatus({ restaurantId }: Props) {
 
     try {
       const { restApiBase, socketOrigin } = getApiAndSocketUrls();
-      agentRef.current = new BrowserPrintAgent(restaurantId, socketOrigin, restApiBase);
+      agentRef.current = new BrowserPrintAgent(restaurantId, socketOrigin, restApiBase, {
+        onPrintJobError: (message) => {
+          setPrintJobError(message);
+        },
+        onPrintJobOk: () => {
+          setPrintJobError('');
+        },
+      });
       setStatus('disconnected');
       setErrorMessage('');
+      setPrintJobError('');
     } catch (error: unknown) {
       const message =
         error instanceof Error
@@ -111,6 +121,7 @@ export default function PrintAgentStatus({ restaurantId }: Props) {
 
     setStatus('connecting');
     setErrorMessage('');
+    setPrintJobError('');
     try {
       await agentRef.current.connectPrinter();
       setStatus('ready');
@@ -154,6 +165,23 @@ export default function PrintAgentStatus({ restaurantId }: Props) {
       {status === 'error' && errorMessage ? (
         <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
       ) : null}
+
+      {printJobError ? (
+        <p className="mt-3 text-sm text-red-600">
+          {t(
+            'print-agent.errors.last-job-prefix',
+            'Last print job:',
+          )}{' '}
+          {printJobError}
+        </p>
+      ) : null}
+
+      <p className="mt-4 text-xs text-body">
+        {t(
+          'print-agent.debug-console-hint',
+          'Tip: Press F12 → Console and filter by “BrowserPrintAgent” to see socket connect, incoming jobs, and ACK URLs.',
+        )}
+      </p>
     </div>
   );
 }

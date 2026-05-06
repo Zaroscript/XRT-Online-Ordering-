@@ -63,6 +63,12 @@ function decodeBase64ToBytes(base64: string): Uint8Array {
   }
 }
 
+/** Optional hooks so the UI can show print failures (console alone is easy to miss). */
+export type BrowserPrintAgentCallbacks = {
+  onPrintJobError?: (message: string) => void;
+  onPrintJobOk?: (jobId: string) => void;
+};
+
 export class BrowserPrintAgent {
   private readonly restaurantRoom: string;
   private readonly socket: Socket;
@@ -71,10 +77,14 @@ export class BrowserPrintAgent {
 
   constructor(
     private readonly restaurantId: string,
-    private readonly serverUrl: string
+    /** Origin only: scheme + host + port (Socket.IO), e.g. http://localhost:3001 */
+    private readonly socketServerUrl: string,
+    /** Full REST base including /api/v1 — used for PATCH …/print-jobs/:id/ack */
+    private readonly restApiBaseUrl: string,
+    private readonly callbacks?: BrowserPrintAgentCallbacks
   ) {
     this.restaurantRoom = `restaurant:${restaurantId}`;
-    this.socket = io(serverUrl, {
+    this.socket = io(socketServerUrl, {
       transports: ['polling', 'websocket'],
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,
@@ -85,12 +95,33 @@ export class BrowserPrintAgent {
 
   private initialize(): void {
     this.socket.on('connect', () => {
+      // eslint-disable-next-line no-console
+      console.info('[BrowserPrintAgent] socket connected → joining room', {
+        socketId: this.socket.id,
+        room: this.restaurantRoom,
+        socketServerUrl: this.socketServerUrl,
+        ackApiBase: this.restApiBaseUrl,
+      });
       this.socket.emit('join', this.restaurantRoom);
     });
 
+    this.socket.on('disconnect', (reason: string) => {
+      // eslint-disable-next-line no-console
+      console.warn('[BrowserPrintAgent] socket disconnected', { reason, room: this.restaurantRoom });
+    });
+
     this.socket.on('print:job', async (job: PrintJobPayload) => {
+      // eslint-disable-next-line no-console
+      console.info('[BrowserPrintAgent] print:job received', {
+        jobId: job?.jobId,
+        contentLength: job?.content?.length ?? 0,
+        printerInterface: job?.printerInterface,
+      });
       try {
         await this.handlePrintJob(job);
+        // eslint-disable-next-line no-console
+        console.info('[BrowserPrintAgent] print:job finished OK', { jobId: job.jobId });
+        this.callbacks?.onPrintJobOk?.(job.jobId);
       } catch (error: unknown) {
         const typedError =
           error instanceof Error
@@ -98,12 +129,17 @@ export class BrowserPrintAgent {
             : new BrowserPrintAgentError('Unhandled print job error.', error);
         // eslint-disable-next-line no-console
         console.error('[BrowserPrintAgent] print:job failed', typedError);
+        this.callbacks?.onPrintJobError?.(typedError.message);
       }
     });
 
     this.socket.on('connect_error', (error: Error) => {
       // eslint-disable-next-line no-console
-      console.error('[BrowserPrintAgent] socket connect_error', error);
+      console.error('[BrowserPrintAgent] socket connect_error (check API is running & CORS)', {
+        message: error.message,
+        socketServerUrl: this.socketServerUrl,
+        room: this.restaurantRoom,
+      });
     });
   }
 
@@ -184,6 +220,8 @@ export class BrowserPrintAgent {
 
   private async acknowledgeJob(jobId: string): Promise<void> {
     const ackUrl = buildAckUrl(this.restApiBaseUrl, jobId);
+    // eslint-disable-next-line no-console
+    console.info('[BrowserPrintAgent] ACK PATCH', ackUrl);
     try {
       const response = await fetch(ackUrl, {
         method: 'PATCH',
