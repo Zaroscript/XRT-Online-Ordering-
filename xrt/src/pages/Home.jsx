@@ -3,6 +3,7 @@ import Menulist from "../Component/Menu_Items/Menulist";
 import { ProductGridSkeleton } from "../Component/Menu_Items/ProductSkeleton";
 import TopRated from "../Component/TopRated/TopRated";
 import Testimonials from "../Component/Testimonials/Testimonials";
+import HeroSlider from "../Component/Slider/Slider";
 import { useCategoriesQuery, useProductsQuery, useSiteSettingsQuery } from "@/api";
 import HomePromotionsStrip from "../Component/Ads/HomePromotionsStrip";
 
@@ -25,6 +26,7 @@ const Home = () => {
 
   return (
     <>
+      <HeroSlider />
       <Categories categories={categories} />
       <HomePromotionsStrip />
       {showMenuSection && (
