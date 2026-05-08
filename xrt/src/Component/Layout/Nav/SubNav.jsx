@@ -1,12 +1,27 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import NavLinks from './NavLinks'
 import { useCart } from '../../../context/CartContext';
 import { formatPhone } from '../../../utils/phoneUtils';
+import { useSiteSettingsQuery } from '../../../api/hooks/useSiteSettings';
+
 const SubNav = (props) => {
   const { orderType, setOrderType, deliveryDetails, setShowDeliveryModal } = useCart();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+  const { data: settings } = useSiteSettingsQuery();
+  
+  const isDeliveryEnabled = settings?.delivery?.enabled ?? true;
 
-  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+  useEffect(() => {
+    if (!isDeliveryEnabled && orderType === 'delivery') {
+      setOrderType('pickup');
+    }
+  }, [isDeliveryEnabled, orderType, setOrderType]);
+
+  const toggleDropdown = () => {
+    if (isDeliveryEnabled) {
+      setIsDropdownOpen(!isDropdownOpen);
+    }
+  };
   
   const selectOrderType = (type) => {
     if (type === 'delivery') {
@@ -33,7 +48,7 @@ const SubNav = (props) => {
           <div className="relative group/type">
              <div 
               onClick={toggleDropdown}
-              className="flex items-center gap-2 cursor-pointer bg-black/10 px-3 py-1.5 rounded-full hover:bg-black/20 transition-colors select-none"
+              className={`flex items-center gap-2 bg-black/10 px-3 py-1.5 rounded-full transition-colors select-none ${isDeliveryEnabled ? 'cursor-pointer hover:bg-black/20' : 'cursor-default'}`}
             >
                <div className="w-[28px] h-[28px] rounded-full bg-white/10 flex items-center justify-center text-white" style={{ color: 'var(--color-secondary-contrast)' }}>
                   {orderType === 'delivery' ? (
@@ -45,11 +60,13 @@ const SubNav = (props) => {
                <span className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--color-secondary-contrast)' }}>
                  {currentOrderType}
                </span>
-               <i className={`fa-solid fa-chevron-down text-xs opacity-70 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--color-secondary-contrast)' }}></i>
+               {isDeliveryEnabled && (
+                 <i className={`fa-solid fa-chevron-down text-xs opacity-70 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--color-secondary-contrast)' }}></i>
+               )}
             </div>
 
             {/* Dropdown Menu */}
-            {isDropdownOpen && (
+            {isDropdownOpen && isDeliveryEnabled && (
               <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50 py-1">
                 <button
                   onClick={() => selectOrderType('pickup')}

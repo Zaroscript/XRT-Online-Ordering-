@@ -11,7 +11,15 @@ export default function Top_Navbar(props) {
       {/* Mobile Layout */}
       <div className='bg-[#F2F7F3] py-[8px] px-4 flex flex-col gap-2 relative nav md:hidden'>
         <div className='flex justify-between items-center w-full'>
-          <h6 className='text-gray-500 text-[9px] w-[50%] md:w-auto'>{props.address}</h6>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(props.address || '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-[50%] md:w-auto block group"
+            title="View on Google Maps"
+          >
+            <h6 className='text-gray-500 text-[9px] w-full duration-500 group-hover:text-[#58d793]'>{props.address}</h6>
+          </a>
           
           <a href={`tel:${props.phone}`} className='block'>
             <div className="right_side flex items-center cursor-pointer group">
@@ -35,7 +43,15 @@ export default function Top_Navbar(props) {
 
       {/* Desktop/Tablet Layout */}
       <div className='bg-[#F2F7F3] py-[8px] hidden md:flex header-container relative nav justify-between items-center'>
-        <h6 className='text-gray-500 lg:text-[14px] md:text-[12px] text-[9px]'>{props.address}</h6>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(props.address || '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block group"
+          title="View on Google Maps"
+        >
+          <h6 className='text-gray-500 lg:text-[14px] md:text-[12px] text-[9px] duration-500 group-hover:text-(--secondary)'>{props.address}</h6>
+        </a>
 
         {/* Center: Store Open/Closed Status Badge */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">

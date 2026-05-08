@@ -1,14 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Truck } from 'lucide-react';
 import { useCart } from '../../../context/CartContext';
 import { COLORS } from '../../../config/colors';
+import { useSiteSettingsQuery } from '../../../api/hooks/useSiteSettings';
 
 const OrderTypeModal = () => {
   const { cartItems, orderType, setOrderType, setShowDeliveryModal } = useCart();
+  const { data: settings } = useSiteSettingsQuery();
+
+  const isDeliveryEnabled = settings?.delivery?.enabled ?? true;
+
+  useEffect(() => {
+    if (!isDeliveryEnabled && cartItems.length > 0 && !orderType) {
+      setOrderType('pickup');
+    }
+  }, [isDeliveryEnabled, cartItems.length, orderType, setOrderType]);
 
   // Show modal if there are items in the cart but no order type selected
-  const isOpen = cartItems.length > 0 && !orderType;
+  const isOpen = cartItems.length > 0 && !orderType && isDeliveryEnabled;
 
   const handleSelectType = (type) => {
     if (type === 'delivery') {
@@ -44,7 +54,7 @@ const OrderTypeModal = () => {
             </div>
 
             {/* Options */}
-            <div className="p-8 grid grid-cols-2 gap-4">
+            <div className={`p-8 grid gap-4 ${isDeliveryEnabled ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <button
                 onClick={() => handleSelectType('pickup')}
                 className="group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-gray-100 hover:border-(--primary) hover:bg-(--primary)/5 transition-all duration-300"
@@ -56,16 +66,18 @@ const OrderTypeModal = () => {
                 <span className="text-sm text-gray-500 mt-1">Collect at store</span>
               </button>
 
-              <button
-                onClick={() => handleSelectType('delivery')}
-                className="group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300"
-              >
-                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition-transform">
-                  <Truck size={32} />
-                </div>
-                <h3 className="text-lg font-bold text-gray-800">Delivery</h3>
-                <span className="text-sm text-gray-500 mt-1">We bring it to you</span>
-              </button>
+              {isDeliveryEnabled && (
+                <button
+                  onClick={() => handleSelectType('delivery')}
+                  className="group flex flex-col items-center justify-center p-6 rounded-xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300"
+                >
+                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition-transform">
+                    <Truck size={32} />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800">Delivery</h3>
+                  <span className="text-sm text-gray-500 mt-1">We bring it to you</span>
+                </button>
+              )}
             </div>
           </motion.div>
         </div>
