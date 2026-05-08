@@ -1,15 +1,26 @@
 import React from "react";
 import { useSiteSettingsQuery } from "@/api";
 import { resolveImageUrl } from "@/utils/resolveImageUrl";
+import { images_slider } from "@/config/constants";
 import Content from "./Photo_Content";
 
 export default function Sliderfun() {
-  const sliderHeight = 650;
   const { heroSlides, isLoading } = useSiteSettingsQuery();
 
-  // Only show slides added from the dashboard (no fallback to local data)
   const slides = React.useMemo(() => {
-    if (!heroSlides?.length) return [];
+    if (!heroSlides?.length) {
+      return images_slider.map((slide, index) => ({
+        key: `fallback-${index}`,
+        src: typeof slide.src === "string" ? slide.src : String(slide.src ?? ""),
+        videoSrc: null,
+        title: slide.title || "",
+        description: slide.description || "",
+        subtitleTwo: "",
+        offer: slide.offer || "",
+        btnText: slide.btnText,
+        btnLink: slide.btnLink,
+      }));
+    }
     return heroSlides.map((slide, index) => {
       const isVideo = slide.bgType === "video";
       

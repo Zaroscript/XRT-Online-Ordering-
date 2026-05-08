@@ -144,6 +144,7 @@ export class OrderController {
     const couponRepository = new CouponRepository();
     const promotionRepository = new PromotionRepository();
     const customerRepository = new CustomerRepository();
+    const businessRepository = new BusinessRepository();
     this.createOrderUseCase = new CreateOrderUseCase(
       orderRepository,
       itemRepository,
@@ -151,7 +152,8 @@ export class OrderController {
       businessSettingsRepository,
       couponRepository,
       promotionRepository,
-      customerRepository
+      customerRepository,
+      businessRepository
     );
     this.getOrderUseCase = new GetOrderUseCase(orderRepository);
     this.getOrdersUseCase = new GetOrdersUseCase(orderRepository);

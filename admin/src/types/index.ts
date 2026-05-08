@@ -595,6 +595,8 @@ export interface Promotion {
   sort_order: number;
   /** Storefront card button label */
   cta_label?: string;
+  /** Empty = every day; otherwise subset of 0–6 (Sun–Sat) in business timezone */
+  active_weekdays?: number[];
   orders?: string[];
   created_at: string;
   updated_at: string;
@@ -613,6 +615,7 @@ export interface PromotionInput {
   is_active_on_website?: boolean;
   sort_order?: number;
   cta_label?: string;
+  active_weekdays?: number[];
 }
 
 export interface CouponInput {

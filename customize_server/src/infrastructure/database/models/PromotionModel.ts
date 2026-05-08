@@ -12,6 +12,8 @@ export interface PromotionDocument extends Document {
   rules: Record<string, unknown>;
   active_from: string;
   expire_at: string;
+  /** Empty array = every weekday */
+  active_weekdays?: number[];
   minimum_cart_amount: number;
   max_conversions: number | null;
   is_active_on_website: boolean;
@@ -42,6 +44,17 @@ const PromotionSchema = new Schema<PromotionDocument>(
     rules: { type: Schema.Types.Mixed, default: {} },
     active_from: { type: String, required: true },
     expire_at: { type: String, required: true },
+    active_weekdays: {
+      type: [Number],
+      default: [],
+      validate: {
+        validator(arr: number[]) {
+          if (!Array.isArray(arr)) return false;
+          return arr.every((n) => Number.isInteger(n) && n >= 0 && n <= 6);
+        },
+        message: 'active_weekdays must be integers 0–6 (Sun–Sat)',
+      },
+    },
     minimum_cart_amount: { type: Number, default: 0 },
     max_conversions: { type: Number, default: null },
     is_active_on_website: { type: Boolean, default: false, index: true },

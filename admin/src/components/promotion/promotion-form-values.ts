@@ -27,6 +27,10 @@ export type PromotionFormValues = {
   coupon_code: string;
   /** Storefront card CTA (e.g. Redeem) */
   cta_label: string;
+  /**
+   * [] = show every day. Non-empty = only those JS weekdays (0=Sun … 6=Sat).
+   */
+  active_weekdays: number[];
 };
 
 export const promotionFormDefaults: PromotionFormValues = {
@@ -54,4 +58,5 @@ export const promotionFormDefaults: PromotionFormValues = {
   restrict_delivery_only: false,
   coupon_code: '',
   cta_label: 'Redeem',
+  active_weekdays: [],
 };

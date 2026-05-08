@@ -35,6 +35,11 @@ export interface Promotion {
   rules: PromotionRules;
   active_from: string;
   expire_at: string;
+  /**
+   * If empty / omitted: promo can appear every day (in addition to date window).
+   * Otherwise subset of 0–6 (Sun–Sat, JS convention), interpreted in business timezone.
+   */
+  active_weekdays: number[];
   minimum_cart_amount: number;
   max_conversions: number | null;
   is_active_on_website: boolean;
@@ -53,6 +58,7 @@ export interface CreatePromotionDTO {
   description?: string;
   image_url?: string;
   rules: PromotionRules;
+  active_weekdays?: number[];
   active_from: string;
   expire_at: string;
   minimum_cart_amount?: number;

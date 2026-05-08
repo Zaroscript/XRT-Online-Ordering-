@@ -16,6 +16,9 @@ export class PromotionRepository implements IPromotionRepository {
       rules: (doc.rules || {}) as Promotion['rules'],
       active_from: doc.active_from,
       expire_at: doc.expire_at,
+      active_weekdays: Array.isArray(doc.active_weekdays)
+        ? [...doc.active_weekdays].filter((n) => Number.isInteger(n) && n >= 0 && n <= 6)
+        : [],
       minimum_cart_amount: doc.minimum_cart_amount ?? 0,
       max_conversions: doc.max_conversions ?? null,
       is_active_on_website: doc.is_active_on_website ?? false,
