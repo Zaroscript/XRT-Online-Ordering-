@@ -1280,5 +1280,17 @@
   "form-title-loyalty-settings": "Loyalty Program Settings",
   "input-label-modifier-groups-short": "Input label modifier groups short",
   "form-title-create-role": "Form title create role",
-  "form-title-edit-role": "Form title edit role"
+  "form-title-edit-role": "Form title edit role",
+  "promotion-weekdays-title": "Visible days on the storefront",
+  "promotion-weekdays-helper": "Customers only see this promotion on the days you select. Uses your business timezone from Business settings.",
+  "promotion-weekdays-all-days": "Every day",
+  "promotion-weekdays-aria": "Days when promotion is visible",
+  "promotion-weekdays-min-one": "Keep at least one day selected, or tap \"Every day\".",
+  "promotion-weekday-short-0": "Sun",
+  "promotion-weekday-short-1": "Mon",
+  "promotion-weekday-short-2": "Tue",
+  "promotion-weekday-short-3": "Wed",
+  "promotion-weekday-short-4": "Thu",
+  "promotion-weekday-short-5": "Fri",
+  "promotion-weekday-short-6": "Sat"
 }

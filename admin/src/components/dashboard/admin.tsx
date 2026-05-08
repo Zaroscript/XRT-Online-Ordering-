@@ -46,7 +46,9 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { locale } = useRouter();
   const { data, isPending: loading } = useAnalyticsQuery();
-  const analyticsData = data?.data as Partial<DashboardAnalyticsData> | undefined;
+  const analyticsData = data?.data as
+    | Partial<DashboardAnalyticsData>
+    | undefined;
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTimeFrame, setActiveTimeFrame] = useState(1);
@@ -78,21 +80,27 @@ export default function Dashboard() {
 
   const { token } = getAuthCredentials();
   useDashboardLoading({
-    loadingStates: token ? [loading, popularProductLoading, topRatedProductsLoading] : [],
+    loadingStates: token
+      ? [loading, popularProductLoading, topRatedProductsLoading]
+      : [],
     loadingMessage: 'Loading dashboard data...',
   });
 
   const activeStats = getDashboardSummaryStats(analyticsData, activeTimeFrame);
 
-  const { price: total_revenue } = usePrice(activeStats && { amount: activeStats.totalRevenue });
-  const { price: total_tips }   = usePrice(activeStats && { amount: activeStats.totalTips });
+  const { price: total_revenue } = usePrice(
+    activeStats && { amount: activeStats.totalRevenue },
+  );
+  const { price: total_tips } = usePrice(
+    activeStats && { amount: activeStats.totalTips },
+  );
 
   const brandColors = {
-    revenue:   'rgb(var(--color-primary))',
-    tips:      'rgb(var(--color-pending))',
-    orders:    'rgb(var(--color-muted-black))',
+    revenue: 'rgb(var(--color-primary))',
+    tips: 'rgb(var(--color-pending))',
+    orders: 'rgb(var(--color-muted-black))',
     completed: 'rgb(var(--color-complete))',
-    canceled:  'rgb(var(--color-canceled))',
+    canceled: 'rgb(var(--color-canceled))',
   };
 
   function handleSearch({ searchText }: { searchText: string }) {
@@ -121,7 +129,6 @@ export default function Dashboard() {
 
   return (
     <div className="grid gap-7 md:gap-8 lg:grid-cols-2 2xl:grid-cols-12">
-
       {/* ① KPI Summary Cards — the single most important first glance */}
       <div className="col-span-full rounded-lg bg-light p-5 md:p-8">
         <div className="mb-5 items-center justify-between sm:flex md:mb-7">
@@ -140,11 +147,36 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          <StickerCard titleTransKey="sticker-card-title-rev"              icon={<EaringIcon className="h-8 w-8" />}            color={brandColors.revenue}   price={total_revenue} />
-          <StickerCard titleTransKey="sticker-card-title-tips"             icon={<ShoppingIcon className="h-8 w-8" />}           color={brandColors.tips}      price={total_tips} />
-          <StickerCard titleTransKey="sticker-card-title-total-orders"     icon={<BasketIcon className="h-8 w-8" />}             color={brandColors.orders}    price={activeStats?.totalOrders} />
-          <StickerCard titleTransKey="sticker-card-title-completed-orders" icon={<ChecklistIcon className="h-8 w-8" />}          color={brandColors.completed} price={activeStats?.completedOrders} />
-          <StickerCard titleTransKey="sticker-card-title-canceled-orders"  icon={<CancelledProcessedIcon className="h-8 w-8" />} color={brandColors.canceled}  price={activeStats?.canceledOrders} />
+          <StickerCard
+            titleTransKey="sticker-card-title-rev"
+            icon={<EaringIcon className="h-8 w-8" />}
+            color={brandColors.revenue}
+            price={total_revenue}
+          />
+          <StickerCard
+            titleTransKey="sticker-card-title-tips"
+            icon={<ShoppingIcon className="h-8 w-8" />}
+            color={brandColors.tips}
+            price={total_tips}
+          />
+          <StickerCard
+            titleTransKey="sticker-card-title-total-orders"
+            icon={<BasketIcon className="h-8 w-8" />}
+            color={brandColors.orders}
+            price={activeStats?.totalOrders}
+          />
+          <StickerCard
+            titleTransKey="sticker-card-title-completed-orders"
+            icon={<ChecklistIcon className="h-8 w-8" />}
+            color={brandColors.completed}
+            price={activeStats?.completedOrders}
+          />
+          <StickerCard
+            titleTransKey="sticker-card-title-canceled-orders"
+            icon={<CancelledProcessedIcon className="h-8 w-8" />}
+            color={brandColors.canceled}
+            price={activeStats?.canceledOrders}
+          />
         </div>
       </div>
 
@@ -212,7 +244,6 @@ export default function Dashboard() {
       <div className="col-span-full">
         <EmailCampaignAnalytics />
       </div>
-
     </div>
   );
 }

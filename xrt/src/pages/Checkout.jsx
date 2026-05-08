@@ -26,11 +26,10 @@ import {
 import { useCart } from "../context/CartContext";
 import { useSiteSettingsQuery } from "../api/hooks/useSiteSettings";
 import { selectPromotion } from "../api/promotions";
+import { verifyCoupon } from "../api/coupons";
 import { formatPrice, getPriceValue } from "../utils/priceUtils";
-import {
-  getAppliedPromotion,
-  clearAppliedPromotion,
-} from "../utils/promotionStorage";
+import { clearAppliedPromotion } from "../utils/promotionStorage";
+import { useAppliedPromotion } from "../hooks/useAppliedPromotion";
 import { calculateDistance } from "../utils/distanceUtils";
 import { loadSavedCustomer, saveCustomerData } from "../utils/customerStorage";
 import { geocodeAddress, buildAddressString } from "../utils/geocode";
@@ -80,6 +79,22 @@ const YouAreHereIcon = L.divIcon({
 const DEFAULT_TIP_OPTIONS = [10, 15, 20, 25];
 const DEFAULT_TAX_RATE = 0;
 const DEFAULT_MAP_CENTER = [51.505, -0.09];
+/** Mirrors server `computeCouponCartImpact` for checkout totals preview */
+function previewCouponImpact(coupon, cartSubtotal, orderType, deliveryFee) {
+  let discount = 0;
+  let deliveryFeeAfter = deliveryFee;
+  const amt = Number(coupon?.amount) || 0;
+  if (coupon?.type === "free_shipping") {
+    if (orderType === "delivery") deliveryFeeAfter = 0;
+  } else if (coupon?.type === "percentage") {
+    discount = (cartSubtotal * amt) / 100;
+  } else {
+    discount = amt;
+  }
+  discount = Math.min(Math.max(0, discount), cartSubtotal);
+  return { discount, delivery_fee_after: deliveryFeeAfter };
+}
+
 const DEFAULT_CUSTOMER_FORM = {
   firstName: "",
   lastName: "",
@@ -145,6 +160,8 @@ const Checkout = () => {
 
   const { data: siteSettings, refetch: refetchSiteSettings } =
     useSiteSettingsQuery();
+  const appliedPromotion = useAppliedPromotion();
+  const promotionId = appliedPromotion?.id;
 
   useEffect(() => {
     refetchSiteSettings();
@@ -185,6 +202,10 @@ const Checkout = () => {
 
   const [promoPreview, setPromoPreview] = useState(null);
   const [promoPreviewError, setPromoPreviewError] = useState("");
+  const [couponCodeInput, setCouponCodeInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponVerifying, setCouponVerifying] = useState(false);
   const [selectedTip, setSelectedTip] = useState(null);
   const [customTip, setCustomTip] = useState("");
   const [orderTimeType, setOrderTimeType] = useState("asap");
@@ -204,13 +225,17 @@ const Checkout = () => {
       }),
     [siteSettings, maxScheduleDays],
   );
-  const selectedScheduleDate = scheduledDate ? parseDateValue(scheduledDate) : null;
-  const availableTimes = getAvailableTimeSlots(siteSettings || {}, selectedScheduleDate);
+  const selectedScheduleDate = scheduledDate
+    ? parseDateValue(scheduledDate)
+    : null;
+  const availableTimes = getAvailableTimeSlots(
+    siteSettings || {},
+    selectedScheduleDate,
+  );
   const dateInputBounds = useMemo(
     () => getDateInputBounds(siteSettings || {}, new Date()),
     [siteSettings],
   );
-
 
   // Sync map center
   useEffect(() => {
@@ -625,17 +650,17 @@ const Checkout = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cartItems]);
 
-  const promotionId = getAppliedPromotion()?.id;
+  const effectivePromotionId = appliedCoupon ? undefined : promotionId;
 
   useEffect(() => {
-    if (!promotionId) {
+    if (!effectivePromotionId) {
       setPromoPreview(null);
       setPromoPreviewError("");
       return;
     }
     let cancelled = false;
     const baseDelivery = orderType === "delivery" ? (matchedZone?.fee ?? 0) : 0;
-    selectPromotion(promotionId, {
+    selectPromotion(effectivePromotionId, {
       lines: promotionCartLines,
       order_type: orderType,
       delivery_fee: baseDelivery,
@@ -646,9 +671,7 @@ const Checkout = () => {
         if (pv) {
           const rawDel = pv.delivery_fee_after;
           const del =
-            rawDel != null && rawDel !== ""
-              ? Number(rawDel)
-              : baseDelivery;
+            rawDel != null && rawDel !== "" ? Number(rawDel) : baseDelivery;
           setPromoPreview({
             discount: Number(pv.discount) || 0,
             delivery_fee_after: Number.isFinite(del) ? del : baseDelivery,
@@ -672,23 +695,66 @@ const Checkout = () => {
     return () => {
       cancelled = true;
     };
-  }, [promotionId, promotionCartLines, orderType, matchedZone?.fee]);
+  }, [effectivePromotionId, promotionCartLines, orderType, matchedZone?.fee]);
+
+  const couponImpact = useMemo(() => {
+    if (!appliedCoupon) return null;
+    return previewCouponImpact(appliedCoupon, subtotal, orderType, deliveryFee);
+  }, [appliedCoupon, subtotal, orderType, deliveryFee]);
 
   const promoDiscount = promoPreview?.discount ?? 0;
-  const effectiveDeliveryFee =
-    promoPreview != null ? promoPreview.delivery_fee_after : deliveryFee;
-  const discount = promoDiscount;
+  const couponDiscount = couponImpact?.discount ?? 0;
+  const effectiveDeliveryFee = appliedCoupon
+    ? (couponImpact?.delivery_fee_after ?? deliveryFee)
+    : promoPreview != null
+      ? promoPreview.delivery_fee_after
+      : deliveryFee;
+  const discount = appliedCoupon ? couponDiscount : promoDiscount;
   const total =
     subtotal +
     tax +
     tipAmount +
     effectiveDeliveryFee -
-    promoDiscount -
+    discount -
     loyaltyDiscount;
+
+  const couponsEnabled = siteSettings?.enableCoupons !== false;
+
+  const handleApplyCoupon = async () => {
+    const code = couponCodeInput.trim();
+    if (!code) {
+      setCouponError("Enter a coupon code.");
+      return;
+    }
+    setCouponVerifying(true);
+    setCouponError("");
+    try {
+      const data = await verifyCoupon(code);
+      clearAppliedPromotion();
+      setAppliedCoupon({
+        code: data.code,
+        type: data.type,
+        amount: Number(data.amount) || 0,
+        minimum_cart_amount: Number(data.minimum_cart_amount) || 0,
+      });
+      setCouponCodeInput("");
+      setPromoPreview(null);
+      setPromoPreviewError("");
+    } catch (err) {
+      setCouponError(
+        err?.response?.data?.message ||
+          "This coupon could not be applied. Check the code and try again.",
+      );
+    } finally {
+      setCouponVerifying(false);
+    }
+  };
 
   const handleSubmitOrder = () => {
     if (!canCheckout) {
-      setSubmitError(modeMessage || "Online ordering is currently unavailable.");
+      setSubmitError(
+        modeMessage || "Online ordering is currently unavailable.",
+      );
       return;
     }
 
@@ -753,9 +819,19 @@ const Checkout = () => {
 
     setSubmitError("");
 
-    if (promotionId && promoPreviewError) {
+    if (appliedCoupon) {
+      const minC = appliedCoupon.minimum_cart_amount || 0;
+      if (subtotal < minC) {
+        setSubmitError(
+          `Minimum order for coupon "${appliedCoupon.code}" is ${formatPrice(minC, siteSettings)}.`,
+        );
+        return;
+      }
+    }
+
+    if (effectivePromotionId && promoPreviewError) {
       setSubmitError(
-        "Selected promotion is no longer valid. Please choose another offer.",
+        "Selected offer is no longer valid. Remove it or pick another deal.",
       );
       return;
     }
@@ -785,7 +861,8 @@ const Checkout = () => {
         tips: tipAmount,
         total_amount: total,
         currency: siteSettings?.currency || "USD",
-        promotion_id: promotionId || undefined,
+        coupon_code: appliedCoupon ? appliedCoupon.code : undefined,
+        promotion_id: appliedCoupon ? undefined : promotionId || undefined,
         loyalty_discount_amount:
           loyaltyDiscount > 0 ? loyaltyDiscount : undefined,
         rewards_points_used:
@@ -1010,7 +1087,8 @@ const Checkout = () => {
                     className="mt-1 h-4 w-4 rounded border-gray-300 text-(--primary) focus:ring-(--primary)/30"
                   />
                   <span className="leading-6">
-                    I want to receive marketing and rewards program emails and text messages.
+                    I want to receive marketing and rewards program emails and
+                    text messages.
                   </span>
                 </label>
 
@@ -1023,7 +1101,8 @@ const Checkout = () => {
                     className="mt-1 h-4 w-4 rounded border-gray-300 text-(--primary) focus:ring-(--primary)/30"
                   />
                   <span className="leading-6">
-                    I want to receive emails and text messages about my order updates.
+                    I want to receive emails and text messages about my order
+                    updates.
                   </span>
                 </label>
               </div>
@@ -1104,7 +1183,9 @@ const Checkout = () => {
                       value={scheduledDate}
                       min={dateInputBounds.min}
                       max={dateInputBounds.max}
-                      onChange={(e) => handleScheduledDateChange(e.target.value)}
+                      onChange={(e) =>
+                        handleScheduledDateChange(e.target.value)
+                      }
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                     />
                   </div>
@@ -1122,7 +1203,9 @@ const Checkout = () => {
                       step={900}
                       list="scheduled-time-options"
                       value={scheduledTime}
-                      onChange={(e) => handleScheduledTimeChange(e.target.value)}
+                      onChange={(e) =>
+                        handleScheduledTimeChange(e.target.value)
+                      }
                       disabled={!scheduledDate || availableTimes.length === 0}
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
                     />
@@ -1410,29 +1493,110 @@ const Checkout = () => {
               </section>
             )}
 
-            {/* Promotion (from menu — one per order) */}
+            {/* Coupon code + optional homepage offer (one savings path per order) */}
             <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-              <h2 className="text-xl font-bold text-(--text-primary) mb-6 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-(--text-primary) mb-8 flex items-center gap-2">
                 <span className="w-8 h-8 rounded-full bg-(--primary) text-white text-sm font-bold flex items-center justify-center">
                   {orderType === "delivery" ? "4" : "3"}
                 </span>
-                Promotion
+                Coupon code
               </h2>
 
-              {!promotionId ? (
-                <p className="text-sm text-gray-600">
-                  Choose a promotion on the menu page — only one can apply per
-                  order.
-                </p>
-              ) : (
+              {couponsEnabled ? (
                 <div className="space-y-3">
+                  {!appliedCoupon ? (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        autoComplete="off"
+                        autoCapitalize="characters"
+                        placeholder="Enter coupon code"
+                        value={couponCodeInput}
+                        onChange={(e) => {
+                          setCouponCodeInput(e.target.value);
+                          if (couponError) setCouponError("");
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleApplyCoupon();
+                          }
+                        }}
+                        className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-(--primary)/30 focus:border-(--primary) transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        disabled={couponVerifying}
+                        className="px-6 py-3 rounded-xl bg-(--primary) text-white font-semibold text-sm hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                      >
+                        {couponVerifying ? "Checking…" : "Apply"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-(--primary)/25 bg-(--primary)/5 p-4 flex justify-between gap-3 items-start">
+                      <div>
+                        <p className="font-bold text-(--text-primary)">
+                          {appliedCoupon.code}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Coupon applied · totals update on the right · clears
+                          after your order is placed.
+                        </p>
+                        {(appliedCoupon.minimum_cart_amount || 0) > 0 &&
+                          subtotal <
+                            (appliedCoupon.minimum_cart_amount || 0) && (
+                            <p className="text-xs text-amber-700 font-medium mt-2">
+                              Add{" "}
+                              {formatPrice(
+                                (appliedCoupon.minimum_cart_amount || 0) -
+                                  subtotal,
+                                siteSettings,
+                              )}{" "}
+                              more to meet this coupon&apos;s minimum.
+                            </p>
+                          )}
+                      </div>
+                      <button
+                        type="button"
+                        className="text-sm font-semibold text-red-600 hover:underline shrink-0"
+                        onClick={() => {
+                          setAppliedCoupon(null);
+                          setCouponError("");
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                  {couponError ? (
+                    <p className="text-sm text-red-600 font-medium">
+                      {couponError}
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Coupon codes are not enabled for this restaurant right now.
+                </p>
+              )}
+
+              {!appliedCoupon && promotionId ? (
+                <div className="mt-8 pt-8 border-t border-gray-100 space-y-3">
+                  <p className="text-sm font-semibold text-(--text-primary)">
+                    Homepage offer (optional)
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    You chose an offer on the home page. It applies
+                    automatically unless you use a coupon code above.
+                  </p>
                   <div className="rounded-xl border border-(--primary)/25 bg-(--primary)/5 p-4 flex justify-between gap-3 items-start">
                     <div>
                       <p className="font-bold text-(--text-primary)">
-                        {getAppliedPromotion()?.headline || "Selected promotion"}
+                        {appliedPromotion?.headline || "Selected offer"}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Saved for this checkout · clears after order is placed.
+                        From homepage / menu · clears after order is placed.
                       </p>
                     </div>
                     <button
@@ -1454,12 +1618,24 @@ const Checkout = () => {
                   )}
                   {promotionId && !promoPreviewError && promoPreview && (
                     <p className="text-sm text-green-700 font-medium">
-                      Promotion applied to this cart preview — totals update on
-                      the right.
+                      Offer preview is included in your totals on the right.
                     </p>
                   )}
                 </div>
-              )}
+              ) : !appliedCoupon && !promotionId ? (
+                <div className="mt-8 pt-8 border-t border-gray-100">
+                  <p className="text-sm text-gray-600">
+                    Have a homepage deal?{" "}
+                    <Link
+                      to="/"
+                      className="font-semibold text-(--primary) hover:underline"
+                    >
+                      Browse special offers
+                    </Link>{" "}
+                    and tap Redeem before checkout.
+                  </p>
+                </div>
+              ) : null}
             </section>
 
             {/* Loyalty Rewards */}
@@ -1470,17 +1646,14 @@ const Checkout = () => {
                 </span>
                 Rewards & Loyalty
               </h2>
-              
-              <LoyaltyJoinCheckbox 
-                phone={form.phone} 
-                name={`${form.firstName} ${form.lastName}`} 
-                email={form.email} 
+
+              <LoyaltyJoinCheckbox
+                phone={form.phone}
+                name={`${form.firstName} ${form.lastName}`}
+                email={form.email}
               />
 
-              <LoyaltyPointsWidget 
-                phone={form.phone} 
-                subtotal={subtotal}
-              />
+              <LoyaltyPointsWidget phone={form.phone} subtotal={subtotal} />
             </section>
           </div>
 
@@ -1665,7 +1838,9 @@ const Checkout = () => {
                 )}
                 {discount > 0 && (
                   <div className="flex justify-between text-(--primary) font-medium">
-                    <span>Discount</span>
+                    <span>
+                      {appliedCoupon ? "Coupon discount" : "Offer discount"}
+                    </span>
                     <span>-{formatPrice(discount, siteSettings)}</span>
                   </div>
                 )}

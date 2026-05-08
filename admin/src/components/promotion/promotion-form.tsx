@@ -27,6 +27,29 @@ import { promotionFormDefaults, type PromotionFormValues } from './promotion-for
 import { buildPromotionRules, parseIds } from './promotion-rules';
 import PromotionTemplateRuleFields from './promotion-template-rule-fields';
 import { normalizeColor, getSoftColor } from '@/utils/color-utils';
+import PromotionWeekdayPicker from '@/components/promotion/promotion-weekday-picker';
+
+function normalizePromotionWeekdaysFromApi(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return [];
+  return [
+    ...new Set(
+      raw
+        .map((x) => Number(x))
+        .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6),
+    ),
+  ].sort((a, b) => a - b);
+}
+
+/** [] or all seven → unrestricted (API stores []). */
+function normalizePromotionFormWeekdaysForApi(days: number[] | undefined): number[] {
+  const u = [
+    ...new Set(
+      (days || []).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6),
+    ),
+  ].sort((a, b) => a - b);
+  if (u.length === 0 || u.length >= 7) return [];
+  return u;
+}
 
 type Props = {
   initialValues?: Promotion;
@@ -73,6 +96,7 @@ function mergeInitialPromotion(initialValues: Promotion): PromotionFormValues {
         initialValues.rules.order_types[0] === 'delivery'),
     coupon_code: initialValues.rules?.coupon_code ?? '',
     cta_label: initialValues.cta_label?.trim() || 'Redeem',
+    active_weekdays: normalizePromotionWeekdaysFromApi(initialValues.active_weekdays),
   };
 }
 
@@ -177,6 +201,7 @@ export default function PromotionForm({ initialValues, lockedTemplateId }: Props
     control,
     watch,
     setValue,
+    reset,
     trigger,
     formState: { errors },
   } = form;
@@ -186,6 +211,12 @@ export default function PromotionForm({ initialValues, lockedTemplateId }: Props
       setValue('template', lockedTemplateId, { shouldValidate: false });
     }
   }, [lockedTemplateId, initialValues, setValue]);
+
+  /** Keep form in sync when promotion loads/refetches after save (weekdays must match DB). */
+  useEffect(() => {
+    if (!initialValues?.id) return;
+    reset(mergeInitialPromotion(initialValues));
+  }, [initialValues?.id, initialValues?.updated_at, reset]); // eslint-disable-line react-hooks/exhaustive-deps -- narrow deps
 
   const template = watch('template');
   const headline = watch('headline');
@@ -263,6 +294,7 @@ export default function PromotionForm({ initialValues, lockedTemplateId }: Props
       sort_order: Number(values.sort_order) || 0,
       cta_label:
         String(values.cta_label || '').trim().slice(0, 24) || 'Redeem',
+      active_weekdays: normalizePromotionFormWeekdaysForApi(values.active_weekdays),
     };
 
     if (!initialValues) {
@@ -463,6 +495,10 @@ export default function PromotionForm({ initialValues, lockedTemplateId }: Props
                     error={(errors.expire_at?.message as string) || ''}
                     required
                   />
+                </div>
+
+                <div className="mb-6">
+                  <PromotionWeekdayPicker control={control} name="active_weekdays" />
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 items-start">

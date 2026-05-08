@@ -1,4 +1,5 @@
 import { ValidationError } from '../../shared/errors/AppError';
+import { promotionAppliesOnWeekday } from '../../shared/utils/promotionWeekdays';
 import type { Promotion } from '../entities/Promotion';
 import type { PromotionRules } from '../entities/Promotion';
 
@@ -14,6 +15,8 @@ export interface ApplyPromotionParams {
   cartSubtotal: number;
   orderType: 'pickup' | 'delivery';
   deliveryFee: number;
+  /** Business IANA timezone (e.g. America/New_York). Defaults to UTC. */
+  businessTimeZone?: string;
 }
 
 export interface ApplyPromotionResult {
@@ -66,11 +69,23 @@ export function assertPromotionWindowAndLimits(promotion: Promotion): void {
   }
 }
 
+export function assertPromotionWeekdayActive(
+  promotion: Pick<Promotion, 'active_weekdays'>,
+  timeZone: string,
+  now: Date = new Date()
+): void {
+  const tz = (timeZone || 'UTC').trim() || 'UTC';
+  if (promotionAppliesOnWeekday(promotion.active_weekdays ?? [], now, tz)) return;
+  throw new ValidationError('This promotion is not available today');
+}
+
 export function applyPromotionToCart(params: ApplyPromotionParams): ApplyPromotionResult {
   const { promotion, lines, cartSubtotal, orderType, deliveryFee } = params;
   const rules = promotion.rules || {};
+  const tz = (params.businessTimeZone || 'UTC').trim() || 'UTC';
 
   assertPromotionWindowAndLimits(promotion);
+  assertPromotionWeekdayActive(promotion, tz);
 
   if (cartSubtotal < (promotion.minimum_cart_amount || 0)) {
     throw new ValidationError(

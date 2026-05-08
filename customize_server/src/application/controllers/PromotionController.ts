@@ -9,8 +9,10 @@ import { ValidationError } from '../../shared/errors/AppError';
 import {
   applyPromotionToCart,
   assertPromotionWindowAndLimits,
+  assertPromotionWeekdayActive,
   CartLineInput,
 } from '../../domain/services/PromotionApplicationService';
+import { promotionAppliesOnWeekday } from '../../shared/utils/promotionWeekdays';
 import { CouponRepository } from '../../infrastructure/repositories/CouponRepository';
 import {
   assertCouponScheduleAndUsage,
@@ -29,6 +31,27 @@ function sanitizePromotionRulesForPublicList(
 function normalizeCtaLabel(raw: unknown): string {
   const s = String(raw ?? '').trim().slice(0, 24);
   return s || 'Redeem';
+}
+
+/**
+ * Body payload: subset of 0–6 (Sun–Sat). Empty or all seven → unrestricted (stored as []).
+ */
+function normalizePromotionWeekdaysInput(raw: unknown): number[] {
+  if (raw == null) return [];
+  if (!Array.isArray(raw)) {
+    throw new ValidationError(
+      'active_weekdays must be an array of weekday numbers (0 = Sunday … 6 = Saturday)'
+    );
+  }
+  const nums = raw.map((x) => Number(x));
+  if (!nums.every((n) => Number.isInteger(n) && n >= 0 && n <= 6)) {
+    throw new ValidationError(
+      'Each active_weekdays value must be an integer from 0 (Sunday) through 6 (Saturday)'
+    );
+  }
+  const uniq = [...new Set(nums)].sort((a, b) => a - b);
+  if (uniq.length >= 7) return [];
+  return uniq;
 }
 
 export class PromotionController {
@@ -66,6 +89,13 @@ export class PromotionController {
       return sendError(res, 'Active from and expire dates are required', 400);
     }
 
+    let active_weekdays: number[] = [];
+    try {
+      active_weekdays = normalizePromotionWeekdaysInput(body.active_weekdays);
+    } catch (e: any) {
+      return sendError(res, e?.message || 'Invalid active_weekdays', 400);
+    }
+
     if (body.is_active_on_website) {
       const n = await this.repository.countWebsiteActive(business_id);
       if (n >= MAX_WEBSITE_PROMOTIONS) {
@@ -84,6 +114,7 @@ export class PromotionController {
       description: body.description,
       image_url: body.image_url,
       rules: body.rules ?? {},
+      active_weekdays,
       active_from: body.active_from!,
       expire_at: body.expire_at!,
       minimum_cart_amount: body.minimum_cart_amount ?? 0,
@@ -205,12 +236,14 @@ export class PromotionController {
       return res.status(500).json({ success: false, message: 'Business not configured' });
     }
 
+    const tz = business.timezone?.trim() || 'UTC';
     const all = await promotionRepository.findByBusinessId(business.id);
     const now = new Date();
     const filtered = all.filter((p) => {
       if (!p.is_active_on_website) return false;
       if (now < new Date(p.active_from) || now > new Date(p.expire_at)) return false;
       if (p.max_conversions != null && p.orders.length >= p.max_conversions) return false;
+      if (!promotionAppliesOnWeekday(p.active_weekdays ?? [], now, tz)) return false;
       return true;
     });
 
@@ -248,8 +281,11 @@ export class PromotionController {
       return res.status(404).json({ success: false, message: 'Promotion not found' });
     }
 
+    const tz = business.timezone?.trim() || 'UTC';
+
     try {
       assertPromotionWindowAndLimits(promotion);
+      assertPromotionWeekdayActive(promotion, tz);
     } catch (e: any) {
       return res.status(400).json({ success: false, message: e.message || 'Invalid promotion' });
     }
@@ -300,6 +336,7 @@ export class PromotionController {
             cartSubtotal,
             orderType,
             deliveryFee,
+            businessTimeZone: tz,
           });
           preview = {
             discount: applied.discount,

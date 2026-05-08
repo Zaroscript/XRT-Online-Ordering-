@@ -1038,7 +1038,8 @@ export class PublicController {
       businessSettingsRepository,
       couponRepository,
       promotionRepository,
-      customerRepository
+      customerRepository,
+      businessRepository
     );
     
     // Normalize address structure (frontend uses address1/zipcode, backend/admin expects street/zipCode)

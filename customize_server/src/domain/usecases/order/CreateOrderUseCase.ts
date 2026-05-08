@@ -7,6 +7,7 @@ import { IBusinessSettingsRepository } from '../../repositories/IBusinessSetting
 import { ICouponRepository } from '../../repositories/ICouponRepository';
 import { IPromotionRepository } from '../../repositories/IPromotionRepository';
 import { ICustomerRepository } from '../../repositories/ICustomerRepository';
+import { BusinessRepository } from '../../../infrastructure/repositories/BusinessRepository';
 import { LoyaltyService } from '../../services/LoyaltyService';
 import { LoyaltyProgramRepository } from '../../../infrastructure/repositories/LoyaltyProgramRepository';
 import { LoyaltyAccountRepository } from '../../../infrastructure/repositories/LoyaltyAccountRepository';
@@ -15,6 +16,7 @@ import { ValidationError } from '../../../shared/errors/AppError';
 import {
   applyPromotionToCart,
   assertPromotionWindowAndLimits,
+  assertPromotionWeekdayActive,
 } from '../../services/PromotionApplicationService';
 import {
   assertCouponMinimumCart,
@@ -33,7 +35,8 @@ export class CreateOrderUseCase {
     private businessSettingsRepository: IBusinessSettingsRepository,
     private couponRepository: ICouponRepository,
     private promotionRepository: IPromotionRepository,
-    private customerRepository: ICustomerRepository
+    private customerRepository: ICustomerRepository,
+    private businessRepository: BusinessRepository
   ) {
     this.loyaltyService = new LoyaltyService(
       new LoyaltyProgramRepository(),
@@ -131,6 +134,9 @@ export class CreateOrderUseCase {
         throw new ValidationError('Promotion is not available');
       }
 
+      const biz = await this.businessRepository.findOne();
+      const promoTz = biz?.timezone?.trim() || 'UTC';
+
       const cartLines = calculatedItems.map((item) => ({
         menu_item_id: item.menu_item_id,
         quantity: item.quantity,
@@ -148,6 +154,7 @@ export class CreateOrderUseCase {
         }
 
         assertPromotionWindowAndLimits(promotion);
+        assertPromotionWeekdayActive(promotion, promoTz);
         assertCouponScheduleAndUsage(coupon);
 
         const minCart = Math.max(
@@ -176,6 +183,7 @@ export class CreateOrderUseCase {
           cartSubtotal: computedSubtotal,
           orderType: orderData.order_type,
           deliveryFee: effectiveDeliveryFee,
+          businessTimeZone: promoTz,
         });
 
         verifiedDiscount = applied.discount;
