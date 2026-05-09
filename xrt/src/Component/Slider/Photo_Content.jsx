@@ -122,11 +122,6 @@ export default function Content(props) {
         space-y-4
         pb-20 md:pb-25
       ">
-        {title ? (
-          <h5 className="tracking-[0.25em] text-white font-semibold uppercase">
-            {title}
-          </h5>
-        ) : null}
 
         {description ? (
           <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight capitalize">
@@ -134,6 +129,11 @@ export default function Content(props) {
           </h2>
         ) : null}
 
+        {title ? (
+          <h5 className="tracking-[0.25em] text-white font-semibold uppercase">
+            {title}
+          </h5>
+        ) : null}
         {subtitleTwo ? (
           <h3 className="text-xl md:text-2xl font-bold text-white mt-2">
             {subtitleTwo}

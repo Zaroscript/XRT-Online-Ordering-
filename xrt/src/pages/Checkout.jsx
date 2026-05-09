@@ -188,7 +188,15 @@ const Checkout = () => {
         ? "Online ordering is temporarily paused."
         : "";
 
+  const isDeliveryEnabled = siteSettings?.delivery?.enabled ?? true;
+
   const [orderType, setOrderType] = useState(contextOrderType || "delivery");
+
+  useEffect(() => {
+    if (!isDeliveryEnabled && orderType === "delivery") {
+      setOrderType("pickup");
+    }
+  }, [isDeliveryEnabled, orderType]);
 
   const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
   const [customerCoords, setCustomerCoords] = useState(null);
@@ -983,16 +991,18 @@ const Checkout = () => {
                   Order Type
                 </p>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setOrderType("delivery")}
-                    className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
-                      orderType === "delivery"
-                        ? "bg-primary text-white border-primary"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                    }`}
-                  >
-                    Delivery
-                  </button>
+                  {isDeliveryEnabled && (
+                    <button
+                      onClick={() => setOrderType("delivery")}
+                      className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
+                        orderType === "delivery"
+                          ? "bg-primary text-white border-primary"
+                          : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                      }`}
+                    >
+                      Delivery
+                    </button>
+                  )}
                   <button
                     onClick={() => setOrderType("pickup")}
                     className={`px-4 py-2 rounded-lg border font-medium text-sm transition-all ${
