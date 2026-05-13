@@ -1,30 +1,32 @@
 /**
  * Computes the total price from server data: base/size price + modifiers (with size and quantity_levels).
  */
-export const computeTotalPrice = (
-  product,
-  selectedSize,
-  selectedModifiers = {},
-  quantity = 1,
-) => {
-  if (!product) return "0.00";
+
+/** Per-unit base (selected size price or basePrice × multiplier). */
+export function computeBaseUnitPrice(product, selectedSize) {
+  if (!product) return 0;
 
   const sizeMultiplier =
     selectedSize && typeof selectedSize === "object" && selectedSize.multiplier
       ? parseFloat(selectedSize.multiplier)
       : 1;
-  const sizeCode = selectedSize?.code ?? selectedSize?.label ?? null;
 
-  let pricePerUnit = 0;
   if (
     selectedSize &&
     typeof selectedSize === "object" &&
     selectedSize.price != null
   ) {
-    pricePerUnit = Number(selectedSize.price);
-  } else {
-    pricePerUnit = (product.basePrice || 0) * sizeMultiplier;
+    return Number(selectedSize.price);
   }
+  return (product.basePrice || 0) * sizeMultiplier;
+}
+
+function createPricingHelpers(product, selectedSize) {
+  const sizeMultiplier =
+    selectedSize && typeof selectedSize === "object" && selectedSize.multiplier
+      ? parseFloat(selectedSize.multiplier)
+      : 1;
+  const sizeCode = selectedSize?.code ?? selectedSize?.label ?? null;
 
   const getModifierPriceForSize = (optionDef) => {
     if (optionDef.prices_by_size?.length && sizeCode) {
@@ -36,7 +38,6 @@ export const computeTotalPrice = (
       );
       if (match != null) return match.priceDelta;
     }
-    // When item is not sizeable (no selectedSize), use modifier base price directly
     const base = optionDef.baseExtra ?? optionDef.price ?? 0;
     if (!selectedSize) return base;
     return base * sizeMultiplier;
@@ -60,7 +61,6 @@ export const computeTotalPrice = (
       );
       if (match != null) return match.priceDelta;
     }
-    // When item is not sizeable (no selectedSize), use level's base price directly
     if (level.price != null) return level.price;
     return null;
   };
@@ -74,9 +74,33 @@ export const computeTotalPrice = (
     return level?.is_default === true;
   };
 
+  return { getModifierPriceForSize, getLevelPrice, isDefaultLevel };
+}
+
+/**
+ * Builds order modifier rows + total premium using the same rules as {@link computeTotalPrice}
+ * (sizes, prices_by_size, quantity levels). Ensures promotions and server line math match the storefront.
+ *
+ * @returns {{ modifiers: Array<{ modifier_id?: string, name_snapshot: string, unit_price_delta: number, quantity_label_snapshot?: string, selected_side?: string }>, totalPremium: number }}
+ */
+export function buildOrderModifiersFromSelection(
+  product,
+  selectedSize,
+  selectedModifiers = {},
+) {
+  const modifiers = [];
+  let totalPremium = 0;
+
+  if (!product?.modifiers?.length || !selectedModifiers) {
+    return { modifiers, totalPremium };
+  }
+
+  const { getModifierPriceForSize, getLevelPrice, isDefaultLevel } =
+    createPricingHelpers(product, selectedSize);
+
   Object.keys(selectedModifiers).forEach((sectionTitle) => {
     const selection = selectedModifiers[sectionTitle];
-    const sectionDef = product.modifiers?.find((s) => s.title === sectionTitle);
+    const sectionDef = product.modifiers.find((s) => s.title === sectionTitle);
     if (!sectionDef) return;
 
     const processOption = (optLabel, optValue) => {
@@ -101,7 +125,21 @@ export const computeTotalPrice = (
         if (levelPrice != null) modifierPrice = levelPrice;
       }
 
-      pricePerUnit += modifierPrice;
+      totalPremium += modifierPrice;
+
+      const placement =
+        typeof optValue === "object" && optValue != null
+          ? optValue.placement ?? optValue.side
+          : undefined;
+
+      modifiers.push({
+        modifier_id:
+          optionDef.id != null ? String(optionDef.id) : undefined,
+        name_snapshot: optionDef.label ?? optLabel,
+        unit_price_delta: modifierPrice,
+        quantity_label_snapshot: levelName || undefined,
+        selected_side: placement,
+      });
     };
 
     if (Array.isArray(selection)) {
@@ -119,7 +157,25 @@ export const computeTotalPrice = (
     }
   });
 
-  const total = pricePerUnit * quantity;
+  return { modifiers, totalPremium };
+}
+
+export const computeTotalPrice = (
+  product,
+  selectedSize,
+  selectedModifiers = {},
+  quantity = 1,
+) => {
+  if (!product) return "0.00";
+
+  const base = computeBaseUnitPrice(product, selectedSize);
+  const { totalPremium } = buildOrderModifiersFromSelection(
+    product,
+    selectedSize,
+    selectedModifiers,
+  );
+
+  const total = (base + totalPremium) * quantity;
   return total.toFixed(2);
 };
 
@@ -139,7 +195,6 @@ export const formatPrice = (amount, settings) => {
     }).format(Number(amount) || 0);
   } catch (e) {
     console.error("Error formatting price:", e);
-    // Fallback if Intl fails or currency code is invalid
     const symbol =
       currency === "GBP" ? "£" : currency === "USD" ? "$" : currency;
     return `${symbol}${(Number(amount) || 0).toFixed(fractions)}`;

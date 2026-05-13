@@ -293,11 +293,20 @@ export class PromotionController {
     const rawLines = req.body?.lines as CartLineInput[] | undefined;
     const orderType = (req.body?.order_type as 'pickup' | 'delivery') || 'pickup';
     const deliveryFee = Number(req.body?.delivery_fee || 0);
+    const cartSubtotalFullRaw = req.body?.cart_subtotal_full;
+    const cartSubtotalFull =
+      cartSubtotalFullRaw != null && cartSubtotalFullRaw !== ''
+        ? Number(cartSubtotalFullRaw)
+        : NaN;
 
     let preview: { discount: number; delivery_fee_after: number } | null = null;
 
     if (rawLines && Array.isArray(rawLines) && rawLines.length > 0) {
-      const cartSubtotal = rawLines.reduce((s, l) => s + (l.line_subtotal || 0), 0);
+      const discountBaseSubtotal = rawLines.reduce((s, l) => s + (l.line_subtotal || 0), 0);
+      const minimumCheckSubtotal =
+        Number.isFinite(cartSubtotalFull) && cartSubtotalFull > 0
+          ? cartSubtotalFull
+          : discountBaseSubtotal;
       try {
         if (promotion.template === 'linked_coupon') {
           const code = String(
@@ -313,7 +322,7 @@ export class PromotionController {
             promotion.minimum_cart_amount || 0,
             coupon.minimum_cart_amount || 0
           );
-          if (cartSubtotal < minCart) {
+          if (minimumCheckSubtotal < minCart) {
             return res.status(400).json({
               success: false,
               message: `Minimum order for this promotion is ${minCart}`,
@@ -321,7 +330,7 @@ export class PromotionController {
           }
           const impact = computeCouponCartImpact(
             coupon,
-            cartSubtotal,
+            discountBaseSubtotal,
             orderType,
             deliveryFee
           );
@@ -333,7 +342,8 @@ export class PromotionController {
           const applied = applyPromotionToCart({
             promotion,
             lines: rawLines,
-            cartSubtotal,
+            cartSubtotal: discountBaseSubtotal,
+            cartSubtotalForMinimum: minimumCheckSubtotal,
             orderType,
             deliveryFee,
             businessTimeZone: tz,

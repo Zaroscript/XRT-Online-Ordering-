@@ -148,6 +148,13 @@ export default function CreateOrUpdateItemForm({
       defaultValue: [],
     }) || [];
 
+  // Watch category to auto-populate modifier groups from category config
+  const selectedCategory = useWatch({
+    control,
+    name: 'category',
+    defaultValue: null,
+  });
+
   // Initialize form with cached or initial values
   useEffect(() => {
     if (
@@ -344,6 +351,64 @@ export default function CreateOrUpdateItemForm({
       }
     }
   }, [modifierGroups, allModifiersList, isInitialized, initialValues?.id]);
+
+  // Auto-populate modifier groups from the selected category's configuration
+  useEffect(() => {
+    if (!isInitialized || !selectedCategory || !modifierGroupsFiltered.length) return;
+
+    // Get the full category object — selectedCategory may be just an ID or a full object
+    const categoryId =
+      typeof selectedCategory === 'object'
+        ? selectedCategory?.id || selectedCategory?._id
+        : selectedCategory;
+
+    const fullCategory = categories?.find(
+      (c: any) => c.id === categoryId || c._id === categoryId,
+    ) || (typeof selectedCategory === 'object' ? selectedCategory : null);
+
+    if (!fullCategory) return;
+
+    // Resolve the modifier groups set on the category
+    const categoryGroupIds: string[] = (fullCategory.modifier_groups || []).map(
+      (mg: any) => {
+        if (typeof mg === 'string') return mg;
+        return (
+          mg.modifier_group_id?._id ||
+          mg.modifier_group_id?.id ||
+          mg.modifier_group_id ||
+          mg.id ||
+          mg._id
+        );
+      },
+    ).filter(Boolean);
+
+    if (categoryGroupIds.length === 0) return;
+
+    // Map IDs to full group objects from the loaded modifier groups
+    const groupsToSet = categoryGroupIds
+      .map((id: string) =>
+        modifierGroupsFiltered.find(
+          (g: any) => g.id === id || g._id === id,
+        ),
+      )
+      .filter(Boolean);
+
+    if (groupsToSet.length === 0) return;
+
+    const currentGroups = getValues('modifier_assignment.modifier_groups') || [];
+
+    // For a new item: always sync from category.
+    // For an existing item: only fill in if no groups are already assigned.
+    if (!initialValues) {
+      setValue('modifier_assignment.modifier_groups', groupsToSet, {
+        shouldValidate: false,
+      });
+    } else if (currentGroups.length === 0) {
+      setValue('modifier_assignment.modifier_groups', groupsToSet, {
+        shouldValidate: false,
+      });
+    }
+  }, [selectedCategory, modifierGroupsFiltered, categories, isInitialized]);
 
   // Form submission
   const onSubmit = async (values: any) => {

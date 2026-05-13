@@ -12,7 +12,10 @@ export interface CartLineInput {
 export interface ApplyPromotionParams {
   promotion: Promotion;
   lines: CartLineInput[];
+  /** Sum used for discount math — storefront sends base menu/size price only (modifiers excluded). */
   cartSubtotal: number;
+  /** Full cart including modifiers — used for minimum spend checks. Defaults to cartSubtotal. */
+  cartSubtotalForMinimum?: number;
   orderType: 'pickup' | 'delivery';
   deliveryFee: number;
   /** Business IANA timezone (e.g. America/New_York). Defaults to UTC. */
@@ -81,13 +84,14 @@ export function assertPromotionWeekdayActive(
 
 export function applyPromotionToCart(params: ApplyPromotionParams): ApplyPromotionResult {
   const { promotion, lines, cartSubtotal, orderType, deliveryFee } = params;
+  const minimumCheckSubtotal = params.cartSubtotalForMinimum ?? cartSubtotal;
   const rules = promotion.rules || {};
   const tz = (params.businessTimeZone || 'UTC').trim() || 'UTC';
 
   assertPromotionWindowAndLimits(promotion);
   assertPromotionWeekdayActive(promotion, tz);
 
-  if (cartSubtotal < (promotion.minimum_cart_amount || 0)) {
+  if (minimumCheckSubtotal < (promotion.minimum_cart_amount || 0)) {
     throw new ValidationError(
       `Minimum order for this promotion is ${promotion.minimum_cart_amount}`
     );
@@ -198,17 +202,31 @@ function computeBogoDiscount(lines: CartLineInput[], rules: PromotionRules): num
 
 function computeBuyNGetOneFree(lines: CartLineInput[], rules: PromotionRules): number {
   const n = rules.n ?? 2;
-  const ids = rules.menu_item_ids || [];
-  if (!ids.length) throw new ValidationError('Promotion has no eligible items configured');
-  const set = new Set(ids);
-  let totalQty = 0;
+  const paidIds = rules.menu_item_ids || [];
+  if (!paidIds.length) throw new ValidationError('Promotion has no eligible items configured');
+
+  const paidSet = new Set(paidIds);
+  let totalPaidQty = 0;
   for (const line of lines) {
-    if (set.has(line.menu_item_id)) totalQty += line.quantity;
+    if (paidSet.has(line.menu_item_id)) totalPaidQty += line.quantity;
   }
+
   const denom = n + 1;
-  const freeSlots = Math.floor(totalQty / denom);
+  const freeSlots = Math.floor(totalPaidQty / denom);
   if (freeSlots <= 0) throw new ValidationError('Cart does not qualify for this promotion');
-  const units = sortedUnitsFromLines(lines, set);
+
+  // If admin configured a separate free-reward item, discount that instead
+  const freeIds = rules.group_b_ids?.length ? rules.group_b_ids : undefined;
+  if (freeIds) {
+    const freeSet = new Set(freeIds);
+    const freeUnits = sortedUnitsFromLines(lines, freeSet);
+    if (!freeUnits.length) throw new ValidationError('Free reward item is not in the cart');
+    const redeemable = Math.min(freeSlots, freeUnits.length);
+    return freeUnits.slice(0, redeemable).reduce((a, b) => a + b, 0);
+  }
+
+  // Fallback: cheapest of the paid items is free
+  const units = sortedUnitsFromLines(lines, paidSet);
   return units.slice(0, freeSlots).reduce((a, b) => a + b, 0);
 }
 
