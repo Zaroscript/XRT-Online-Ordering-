@@ -95,8 +95,12 @@ export class CreateOrderUseCase {
       });
     }
 
-    // 2. Sum up subtotals
+    // 2. Sum up subtotals (full cart vs base-only for promotions — modifiers excluded from discount pool)
     const computedSubtotal = calculatedItems.reduce((acc, item) => acc + item.line_subtotal, 0);
+    const computedSubtotalBaseOnly = calculatedItems.reduce(
+      (acc, item) => acc + Number(item.unit_price || 0) * Number(item.quantity || 0),
+      0
+    );
 
     let effectiveDeliveryFee = Number(orderData.money.delivery_fee || 0);
 
@@ -140,7 +144,7 @@ export class CreateOrderUseCase {
       const cartLines = calculatedItems.map((item) => ({
         menu_item_id: item.menu_item_id,
         quantity: item.quantity,
-        line_subtotal: item.line_subtotal,
+        line_subtotal: Number(item.unit_price || 0) * Number(item.quantity || 0),
       }));
 
       if (promotion.template === 'linked_coupon') {
@@ -167,7 +171,7 @@ export class CreateOrderUseCase {
 
         const impact = computeCouponCartImpact(
           coupon,
-          computedSubtotal,
+          computedSubtotalBaseOnly,
           orderData.order_type,
           effectiveDeliveryFee
         );
@@ -180,7 +184,8 @@ export class CreateOrderUseCase {
         const applied = applyPromotionToCart({
           promotion,
           lines: cartLines,
-          cartSubtotal: computedSubtotal,
+          cartSubtotal: computedSubtotalBaseOnly,
+          cartSubtotalForMinimum: computedSubtotal,
           orderType: orderData.order_type,
           deliveryFee: effectiveDeliveryFee,
           businessTimeZone: promoTz,
@@ -204,14 +209,14 @@ export class CreateOrderUseCase {
 
       const impact = computeCouponCartImpact(
         coupon,
-        computedSubtotal,
+        computedSubtotalBaseOnly,
         orderData.order_type,
         effectiveDeliveryFee
       );
       verifiedDiscount = impact.discount;
       effectiveDeliveryFee = impact.deliveryFeeAfter;
 
-      verifiedDiscount = Math.min(verifiedDiscount, computedSubtotal);
+      verifiedDiscount = Math.min(verifiedDiscount, computedSubtotalBaseOnly);
       orderData.money.coupon_code = couponCode;
       orderData.money.promotion_id = undefined;
       resolvedCouponCode = couponCode;

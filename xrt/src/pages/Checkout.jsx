@@ -27,7 +27,12 @@ import { useCart } from "../context/CartContext";
 import { useSiteSettingsQuery } from "../api/hooks/useSiteSettings";
 import { selectPromotion } from "../api/promotions";
 import { verifyCoupon } from "../api/coupons";
-import { formatPrice, getPriceValue } from "../utils/priceUtils";
+import {
+  formatPrice,
+  getPriceValue,
+  computeBaseUnitPrice,
+  buildOrderModifiersFromSelection,
+} from "../utils/priceUtils";
 import { clearAppliedPromotion } from "../utils/promotionStorage";
 import { useAppliedPromotion } from "../hooks/useAppliedPromotion";
 import { calculateDistance } from "../utils/distanceUtils";
@@ -79,7 +84,7 @@ const YouAreHereIcon = L.divIcon({
 const DEFAULT_TIP_OPTIONS = [10, 15, 20, 25];
 const DEFAULT_TAX_RATE = 0;
 const DEFAULT_MAP_CENTER = [51.505, -0.09];
-/** Mirrors server `computeCouponCartImpact` for checkout totals preview */
+/** Mirrors server `computeCouponCartImpact` for checkout totals preview (`cartSubtotal` = base menu/size only, modifiers excluded). */
 function previewCouponImpact(coupon, cartSubtotal, orderType, deliveryFee) {
   let discount = 0;
   let deliveryFeeAfter = deliveryFee;
@@ -561,73 +566,41 @@ const Checkout = () => {
     );
   };
 
-  // Map cart items to order items format
+  // Map cart items to order items format (base unit price + modifier deltas match storefront computeTotalPrice)
   const mapCartItemsToOrderItems = () => {
     return cartItems.map((item) => {
-      const unitPrice = getPriceValue(item.price);
+      const hasSize = item.size && typeof item.size === "object";
+      const rawMods = item.modifiers;
+      const hasModifierKeys =
+        rawMods &&
+        typeof rawMods === "object" &&
+        Object.keys(rawMods).length > 0;
 
-      // Map modifiers from cart format to order format
-      const modifiers = [];
-      if (item.modifiers && typeof item.modifiers === "object") {
-        Object.entries(item.modifiers).forEach(([groupTitle, value]) => {
-          if (!value) return;
+      const storedUnit = getPriceValue(item.price);
+      let unitPrice;
+      let modifiers;
 
-          if (typeof value === "string") {
-            // Single modifier selected by label
-            const product = item; // reference back to original product data
-            const group = product.modifier_groups?.find((mg) => {
-              const g = mg.modifier_group || mg;
-              return g.name === groupTitle || g.display_name === groupTitle;
-            });
-            const modData = group?.modifiers?.find((m) => m.name === value);
-            if (modData) {
-              modifiers.push({
-                modifier_id: modData.id || modData._id,
-                name_snapshot: modData.name || value,
-                unit_price_delta: modData.price ?? 0,
-              });
-            }
-          } else if (Array.isArray(value)) {
-            // Multiple modifiers (checkbox style)
-            value.forEach((label) => {
-              const product = item;
-              const group = product.modifier_groups?.find((mg) => {
-                const g = mg.modifier_group || mg;
-                return g.name === groupTitle || g.display_name === groupTitle;
-              });
-              const modData = group?.modifiers?.find((m) => m.name === label);
-              if (modData) {
-                modifiers.push({
-                  modifier_id: modData.id || modData._id,
-                  name_snapshot: modData.name || label,
-                  unit_price_delta: modData.price ?? 0,
-                });
-              }
-            });
-          } else if (typeof value === "object") {
-            // Complex modifiers with levels/placements
-            Object.entries(value).forEach(([label, details]) => {
-              if (!details) return;
-              const product = item;
-              const group = product.modifier_groups?.find((mg) => {
-                const g = mg.modifier_group || mg;
-                return g.name === groupTitle || g.display_name === groupTitle;
-              });
-              const modData = group?.modifiers?.find((m) => m.name === label);
-              if (modData) {
-                modifiers.push({
-                  modifier_id: modData.id || modData._id,
-                  name_snapshot: modData.name || label,
-                  unit_price_delta: modData.price ?? 0,
-                  quantity_label_snapshot:
-                    typeof details === "object" ? details.level : undefined,
-                  selected_side:
-                    typeof details === "object" ? details.side : undefined,
-                });
-              }
-            });
-          }
-        });
+      if (hasSize || hasModifierKeys) {
+        unitPrice = computeBaseUnitPrice(item, item.size);
+        const built = buildOrderModifiersFromSelection(
+          item,
+          item.size,
+          rawMods || {},
+        );
+        modifiers = built.modifiers;
+        const decomposedUnit = unitPrice + built.totalPremium;
+        // Missing modifier defs on cart snapshot (e.g. stale/local-only item) — keep totals aligned with charged price
+        if (
+          modifiers.length === 0 &&
+          storedUnit > 0 &&
+          Math.abs(decomposedUnit - storedUnit) > 0.02
+        ) {
+          unitPrice = storedUnit;
+          modifiers = [];
+        }
+      } else {
+        unitPrice = storedUnit;
+        modifiers = [];
       }
 
       return {
@@ -642,19 +615,14 @@ const Checkout = () => {
     });
   };
 
+  /** Base menu/size subtotals only — promotions discount this pool, not modifier premiums. */
   const promotionCartLines = useMemo(() => {
     const items = mapCartItemsToOrderItems();
-    return items.map((oi) => {
-      const modSum = (oi.modifiers || []).reduce(
-        (s, m) => s + Number(m.unit_price_delta || 0),
-        0,
-      );
-      return {
-        menu_item_id: oi.menu_item_id,
-        quantity: oi.quantity,
-        line_subtotal: (Number(oi.unit_price) + modSum) * Number(oi.quantity),
-      };
-    });
+    return items.map((oi) => ({
+      menu_item_id: oi.menu_item_id,
+      quantity: oi.quantity,
+      line_subtotal: Number(oi.unit_price) * Number(oi.quantity),
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cartItems]);
 
@@ -670,6 +638,7 @@ const Checkout = () => {
     const baseDelivery = orderType === "delivery" ? (matchedZone?.fee ?? 0) : 0;
     selectPromotion(effectivePromotionId, {
       lines: promotionCartLines,
+      cart_subtotal_full: subtotal,
       order_type: orderType,
       delivery_fee: baseDelivery,
     })
@@ -703,12 +672,27 @@ const Checkout = () => {
     return () => {
       cancelled = true;
     };
-  }, [effectivePromotionId, promotionCartLines, orderType, matchedZone?.fee]);
+  }, [
+    effectivePromotionId,
+    promotionCartLines,
+    orderType,
+    matchedZone?.fee,
+    subtotal,
+  ]);
 
   const couponImpact = useMemo(() => {
     if (!appliedCoupon) return null;
-    return previewCouponImpact(appliedCoupon, subtotal, orderType, deliveryFee);
-  }, [appliedCoupon, subtotal, orderType, deliveryFee]);
+    const discountBaseSubtotal = promotionCartLines.reduce(
+      (s, l) => s + Number(l.line_subtotal || 0),
+      0,
+    );
+    return previewCouponImpact(
+      appliedCoupon,
+      discountBaseSubtotal,
+      orderType,
+      deliveryFee,
+    );
+  }, [appliedCoupon, promotionCartLines, orderType, deliveryFee]);
 
   const promoDiscount = promoPreview?.discount ?? 0;
   const couponDiscount = couponImpact?.discount ?? 0;
@@ -1677,6 +1661,31 @@ const Checkout = () => {
                   {cartItems.reduce((s, i) => s + i.qty, 0)} items
                 </span>
               </h2>
+
+              {discount > 0 && (
+                <div className="mb-5 p-4 bg-green-50 rounded-xl border border-green-200">
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-green-600 mt-0.5 flex-shrink-0 text-base leading-none">🎉</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-green-800 mb-0.5">
+                        Discount Applied
+                      </p>
+                      <p className="text-sm text-green-700 leading-relaxed">
+                        {appliedCoupon ? (
+                          <>Coupon <strong>{appliedCoupon.code}</strong></>
+                        ) : appliedPromotion ? (
+                          <><strong>{appliedPromotion.headline || 'Special Offer'}</strong></>
+                        ) : (
+                          <>Promo discount</>
+                        )}
+                      </p>
+                    </div>
+                    <span className="font-bold text-green-700 whitespace-nowrap">
+                      -{formatPrice(discount, siteSettings)}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {orderType === "delivery" &&
                 (deliveryAddress || deliveryDetails) && (

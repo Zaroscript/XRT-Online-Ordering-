@@ -104,7 +104,7 @@ export const PROMOTION_TEMPLATE_DEFINITIONS: PromotionTemplateDefinition[] = [
   {
     id: 'bogo',
     title: 'Buy one, get one',
-    summary: 'The classic BOGO: Buy one and get another one discounted or free.',
+    summary: 'Buy one, get one free or discounted. Can be the same item (Buy a Burger, get a Burger) or different items (Buy a Pizza, get a Drink).',
     category: 'item_deals',
     tags: ['bogo', 'pair'],
   },

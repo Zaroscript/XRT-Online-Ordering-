@@ -47,11 +47,17 @@ export function buildPromotionRules(
       }
       return rules;
     }
-    case 'buy_n_get_one_free':
-      return {
+    case 'buy_n_get_one_free': {
+      const freeItems = parseIds(v.group_b_csv);
+      const rules: Promotion['rules'] = {
         n: Math.max(1, Number(v.n) || 2),
         menu_item_ids: parseIds(v.menu_item_ids_csv),
       };
+      if (freeItems.length) {
+        rules.group_b_ids = freeItems;
+      }
+      return rules;
+    }
     case 'meal_bundle': {
       const components = parseIds(v.menu_item_ids_csv).map((menuItemId) => ({
         menu_item_id: menuItemId,
