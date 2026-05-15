@@ -247,6 +247,17 @@ export class OrderController {
       throw new NotFoundError('Order not found');
     }
 
+    // Print receipt when staff accepts an order
+    if (status === 'accepted') {
+      const orderRepository = new OrderRepository();
+      await orderRepository.clearPrintStatus(order.id);
+      setImmediate(() => {
+        routeOrderToPrinters(order.id).catch((err) => {
+          console.error('[OrderController] Print on accept failed:', err?.message || err);
+        });
+      });
+    }
+
     try {
       const businessRepository = new BusinessRepository();
       const customerRepository = new CustomerRepository();

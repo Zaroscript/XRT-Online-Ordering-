@@ -13,6 +13,7 @@ import cn from 'classnames';
 import { DatePicker } from 'rsuite';
 import { formatOrderTrackingLabel } from '@/utils/order-tracking';
 import 'rsuite/dist/rsuite-no-reset.min.css';
+import PrintOrderButton from '@/components/order/print-order-button';
 
 dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
@@ -399,12 +400,15 @@ export default function HorizontalOrderCard({
           </p>
         )}
 
-        <button
-          onClick={() => onViewDetails?.(order)}
-          className="text-sm font-bold text-accent hover:text-accent-hover transition-colors underline decoration-dotted underline-offset-4"
-        >
-          {t('text-view-details')}
-        </button>
+        <div className="flex items-center gap-3 w-full justify-end">
+          <PrintOrderButton orderId={String(order.id)} className="w-auto px-4" />
+          <button
+            onClick={() => onViewDetails?.(order)}
+            className="text-sm font-bold text-accent hover:text-accent-hover transition-colors underline decoration-dotted underline-offset-4 whitespace-nowrap"
+          >
+            {t('text-view-details')}
+          </button>
+        </div>
       </div>
     </div>
   );

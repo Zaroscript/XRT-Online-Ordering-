@@ -269,7 +269,7 @@ const startServer = async () => {
       });
 
       registerOrderPrintHandler();
-      startPrinterStatusMonitor(io, 30_000);
+      startPrinterStatusMonitor(io, 3_000);
       autoOrderManager.start();
       startCustomerDedupeJob({
         enabled: env.CUSTOMER_DEDUPE_JOB_ENABLED,
