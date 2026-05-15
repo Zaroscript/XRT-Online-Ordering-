@@ -101,6 +101,10 @@ const BusinessSettingsSchema = new Schema<BusinessSettingsDocument>(
         type: Number,
         default: 0,
       },
+      auto_accept_after_minutes: {
+        type: Number,
+        default: 0,
+      },
     },
     siteLink: { type: String, default: '' },
     isProductReview: { type: Boolean, default: false },

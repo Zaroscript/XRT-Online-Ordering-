@@ -8,7 +8,7 @@ export function usePublicSiteSettingsQuery(enabled: boolean) {
     queryFn: () => publicSiteClient.getSiteSettings(),
     enabled,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     staleTime: 5 * 60 * 1000,
   });
 }

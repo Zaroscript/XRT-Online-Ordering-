@@ -37,6 +37,7 @@ export interface BusinessSettings {
     auto_accept_order_types?: string[];
     auto_accept_ready_time_pickup?: number;
     auto_accept_ready_time_delivery?: number;
+    auto_accept_after_minutes?: number;
   };
   minimumOrderAmount?: number;
   siteLink?: string;

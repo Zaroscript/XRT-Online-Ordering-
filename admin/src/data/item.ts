@@ -173,7 +173,7 @@ export const useItemQuery = ({ slug, id, language }: { slug?: string; id?: strin
     const { data, error, isLoading, refetch } = useQuery<Item, Error>({
         queryKey: [API_ENDPOINTS.ITEMS, { slug, id, language }],
         queryFn: () => itemClient.get({ slug: slug || '', id, language }),
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
         refetchOnMount: true,
         ...options,
     });

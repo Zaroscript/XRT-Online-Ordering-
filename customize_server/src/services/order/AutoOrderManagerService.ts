@@ -35,7 +35,8 @@ export class AutoOrderManagerService {
         // 1. Handle Auto-Accept
         // settings.business is the ID of the business
         if (settings.orders?.auto_accept_orders) {
-          const acceptTimeThreshold = new Date(Date.now());
+          const delayMinutes = settings.orders.auto_accept_after_minutes || 0;
+          const acceptTimeThreshold = new Date(Date.now() - delayMinutes * 60000);
           
           for (const type of settings.orders.auto_accept_order_types || []) {
             let prepTimeMinutes = 0;

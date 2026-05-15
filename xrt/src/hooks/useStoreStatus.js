@@ -15,18 +15,34 @@ export function to12Hour(timeStr) {
 }
 
 /**
+ * Returns the current Date object re-interpreted in the store's configured IANA timezone.
+ * This ensures open/closed logic uses the store's local clock, not the customer's browser clock.
+ */
+function getStoreNow(tz) {
+  try {
+    // toLocaleString in the store timezone then re-parse gives us the wall-clock time in that zone.
+    const storeTimeStr = new Date().toLocaleString('en-US', { timeZone: tz });
+    return new Date(storeTimeStr);
+  } catch {
+    return new Date();
+  }
+}
+
+/**
  * Returns store open/closed status and the full weekly schedule.
+ * Open/closed is evaluated against the store's configured timezone, not the browser's.
  * @returns {{ isOpen: boolean, schedule: Array, todaySlot: object|null }}
  */
 export function useStoreStatus() {
   const { data: settings } = useSiteSettingsQuery();
   const schedule = settings?.operating_hours?.schedule ?? [];
+  const storeTimezone = settings?.options?.timezone || 'America/New_York';
 
   const { isOpen, todaySlot } = useMemo(() => {
     if (!schedule.length) return { isOpen: false, todaySlot: null };
 
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const now = new Date();
+    const now = getStoreNow(storeTimezone);
     const currentDayName = days[now.getDay()];
     const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
@@ -39,7 +55,7 @@ export function useStoreStatus() {
       currentTime <= todaySlot.close_time;
 
     return { isOpen, todaySlot };
-  }, [schedule]);
+  }, [schedule, storeTimezone]);
 
   return { isOpen, todaySlot, schedule };
 }

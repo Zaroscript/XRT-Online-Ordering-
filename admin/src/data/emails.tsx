@@ -130,7 +130,7 @@ export const useEmailCampaignAnalyticsQuery = () => {
   return useQuery({
     queryKey: [API_ENDPOINTS.EMAIL_CAMPAIGNS, 'analytics'],
     queryFn: () => emailCampaignClient.getAnalytics(),
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     staleTime: 5 * 60 * 1000, // 5-min cache
   });
 };

@@ -41,7 +41,7 @@ export default function EditItemPage() {
       language: locale!,
     },
     {
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true,
       refetchOnMount: true,
     },
   );

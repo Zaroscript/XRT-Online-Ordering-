@@ -44,7 +44,7 @@ import { useLoyalty } from "../hooks/useLoyalty";
 import { LoyaltyJoinCheckbox } from "../components/checkout/LoyaltyJoinCheckbox";
 import { LoyaltyPointsWidget } from "../components/checkout/LoyaltyPointsWidget";
 import {
-  getDateInputBounds,
+  getDateInputBounds, getStoreDate,
   formatDateLabel,
   formatTimeLabel,
   getAvailableDates,
@@ -246,7 +246,7 @@ const Checkout = () => {
     selectedScheduleDate,
   );
   const dateInputBounds = useMemo(
-    () => getDateInputBounds(siteSettings || {}, new Date()),
+    () => getDateInputBounds(siteSettings || {}, getStoreDate(siteSettings || {})),
     [siteSettings],
   );
 
@@ -317,7 +317,7 @@ const Checkout = () => {
   }, [customerCoords, deliveryZones, shopLocation]);
 
   const calculateAsapTime = () => {
-    const now = new Date();
+    const now = getStoreDate(siteSettings || {});
     const asap = new Date(now.getTime() + 25 * 60000);
     return asap.toLocaleTimeString([], {
       hour: "numeric",

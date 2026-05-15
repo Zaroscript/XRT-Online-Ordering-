@@ -150,7 +150,7 @@ export const useProductsQuery = (
     }) as any,
     placeholderData: (previousData: any) => previousData,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     ...options,
   });
 

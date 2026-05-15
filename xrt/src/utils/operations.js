@@ -8,6 +8,17 @@ const DAYS = [
   "Saturday",
 ];
 
+export function getStoreDate(settings = {}, baseDate = null) {
+  const tz = settings?.options?.timezone || 'America/New_York';
+  const sourceDate = baseDate || new Date();
+  try {
+    const storeTimeString = sourceDate.toLocaleString("en-US", { timeZone: tz });
+    return new Date(storeTimeString);
+  } catch (e) {
+    return sourceDate;
+  }
+}
+
 export const OperationsMode = {
   OPEN_NORMAL: "OPEN_NORMAL",
   SCHEDULED_ONLY: "SCHEDULED_ONLY",
@@ -97,7 +108,7 @@ export function isBusinessOpenAt(schedule = [], atDate = new Date()) {
   return false;
 }
 
-export function resolveOperationsState(settings = {}, now = new Date()) {
+export function resolveOperationsState(settings = {}, now = getStoreDate(settings)) {
   const operations = normalizeOperationsSettings(settings);
   const manualActive =
     operations.manualOverride && isOverrideActive(operations.overrideUntil, now);
@@ -189,7 +200,7 @@ export function getAvailableDates(settings = {}, config = {}) {
   const maxSearchDays = maxDays === 0 ? 3650 : Math.max(maxDays, 1);
 
   const dates = [];
-  const today = startOfDay(new Date());
+  const today = startOfDay(getStoreDate(settings));
   for (
     let i = 0;
     i < maxSearchDays && dates.length < openDaysLimit;
@@ -204,7 +215,7 @@ export function getAvailableDates(settings = {}, config = {}) {
   return dates;
 }
 
-export function isDateSelectable(settings = {}, date, now = new Date()) {
+export function isDateSelectable(settings = {}, date, now = getStoreDate(settings)) {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) return false;
   const targetDay = startOfDay(date);
   const today = startOfDay(now);
@@ -221,7 +232,7 @@ export function isDateSelectable(settings = {}, date, now = new Date()) {
   return isDateBookable(schedule, targetDay);
 }
 
-export function getDateInputBounds(settings = {}, now = new Date()) {
+export function getDateInputBounds(settings = {}, now = getStoreDate(settings)) {
   const today = startOfDay(now);
   const min = formatDateValue(today);
   const maxDays = resolveMaxDays(settings?.orders?.maxDays ?? 30);
@@ -243,7 +254,7 @@ export function getAvailableTimeSlots(settings = {}, date, interval = 15) {
   const close = parseTimeToMinutes(entry.close_time);
   if (open === null || close === null) return [];
 
-  const now = new Date();
+  const now = getStoreDate(settings);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const isSameDay = now.toDateString() === date.toDateString();
   const prepBuffer = Number(settings?.orders?.deliveredOrderTime || 25);

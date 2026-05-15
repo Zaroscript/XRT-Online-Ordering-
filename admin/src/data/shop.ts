@@ -109,7 +109,7 @@ export const useShopQuery = ({ slug, id }: { slug?: string; id?: string }, optio
     queryFn: () => shopClient.get({ slug, id }),
     ...options,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     enabled: !!(slug || id),
   });
 };
@@ -120,7 +120,7 @@ export const useShopsQuery = (options: Partial<ShopQueryOptions>) => {
     queryFn: () => shopClient.paginated(options) as any,
     placeholderData: (previousData) => previousData,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
   const shops = (data as any)?.data ?? [];
   const paginatorInfo = (data as any)?.paginatorInfo ?? mapPaginatorData(data);
