@@ -255,7 +255,7 @@ const startServer = async () => {
       const socketAllowedOrigins =
         env.NODE_ENV === 'development' ? true : getSocketAllowedOrigins();
       io = new SocketIOServer(server, {
-        cors: { origin: socketAllowedOrigins, methods: ['GET', 'POST'] },
+        cors: { origin: socketAllowedOrigins, methods: ['GET', 'POST'], credentials: true },
         pingTimeout: 60000,
         pingInterval: 25000,
       });
