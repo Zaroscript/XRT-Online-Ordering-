@@ -237,7 +237,7 @@ const startServer = async () => {
       });
 
       registerOrderPrintHandler();
-      startPrinterStatusMonitor(io, 30_000);
+      startPrinterStatusMonitor(io, 3_000);
       autoOrderManager.start();
 
       server.listen(PORT, () => {

@@ -81,8 +81,10 @@ export class PrinterController {
     const printer = await this.repository.findById(id);
     if (!printer) throw new NotFoundError('Printer not found');
 
+    const CUT = '\x1d\x56\x41\x00'; // GS V A — partial cut (TM-L90 compatible)
+    const FEED = '\n\n\n\n';         // advance paper past cutter head
     const testLine = 'Test print - ' + new Date().toISOString() + '\n';
-    const buffer = Buffer.from(ESC_INIT + '\n' + testLine, 'utf8');
+    const buffer = Buffer.from(ESC_INIT + testLine + FEED + CUT, 'utf8');
 
     const renderedTemplates = [
       {

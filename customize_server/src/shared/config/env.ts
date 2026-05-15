@@ -76,7 +76,7 @@ export const env = {
    * direct — print immediately from this Node process (no local agent; API host must reach printer).
    */
   PRINT_DELIVERY:
-    String(process.env.PRINT_DELIVERY || 'queue').toLowerCase() === 'direct'
+    String(process.env.PRINT_DELIVERY || 'queue').trim().toLowerCase() === 'direct'
       ? 'direct'
       : 'queue',
 } as const;

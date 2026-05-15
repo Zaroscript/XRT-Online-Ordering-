@@ -93,6 +93,14 @@ export const orderClient = {
       amount,
     });
   },
+  reprint: (id: string, printerId?: string) => {
+    const orderId = String(id).trim();
+    if (!orderId) return Promise.reject(new Error('Order id is required'));
+    return HttpClient.post<{ orderId: string; printerId: string }>(
+      API_ENDPOINTS.ORDER_REPRINT.replace(':id', orderId),
+      printerId ? { printerId } : {}
+    );
+  },
   paginated: ({ tracking_number, ...params }: Partial<OrderQueryOptions>) => {
     return HttpClient.get<OrderPaginator>(API_ENDPOINTS.ORDERS, {
       searchJoin: 'and',
