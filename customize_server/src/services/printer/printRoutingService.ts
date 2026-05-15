@@ -14,6 +14,12 @@ import { recordPrinterLog } from './printerActivityLogger';
 import { Server as SocketIOServer } from 'socket.io';
 import { PrintJobNotifier } from './printJobNotifier';
 
+let printJobNotifier: PrintJobNotifier | null = null;
+
+export function setPrintJobNotifier(io: SocketIOServer) {
+  printJobNotifier = new PrintJobNotifier(io);
+}
+
 const DEFAULT_KITCHEN_LAYOUT: TemplateLayout = {
   header: [
     { type: 'field', value: 'orderNumber' },
@@ -129,6 +135,15 @@ async function dispatchToPrinter(
     maxRetries: printer.maxRetries ?? 3,
     renderedTemplates,
   });
+  
+  if (printJobNotifier) {
+    printJobNotifier.notify(order.business_id, {
+      id: job.id,
+      renderedTemplates,
+      printerInterface: printer.connection_type || 'usb',
+    });
+  }
+  
   await orderRepository.updatePrintStatus(order.id, printer.id, 'sent');
   logger.info(
     `[PrintRouting][QUEUE] Order ${order.order_number} queued for ${printer.name} (${renderedTemplates.length} template(s))`
