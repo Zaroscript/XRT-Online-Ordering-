@@ -4,6 +4,8 @@ export interface Customer {
   name: string;
   email: string;
   phoneNumber: string;
+  /** Authoritative current loyalty balance from LoyaltyAccount.points_balance */
+  loyaltyPoints?: number;
   rewards?: number;
   notes?: string;
   isActive: boolean;

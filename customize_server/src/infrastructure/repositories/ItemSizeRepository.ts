@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { IItemSizeRepository } from '../../domain/repositories/IItemSizeRepository';
 import {
   ItemSize,
@@ -87,7 +88,7 @@ export class ItemSizeRepository implements IItemSizeRepository {
 
     const operations = items.map((item) => ({
       updateOne: {
-        filter: { _id: item.id },
+        filter: { _id: new mongoose.Types.ObjectId(item.id) },
         update: { display_order: item.order },
       },
     }));

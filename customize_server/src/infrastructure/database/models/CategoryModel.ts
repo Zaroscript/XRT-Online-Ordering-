@@ -80,6 +80,7 @@ const CategorySchema = new Schema<CategoryDocument>(
         ],
       },
     ],
+    suggested_products: [{ type: Schema.Types.ObjectId, ref: 'Item' }],
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

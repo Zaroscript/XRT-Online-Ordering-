@@ -166,25 +166,36 @@ export class LoyaltyController {
          return sendError(res, 'Loyalty program settings not found', 400);
       }
 
-      if (points_to_redeem < program.minimum_points_to_redeem) {
+      const normalizedPoints = Math.floor(Number(points_to_redeem));
+      if (normalizedPoints < program.minimum_points_to_redeem) {
          return sendError(res, `Minimum redemption is ${program.minimum_points_to_redeem} points.`, 400);
       }
 
-      if (lookup.points_balance < points_to_redeem) {
+      if (lookup.points_balance < normalizedPoints) {
          return sendError(res, `Insufficient points. You only have ${lookup.points_balance} points.`, 400);
       }
-
-      const requestedDiscount = points_to_redeem * (program.redeem_rate_currency_per_point || 0);
-      const maxDiscountValue = subtotal * ((program.max_discount_percent_per_order || 100) / 100);
-
-      if (requestedDiscount > maxDiscountValue) {
-         const maxAllowedPoints = Math.floor(maxDiscountValue / (program.redeem_rate_currency_per_point || 1));
-         return sendError(res, `You can only discount up to ${program.max_discount_percent_per_order}% of your order. Maximum allowed points for this order is ${maxAllowedPoints}.`, 400);
+      if (!lookup.customer_id) {
+        return sendError(res, 'Customer loyalty account not found', 400);
       }
 
-      sendSuccess(res, 'Valid redemption', { valid: true, discount_value: requestedDiscount });
+      const { discount_value } = await this.loyaltyService.validateRedemptionWithSubtotal(
+        lookup.customer_id,
+        normalizedPoints,
+        Number(subtotal)
+      );
+
+      sendSuccess(res, 'Valid redemption', { valid: true, discount_value });
     } catch (error: any) {
-      sendError(res, error.message, 500);
+      const message = error?.message || 'Failed to validate redemption';
+      const lower = message.toLowerCase();
+      const isValidationError =
+        lower.includes('minimum redemption') ||
+        lower.includes('insufficient points') ||
+        lower.includes('not active') ||
+        lower.includes('not configured') ||
+        lower.includes('maximum allowed points') ||
+        lower.includes('not found');
+      sendError(res, message, isValidationError ? 400 : 500);
     }
   };
 }

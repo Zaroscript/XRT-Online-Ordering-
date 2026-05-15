@@ -40,13 +40,12 @@ export const productClient = {
       }),
     });
   },
-  popular({ ...params }: Partial<ProductQueryOptions>) {
-    return HttpClient.get<Product[]>(API_ENDPOINTS.POPULAR_PRODUCTS, {
-      searchJoin: 'and',
-      with: 'type;shop',
-      ...params,
-      search: HttpClient.formatSearchParams({}),
+  popular: async ({ limit, language }: Partial<ProductQueryOptions>) => {
+    const response = await HttpClient.get<any>(API_ENDPOINTS.POPULAR_PRODUCTS, {
+      limit,
+      language,
     });
+    return response?.data || response;
   },
   lowStock({ ...params }: Partial<ProductQueryOptions>) {
     return HttpClient.get<Product[]>(
@@ -130,11 +129,11 @@ export const productClient = {
       },
     );
   },
-  topRated({ ...params }: Partial<ProductQueryOptions>) {
-    return HttpClient.get<Product[]>(API_ENDPOINTS.TOP_RATED_PRODUCTS, {
-      searchJoin: 'and',
-      ...params,
-      search: HttpClient.formatSearchParams({}),
+  topRated: async ({ limit, language }: Partial<ProductQueryOptions>) => {
+    const response = await HttpClient.get<any>(API_ENDPOINTS.TOP_RATED_PRODUCTS, {
+      limit,
+      language,
     });
+    return response?.data || response;
   },
 };

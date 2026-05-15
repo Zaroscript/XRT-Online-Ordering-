@@ -16,18 +16,13 @@ import {
   useUpdatePrinterMutation,
   useScanWiFiMutation,
   useScanLANMutation,
-  usePrinterDiscoverSerialQuery,
 } from '@/data/printer';
 import { useTemplatesQuery } from '@/data/template';
 import { useKitchenSectionsQuery } from '@/data/kitchen-section';
 import { Printer } from '@/data/client/printer';
 import { Routes } from '@/config/routes';
-import {
-  supportsWebSerial,
-  listGrantedSerialPorts,
-  requestSerialPortAccess,
-  type LocalSerialPortOption,
-} from '@/utils/localSerialPorts';
+import { useBusinessesQuery } from '@/data/business';
+import PrintAgentStatus from '@/components/printer/PrintAgentStatus';
 
 type FormValues = {
   name: string;
@@ -56,7 +51,7 @@ const schema = yup.object().shape({
     .required('Interface is required')
     .test(
       'lan-wifi-not-serial',
-      'LAN/Wi‑Fi expects a network address (e.g. 192.168.1.50 or 192.168.1.50:9100). For COM/USB serial ports choose Bluetooth / USB-Serial.',
+      'LAN/Wi‑Fi expects a network address (e.g. 192.168.1.50 or 192.168.1.50:9100). For local USB printing choose "Bluetooth / USB Printer (This Device)".',
       function (value) {
         const type = this.parent.connection_type as string;
         if (type === 'lan' || type === 'wifi') {
@@ -73,7 +68,7 @@ const schema = yup.object().shape({
 type DiscoveredDevice = {
   value: string;
   label: string;
-  source: 'network' | 'server-serial' | 'browser-serial';
+  source: 'network';
 };
 
 type Props = {
@@ -83,6 +78,13 @@ type Props = {
 export default function PrinterForm({ initialValues }: Props) {
   const router = useRouter();
   const { t } = useTranslation(['common', 'form']);
+  const { businesses, loading: businessesLoading } = useBusinessesQuery();
+  const restaurantId =
+    (router.query.restaurant_id as string | undefined) ||
+    (router.query.restaurantId as string | undefined) ||
+    (router.query.business_id as string | undefined) ||
+    businesses?.[0]?.id ||
+    '';
 
   const { data: templatesData } = useTemplatesQuery();
   const templates = useMemo(
@@ -107,10 +109,6 @@ export default function PrinterForm({ initialValues }: Props) {
   const [discoveredDevices, setDiscoveredDevices] = useState<DiscoveredDevice[]>(
     [],
   );
-  const [browserSerialOptions, setBrowserSerialOptions] = useState<
-    LocalSerialPortOption[]
-  >([]);
-  const [loadingBrowserPorts, setLoadingBrowserPorts] = useState(false);
 
   const {
     register,
@@ -145,105 +143,36 @@ export default function PrinterForm({ initialValues }: Props) {
   });
 
   const connectionType = useWatch({ control, name: 'connection_type' });
-
-  const {
-    data: serialPorts = [],
-    isFetching: serialDiscoverLoading,
-    refetch: refetchSerialDiscovery,
-  } = usePrinterDiscoverSerialQuery(connectionType === 'bluetooth');
+  const selectedInterface = useWatch({ control, name: 'interface' });
 
   const { mutate: scanWiFi, isPending: scanningWiFi } = useScanWiFiMutation();
   const { mutate: scanLAN, isPending: scanningLAN } = useScanLANMutation();
 
-  const scanning =
-    scanningWiFi ||
-    scanningLAN ||
-    (connectionType === 'bluetooth' && serialDiscoverLoading);
+  const scanning = scanningWiFi || scanningLAN;
+  const [showConnectionChecklist, setShowConnectionChecklist] = useState(false);
 
-  const autoFilledSerialRef = useRef(false);
+  const autoFilledNetworkRef = useRef(false);
 
   useEffect(() => {
     setDiscoveredDevices([]);
-    autoFilledSerialRef.current = false;
+    autoFilledNetworkRef.current = false;
   }, [connectionType]);
 
   useEffect(() => {
-    if (initialValues?.id) return;
     if (connectionType !== 'bluetooth') return;
-    if (serialDiscoverLoading) return;
-    if (serialPorts.length !== 1) return;
-    if (autoFilledSerialRef.current) return;
-    setValue('interface', serialPorts[0].interface, { shouldValidate: true });
-    autoFilledSerialRef.current = true;
-    toast.success(`Interface set to ${serialPorts[0].interface}`);
-  }, [
-    connectionType,
-    initialValues?.id,
-    serialDiscoverLoading,
-    serialPorts,
-    setValue,
-  ]);
+    if (selectedInterface) return;
+    // For browser-based USB printing, interface is a logical marker, not a COM path.
+    setValue('interface', 'browser-usb', { shouldValidate: true });
+  }, [connectionType, selectedInterface, setValue]);
 
-  const refreshBrowserSerial = useCallback(async () => {
-    if (!supportsWebSerial()) {
-      toast.info(
-        'Web Serial is only available in Chrome or Edge on desktop. Enter COM/port manually.',
-      );
-      return;
-    }
-    setLoadingBrowserPorts(true);
-    try {
-      const opts = await listGrantedSerialPorts();
-      setBrowserSerialOptions(opts);
-      if (opts.length === 0) {
-        toast.info(
-          'No USB serial devices granted yet. Click “Pair USB serial device” first.',
-        );
-      } else {
-        toast.success(`${opts.length} granted serial device(s) listed below.`);
-      }
-    } catch {
-      toast.error('Could not read serial ports from the browser.');
-    } finally {
-      setLoadingBrowserPorts(false);
-    }
-  }, []);
-
-  const pairBrowserSerial = useCallback(async () => {
-    try {
-      await requestSerialPortAccess();
-      toast.success('Device paired in browser. Refresh the list, then enter COM/tty in Interface.');
-      await refreshBrowserSerial();
-    } catch (e: any) {
-      if (e?.name === 'NotFoundError') return;
-      toast.error(e?.message || 'Could not open device picker.');
-    }
-  }, [refreshBrowserSerial]);
-
-  const serialServerDevices: DiscoveredDevice[] = useMemo(() => {
-    if (connectionType !== 'bluetooth') return [];
-    return serialPorts.map((p) => ({
-      value: p.interface,
-      label: p.label,
-      source: 'server-serial' as const,
-    }));
-  }, [connectionType, serialPorts]);
+  useEffect(() => {
+    if (connectionType === 'bluetooth') return;
+    if (selectedInterface !== 'browser-usb') return;
+    // Prevent carrying USB-only interface marker into LAN/WiFi settings.
+    setValue('interface', '', { shouldValidate: true });
+  }, [connectionType, selectedInterface, setValue]);
 
   const onScanServer = () => {
-    if (connectionType === 'bluetooth') {
-      void refetchSerialDiscovery().then((result) => {
-        const list = result.data ?? [];
-        if (list.length === 0) {
-          toast.info(
-            'No serial/COM ports detected on the machine running the API server.',
-          );
-        } else {
-          toast.success(`Refreshed: ${list.length} port(s) on API server`);
-        }
-      });
-      return;
-    }
-
     setDiscoveredDevices([]);
     const mutation = connectionType === 'lan' ? scanLAN : scanWiFi;
 
@@ -273,21 +202,12 @@ export default function PrinterForm({ initialValues }: Props) {
   };
 
   const allSelectableDevices = useMemo(() => {
-    const browserMapped: DiscoveredDevice[] = browserSerialOptions.map((o) => ({
-      value: o.value,
-      label: `${o.label} (browser — type COM/tty in Interface)`,
-      source: 'browser-serial' as const,
-    }));
-    const networkOnly =
-      connectionType === 'lan' || connectionType === 'wifi'
-        ? discoveredDevices
-        : [];
-    return [...networkOnly, ...serialServerDevices, ...browserMapped];
+    return connectionType === 'lan' || connectionType === 'wifi'
+      ? discoveredDevices
+      : [];
   }, [
     connectionType,
     discoveredDevices,
-    serialServerDevices,
-    browserSerialOptions,
   ]);
 
   const onSubmit = (values: FormValues) => {
@@ -353,63 +273,193 @@ export default function PrinterForm({ initialValues }: Props) {
             >
               <option value="lan">LAN</option>
               <option value="wifi">WiFi</option>
-              <option value="bluetooth">Bluetooth / USB-Serial</option>
+              <option value="bluetooth">Bluetooth / USB Printer (This Device)</option>
             </select>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-            <div className="min-w-0 flex-1">
-              <Input
-                label="Interface (filled automatically when possible)"
-                {...register('interface')}
-                error={errors.interface?.message}
-                variant="outline"
-                disabled={isLoading}
-              />
-            </div>
-            {(connectionType === 'wifi' ||
-              connectionType === 'lan' ||
-              connectionType === 'bluetooth') && (
+          {connectionType !== 'bluetooth' ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+              <div className="min-w-0 flex-1">
+                <Input
+                  label="Interface (filled automatically when possible)"
+                  {...register('interface')}
+                  error={errors.interface?.message}
+                  variant="outline"
+                  disabled={isLoading}
+                />
+              </div>
               <Button
                 type="button"
                 onClick={onScanServer}
                 loading={scanning}
                 disabled={scanning || isLoading}
                 variant="outline"
-                className="mb-[2px] shrink-0"
+                className="shrink-0 sm:mt-7"
               >
                 Scan (server)
               </Button>
-            )}
-          </div>
-
-          {connectionType === 'bluetooth' && supportsWebSerial() && (
-            <div className="flex flex-wrap gap-2 rounded-md border border-dashed border-accent/40 p-3">
-              <span className="w-full text-xs font-medium text-heading">
-                This computer (browser)
+            </div>
+          ) : (
+            <div className="space-y-3 rounded-md border border-dashed border-accent/40 p-3">
+              <input type="hidden" {...register('interface')} />
+              <span className="block text-sm font-medium text-heading">
+                USB printer
               </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="small"
-                loading={loadingBrowserPorts}
-                disabled={loadingBrowserPorts || isLoading}
-                onClick={refreshBrowserSerial}
-              >
-                List granted USB serial
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="small"
-                disabled={isLoading}
-                onClick={pairBrowserSerial}
-              >
-                Pair USB serial device
-              </Button>
+              <p className="text-sm text-body">
+                Use the button below to connect your local USB printer in one step.
+              </p>
             </div>
           )}
 
-          {allSelectableDevices.length > 0 && (
+          {connectionType === 'bluetooth'
+            ? restaurantId
+              ? <PrintAgentStatus restaurantId={restaurantId} />
+              : !businessesLoading
+                ? (
+                    <p className="text-sm text-red-600">
+                      {t(
+                        'common:print-agent.errors.restaurant-id-unavailable',
+                        'Cannot start print agent: restaurant ID is unavailable.',
+                      )}
+                    </p>
+                  )
+                : null
+            : null}
+
+          <div className="rounded-md border border-blue-100 bg-blue-50 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-sm font-semibold text-blue-900">
+                {connectionType === 'bluetooth'
+                  ? t(
+                      'common:print-agent.checklist.usb-title',
+                      'USB Printer Connection Checklist',
+                    )
+                  : connectionType === 'lan'
+                    ? t(
+                        'common:print-agent.checklist.lan-title',
+                        'LAN Printer Connection Checklist',
+                      )
+                    : t(
+                        'common:print-agent.checklist.wifi-title',
+                        'WiFi Printer Connection Checklist',
+                      )}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowConnectionChecklist((prev) => !prev)}
+                className="text-xs font-medium text-blue-800 underline underline-offset-2 hover:text-blue-900"
+              >
+                {showConnectionChecklist
+                  ? t('common:print-agent.checklist.hide', 'Hide steps')
+                  : t('common:print-agent.checklist.show', 'Show steps')}
+              </button>
+            </div>
+            {showConnectionChecklist ? (
+              <ol className="mt-2 list-decimal space-y-1 ps-5 text-sm text-blue-900">
+                {connectionType === 'bluetooth' ? (
+                  <>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.usb-step-1',
+                        'Set connection type to "Bluetooth / USB Printer (This Device)".',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.usb-step-2',
+                        'Save the printer first.',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.usb-step-3',
+                        'Click "Connect Printer" and choose your USB printer in the browser popup.',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.usb-step-4',
+                        'Wait until status shows "Ready to print".',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.usb-step-5',
+                        'Keep this dashboard tab open while printing orders.',
+                      )}
+                    </li>
+                  </>
+                ) : connectionType === 'lan' ? (
+                  <>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.lan-step-1',
+                        'Set connection type to "LAN".',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.lan-step-2',
+                        'Click "Scan (server)" to find printers on the server network.',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.lan-step-3',
+                        'Select a discovered device to fill the Interface field, or enter printer IP manually.',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.lan-step-4',
+                        'Save the printer and run "Check link" from the printers list.',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.lan-step-5',
+                        'If check fails, ensure the API server can reach the printer IP and port 9100.',
+                      )}
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.wifi-step-1',
+                        'Set connection type to "WiFi".',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.wifi-step-2',
+                        'Click "Scan (server)" to discover printers accessible from the server.',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.wifi-step-3',
+                        'Pick a discovered device or enter the printer IP manually in Interface.',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.wifi-step-4',
+                        'Save the printer and run "Check link" from the printers list.',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        'common:print-agent.checklist.wifi-step-5',
+                        'If connection fails, verify printer and API server are on reachable networks.',
+                      )}
+                    </li>
+                  </>
+                )}
+              </ol>
+            ) : null}
+          </div>
+
+          {connectionType !== 'bluetooth' && allSelectableDevices.length > 0 && (
             <div>
               <Label>Discovered devices — pick one to fill Interface</Label>
               <select
@@ -420,41 +470,16 @@ export default function PrinterForm({ initialValues }: Props) {
                   if (!v) return;
                   const dev = allSelectableDevices.find((d) => d.value === v);
                   if (!dev) return;
-                  if (dev.source === 'browser-serial') {
-                    toast.info(
-                      'Browser cannot read the COM name. Open Device Manager (Windows) or use ls /dev/tty* (Linux) and type it in Interface.',
-                    );
-                    e.target.value = '';
-                    return;
-                  }
                   setValue('interface', dev.value, { shouldValidate: true });
                   e.target.value = '';
                 }}
               >
                 <option value="">Select a device…</option>
-                {serialServerDevices.length > 0 && (
-                  <optgroup label="API server — USB / COM (auto-detected)">
-                    {serialServerDevices.map((d) => (
-                      <option key={`ser-${d.value}`} value={d.value}>
-                        {d.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
                 {discoveredDevices.length > 0 && (
                   <optgroup label="Network scan (TCP 9100)">
                     {discoveredDevices.map((d) => (
                       <option key={`net-${d.value}-${d.label}`} value={d.value}>
                         {d.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {browserSerialOptions.length > 0 && (
-                  <optgroup label="Browser USB serial (enter COM/tty manually)">
-                    {browserSerialOptions.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
                       </option>
                     ))}
                   </optgroup>

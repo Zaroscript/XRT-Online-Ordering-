@@ -13,6 +13,35 @@ import {
 import { mapPaginatorData } from '@/utils/data-mappers';
 import { modifierClient } from './client/modifier';
 import { Config } from '@/config';
+import { HttpClient } from './client/http-client';
+
+export const useUpdateModifiersSortOrderMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      groupId,
+      items,
+    }: {
+      groupId: string;
+      items: { id: string; order: number }[];
+    }) => {
+      const url = `${API_ENDPOINTS.MODIFIER_GROUPS}/${groupId}/modifiers/sort-order`;
+      return HttpClient.post(url, { items });
+    },
+    onSuccess: () => {
+      toast.success(t('common:successfully-updated'));
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.MODIFIERS] });
+      queryClient.invalidateQueries({
+        queryKey: [API_ENDPOINTS.MODIFIER_GROUPS],
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || t('common:update-failed'));
+    },
+  });
+};
 
 export const useCreateModifierMutation = () => {
   const queryClient = useQueryClient();

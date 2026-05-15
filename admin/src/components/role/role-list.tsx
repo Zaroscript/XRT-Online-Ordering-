@@ -93,10 +93,12 @@ const RoleList = ({
       width: 120,
       render: (id: string, record: Role) => {
         if (record.isSystem) return null;
+        const roleId = id || record.id;
+        if (!roleId) return null;
         return (
           <ActionButtons
-            id={id}
-            editUrl={`${Routes.role.list}/${id}/edit`}
+            id={roleId}
+            editUrl={`${Routes.role.list}/${roleId}/edit`}
             deleteModalView="DELETE_ROLE"
           />
         );

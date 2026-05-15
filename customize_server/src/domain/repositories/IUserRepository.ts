@@ -23,6 +23,7 @@ export interface IUserRepository {
   create(userData: CreateUserDTO): Promise<User>;
   findById(id: string, includePassword?: boolean): Promise<User | null>;
   findByEmail(email: string, includePassword?: boolean): Promise<User | null>;
+  findByIdentity(identity: string, includePassword?: boolean): Promise<User | null>;
   findAll(filters: UserFilters): Promise<PaginatedUsers>;
   update(id: string, userData: UpdateUserDTO): Promise<User>;
   delete(id: string): Promise<void>;

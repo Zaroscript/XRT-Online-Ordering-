@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { OrderController } from '../controllers/OrderController';
 import { requireAuth } from '../middlewares/auth';
 import { requirePermission } from '../middlewares/authorize';
+import { writeRateLimitMiddleware } from '../middlewares';
 
 const router = Router();
 const orderController = new OrderController();
@@ -12,62 +13,77 @@ const orderController = new OrderController();
 // Create order - requires orders:create permission or customer role
 router.post(
   '/',
-  // requireAuth,
-  // requirePermission('orders:create'),
+  writeRateLimitMiddleware,
+  requireAuth,
+  requirePermission('orders:create'),
   orderController.create
 );
 
 // Get all orders - requires orders:read permission
 router.get(
   '/',
-  // requireAuth,
-  // requirePermission('orders:read'),
+  requireAuth,
+  requirePermission('orders:read'),
   orderController.getAll
 );
 
 // Get single order
 router.get(
   '/:id',
-  // requireAuth,
-  // requirePermission('orders:read'),
+  requireAuth,
+  requirePermission('orders:read'),
   orderController.getById
 );
 
 // Get print logs for an order
 router.get(
   '/:id/print-logs',
-  // requireAuth,
+  requireAuth,
+  requirePermission('orders:read'),
   orderController.getPrintLogs
 );
 
 // Update order status - requires orders:update permission
 router.put(
   '/:id/status',
-  // requireAuth,
-  // requirePermission('orders:update'),
+  writeRateLimitMiddleware,
+  requireAuth,
+  requirePermission('orders:update'),
   orderController.updateStatus
 );
 
 // Manual reprint - clear print status and trigger routing (optional body: { printerId? })
 router.post(
   '/:id/reprint',
-  // requireAuth,
+  writeRateLimitMiddleware,
+  requireAuth,
+  requirePermission('orders:reprint'),
   orderController.reprint
 );
 
 // Delete order - requires orders:delete permission
 router.delete(
   '/:id',
-  // requireAuth,
-  // requirePermission('orders:delete'),
+  requireAuth,
+  requirePermission('orders:delete'),
   orderController.delete
 );
 
 // Refund order (full or partial)
 router.post(
   '/:id/refund',
-  // requireAuth,
+  writeRateLimitMiddleware,
+  requireAuth,
+  requirePermission('orders:refund'),
   orderController.refundOrder
+);
+
+// Resolve refund action (refund vs void) based on settlement state
+router.get(
+  '/:id/refund-action',
+  requireAuth,
+  requirePermission('orders:refund'),
+  orderController.getRefundAction
 );
 
 export default router;

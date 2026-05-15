@@ -120,29 +120,6 @@ export const PERMISSIONS = {
   SETTINGS_UPDATE: 'settings:update',
 
   // ----------------------
-  // Business
-  // ----------------------
-  BUSINESS_READ: 'business:read',
-  BUSINESS_UPDATE: 'business:update',
-
-  // ----------------------
-  // Withdrawals
-  // ----------------------
-  WITHDRAWS_READ: 'withdraws:read',
-  WITHDRAWS_CREATE: 'withdraws:create',
-  WITHDRAWS_UPDATE: 'withdraws:update',
-  WITHDRAWS_DELETE: 'withdraws:delete',
-
-  // ----------------------
-  // Content Management
-  // ----------------------
-  CONTENT_READ: 'content:read',
-  CONTENT_CREATE: 'content:create',
-  CONTENT_UPDATE: 'content:update',
-  CONTENT_DELETE: 'content:delete',
-  CONTENT_PUBLISH: 'content:publish',
-
-  // ----------------------
   // System (Super Admin Only)
   // ----------------------
   SYSTEM_READ: 'system:read',
@@ -162,6 +139,96 @@ export const PERMISSIONS = {
   ADMIN_DASHBOARD: 'admin:dashboard',
   ADMIN_SETTINGS: 'admin:settings',
   ADMIN_ANALYTICS: 'admin:analytics',
+
+  // ----------------------
+  // Orders
+  // ----------------------
+  ORDERS_READ: 'orders:read',
+  ORDERS_CREATE: 'orders:create',
+  ORDERS_UPDATE: 'orders:update',
+  ORDERS_DELETE: 'orders:delete',
+  ORDERS_REPRINT: 'orders:reprint',
+  ORDERS_REFUND: 'orders:refund',
+
+  // ----------------------
+  // Printers
+  // ----------------------
+  PRINTERS_READ: 'printers:read',
+  PRINTERS_CREATE: 'printers:create',
+  PRINTERS_UPDATE: 'printers:update',
+  PRINTERS_DELETE: 'printers:delete',
+  PRINTERS_SCAN: 'printers:scan',
+  PRINTERS_TEST: 'printers:test',
+
+  // ----------------------
+  // Print Templates
+  // ----------------------
+  PRINT_TEMPLATES_READ: 'print_templates:read',
+  PRINT_TEMPLATES_CREATE: 'print_templates:create',
+  PRINT_TEMPLATES_UPDATE: 'print_templates:update',
+  PRINT_TEMPLATES_DELETE: 'print_templates:delete',
+
+  // ----------------------
+  // Kitchen Sections
+  // ----------------------
+  KITCHEN_SECTIONS_READ: 'kitchen_sections:read',
+  KITCHEN_SECTIONS_CREATE: 'kitchen_sections:create',
+  KITCHEN_SECTIONS_UPDATE: 'kitchen_sections:update',
+  KITCHEN_SECTIONS_DELETE: 'kitchen_sections:delete',
+
+  // ----------------------
+  // Coupons
+  // ----------------------
+  COUPONS_READ: 'coupons:read',
+  COUPONS_CREATE: 'coupons:create',
+  COUPONS_UPDATE: 'coupons:update',
+  COUPONS_DELETE: 'coupons:delete',
+  COUPONS_APPROVE: 'coupons:approve',
+
+  // ----------------------
+  // Taxes / Shipping / Prices
+  // ----------------------
+  TAXES_READ: 'taxes:read',
+  TAXES_CREATE: 'taxes:create',
+  TAXES_UPDATE: 'taxes:update',
+  TAXES_DELETE: 'taxes:delete',
+  PRICES_READ: 'prices:read',
+  PRICES_UPDATE: 'prices:update',
+
+  // ----------------------
+  // Marketing
+  // ----------------------
+  EMAILS_READ: 'emails:read',
+  EMAILS_CREATE: 'emails:create',
+  EMAILS_UPDATE: 'emails:update',
+  EMAILS_DELETE: 'emails:delete',
+  SMS_READ: 'sms:read',
+  SMS_CREATE: 'sms:create',
+  SMS_UPDATE: 'sms:update',
+  SMS_DELETE: 'sms:delete',
+
+  // ----------------------
+  // Loyalty / Analytics / Import-Export
+  // ----------------------
+  LOYALTY_READ: 'loyalty:read',
+  LOYALTY_UPDATE: 'loyalty:update',
+  ANALYTICS_READ: 'analytics:read',
+  IMPORTS_READ: 'imports:read',
+  IMPORTS_CREATE: 'imports:create',
+  IMPORTS_ROLLBACK: 'imports:rollback',
+  EXPORTS_READ: 'exports:read',
+
+  // ----------------------
+  // Dashboard Sections
+  // ----------------------
+  DASHBOARD_VIEW: 'dashboard:view',
+  DASHBOARD_ORDERS_SECTION: 'dashboard:orders_section',
+  DASHBOARD_MENU_SECTION: 'dashboard:menu_section',
+  DASHBOARD_PRINTING_SECTION: 'dashboard:printing_section',
+  DASHBOARD_USERS_SECTION: 'dashboard:users_section',
+  DASHBOARD_PROMOTIONAL_SECTION: 'dashboard:promotional_section',
+  DASHBOARD_MARKETING_SECTION: 'dashboard:marketing_section',
+  DASHBOARD_SETTINGS_SECTION: 'dashboard:settings_section',
 } as const;
 
 export type PermissionKey = typeof PERMISSIONS[keyof typeof PERMISSIONS];

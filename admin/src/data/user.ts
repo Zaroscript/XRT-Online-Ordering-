@@ -120,7 +120,6 @@ export const useCreateUserMutation = () => {
 };
 
 export const useUpdateUserMutation = () => {
-  // ...existing code...
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   return useMutation({
@@ -132,6 +131,21 @@ export const useUpdateUserMutation = () => {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ME] });
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.USERS] });
+    },
+  });
+};
+
+export const useUpdateProfileMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: userClient.updateProfile,
+    onSuccess: () => {
+      toast.success(t('common:successfully-updated'));
+    },
+    // Always refetch after error or success:
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ME] });
     },
   });
 };

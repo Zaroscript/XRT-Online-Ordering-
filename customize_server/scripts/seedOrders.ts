@@ -164,6 +164,7 @@ const seedOrders = async (): Promise<void> => {
             : null;
 
         const order = {
+          business_id: business._id,
           customer_id: customer._id,
           order_number: `ORD-${Date.now()}-${i}`,
           order_type: orderType,
@@ -175,7 +176,7 @@ const seedOrders = async (): Promise<void> => {
             discount: 0,
             delivery_fee: deliveryFee,
             tax_total: taxTotal,
-            tips: 0,
+            tips: parseFloat((subtotal * (Math.random() * 0.15)).toFixed(2)),
             total_amount: totalAmount,
             currency: 'USD',
             payment: 'Cash',
@@ -207,7 +208,6 @@ const seedOrders = async (): Promise<void> => {
         console.log(`✅ Generated order ${i + 1}/15`);
       } catch (err: any) {
         console.error(`❌ Error generating order ${i + 1}:`, err.message);
-        // Don't throw, just skip this one
       }
     }
 
@@ -230,3 +230,4 @@ const seedOrders = async (): Promise<void> => {
 };
 
 seedOrders();
+

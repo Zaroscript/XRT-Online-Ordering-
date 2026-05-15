@@ -1,263 +1,163 @@
-import { useEffect, useState } from 'react';
-import ColumnChart from '@/components/widgets/column-chart';
+import { useState } from 'react';
 import StickerCard from '@/components/widgets/sticker-card';
 import {
+  DashboardAnalyticsData,
+  getDashboardSummaryStats,
   useAnalyticsQuery,
-  useProductByCategoryQuery,
-  useTopRatedProductsQuery,
 } from '@/data/dashboard';
 import { adminOnly, adminAndOwnerOnly, hasAccess } from '@/utils/auth-utils';
 import usePrice from '@/utils/use-price';
-import cn from 'classnames';
 import { useTranslation } from 'next-i18next';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/router';
 import { EaringIcon } from '@/components/icons/summary/earning';
 import { ShoppingIcon } from '@/components/icons/summary/shopping';
 import { ChecklistIcon } from '@/components/icons/summary/checklist';
 import { BasketIcon } from '@/components/icons/summary/basket';
-import Button from '@/components/ui/button';
-import { motion } from 'framer-motion';
 import PageHeading from '@/components/common/page-heading';
 import { getAuthCredentials } from '@/utils/auth-utils';
 import { useDashboardLoading } from '@/hooks/use-app-loading';
-import { TodayTotalOrderByStatus } from '@/types';
+import { CancelledProcessedIcon } from '@/components/icons/summary/cancelled-order';
+import DashboardTimeframeFilter from '@/components/dashboard/timeframe-filter';
+import SalesChart from '@/components/dashboard/sales-chart';
+import TaxChart from '@/components/dashboard/tax-chart';
+import EmailCampaignAnalytics from '@/components/dashboard/email-campaign-analytics';
+import TipsChart from '@/components/dashboard/tips-chart';
+import TrendChart from '@/components/dashboard/trend-chart';
+import OrderAnalysis from '@/components/dashboard/order-analysis';
+import CouponAnalysis from '@/components/dashboard/coupon-analysis';
+
 const ShopList = dynamic(() => import('@/components/dashboard/shops/shops'));
-const Message = dynamic(() => import('@/components/dashboard/shops/message'));
-const OrderStatusWidget = dynamic(
-  () => import('@/components/dashboard/widgets/box/widget-order-by-status'),
-);
-const ProductCountByCategory = dynamic(
-  () =>
-    import('@/components/dashboard/widgets/table/widget-product-count-by-category'),
-);
-
-const TopRatedProducts = dynamic(
-  () => import('@/components/dashboard/widgets/box/widget-top-rate-product'),
-);
-
-const MAP_PAGE_LIST: Record<string, any> = {
-  ShopList: ShopList,
-  Message: Message,
-};
 
 const OwnerShopLayout = () => {
   const { t } = useTranslation();
-  const { locale } = useRouter();
-  const router = useRouter();
   const { permissions } = getAuthCredentials();
   const { data, isPending: loading } = useAnalyticsQuery();
   const [activeTimeFrame, setActiveTimeFrame] = useState(1);
-  const [orderDataRange, setOrderDataRange] = useState(
-    data?.todayTotalOrderByStatus,
-  );
-
-  const {
-    data: productByCategory,
-    isLoading: productByCategoryLoading,
-    error: productByCategoryError,
-  } = useProductByCategoryQuery({ limit: 10, language: locale });
-
-  const {
-    data: topRatedProducts,
-    isLoading: topRatedProductsLoading,
-    error: topRatedProductsError,
-  } = useTopRatedProductsQuery({ limit: 10, language: locale });
+  const analyticsData = data?.data as Partial<DashboardAnalyticsData> | undefined;
+  const activeStats = getDashboardSummaryStats(analyticsData, activeTimeFrame);
 
   // Always call the hook, but pass empty array if not authenticated
   const { token } = getAuthCredentials();
   useDashboardLoading({
-    loadingStates: token
-      ? [loading, productByCategoryLoading, topRatedProductsLoading]
-      : [],
+    loadingStates: token ? [loading] : [],
     loadingMessage: 'Loading dashboard data...',
   });
 
   const { price: total_revenue } = usePrice(
-    data && {
-      amount: data?.totalRevenue!,
+    activeStats && {
+      amount: activeStats.totalRevenue,
     },
   );
-  const { price: total_refund } = usePrice(
-    data && {
-      amount: data?.totalRefunds!,
+  const { price: total_tips } = usePrice(
+    activeStats && {
+      amount: activeStats.totalTips,
     },
   );
 
-  const { price: todays_revenue } = usePrice(
-    data && {
-      amount: data?.todaysRevenue!,
-    },
-  );
-  const { query } = router;
-
-  const classNames = {
-    basic:
-      'lg:text-[1.375rem] font-semibold border-b-2 border-solid border-transparent lg:pb-5 pb-3 -mb-0.5',
-    selected: 'text-accent hover:text-accent-hover border-current',
-    normal: 'hover:text-black/80',
-  };
-  let salesByYear: number[] = Array.from({ length: 12 }, (_) => 0);
-  if (!!data?.totalYearSaleByMonth?.length) {
-    salesByYear = data.totalYearSaleByMonth.map((item: any, index: number) => {
-      if (index < 12) {
-        const total = item?.total ?? item?.value ?? 0;
-        const value =
-          typeof total === 'number' ? total : parseFloat(String(total || '0'));
-        return isNaN(value) || !isFinite(value) ? 0 : Math.max(0, value);
-      }
-      return 0;
-    });
-  }
-  // Ensure all values are valid numbers (no NaN, null, or undefined)
-  salesByYear = salesByYear.map((val) =>
-    typeof val === 'number' && !isNaN(val) && isFinite(val) ? val : 0,
-  );
-
-  const timeFrame = [
-    { name: t('text-today'), day: 1 },
-    { name: t('text-weekly'), day: 7 },
-    { name: t('text-monthly'), day: 30 },
-    { name: t('text-yearly'), day: 365 },
-  ];
-
-  useEffect(() => {
-    switch (activeTimeFrame) {
-      case 1:
-        setOrderDataRange(data?.todayTotalOrderByStatus);
-        break;
-      case 7:
-        setOrderDataRange(data?.weeklyTotalOrderByStatus);
-        break;
-      case 30:
-        setOrderDataRange(data?.monthlyTotalOrderByStatus);
-        break;
-      case 365:
-        setOrderDataRange(data?.yearlyTotalOrderByStatus);
-        break;
-
-      default:
-        setOrderDataRange(orderDataRange);
-        break;
-    }
-  });
-
-  // Transform order status data from array to object format
-  const transformOrderStatusData = (orderStatusArray: any[] | undefined) => {
-    if (!orderStatusArray) return {};
-
-    return orderStatusArray.reduce((acc, item) => {
-      const statusKey = item.status.replace('-', '');
-      acc[statusKey] = item.count;
-      return acc;
-    }, {} as TodayTotalOrderByStatus);
+  // Use brand colors from CSS variables to ensure consistency and prevent manual editing
+  const brandColors = {
+    revenue: 'rgb(var(--color-primary))',
+    tips: 'rgb(var(--color-pending))',
+    orders: 'rgb(var(--color-muted-black))',
+    completed: 'rgb(var(--color-complete))',
+    canceled: 'rgb(var(--color-canceled))',
   };
 
   return (
     <>
+      {/* Summary Section */}
       <div className="mb-8 rounded-lg bg-light p-5 md:p-8">
-        <div className="mb-7 flex items-center justify-between">
-          <PageHeading title={t('text-summary')} />
+        <div className="mb-5 items-center justify-between sm:flex md:mb-7">
+          <PageHeading title={t('text-summary-order-status')} />
+          <DashboardTimeframeFilter
+            activeTimeFrame={activeTimeFrame}
+            onChange={setActiveTimeFrame}
+          />
         </div>
-        <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+
+        <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           <StickerCard
             titleTransKey="sticker-card-title-rev"
-            // subtitleTransKey="sticker-card-subtitle-rev"
             icon={<EaringIcon className="h-8 w-8" />}
-            color="#047857"
+            color={brandColors.revenue}
             price={total_revenue}
           />
           <StickerCard
-            titleTransKey="sticker-card-title-today-refunds"
-            // subtitleTransKey="sticker-card-subtitle-order"
+            titleTransKey="sticker-card-title-tips"
             icon={<ShoppingIcon className="h-8 w-8" />}
-            color="#865DFF"
-            price={total_refund}
+            color={brandColors.tips}
+            price={total_tips}
           />
           <StickerCard
-            titleTransKey="sticker-card-title-total-shops"
+            titleTransKey="sticker-card-title-total-orders"
             icon={<BasketIcon className="h-8 w-8" />}
-            color="#E157A0"
-            price={data?.totalShops}
+            color={brandColors.orders}
+            price={activeStats?.totalOrders}
           />
           <StickerCard
-            titleTransKey="sticker-card-title-today-rev"
+            titleTransKey="sticker-card-title-completed-orders"
             icon={<ChecklistIcon className="h-8 w-8" />}
-            color="#D74EFF"
-            price={todays_revenue}
+            color={brandColors.completed}
+            price={activeStats?.completedOrders}
+          />
+          <StickerCard
+            titleTransKey="sticker-card-title-canceled-orders"
+            icon={<CancelledProcessedIcon className="h-8 w-8" />}
+            color={brandColors.canceled}
+            price={activeStats?.canceledOrders}
           />
         </div>
       </div>
 
-      <div className="mb-8 rounded-lg bg-light p-5 md:p-8">
-        <div className="mb-5 items-center justify-between sm:flex md:mb-7">
-          <PageHeading title={t('text-order-status')} />
-          <div className="mt-3.5 inline-flex rounded-full bg-gray-100/80 p-1.5 sm:mt-0">
-            {timeFrame
-              ? timeFrame.map((time) => (
-                  <div key={time.day} className="relative">
-                    <Button
-                      className={cn(
-                        '!focus:ring-0  relative z-10 !h-7 rounded-full !px-2.5 text-sm font-medium text-gray-500',
-                        time.day === activeTimeFrame ? 'text-accent' : '',
-                      )}
-                      type="button"
-                      onClick={() => setActiveTimeFrame(time.day)}
-                      variant="custom"
-                    >
-                      {time.name}
-                    </Button>
-                    {time.day === activeTimeFrame ? (
-                      <motion.div className="absolute bottom-0 left-0 right-0 z-0 h-full rounded-3xl bg-accent/10" />
-                    ) : null}
-                  </div>
-                ))
-              : null}
-          </div>
-        </div>
-        <OrderStatusWidget
-          order={transformOrderStatusData(orderDataRange)}
-          timeFrame={activeTimeFrame}
-          allowedStatus={['pending', 'processing', 'complete', 'cancel']}
-        />
-      </div>
-
+      {/* Sales History Section */}
       {hasAccess(adminAndOwnerOnly, permissions) && (
-        <div className="mb-8 flex w-full flex-wrap md:flex-nowrap">
-          <ColumnChart
-            widgetTitle={t('common:sale-history')}
-            colors={['#6073D4']}
-            series={salesByYear}
-            categories={[
-              t('common:january'),
-              t('common:february'),
-              t('common:march'),
-              t('common:april'),
-              t('common:may'),
-              t('common:june'),
-              t('common:july'),
-              t('common:august'),
-              t('common:september'),
-              t('common:october'),
-              t('common:november'),
-              t('common:december'),
-            ]}
-          />
+        <div className="mb-8">
+          <SalesChart analyticsData={analyticsData} />
         </div>
       )}
 
-      <div className="grid gap-8 xl:grid-cols-12">
-        <TopRatedProducts
-          products={Array.isArray(topRatedProducts) ? topRatedProducts : []}
-          title={'text-most-rated-products'}
-          className="xl:col-span-5 2xl:me-20"
-        />
-        <ProductCountByCategory
-          products={Array.isArray(productByCategory) ? productByCategory : []}
-          title={'text-most-category-products'}
-          className="xl:col-span-7 2xl:ltr:-ml-20 2xl:rtl:-mr-20"
-        />
-      </div>
+      {/* Tax Collected Section */}
+      {hasAccess(adminAndOwnerOnly, permissions) && (
+        <div className="mb-8">
+          <TaxChart analyticsData={analyticsData} />
+        </div>
+      )}
+
+      {/* Email Campaign Analytics */}
+      {hasAccess(adminAndOwnerOnly, permissions) && (
+        <div className="mb-8">
+          <EmailCampaignAnalytics />
+        </div>
+      )}
+
+      {/* Daily Tips Section */}
+      {hasAccess(adminAndOwnerOnly, permissions) && (
+        <div className="mb-8">
+          <TipsChart analyticsData={analyticsData} />
+        </div>
+      )}
+
+      {/* Order Analysis Section */}
+      {hasAccess(adminAndOwnerOnly, permissions) && (
+        <div className="mb-8">
+          <OrderAnalysis analyticsData={analyticsData} />
+        </div>
+      )}
+
+      {/* Coupon Analysis Section */}
+      {hasAccess(adminAndOwnerOnly, permissions) && (
+        <div className="mb-8">
+          <CouponAnalysis analyticsData={analyticsData} />
+        </div>
+      )}
+
+      {/* Trend Analysis & Export Section - Temporarily Hidden
+      {hasAccess(adminAndOwnerOnly, permissions) && (
+        <div className="mb-8">
+          <TrendChart analyticsData={analyticsData} />
+        </div>
+      )}
+      */}
     </>
   );
 };
@@ -270,3 +170,4 @@ const OwnerDashboard = () => {
 };
 
 export default OwnerDashboard;
+

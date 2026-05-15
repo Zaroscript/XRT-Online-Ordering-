@@ -27,7 +27,9 @@ export interface OrdersListParams {
   order_type?: string;
   page?: number;
   limit?: number;
+
   customer_id?: string;
+  today_only?: boolean;
 }
 
 export interface OrdersListResult {
@@ -58,13 +60,30 @@ export const orderClient = {
         page: params.page ?? 1,
         limit: params.limit ?? 20,
         customer_id: params.customer_id,
+        today_only: params.today_only,
       }
     );
     const payload = (res as any)?.data ?? res;
-    const list = Array.isArray(payload?.data) ? payload.data : payload?.data?.data ?? [];
-    const total = payload?.total ?? payload?.data?.total ?? 0;
-    const page = params.page ?? 1;
-    const perPage = params.limit ?? 20;
+    const list = Array.isArray(payload?.data)
+      ? payload.data
+      : payload?.data?.data ?? [];
+    const total = Number(payload?.total ?? payload?.data?.total ?? 0);
+    const page = Number(
+      payload?.page ??
+        payload?.current_page ??
+        payload?.data?.page ??
+        payload?.data?.current_page ??
+        params.page ??
+        1,
+    );
+    const perPage = Number(
+      payload?.limit ??
+        payload?.per_page ??
+        payload?.data?.limit ??
+        payload?.data?.per_page ??
+        params.limit ??
+        20,
+    );
     const lastPage = Math.max(1, Math.ceil(total / perPage));
     const serverOrders = (list as ServerOrder[]) ?? [];
     return {
@@ -86,12 +105,32 @@ export const orderClient = {
       ...body,
     });
   },
-  refund: (id: string, amount?: number) => {
+  refund: (
+    id: string,
+    payload: {
+      amount?: number;
+      reason: string;
+      refundType: 'full' | 'partial';
+      notes?: string;
+    },
+  ) => {
     const orderId = String(id).trim();
     if (!orderId) return Promise.reject(new Error('Order id is required'));
-    return HttpClient.post<Order>(`${API_ENDPOINTS.ORDERS}/${orderId}/refund`, {
-      amount,
-    });
+    return HttpClient.post<Order>(`${API_ENDPOINTS.ORDERS}/${orderId}/refund`, payload);
+  },
+  refundAction: (id: string) => {
+    const orderId = String(id).trim();
+    if (!orderId) return Promise.reject(new Error('Order id is required'));
+    return HttpClient.get<{
+      action: 'refund' | 'void';
+      transactionId: string;
+      transactionStatus: string;
+      settled: boolean;
+      capturedAmount: number | null;
+      remainingRefundable: number;
+      last4: string | null;
+      message?: string;
+    }>(`${API_ENDPOINTS.ORDERS}/${orderId}/refund-action`);
   },
   reprint: (id: string, printerId?: string) => {
     const orderId = String(id).trim();
@@ -112,6 +151,14 @@ export const orderClient = {
     return HttpClient.post<string>(
       `${API_ENDPOINTS.ORDER_INVOICE_DOWNLOAD}`,
       input
+    );
+  },
+  reprint: (id: string, printerId?: string) => {
+    const orderId = String(id).trim();
+    if (!orderId) return Promise.reject(new Error('Order id is required'));
+    return HttpClient.post<{ orderId: string; printerId: string }>(
+      `${API_ENDPOINTS.ORDERS}/${orderId}/reprint`,
+      printerId ? { printerId } : {},
     );
   },
   orderSeen({ id }: { id: string }) {

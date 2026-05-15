@@ -11,8 +11,8 @@ const categoryController = new CategoryController();
 // All category routes require authentication
 router.use(requireAuth);
 
-// Sort order update - specific route before generic /:id routes
-router.post('/sort-order', requireAuth, categoryController.updateSortOrder);
+// Sort order update - specific route MUST come before generic /:id routes
+router.post('/sort-order', categoryController.updateSortOrder);
 
 // Export categories - requires categories:read permission
 router.get('/export', requirePermission('categories:read'), categoryController.exportCategories);

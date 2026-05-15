@@ -13,9 +13,10 @@ export const settingsInitialState = {
   },
   logo: {
     id: 1,
-    thumbnail: '/logo.png',
-    original: '/logo.png',
+    thumbnail: '/shop-logo-placeholder.svg',
+    original: '/shop-logo-placeholder.svg',
   },
+  favicon: null,
 };
 
 const initialState = settingsInitialState;

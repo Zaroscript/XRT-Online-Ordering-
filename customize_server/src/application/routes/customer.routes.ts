@@ -16,6 +16,13 @@ router.get(
     customerController.getAll
 );
 
+// Check whether customer can be hard-deleted safely
+router.get(
+    '/:id/delete-safety',
+    requirePermission('customers:read'),
+    customerController.getDeleteSafety
+);
+
 // Get single customer - requires customers:read permission
 router.get(
     '/:id',

@@ -27,7 +27,10 @@ import {
   useModalAction,
   useModalState,
 } from '@/components/ui/modal/modal.context';
-import { useDeleteItemSizeMutation } from '@/data/item-size';
+import {
+  useDeleteItemSizeMutation,
+  useUpdateItemSizesSortOrderMutation,
+} from '@/data/item-size';
 import {
   DndContext,
   closestCenter,
@@ -44,9 +47,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableRow } from '@/components/ui/sortable-row';
-import { useMutation } from '@tanstack/react-query';
-import { API_ENDPOINTS } from '@/data/client/api-endpoints';
-import { HttpClient } from '@/data/client/http-client';
 
 export default function ItemSizes() {
   const router = useRouter();
@@ -59,6 +59,7 @@ export default function ItemSizes() {
   const { sizes, isLoading, error } = useItemSizesQuery(businessId);
   const { openModal } = useModalAction();
   const { mutate: deleteSize } = useDeleteItemSizeMutation();
+  const { mutate: updateSortOrder } = useUpdateItemSizesSortOrderMutation();
 
   // Local state for optimistic updates
   const [itemsList, setItemsList] = useState<ItemSize[]>([]);
@@ -100,17 +101,6 @@ export default function ItemSizes() {
     }),
   );
 
-  // Sorting Mutation
-  const updateSortOrder = useMutation({
-    mutationFn: async (newItems: { id: string; order: number }[]) => {
-      // API_ENDPOINTS.ITEM_SIZES is not defined, using literal 'sizes'
-      return HttpClient.post('sizes/sort-order', { items: newItems });
-    },
-    onError: (error) => {
-      console.error('Failed to update sort order', error);
-    },
-  });
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
@@ -118,20 +108,6 @@ export default function ItemSizes() {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over?.id);
         const newItems = arrayMove(items, oldIndex, newIndex);
-
-        // Calculate orders based on current index in the view
-        // Note: sorting filtered list might be weird if we assign orders 0..N to the subset.
-        // Ideally we should use the original orders?
-        // But if `display_order` is simple ascending integer, and we just swap them.
-
-        // If sorting a filtered list:
-        // Item A (order 10), Item B (order 20).
-        // Swap -> A (order 20), B (order 10).
-        // This is safe if we simply swap their order values.
-        // But `arrayMove` changes the array index.
-        // If we map index to `order`, we might re-assign order 0, 1, 2... to items that were 10, 20, 30.
-        // This would "compact" them to the top of the Global list.
-        // That is Bad if we are filtering!
 
         // Conclusion: Disable DnD when searching.
         if (searchTerm) return items;
@@ -141,7 +117,7 @@ export default function ItemSizes() {
           order: index, // itemsList is the full list when no search
         }));
 
-        updateSortOrder.mutate(payload);
+        updateSortOrder(payload);
 
         return newItems;
       });

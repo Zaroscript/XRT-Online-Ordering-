@@ -14,6 +14,7 @@ import { DatePicker } from 'rsuite';
 import 'rsuite/dist/rsuite-no-reset.min.css';
 import { toast } from 'react-toastify';
 import { useUpdateOrderMutation } from '@/data/order';
+import { formatOrderTrackingLabel } from '@/utils/order-tracking';
 
 export default function NewOrderModal() {
   const { t } = useTranslation();
@@ -127,6 +128,8 @@ export default function NewOrderModal() {
   const paymentStatus = (newOrder as any)?.payment_status ?? 'pending';
   const orderType = (newOrder as any)?.order_type ?? 'pickup';
   const items = (newOrder as any)?.products ?? [];
+  const trackingLabel =
+    formatOrderTrackingLabel((newOrder as any)?.tracking_number) || 'N/A';
 
   return (
     <Modal open={isOpen} onClose={handleClose}>
@@ -137,7 +140,7 @@ export default function NewOrderModal() {
             <h2 className="text-2xl font-bold text-heading flex items-center gap-3">
               {t('text-new-order')}{' '}
               <span className="text-accent">
-                #{(newOrder as any).tracking_number || newOrder.id}
+                {trackingLabel}
               </span>
               <span className="flex h-3 w-3 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>

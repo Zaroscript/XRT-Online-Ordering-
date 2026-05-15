@@ -56,6 +56,7 @@ export class OrderRepository implements IOrderRepository {
         ? {
             name: populatedCustomer.name || populatedCustomer.firstName || '',
             phone: populatedCustomer.phoneNumber || populatedCustomer.phone || '',
+            address: populatedCustomer.address || undefined,
           }
         : undefined);
 
@@ -84,6 +85,7 @@ export class OrderRepository implements IOrderRepository {
         payment_id: obj.money?.payment_id,
         payment_status: obj.money?.payment_status || obj.payment_status,
         coupon_code: obj.money?.coupon_code,
+        promotion_id: obj.money?.promotion_id,
         rewards_points_used: obj.money?.rewards_points_used,
         card_type: obj.money?.card_type,
         last_4: obj.money?.last_4,
@@ -118,7 +120,7 @@ export class OrderRepository implements IOrderRepository {
   private static readonly CUSTOMER_POPULATE = {
     path: 'customer_id',
     model: 'Customer',
-    select: 'name phoneNumber email',
+    select: 'name phoneNumber email address',
   };
 
   async findById(id: string): Promise<Order | null> {
@@ -168,6 +170,13 @@ export class OrderRepository implements IOrderRepository {
       this.applyStatusFilter(query, filters.status);
     }
     if (filters.order_type) query.order_type = filters.order_type;
+    if (filters.today_only) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      query.created_at = { $gte: startOfDay, $lte: endOfDay };
+    }
 
     const page = filters.page || 1;
     const limit = filters.limit || 10;
@@ -198,6 +207,13 @@ export class OrderRepository implements IOrderRepository {
     const query: any = { customer_id: customerId };
     if (filters.status) {
       this.applyStatusFilter(query, filters.status);
+    }
+    if (filters.today_only) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      query.created_at = { $gte: startOfDay, $lte: endOfDay };
     }
 
     const page = filters.page || 1;

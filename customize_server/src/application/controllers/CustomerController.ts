@@ -10,6 +10,10 @@ import { sendSuccess } from '../../shared/utils/response';
 import { asyncHandler } from '../../shared/utils/asyncHandler';
 import { ValidationError } from '../../shared/errors/AppError';
 import { UserRole } from '../../shared/constants/roles';
+import { OrderModel } from '../../infrastructure/database/models/OrderModel';
+import { LoyaltyAccountModel } from '../../infrastructure/database/models/LoyaltyAccountModel';
+import { LoyaltyTransactionModel } from '../../infrastructure/database/models/LoyaltyTransactionModel';
+import { TransactionModel } from '../../infrastructure/database/models/TransactionModel';
 
 export class CustomerController {
   private createCustomerUseCase: CreateCustomerUseCase;
@@ -193,9 +197,73 @@ export class CustomerController {
       business_id = undefined;
     }
 
+    const deleteCheck = await this.computeDeleteSafety(id, business_id as string | undefined);
+    if (!deleteCheck.canDelete) {
+      return res.status(409).json({
+        success: false,
+        message: 'This customer has historical orders. Archive instead?',
+        data: {
+          canArchive: true,
+          ...deleteCheck,
+        },
+      });
+    }
+
     await this.deleteCustomerUseCase.execute(id, business_id as string | undefined);
 
     return sendSuccess(res, 'Customer deleted successfully', null, 204);
   });
+
+  getDeleteSafety = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    let business_id = req.user?.business_id || req.query.business_id;
+
+    if (!business_id && req.user?.role !== UserRole.SUPER_ADMIN) {
+      throw new ValidationError('business_id is required');
+    }
+
+    if (!business_id && req.user?.role === UserRole.SUPER_ADMIN) {
+      business_id = undefined;
+    }
+
+    const result = await this.computeDeleteSafety(id, business_id as string | undefined);
+    return sendSuccess(res, 'Customer delete safety checked', result);
+  });
+
+  private async computeDeleteSafety(id: string, business_id?: string) {
+    const customer = await this.getCustomerUseCase.execute(id, business_id);
+    if (!customer) {
+      throw new ValidationError('Customer not found');
+    }
+
+    const customerObjectId = customer.id;
+    const [orderCount, loyaltyAccount, loyaltyTxCount, paymentTxCount] = await Promise.all([
+      OrderModel.countDocuments({ customer_id: customerObjectId }),
+      LoyaltyAccountModel.findOne({ customer_id: customerObjectId }).lean(),
+      LoyaltyTransactionModel.countDocuments({ customer_id: customerObjectId }),
+      TransactionModel.countDocuments({ customer_id: customerObjectId }),
+    ]);
+
+    const hasOrderHistory = orderCount > 0;
+    const hasLoyaltyHistory = !!loyaltyAccount || loyaltyTxCount > 0;
+    const hasPaymentHistory = paymentTxCount > 0;
+    const hasHistory = hasOrderHistory || hasLoyaltyHistory || hasPaymentHistory;
+
+    return {
+      canDelete: !hasHistory,
+      hasHistory,
+      counts: {
+        orders: orderCount,
+        loyaltyTransactions: loyaltyTxCount,
+        paymentTransactions: paymentTxCount,
+      },
+      loyalty: loyaltyAccount
+        ? {
+            accountId: String((loyaltyAccount as any)._id || ''),
+            pointsBalance: Number((loyaltyAccount as any).points_balance || 0),
+          }
+        : null,
+    };
+  }
 }
 

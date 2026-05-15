@@ -51,9 +51,12 @@ export const API_ENDPOINTS = {
 
   // Legacy endpoints
   SETTINGS: 'settings',
+  SETTINGS_SEO: 'settings/seo',
+  SETTINGS_SEO_GENERATE: 'settings/seo/generate',
+  SETTINGS_SEO_HEALTH: 'settings/seo/health-score',
   /** No auth — branding for login / pre-auth shell */
   PUBLIC_SITE_SETTINGS: 'public/site-settings',
-  PROFILE_UPDATE: 'profile-update',
+  PROFILE_UPDATE: 'auth/profile',
 
   // Additional endpoints for compatibility (may not exist in customize_server yet)
   VERIFY_FORGET_PASSWORD_TOKEN: 'auth/verify-reset-token',
@@ -78,9 +81,15 @@ export const API_ENDPOINTS = {
   ATTRIBUTES: 'attributes',
   TYPES: 'types',
   ANALYTICS: 'analytics',
+  COUPON_PERFORMANCE_ANALYTICS: 'analytics/coupons-performance',
   ITEMS: 'items',
+  ITEMS_SORT_ORDER: 'items/sort-order',
   MODIFIER_GROUPS: 'modifier-groups',
+  MODIFIER_GROUPS_SORT_ORDER: 'modifier-groups/sort-order',
   MODIFIERS: 'modifiers',
+  MODIFIERS_SORT_ORDER: 'modifiers/sort-order',
+  ITEM_SIZES: 'item-sizes',
+  ITEM_SIZES_SORT_ORDER: 'item-sizes/sort-order',
   IMPORT_PARSE: 'import/parse',
   IMPORT_SESSIONS: 'import/sessions',
   /** Reserved — no API route yet; use IMPORT_SESSIONS. Avoid leading `/` (breaks baseURL join). */
@@ -109,16 +118,18 @@ export const API_ENDPOINTS = {
   EXPORT_ALL: 'export/all',
 
   // Product endpoints
-  POPULAR_PRODUCTS: 'products/popular',
+  POPULAR_PRODUCTS: 'analytics/popular-items',
   LOW_STOCK_PRODUCTS_ANALYTICS: 'products/low-stock',
   CATEGORY_WISE_PRODUCTS: 'products/category-wise',
   CATEGORY_WISE_PRODUCTS_SALE: 'products/category-wise-sale',
-  TOP_RATED_PRODUCTS: 'products/top-rated',
+  TOP_RATED_PRODUCTS: 'analytics/less-sold-items',
 
   // Additional placeholder endpoints
   AUTHORS: 'authors',
   TAGS: 'tags',
   COUPONS: 'coupons',
+  PROMOTIONS: 'promotions',
+  PROMOTIONS_SORT_ORDER: 'promotions/sort-order',
   VERIFY_COUPONS: 'coupons/verify',
   APPROVE_COUPON: 'coupons/approve',
   DISAPPROVE_COUPON: 'coupons/disapprove',

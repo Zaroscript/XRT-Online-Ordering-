@@ -8,9 +8,11 @@ import { useSettings } from '@/contexts/settings.context';
 const VisitStore = () => {
   const { t } = useTranslation();
   const { pathname, query } = useRouter();
-  const { contactDetails } = useSettings();
+  const { contactDetails, siteLink } = useSettings();
   const slug = (pathname === '/[shop]' && `shops/${query?.shop}`) || '/';
-  const siteUrl = contactDetails?.website ?? Routes.visitStore(slug as string);
+  
+  // Prioritize siteLink from landing settings, fallback to contactDetails.website or calculated slug
+  const siteUrl = siteLink || contactDetails?.website || Routes.visitStore(slug as string);
 
   return (
     <>

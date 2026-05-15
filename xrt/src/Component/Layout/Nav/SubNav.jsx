@@ -1,12 +1,27 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import NavLinks from './NavLinks'
 import { useCart } from '../../../context/CartContext';
 import { formatPhone } from '../../../utils/phoneUtils';
+import { useSiteSettingsQuery } from '../../../api/hooks/useSiteSettings';
+
 const SubNav = (props) => {
   const { orderType, setOrderType, deliveryDetails, setShowDeliveryModal } = useCart();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+  const { data: settings } = useSiteSettingsQuery();
+  
+  const isDeliveryEnabled = settings?.delivery?.enabled ?? true;
 
-  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+  useEffect(() => {
+    if (!isDeliveryEnabled && orderType === 'delivery') {
+      setOrderType('pickup');
+    }
+  }, [isDeliveryEnabled, orderType, setOrderType]);
+
+  const toggleDropdown = () => {
+    if (isDeliveryEnabled) {
+      setIsDropdownOpen(!isDropdownOpen);
+    }
+  };
   
   const selectOrderType = (type) => {
     if (type === 'delivery') {
@@ -22,8 +37,8 @@ const SubNav = (props) => {
   const currentOrderType = orderType === 'delivery' ? 'Delivery' : 'Pick up';
 
   return (
-    <div className='header-container relative hidden lg:flex bg-secondary'>
-        <NavLinks className={'flex gap-[30px] bg-secondary py-[20px] '}/>
+    <div className='header-container relative hidden lg:flex' style={{ backgroundColor: 'var(--color-secondary)' }}>
+        <NavLinks className={'flex gap-[30px] py-[20px] '} style={{ color: 'var(--color-secondary-contrast)' }} />
 
         {/* Status Badge moved to Top_Navbar */}
 
@@ -33,23 +48,25 @@ const SubNav = (props) => {
           <div className="relative group/type">
              <div 
               onClick={toggleDropdown}
-              className="flex items-center gap-2 cursor-pointer bg-black/10 px-3 py-1.5 rounded-full hover:bg-black/20 transition-colors select-none"
+              className={`flex items-center gap-2 bg-black/10 px-3 py-1.5 rounded-full transition-colors select-none ${isDeliveryEnabled ? 'cursor-pointer hover:bg-black/20' : 'cursor-default'}`}
             >
-               <div className="w-[28px] h-[28px] rounded-full bg-white/10 flex items-center justify-center text-white">
+               <div className="w-[28px] h-[28px] rounded-full bg-white/10 flex items-center justify-center text-white" style={{ color: 'var(--color-secondary-contrast)' }}>
                   {orderType === 'delivery' ? (
                      <i className="fa-solid fa-truck text-xs"></i>
                   ) : (
                      <i className="fa-solid fa-bag-shopping text-xs"></i>
                   )}
                </div>
-               <span className="text-white text-sm font-bold uppercase tracking-wider">
+               <span className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--color-secondary-contrast)' }}>
                  {currentOrderType}
                </span>
-               <i className={`fa-solid fa-chevron-down text-white text-xs opacity-70 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}></i>
+               {isDeliveryEnabled && (
+                 <i className={`fa-solid fa-chevron-down text-xs opacity-70 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--color-secondary-contrast)' }}></i>
+               )}
             </div>
 
             {/* Dropdown Menu */}
-            {isDropdownOpen && (
+            {isDropdownOpen && isDeliveryEnabled && (
               <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50 py-1">
                 <button
                   onClick={() => selectOrderType('pickup')}
@@ -77,10 +94,10 @@ const SubNav = (props) => {
           </div>
 
           <div className="flex items-center group">
-          <div className="rounded-full w-[35px] h-[35px] bg-white/20 flex items-center justify-center shadow-[0_4px_18px_rgba(0,0,0,0.04)] group-hover:cursor-pointer">
-            <i className="fa-solid fa-headset text-white"></i>
+          <div className="rounded-full w-[35px] h-[35px] bg-white/20 flex items-center justify-center shadow-[0_4px_18px_rgba(0,0,0,0.04)] group-hover:cursor-pointer" style={{ color: 'var(--color-secondary-contrast)' }}>
+            <i className="fa-solid fa-headset"></i>
           </div>
-          <h5 className='pl-[5px] text-white font-bold group-hover:cursor-pointer'>{formatPhone(props.phone)}</h5>
+          <h5 className='pl-[5px] font-bold group-hover:cursor-pointer' style={{ color: 'var(--color-secondary-contrast)' }}>{formatPhone(props.phone)}</h5>
         </div>
         </div>
     </div>

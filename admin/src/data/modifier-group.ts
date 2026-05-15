@@ -12,7 +12,31 @@ import {
 import { mapPaginatorData } from '@/utils/data-mappers';
 import { modifierGroupClient } from './client/modifier-group';
 import { Config } from '@/config';
+import { HttpClient } from './client/http-client';
 // Removed mock imports - using real API calls now
+
+export const useUpdateModifierGroupsSortOrderMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (items: { id: string; order: number }[]) =>
+      HttpClient.post(API_ENDPOINTS.MODIFIER_GROUPS_SORT_ORDER, { items }),
+    onSuccess: () => {
+      toast.success(t('common:successfully-updated'));
+      queryClient.invalidateQueries({
+        queryKey: [API_ENDPOINTS.MODIFIER_GROUPS],
+      });
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          t('common:update-failed'),
+      );
+    },
+  });
+};
 
 export const useCreateModifierGroupMutation = () => {
   const queryClient = useQueryClient();

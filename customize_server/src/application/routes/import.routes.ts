@@ -1,17 +1,22 @@
 import { Router } from 'express';
 import { ImportController } from '../controllers/ImportController';
 import { requireAuth } from '../middlewares/auth';
+import { authorizeRoles } from '../middlewares/authorize';
+import { writeRateLimitMiddleware } from '../middlewares';
 import { upload } from '../middlewares/upload';
+import { UserRole } from '../../shared/constants/roles';
 
 const router = Router();
 const importController = new ImportController();
 
 // All routes require auth; Super Admin is enforced in ImportController (parse/append included).
 router.use(requireAuth);
+router.use(authorizeRoles(UserRole.SUPER_ADMIN));
 
 // Parse and validate import file
 router.post(
   '/parse',
+  writeRateLimitMiddleware,
   upload.single('file'), // Accept CSV or ZIP
   importController.parseAndValidate
 );
@@ -26,10 +31,15 @@ router.get('/sessions', importController.listSessions);
 router.put('/sessions/:id', importController.updateSession);
 
 // Append file to session
-router.post('/sessions/:id/append', upload.single('file'), importController.appendFile);
+router.post(
+  '/sessions/:id/append',
+  writeRateLimitMiddleware,
+  upload.single('file'),
+  importController.appendFile
+);
 
 // Final save to database
-router.post('/sessions/:id/save', importController.finalSave);
+router.post('/sessions/:id/save', writeRateLimitMiddleware, importController.finalSave);
 
 // Discard import session
 router.post('/sessions/:id/discard', importController.discardSession);
@@ -41,7 +51,7 @@ router.delete('/sessions/:id', importController.deleteSession);
 router.get('/sessions/:id/errors', importController.downloadErrors);
 
 // Rollback import session
-router.post('/sessions/:id/rollback', importController.rollbackSession);
+router.post('/sessions/:id/rollback', writeRateLimitMiddleware, importController.rollbackSession);
 
 // Clear import history
 router.delete('/sessions', importController.clearHistory);

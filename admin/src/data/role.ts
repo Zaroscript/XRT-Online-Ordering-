@@ -12,6 +12,7 @@ import { roleClient } from './client/role';
 import { Role, RolePaginator, QueryOptionsType } from '@/types';
 import { Routes } from '@/config/routes';
 import { useRouter } from 'next/router';
+import { getErrorMessage } from '@/utils/form-error';
 
 export const useRolesQuery = (params: Partial<QueryOptionsType>) => {
   const { data, isLoading, error } = useQuery<RolePaginator, Error>({
@@ -99,6 +100,9 @@ export const useDeleteRoleMutation = () => {
     mutationFn: roleClient.delete,
     onSuccess: () => {
       toast.success(t('common:successfully-deleted'));
+    },
+    onError: (error: any) => {
+      toast.error(getErrorMessage(error)?.message as string);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.ROLES] });

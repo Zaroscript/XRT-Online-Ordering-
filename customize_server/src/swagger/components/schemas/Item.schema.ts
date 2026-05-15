@@ -102,6 +102,11 @@ export const Item = {
       description: 'Modifier groups assigned to this item. Each assignment can include item-specific configuration and per-modifier overrides that apply ONLY to this item (never affecting other items or global modifier/group settings).',
       items: { $ref: '#/components/schemas/ItemModifierGroupAssignment' },
     },
+    suggested_products: {
+      type: 'array',
+      description: 'List of suggested products from the same category',
+      items: { $ref: '#/components/schemas/Item' },
+    },
     created_at: {
       type: 'string',
       format: 'date-time',

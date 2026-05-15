@@ -8,7 +8,7 @@ export const CreateRoleRequest = {
           permissions: {
             type: 'array',
             items: { type: 'string' },
-            example: ['content:read', 'content:create', 'content:update'],
+            example: ['settings:read', 'orders:read', 'items:read'],
           },
         },
       };

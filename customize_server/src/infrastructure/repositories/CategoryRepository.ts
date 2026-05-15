@@ -40,6 +40,20 @@ export class CategoryRepository implements ICategoryRepository {
       icon: document.icon,
       icon_public_id: document.icon_public_id,
       translated_languages: document.translated_languages,
+      suggested_products: document.suggested_products
+        ? document.suggested_products.map((p: any) => {
+            if (p && typeof p === 'object' && (p._id || p.id) && p.name) {
+              return {
+                id: (p._id || p.id).toString(),
+                name: p.name,
+                image: p.image,
+                base_price: p.base_price,
+                is_available: p.is_available,
+              };
+            }
+            return p ? p.toString() : p;
+          })
+        : [],
       modifier_groups: document.modifier_groups
         ? document.modifier_groups.map((mg: any) => ({
             modifier_group_id:
@@ -75,6 +89,7 @@ export class CategoryRepository implements ICategoryRepository {
     await categoryDoc.save();
     await categoryDoc.populate('kitchen_section_id');
     await categoryDoc.populate('modifier_groups.modifier_group_id');
+    await categoryDoc.populate('suggested_products');
     return this.toDomain(categoryDoc);
   }
 
@@ -86,7 +101,8 @@ export class CategoryRepository implements ICategoryRepository {
     // }
     const categoryDoc = await CategoryModel.findOne(query)
       .populate('kitchen_section_id')
-      .populate('modifier_groups.modifier_group_id');
+      .populate('modifier_groups.modifier_group_id')
+      .populate('suggested_products');
     return categoryDoc ? this.toDomain(categoryDoc) : null;
   }
 
@@ -111,6 +127,7 @@ export class CategoryRepository implements ICategoryRepository {
     const categoryDocs = await CategoryModel.find(query)
       .populate('kitchen_section_id')
       .populate('modifier_groups.modifier_group_id')
+      .populate('suggested_products')
       .sort({ sort_order: 1 });
 
     // Fetch product counts for these categories
@@ -146,21 +163,26 @@ export class CategoryRepository implements ICategoryRepository {
     business_id: string,
     categoryData: UpdateCategoryDTO
   ): Promise<Category> {
-    // Remove business_id from update filter
-    const categoryDoc = await CategoryModel.findOneAndUpdate(
-      { _id: id },
-      categoryData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    )
-      .populate('kitchen_section_id')
-      .populate('modifier_groups.modifier_group_id');
+    const categoryDoc = await CategoryModel.findById(id);
 
     if (!categoryDoc) {
       throw new Error('Category not found');
     }
+
+    // Update fields
+    Object.assign(categoryDoc, categoryData);
+
+    // Explicitly mark suggested_products as modified if it was provided
+    if (categoryData.suggested_products) {
+      categoryDoc.markModified('suggested_products');
+    }
+
+    await categoryDoc.save();
+
+    // Re-populate for toDomain
+    await categoryDoc.populate('kitchen_section_id');
+    await categoryDoc.populate('modifier_groups.modifier_group_id');
+    await categoryDoc.populate('suggested_products');
 
     return this.toDomain(categoryDoc);
   }
@@ -183,7 +205,7 @@ export class CategoryRepository implements ICategoryRepository {
 
     const operations = items.map((item) => ({
       updateOne: {
-        filter: { _id: item.id },
+        filter: { _id: new mongoose.Types.ObjectId(item.id) },
         update: { sort_order: item.order },
       },
     }));

@@ -15,6 +15,8 @@ import { AppError, NotFoundError } from '../../shared/errors/AppError';
 import { env } from '../../shared/config/env';
 import { sendRenderedTemplatesToPrinter } from '../../services/printer/directPrintService';
 import { recordPrinterLog } from '../../services/printer/printerActivityLogger';
+import { notifyQueuedPrintJob } from '../../services/printer/printRoutingService';
+import { BusinessRepository } from '../../infrastructure/repositories/BusinessRepository';
 
 const ESC_INIT = '\x1b\x40';
 
@@ -102,7 +104,10 @@ export class PrinterController {
         level: 'info',
         message: 'Test print simulated (PRINT_MODE=mock)',
       });
-      return sendSuccess(res, 'Test print simulated (PRINT_MODE=mock)', { printerId: id });
+      return sendSuccess(res, 'Test print simulated (PRINT_MODE=mock)', {
+        printerId: id,
+        delivery: 'mock',
+      });
     }
 
     if (env.PRINT_DELIVERY === 'direct') {
@@ -115,7 +120,10 @@ export class PrinterController {
           level: 'success',
           message: 'Test print sent directly to printer',
         });
-        return sendSuccess(res, 'Test print sent directly to printer', { printerId: id });
+        return sendSuccess(res, 'Test print sent directly to printer', {
+          printerId: id,
+          delivery: 'direct',
+        });
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         void recordPrinterLog({
@@ -147,7 +155,21 @@ export class PrinterController {
       print_job_id: job.id,
     });
 
-    return sendSuccess(res, 'Test print queued successfully', { printerId: id });
+    const businessRepository = new BusinessRepository();
+    const business = await businessRepository.findOne();
+    if (business) {
+      notifyQueuedPrintJob(business.id, {
+        id: job.id,
+        renderedTemplates: job.renderedTemplates,
+        printerInterface: printer.interface,
+      });
+    }
+
+    return sendSuccess(res, 'Test print queued successfully', {
+      printerId: id,
+      printJobId: job.id,
+      delivery: 'queue',
+    });
   });
 
   /**

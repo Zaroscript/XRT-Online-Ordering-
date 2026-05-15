@@ -8,7 +8,7 @@ export const Role = {
           permissions: {
             type: 'array',
             items: { type: 'string' },
-            example: ['content:read', 'content:create', 'content:update'],
+            example: ['settings:read', 'orders:read', 'items:read'],
           },
           isSystem: { type: 'boolean', example: false },
           createdBy: { type: 'string', example: '507f1f77bcf86cd799439011' },

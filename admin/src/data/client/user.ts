@@ -43,6 +43,9 @@ export const userClient = {
   update: ({ id, input }: { id: string; input: UpdateUser }) => {
     return HttpClient.patch<User>(`${API_ENDPOINTS.USERS}/${id}`, input);
   },
+  updateProfile: ({ input }: { input: UpdateUser }) => {
+    return HttpClient.patch<User>(API_ENDPOINTS.PROFILE_UPDATE, input);
+  },
   changePassword: (variables: ChangePasswordInput) => {
     return HttpClient.patch<any>(API_ENDPOINTS.CHANGE_PASSWORD, variables);
   },

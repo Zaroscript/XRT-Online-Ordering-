@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { IItemRepository, PaginatedItems } from '../../domain/repositories/IItemRepository';
 import { Item, CreateItemDTO, UpdateItemDTO, ItemFilters } from '../../domain/entities/Item';
 import { ItemModel, ItemDocument } from '../database/models/ItemModel';
@@ -153,6 +154,30 @@ export class ItemRepository implements IItemRepository {
             };
           })
         : [],
+      suggested_products:
+        document.category_id &&
+        typeof document.category_id === 'object' &&
+        (document.category_id as any).suggested_products
+          ? (document.category_id as any).suggested_products
+              .filter(
+                (p: any) =>
+                  p &&
+                  (p._id ? p._id.toString() : p.toString()) !== (document._id?.toString() || '') &&
+                  (typeof p !== 'object' || (p.is_active !== false && p.is_available !== false))
+              )
+              .map((p: any) =>
+                typeof p === 'object' && p._id
+                  ? {
+                      id: p._id.toString(),
+                      name: p.name,
+                      image: p.image,
+                      base_price: p.base_price,
+                      is_available: p.is_available,
+                    }
+                  : p.toString()
+              )
+              .slice(0, 4) // Max 4 items as requested
+          : [],
       created_at: document.created_at,
       updated_at: document.updated_at,
     };
@@ -178,7 +203,13 @@ export class ItemRepository implements IItemRepository {
   async findById(id: string): Promise<Item | null> {
     const query: any = { _id: id };
     const itemDoc = await ItemModel.findOne(query)
-      .populate('category_id')
+      .populate({
+        path: 'category_id',
+        populate: {
+          path: 'suggested_products',
+          model: 'Item',
+        },
+      })
       .populate('sizes.size_id')
       .populate('default_size_id')
       .populate('modifier_groups.modifier_group_id')
@@ -238,8 +269,13 @@ export class ItemRepository implements IItemRepository {
         .sort({ [orderBy]: sortedBy })
         .skip(skip)
         .limit(limit)
-        .limit(limit)
-        .populate('category_id')
+        .populate({
+          path: 'category_id',
+          populate: {
+            path: 'suggested_products',
+            model: 'Item',
+          },
+        })
         .populate('sizes.size_id')
         .populate('default_size_id')
         .populate('modifier_groups.modifier_group_id')
@@ -323,7 +359,7 @@ export class ItemRepository implements IItemRepository {
 
     const operations = items.map((item) => ({
       updateOne: {
-        filter: { _id: item.id },
+        filter: { _id: new mongoose.Types.ObjectId(item.id) },
         update: { sort_order: item.order },
       },
     }));

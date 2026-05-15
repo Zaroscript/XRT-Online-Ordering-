@@ -10,6 +10,7 @@ import {
   securityMiddleware,
   compressionMiddleware,
   rateLimitMiddleware,
+  authRateLimitMiddleware,
   requestLogger,
   errorHandler,
 } from './application/middlewares';
@@ -34,6 +35,7 @@ import kitchenSectionRoutes from './application/routes/kitchen-section.routes';
 import taxRoutes from './application/routes/tax.routes';
 import shippingRoutes from './application/routes/shipping.routes';
 import couponRoutes from './application/routes/coupon.routes';
+import promotionRoutes from './application/routes/promotion.routes';
 import testimonialRoutes from './application/routes/testimonial.routes';
 import orderRoutes from './application/routes/order.routes';
 import templateRoutes from './application/routes/template.routes';
@@ -41,16 +43,20 @@ import printerRoutes from './application/routes/printer.routes';
 import printerLogRoutes from './application/routes/printer-log.routes';
 import printJobRoutes from './application/routes/print-job.routes';
 import transactionRoutes from './application/routes/transaction.routes';
+import analyticsRoutes from './application/routes/analytics.routes';
 import emailCampaignRoutes from './application/routes/email-campaign.routes';
 import smsCampaignRoutes from './application/routes/sms-campaign.routes';
 import loyaltyRoutes from './application/routes/loyalty.routes';
+import webhookRoutes from './application/routes/webhook.routes';
 import { env } from './shared/config/env';
 import { logger } from './shared/utils/logger';
 import { registerOrderPrintHandler } from './services/printer/orderPrintEvents';
+import { setPrintJobNotifier } from './services/printer/printRoutingService';
 import { startPrinterStatusMonitor } from './services/printer/printerStatusMonitor';
 // Import swagger config - using relative path from src to config directory
 import { specs } from './swagger';
 import { autoOrderManager } from './services/order/AutoOrderManagerService';
+import { startCustomerDedupeJob } from './services/maintenance/customerDedupeService';
 
 const app: Express = express();
 // Trigger restart for helmet config change
@@ -60,21 +66,39 @@ app.set('trust proxy', 1);
 // Database connection will be established in startServer function
 
 // Global middlewares
-// Skip body parsing for any route that accepts multipart/form-data so Multer gets the raw stream (otherwise upload hangs)
-const skipBodyParsing = (req: express.Request) =>
-  req.path.startsWith('/attachments') ||
-  req.originalUrl.includes('/attachments') ||
-  req.path.startsWith('/import') ||
-  req.originalUrl.includes('/import') ||
-  req.path.startsWith('/items') ||
-  req.originalUrl.includes('/items') ||
-  req.path.startsWith('/categories') ||
-  req.originalUrl.includes('/categories');
+// Skip body parsing for any route that accepts multipart/form-data (multer) 
+// UNLESS it's a JSON request (like sort-order).
+const skipBodyParsing = (req: express.Request) => {
+  const contentType = (req.headers['content-type'] || '').toLowerCase();
+  
+  // NEVER skip body parsing if it's application/json
+  if (contentType.includes('application/json')) {
+    return false;
+  }
+
+  // Only skip for specific paths known to handle multipart/form-data
+  const path = req.path.toLowerCase();
+  const url = req.originalUrl.toLowerCase();
+  
+  return (
+    path.includes('/attachments') ||
+    url.includes('/attachments') ||
+    path.includes('/import') ||
+    url.includes('/import') ||
+    path.includes('/items') ||
+    url.includes('/items') ||
+    path.includes('/categories') ||
+    url.includes('/categories')
+  );
+};
 
 app.use((req, res, next) => {
-  if (skipBodyParsing(req)) {
+  const shouldSkip = skipBodyParsing(req);
+  if (shouldSkip) {
+    console.log(`⏩ Skipping body parsing for: ${req.method} ${req.originalUrl}`);
     return next();
   }
+  console.log(`🔍 Parsing body for: ${req.method} ${req.originalUrl} (${req.headers['content-type']})`);
   express.json({ limit: '10mb' })(req, res, next);
 });
 
@@ -163,20 +187,14 @@ app.use(async (req, res, next) => {
 });
 
 // API Routes
-app.use(`${env.API_BASE_URL}/auth`, authRoutes);
+app.use(`${env.API_BASE_URL}/auth`, authRateLimitMiddleware, authRoutes);
 app.use(`${env.API_BASE_URL}/businesses`, businessRoutes);
 app.use(`${env.API_BASE_URL}/categories`, categoryRoutes);
 app.use(`${env.API_BASE_URL}/settings`, settingsRoutes);
 app.use(`${env.API_BASE_URL}/public`, publicRoutes);
 app.use(`${env.API_BASE_URL}/roles`, roleRoutes);
 app.use(`${env.API_BASE_URL}/permissions`, permissionRoutes);
-app.use(
-  `${env.API_BASE_URL}/attachments`,
-  (req, res, next) => {
-    next();
-  },
-  attachmentRoutes
-);
+app.use(`${env.API_BASE_URL}/attachments`, attachmentRoutes);
 app.use(`${env.API_BASE_URL}/items`, itemRoutes);
 app.use(`${env.API_BASE_URL}/sizes`, itemSizeRoutes); // Nested routes for item sizes
 app.use(`${env.API_BASE_URL}/customers`, customerRoutes);
@@ -190,6 +208,7 @@ app.use(`${env.API_BASE_URL}`, mockRoutes);
 app.use(`${env.API_BASE_URL}/taxes`, taxRoutes);
 app.use(`${env.API_BASE_URL}/shippings`, shippingRoutes);
 app.use(`${env.API_BASE_URL}/coupons`, couponRoutes);
+app.use(`${env.API_BASE_URL}/promotions`, promotionRoutes);
 app.use(`${env.API_BASE_URL}/testimonials`, testimonialRoutes);
 app.use(`${env.API_BASE_URL}/orders`, orderRoutes);
 app.use(`${env.API_BASE_URL}/templates`, templateRoutes);
@@ -197,9 +216,13 @@ app.use(`${env.API_BASE_URL}/printers`, printerRoutes);
 app.use(`${env.API_BASE_URL}/printer-logs`, printerLogRoutes);
 app.use(`${env.API_BASE_URL}/print-jobs`, printJobRoutes);
 app.use(`${env.API_BASE_URL}/transactions`, transactionRoutes);
+app.use(`${env.API_BASE_URL}/analytics`, analyticsRoutes);
 app.use(`${env.API_BASE_URL}/email-campaigns`, emailCampaignRoutes);
 app.use(`${env.API_BASE_URL}/sms-campaigns`, smsCampaignRoutes);
 app.use(`${env.API_BASE_URL}/loyalty`, loyaltyRoutes);
+
+// Webhook routes — PUBLIC, no auth required (signature-verified internally)
+app.use(`${env.API_BASE_URL}/webhooks`, webhookRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -215,6 +238,12 @@ app.use(errorHandler);
 let server: http.Server | null = null;
 let io: SocketIOServer | null = null;
 
+const getSocketAllowedOrigins = (): string[] => {
+  const configured = env.ALLOWED_ORIGINS.filter(Boolean);
+  const productionDefaults = ['https://xrttech.org', 'https://www.xrttech.org', 'https://admin.xrttech.org'];
+  return Array.from(new Set([...configured, ...productionDefaults]));
+};
+
 const startServer = async () => {
   try {
     await connectDatabase();
@@ -223,12 +252,15 @@ const startServer = async () => {
     if (!process.env.VERCEL) {
       const PORT = env.PORT;
       server = http.createServer(app);
+      const socketAllowedOrigins =
+        env.NODE_ENV === 'development' ? true : getSocketAllowedOrigins();
       io = new SocketIOServer(server, {
-        cors: { origin: '*', methods: ['GET', 'POST'] },
+        cors: { origin: socketAllowedOrigins, methods: ['GET', 'POST'] },
         pingTimeout: 60000,
         pingInterval: 25000,
       });
       app.set('io', io);
+      setPrintJobNotifier(io);
 
       io.on('connection', (socket) => {
         socket.on('join', (userId: string) => {
@@ -239,6 +271,11 @@ const startServer = async () => {
       registerOrderPrintHandler();
       startPrinterStatusMonitor(io, 3_000);
       autoOrderManager.start();
+      startCustomerDedupeJob({
+        enabled: env.CUSTOMER_DEDUPE_JOB_ENABLED,
+        intervalMinutes: env.CUSTOMER_DEDUPE_JOB_INTERVAL_MINUTES,
+        runOnStart: env.CUSTOMER_DEDUPE_JOB_RUN_ON_START,
+      });
 
       server.listen(PORT, () => {
         logger.info(`🚀 Server running on port ${PORT}`);

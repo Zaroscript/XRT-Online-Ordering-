@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, useRef } from 'react';
 import Toast from '../Component/UI/Toast';
 
 const CartContext = createContext();
@@ -28,6 +28,11 @@ function saveCartToStorage(cartItems, orderType, deliveryDetails) {
   }
 }
 
+function emitCartLifecycleEvent(name, detail = {}) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(name, { detail }));
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export function useCart() {
   return useContext(CartContext);
@@ -36,6 +41,7 @@ export function useCart() {
 export function CartProvider({ children }) {
   const [persisted, setPersisted] = useState(loadCartFromStorage);
   const { cartItems, orderType, deliveryDetails } = persisted;
+  const previousCartCountRef = useRef(cartItems.length);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
 
@@ -72,6 +78,14 @@ export function CartProvider({ children }) {
     }
   }, [cartItems.length, orderType, setOrderType]);
 
+  React.useEffect(() => {
+    const previousCount = previousCartCountRef.current;
+    if (previousCount > 0 && cartItems.length === 0) {
+      emitCartLifecycleEvent('xrt:cart-emptied', { reason: 'cart-became-empty' });
+    }
+    previousCartCountRef.current = cartItems.length;
+  }, [cartItems.length]);
+
   const showToast = (message) => {
     setToast({ show: true, message });
   };
@@ -81,6 +95,8 @@ export function CartProvider({ children }) {
   };
 
   const addToCart = (product, quantity = 1) => {
+    // Ensure we are using the most up-to-date product data including suggested_products
+    // In case the passed product is a partial or from an old cache
     setCartItems(prev => {
       // Helper to generate a unique signature for the item options
       const getSignature = (item) => {
@@ -117,7 +133,9 @@ export function CartProvider({ children }) {
         const newCart = [...prev];
         newCart[existingIndex] = {
            ...newCart[existingIndex],
-           qty: newCart[existingIndex].qty + quantity
+           qty: newCart[existingIndex].qty + quantity,
+           // Preserve or update suggestions if they come with the product
+           suggested_products: product.suggested_products || newCart[existingIndex].suggested_products
         };
         return newCart;
       }
@@ -156,10 +174,12 @@ export function CartProvider({ children }) {
   };
 
   const clearCart = useCallback(() => {
+    const hadItems = cartItems.length > 0;
     const empty = { cartItems: [], orderType: null, deliveryDetails: null };
     setPersisted(empty);
     saveCartToStorage([], null, null);
-  }, []);
+    emitCartLifecycleEvent('xrt:cart-cleared', { hadItems });
+  }, [cartItems.length]);
 
   const value = {
     cartItems,

@@ -9,8 +9,8 @@ const modifierGroupController = new ModifierGroupController();
 // All modifier group routes require authentication
 router.use(requireAuth);
 
-// Sort order update - specific route before generic /:id routes
-router.post('/sort-order', requireAuth, modifierGroupController.updateSortOrder);
+// Sort order update - specific route MUST come before generic /:id routes
+router.post('/sort-order', modifierGroupController.updateSortOrder);
 
 // Modifiers sort order update within a group
 router.post(

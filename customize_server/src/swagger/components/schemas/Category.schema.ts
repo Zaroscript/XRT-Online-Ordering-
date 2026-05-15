@@ -17,6 +17,11 @@ export const Category = {
             items: { type: 'string' },
             example: ['en', 'ar'],
           },
+          suggested_products: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'List of product IDs to suggest when viewing items in this category',
+          },
           created_at: { type: 'string', format: 'date-time' },
           updated_at: { type: 'string', format: 'date-time' },
         },

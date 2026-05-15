@@ -124,3 +124,13 @@ export const useDeleteEmailCampaignMutation = () => {
     },
   });
 };
+
+/** Fetch aggregated campaign analytics for the dashboard */
+export const useEmailCampaignAnalyticsQuery = () => {
+  return useQuery({
+    queryKey: [API_ENDPOINTS.EMAIL_CAMPAIGNS, 'analytics'],
+    queryFn: () => emailCampaignClient.getAnalytics(),
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5-min cache
+  });
+};

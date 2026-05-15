@@ -23,6 +23,23 @@ export const customerClient = {
     return response?.data || response;
   },
 
+  getDeleteSafety: async (id: string): Promise<{
+    canDelete: boolean;
+    hasHistory: boolean;
+    counts: {
+      orders: number;
+      loyaltyTransactions: number;
+      paymentTransactions: number;
+    };
+    loyalty: {
+      accountId: string;
+      pointsBalance: number;
+    } | null;
+  }> => {
+    const response = await HttpClient.get<any>(`/customers/${id}/delete-safety`);
+    return response?.data || response;
+  },
+
   create: async (input: {
     name: string;
     email: string;

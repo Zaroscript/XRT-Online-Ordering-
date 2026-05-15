@@ -16,18 +16,16 @@ export class LoginUseCase {
   ) {}
 
   async execute(loginData: LoginDTO): Promise<LoginResult> {
-    // Normalize email to lowercase for consistent lookup
-    const normalizedEmail = loginData.email.toLowerCase().trim();
-    const user = await this.userRepository.findByEmail(normalizedEmail, true);
+    const user = await this.userRepository.findByIdentity(loginData.identity, true);
 
     if (!user) {
-      throw new UnauthorizedError('Incorrect email or password');
+      throw new UnauthorizedError('Incorrect email, contact number or password');
     }
 
     // Get the Mongoose document to use instance methods
     const userDoc = await UserModel.findById(user.id).select('+password');
     if (!userDoc) {
-      throw new UnauthorizedError('Incorrect email or password');
+      throw new UnauthorizedError('Incorrect email, contact number or password');
     }
 
     const isPasswordValid = await userDoc.comparePassword(loginData.password);

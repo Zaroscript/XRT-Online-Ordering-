@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS = {
 };
 
 const MIN_LOYALTY_PHONE_DIGITS = 7;
+const REDEEM_SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 
 const normalizePhoneInput = (phone) => String(phone || '').replace(/\D/g, '');
 
@@ -91,8 +92,24 @@ export const LoyaltyProvider = ({ children }) => {
   );
   const [error, setError] = useState(null);
   const lastPhoneRef = useRef(initialStoredPhone);
+  const redeemInFlightRef = useRef(false);
+  const redeemExpiryTimerRef = useRef(null);
   
   const { showToast } = useToast() || { showToast: () => {} };
+
+  const clearRedeemExpiryTimer = useCallback(() => {
+    if (redeemExpiryTimerRef.current) {
+      clearTimeout(redeemExpiryTimerRef.current);
+      redeemExpiryTimerRef.current = null;
+    }
+  }, []);
+
+  const resetCheckoutRedeemState = useCallback(() => {
+    clearRedeemExpiryTimer();
+    setDiscountValue(0);
+    setPointsRedeemed(0);
+    redeemInFlightRef.current = false;
+  }, [clearRedeemExpiryTimer]);
 
   const persistSettings = useCallback((settingsPayload = {}) => {
     const nextSettings = normalizeSettings(settingsPayload);
@@ -115,8 +132,7 @@ export const LoyaltyProvider = ({ children }) => {
     const phoneChanged = lastPhoneRef.current !== nextPhone;
 
     if (phoneChanged) {
-      setDiscountValue(0);
-      setPointsRedeemed(0);
+      resetCheckoutRedeemState();
     }
 
     setIsEnrolled(Boolean(enrolled));
@@ -134,10 +150,27 @@ export const LoyaltyProvider = ({ children }) => {
     localStorage.setItem(STORAGE_KEYS.points, String(nextPoints));
 
     if (!enrolled) {
-      setDiscountValue(0);
-      setPointsRedeemed(0);
+      resetCheckoutRedeemState();
     }
-  }, []);
+  }, [resetCheckoutRedeemState]);
+
+  const refreshBalanceForPhone = useCallback(async (phone) => {
+    const normalizedPhone = normalizePhoneInput(phone);
+    if (!normalizedPhone || normalizedPhone.length < MIN_LOYALTY_PHONE_DIGITS) return;
+
+    try {
+      const result = await lookupPoints(normalizedPhone);
+      const data = result || {};
+      persistSettings(data);
+      persistMemberState({
+        phone: normalizedPhone,
+        enrolled: Boolean(data.isEnrolled),
+        points: data.points_balance ?? 0,
+      });
+    } catch (error) {
+      console.warn('[LoyaltyContext] Failed to refresh loyalty balance after order', error);
+    }
+  }, [persistMemberState, persistSettings]);
 
   const lookup = useCallback(async (phone) => {
     const rawPhone = String(phone || '').trim();
@@ -155,8 +188,7 @@ export const LoyaltyProvider = ({ children }) => {
     if (normalizedPhone && normalizedPhone !== lastPhoneRef.current) {
       setIsEnrolled(false);
       setPointsBalance(0);
-      setDiscountValue(0);
-      setPointsRedeemed(0);
+      resetCheckoutRedeemState();
     }
 
     try {
@@ -182,7 +214,7 @@ export const LoyaltyProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [persistMemberState, persistSettings]);
+  }, [persistMemberState, persistSettings, resetCheckoutRedeemState]);
 
   // Initial status check
   useEffect(() => {
@@ -239,13 +271,36 @@ export const LoyaltyProvider = ({ children }) => {
   }, [lookup, persistMemberState, showToast]);
 
   const redeem = useCallback(async (phone, points, subtotal) => {
-    if (!phone || !points || subtotal == null) return false;
+    const normalizedPhone = normalizePhoneInput(phone);
+    const normalizedPoints = Math.floor(Number(points));
+    const normalizedSubtotal = Number(subtotal);
+
+    if (
+      redeemInFlightRef.current ||
+      !normalizedPhone ||
+      !Number.isFinite(normalizedPoints) ||
+      normalizedPoints <= 0 ||
+      !Number.isFinite(normalizedSubtotal) ||
+      normalizedSubtotal < 0
+    ) {
+      return false;
+    }
+
+    redeemInFlightRef.current = true;
     setIsLoading(true);
     try {
-      const result = await redeemPoints({ phone, points_to_redeem: points, subtotal });
+      const result = await redeemPoints({
+        phone: normalizedPhone,
+        points_to_redeem: normalizedPoints,
+        subtotal: normalizedSubtotal,
+      });
       const data = result || {};
       setDiscountValue(data.discount_value || 0);
-      setPointsRedeemed(points);
+      setPointsRedeemed(normalizedPoints);
+      clearRedeemExpiryTimer();
+      redeemExpiryTimerRef.current = setTimeout(() => {
+        resetCheckoutRedeemState();
+      }, REDEEM_SESSION_TIMEOUT_MS);
       return true;
     } catch (err) {
       console.error('Failed to redeem points:', err);
@@ -253,14 +308,44 @@ export const LoyaltyProvider = ({ children }) => {
       showToast(msg);
       return msg; // Return string so widget can display the exact rejection reason
     } finally {
+      redeemInFlightRef.current = false;
       setIsLoading(false);
     }
-  }, [showToast]);
+  }, [clearRedeemExpiryTimer, resetCheckoutRedeemState, showToast]);
 
   const resetDiscount = useCallback(() => {
-    setDiscountValue(0);
-    setPointsRedeemed(0);
-  }, []);
+    resetCheckoutRedeemState();
+  }, [resetCheckoutRedeemState]);
+
+  const handleOrderCompleted = useCallback(async (phone) => {
+    const normalizedPhone =
+      normalizePhoneInput(phone) || lastPhoneRef.current;
+
+    resetCheckoutRedeemState();
+    await refreshBalanceForPhone(normalizedPhone);
+  }, [refreshBalanceForPhone, resetCheckoutRedeemState]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const onCartCleared = () => resetCheckoutRedeemState();
+    const onCartEmptied = () => resetCheckoutRedeemState();
+    const onCustomerLoggedOut = () => resetCheckoutRedeemState();
+    const onCustomerSwitched = () => resetCheckoutRedeemState();
+
+    window.addEventListener('xrt:cart-cleared', onCartCleared);
+    window.addEventListener('xrt:cart-emptied', onCartEmptied);
+    window.addEventListener('xrt:customer-logged-out', onCustomerLoggedOut);
+    window.addEventListener('xrt:customer-switched', onCustomerSwitched);
+
+    return () => {
+      window.removeEventListener('xrt:cart-cleared', onCartCleared);
+      window.removeEventListener('xrt:cart-emptied', onCartEmptied);
+      window.removeEventListener('xrt:customer-logged-out', onCustomerLoggedOut);
+      window.removeEventListener('xrt:customer-switched', onCustomerSwitched);
+      clearRedeemExpiryTimer();
+    };
+  }, [clearRedeemExpiryTimer, resetCheckoutRedeemState]);
 
   return (
     <LoyaltyContext.Provider value={{
@@ -279,7 +364,9 @@ export const LoyaltyProvider = ({ children }) => {
       lookup,
       join,
       redeem,
-      resetDiscount
+      resetDiscount,
+      resetCheckoutRedeemState,
+      handleOrderCompleted
     }}>
       {children}
     </LoyaltyContext.Provider>

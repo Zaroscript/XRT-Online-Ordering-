@@ -13,7 +13,7 @@ import TitleWithSort from '@/components/ui/title-with-sort';
 import { siteSettings } from '@/settings/site.settings';
 import { resolveImageUrl } from '@/utils/resolve-image-url';
 import { NoDataFound } from '@/components/icons/no-data-found';
-import { useUpdateItemMutation } from '@/data/item';
+import { useUpdateItemMutation, useUpdateItemsSortOrderMutation } from '@/data/item';
 import Link from '@/components/ui/link';
 import { Routes } from '@/config/routes';
 import Badge from '@/components/ui/badge/badge';
@@ -38,10 +38,6 @@ import {
 } from '@dnd-kit/sortable';
 import { SortableRow } from '@/components/ui/sortable-row';
 import { SortableList } from '@/components/ui/sortable-list';
-import { useMutation } from '@tanstack/react-query';
-import { API_ENDPOINTS } from '@/data/client/api-endpoints';
-import { HttpClient } from '@/data/client/http-client';
-import { toast } from 'react-toastify';
 
 export type IProps = {
   items: Item[] | undefined | null;
@@ -64,14 +60,12 @@ const ItemList = ({
   onOrder,
 }: IProps) => {
   const router = useRouter();
-  const {
-    query: { shop },
-  } = router;
   const { t } = useTranslation();
   const { alignLeft, alignRight } = useIsRTL();
   const { openModal } = useModalAction();
-  const { isOpen, view } = useModalState();
-  const { mutate: updateItem, isPending: isUpdating } = useUpdateItemMutation();
+  const { isOpen } = useModalState();
+  const { mutate: updateItem } = useUpdateItemMutation();
+  const { mutate: updateSortOrder, isPending: isUpdatingSortOrder } = useUpdateItemsSortOrderMutation();
 
   // Local state for items to handle immediate drag updates
   const [itemsList, setItemsList] = useState<Item[]>([]);
@@ -104,28 +98,15 @@ const ItemList = ({
     }),
   );
 
-  // Sorting Mutation
-  const updateSortOrder = useMutation({
-    mutationFn: async (newItems: { id: string; order: number }[]) => {
-      return HttpClient.post(API_ENDPOINTS.ITEMS + '/sort-order', {
-        items: newItems,
-      });
-    },
-    onSuccess: () => {
-      toast.success(t('common:successfully-updated'));
-    },
-    onError: (error) => {
-      console.error('Failed to update sort order', error);
-      toast.error(t('common:update-failed'));
-    },
-  });
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over?.id) {
+    if (active && over && active.id !== over.id) {
       setItemsList((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over?.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        if (oldIndex === -1 || newIndex === -1) return items;
+        
         const newItems = arrayMove(items, oldIndex, newIndex);
 
         // Calculate new orders based on pagination
@@ -138,9 +119,12 @@ const ItemList = ({
           order: startOrder + index,
         }));
 
-        updateSortOrder.mutate(payload);
+        updateSortOrder(payload);
 
-        return newItems;
+        return newItems.map((item, index) => ({
+          ...item,
+          sort_order: startOrder + index,
+        }));
       });
     }
   };
@@ -380,7 +364,7 @@ const ItemList = ({
 
   return (
     <>
-      <div className="mb-6 overflow-hidden rounded shadow">
+      <div className={`mb-6 overflow-hidden rounded shadow ${isUpdatingSortOrder ? 'opacity-50 pointer-events-none' : ''}`}>
         {/* Desktop: Full table */}
         <div className="hidden md:block">
           <DndContext
@@ -446,8 +430,11 @@ const ItemList = ({
                     order: startOrder + index,
                   }));
 
-                  updateSortOrder.mutate(payload);
-                  return newItems;
+                  updateSortOrder(payload);
+                  return newItems.map((item, index) => ({
+                    ...item,
+                    sort_order: startOrder + index,
+                  }));
                 });
               }}
               renderItem={(item, dragHandleProps) => (

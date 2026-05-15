@@ -68,6 +68,8 @@ const PriceDisplay = ({ amount }: { amount: number }) => {
   return <span className="whitespace-nowrap">{price}</span>;
 };
 
+import { useUpdateModifiersSortOrderMutation } from '@/data/modifier';
+
 const ModifierList = ({
   modifiers,
   paginatorInfo,
@@ -110,6 +112,8 @@ const ModifierList = ({
     column: null,
   });
 
+  const { mutate: updateSortOrder, isPending: isUpdatingSortOrder } = useUpdateModifiersSortOrderMutation();
+
   // DnD Sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -122,34 +126,15 @@ const ModifierList = ({
     }),
   );
 
-  // Sorting Mutation
-  // Note: For modifiers, the endpoint depends on the group.
-  const updateSortOrder = useMutation({
-    mutationFn: async (newItems: { id: string; order: number }[]) => {
-      // We need groupId. We can get it from the first item since we assume homogenous group context
-      // if enabledDnD is true.
-      const groupId = itemsList[0]?.modifier_group_id;
-      if (!groupId) return; // Should not happen if list not empty
-
-      // Endpoint: /modifier-groups/:groupId/modifiers/sort-order
-      // Construct URL
-      const url = `${API_ENDPOINTS.MODIFIER_GROUPS}/${groupId}/modifiers/sort-order`;
-      return HttpClient.post(url, { items: newItems });
-    },
-    onSuccess: () => {
-      toast.success(t('common:successfully-updated'));
-    },
-    onError: (error) => {
-      console.error('Failed to update sort order', error);
-    },
-  });
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (active.id !== over?.id) {
       setItemsList((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over?.id);
+        
+        if (oldIndex === -1 || newIndex === -1) return items;
+        
         const newItems = arrayMove(items, oldIndex, newIndex);
 
         const pageSize = paginatorInfo?.perPage || 10;
@@ -161,9 +146,16 @@ const ModifierList = ({
           order: startOrder + index,
         }));
 
-        updateSortOrder.mutate(payload);
+        // Group ID from first item
+        const groupId = itemsList[0]?.modifier_group_id;
+        if (groupId) {
+          updateSortOrder({ groupId, items: payload });
+        }
 
-        return newItems;
+        return newItems.map((item, index) => ({
+          ...item,
+          sort_order: startOrder + index,
+        }));
       });
     }
   };

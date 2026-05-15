@@ -199,6 +199,7 @@ export class LoyaltyService {
 
   async lookupPoints(phone: string): Promise<{
     isEnrolled: boolean;
+    customer_id?: string;
     points_balance: number;
     max_redeemable_points: number;
     equivalent_discount_value: number;
@@ -238,11 +239,25 @@ export class LoyaltyService {
     
     if (!account) {
       // Should not happen if opted_into_loyalty is true, but for safety:
-      return { isEnrolled: true, points_balance: 0, max_redeemable_points: 0, equivalent_discount_value: 0, ...globalSettings };
+      return {
+        isEnrolled: true,
+        customer_id: customer._id.toString(),
+        points_balance: 0,
+        max_redeemable_points: 0,
+        equivalent_discount_value: 0,
+        ...globalSettings
+      };
     }
 
     if (!is_active) {
-      return { isEnrolled: true, points_balance: account.points_balance, max_redeemable_points: 0, equivalent_discount_value: 0, ...globalSettings };
+      return {
+        isEnrolled: true,
+        customer_id: customer._id.toString(),
+        points_balance: account.points_balance,
+        max_redeemable_points: 0,
+        equivalent_discount_value: 0,
+        ...globalSettings
+      };
     }
 
     const max_redeemable_points = account.points_balance >= (program!.minimum_points_to_redeem || 0) ? account.points_balance : 0;
@@ -250,6 +265,7 @@ export class LoyaltyService {
 
     const result = {
       isEnrolled: true,
+      customer_id: customer._id.toString(),
       points_balance: account.points_balance,
       max_redeemable_points,
       equivalent_discount_value,
@@ -305,21 +321,50 @@ export class LoyaltyService {
   }
 
   async validateRedemption(customer_id: string, points_to_redeem: number): Promise<{ discount_value: number }> {
-    if (points_to_redeem <= 0) return { discount_value: 0 };
+    return this.validateRedemptionWithSubtotal(customer_id, points_to_redeem);
+  }
+
+  async validateRedemptionWithSubtotal(
+    customer_id: string,
+    points_to_redeem: number,
+    subtotal?: number
+  ): Promise<{ discount_value: number; points_to_redeem: number }> {
+    const normalizedPoints = Math.floor(Number(points_to_redeem));
+    if (!Number.isFinite(normalizedPoints) || normalizedPoints <= 0) {
+      return { discount_value: 0, points_to_redeem: 0 };
+    }
     
     const program = await this.getProgramSettings();
     if (!program?.is_active) throw new Error('Loyalty program is not active');
+
+    const redeemRate = Number(program.redeem_rate_currency_per_point || 0);
+    if (!Number.isFinite(redeemRate) || redeemRate <= 0) {
+      throw new Error('Loyalty redeem rate is not configured');
+    }
     
-    if (points_to_redeem < program.minimum_points_to_redeem) {
+    if (normalizedPoints < program.minimum_points_to_redeem) {
       throw new Error(`Minimum redemption is ${program.minimum_points_to_redeem} points`);
     }
 
     const account = await this.accountRepo.findByCustomerId(customer_id);
     if (!account) throw new Error('Loyalty account not found');
-    if (account.points_balance < points_to_redeem) throw new Error('Insufficient points balance');
+    if (account.points_balance < normalizedPoints) throw new Error('Insufficient points balance');
 
-    const discount_value = points_to_redeem * program.redeem_rate_currency_per_point;
-    return { discount_value };
+    const rawDiscountValue = normalizedPoints * redeemRate;
+    const normalizedSubtotal = Number(subtotal);
+    if (Number.isFinite(normalizedSubtotal) && normalizedSubtotal >= 0) {
+      const maxDiscountPercent = Number(program.max_discount_percent_per_order || 100);
+      const maxDiscountValue = normalizedSubtotal * (maxDiscountPercent / 100);
+      if (rawDiscountValue > maxDiscountValue) {
+        const maxAllowedPoints = Math.floor(maxDiscountValue / redeemRate);
+        throw new Error(
+          `You can only discount up to ${maxDiscountPercent}% of your order. Maximum allowed points for this order is ${maxAllowedPoints}.`
+        );
+      }
+    }
+
+    const discount_value = Number(rawDiscountValue.toFixed(2));
+    return { discount_value, points_to_redeem: normalizedPoints };
   }
 
   async redeemPoints(loyalty_account_id: string, points_to_redeem: number, order_id?: string): Promise<{ discount_value: number }> {
@@ -327,35 +372,55 @@ export class LoyaltyService {
   }
 
   async redeemPointsByCustomer(customer_id: string, points_to_redeem: number, order_id?: string): Promise<{ discount_value: number }> {
-    if (points_to_redeem <= 0) return { discount_value: 0 };
+    const normalizedPoints = Math.floor(Number(points_to_redeem));
+    if (!Number.isFinite(normalizedPoints) || normalizedPoints <= 0) return { discount_value: 0 };
 
     const program = await this.getProgramSettings();
     if (!program?.is_active) throw new Error('Loyalty program is not active');
     
-    if (points_to_redeem < program.minimum_points_to_redeem) {
+    if (normalizedPoints < program.minimum_points_to_redeem) {
       throw new Error(`Minimum redemption is ${program.minimum_points_to_redeem} points`);
+    }
+
+    if (order_id) {
+      const existingRedeem = await this.transactionRepo.findByOrderIdAndType(order_id, 'REDEEM');
+      if (existingRedeem) {
+        const discount_value = Number(
+          (normalizedPoints * (program.redeem_rate_currency_per_point || 0)).toFixed(2)
+        );
+        return { discount_value };
+      }
     }
 
     const account = await this.accountRepo.findByCustomerId(customer_id);
     if (!account) throw new Error('Loyalty account not found');
-    if (account.points_balance < points_to_redeem) throw new Error('Insufficient points balance');
+    if (account.points_balance < normalizedPoints) throw new Error('Insufficient points balance');
 
-    const discount_value = points_to_redeem * program.redeem_rate_currency_per_point;
+    const discount_value = Number(
+      (normalizedPoints * (program.redeem_rate_currency_per_point || 0)).toFixed(2)
+    );
 
-    // Create transaction
-    await this.transactionRepo.create({
-      loyalty_account_id: account.id,
-      order_id: order_id, // can be passed if we know it, or updated later
-      type: 'REDEEM',
-      points_change: -points_to_redeem,
-      points_balance_after: account.points_balance - points_to_redeem,
-      description: order_id ? `Redeemed points for order` : `Redeemed points`,
+    const updatedAccount = await this.accountRepo.updateBalance(account.id, -normalizedPoints, {
+      redeemed: normalizedPoints,
     });
 
-    // Update account
-    await this.accountRepo.updateBalance(account.id, -points_to_redeem, {
-      redeemed: points_to_redeem,
-    });
+    try {
+      // Create transaction
+      await this.transactionRepo.create({
+        loyalty_account_id: account.id,
+        order_id: order_id, // can be passed if we know it, or updated later
+        type: 'REDEEM',
+        points_change: -normalizedPoints,
+        points_balance_after: updatedAccount.points_balance,
+        description: order_id ? `Redeemed points for order` : `Redeemed points`,
+      });
+    } catch (error) {
+      // Keep ledger and balance in sync if transaction logging fails.
+      await this.accountRepo.updateBalance(account.id, normalizedPoints, {
+        redeemed: -normalizedPoints,
+      });
+      throw error;
+    }
 
     return { discount_value };
   }

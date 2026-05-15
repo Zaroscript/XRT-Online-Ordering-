@@ -6,7 +6,7 @@ import {
 } from '@/data/notify-logs';
 import { ShoppingBagIcon } from '@/components/icons/sidebar/shopping-bag';
 import { Menu, Transition } from '@headlessui/react';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useState } from 'react';
 import { SortOrder } from '@/types';
 import Link from '@/components/ui/link';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -15,12 +15,9 @@ import timezone from 'dayjs/plugin/timezone';
 import { useTranslation } from 'next-i18next';
 import dayjs from 'dayjs';
 import { adminOnly, getAuthCredentials, hasAccess } from '@/utils/auth-utils';
-import { PusherConfig } from '@/utils/pusher-config';
-import { toast } from 'react-toastify';
 import { Routes } from '@/config/routes';
 import { useRouter } from 'next/router';
 import { useOrderQuery } from '@/data/order';
-import { Config } from '@/config';
 
 type IProps = {
   user: any;
@@ -90,12 +87,10 @@ const NotifyLogItem = ({ item }: any) => {
 const RecentOrderBar = ({ user }: IProps) => {
   const { t } = useTranslation();
   const [orderOpen, setOrderOpen] = useState(false);
-  const [order, setOrder] = useState([]);
   const { permissions } = getAuthCredentials();
   const permission = hasAccess(adminOnly, permissions);
   const { mutate: readAllNotifyLogs, isPending: creating } =
     useNotifyLogAllReadMutation();
-  let allOrder: any = [];
 
   const { notifyLogs } = useNotifyLogsQuery({
     notify_type: 'order',
@@ -117,34 +112,6 @@ const RecentOrderBar = ({ user }: IProps) => {
   const activeStatus = notifyLogsArray.filter((item) => {
     return Boolean(item?.is_read) === false;
   });
-
-  useEffect(() => {
-    if (Config.broadcastDriver === 'pusher' && Config.pusherEnable === 'true') {
-      const channelName =
-        `${process.env.NEXT_PUBLIC_ORDER_CREATED_CHANNEL_PRIVATE}` +
-        '.' +
-        user?.id;
-      if (PusherConfig) {
-        const channel = PusherConfig.subscribe(channelName);
-
-        channel.bind(
-          `${process.env.NEXT_PUBLIC_ORDER_CREATED_EVENT}`,
-          function (data: any) {
-            allOrder.push(data);
-            setOrder(allOrder);
-            toast.success(data?.message, {
-              toastId: 'orderSuccess',
-            });
-          },
-        );
-        return () => {
-          PusherConfig?.unsubscribe(channelName);
-        };
-      }
-    } else {
-      PusherConfig?.disconnect();
-    }
-  }, [order]);
 
   return (
     <>

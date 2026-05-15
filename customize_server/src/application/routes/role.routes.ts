@@ -21,6 +21,9 @@ router.post('/', requirePermission('roles:create'), roleController.createRole);
 // Update role - requires roles:update permission
 router.patch('/:id', requirePermission('roles:update'), roleController.updateRole);
 
+// Delete role - requires roles:delete permission
+router.delete('/:id', requirePermission('roles:delete'), roleController.deleteRole);
+
 // Role assignment to users
 router.patch('/users/:userId/assign', requirePermission('roles:update'), roleController.assignRole);
 router.patch('/users/:userId/remove', requirePermission('roles:update'), roleController.removeRole);

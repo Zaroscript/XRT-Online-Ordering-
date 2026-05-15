@@ -1,6 +1,6 @@
 import { CloseIcon } from '@/components/icons/close-icon';
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import { useAtom } from 'jotai';
@@ -11,20 +11,27 @@ import {
 import cn from 'classnames';
 
 export default function Modal({ open, onClose, children }: any) {
-  const cancelButtonRef = useRef(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const { t } = useTranslation('common');
   const { locale } = useRouter();
   const dir = locale === 'ar' || locale === 'he' ? 'rtl' : 'ltr';
   const [searchModal] = useAtom(searchModalInitialValues);
   const [approveModal] = useAtom(approveModalInitialValues);
 
+  useEffect(() => {
+    if (!open) return;
+    const frame = requestAnimationFrame(() => {
+      panelRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open]);
+
   return (
     <Transition show={open} as={Fragment}>
       <Dialog
         as="div"
         className="fixed inset-0 z-50 overflow-y-auto"
-        initialFocus={cancelButtonRef}
-        static
+        initialFocus={panelRef}
         open={open}
         onClose={onClose}
         dir={dir}
@@ -68,11 +75,14 @@ export default function Modal({ open, onClose, children }: any) {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Dialog.Panel className="min-w-content relative inline-block max-w-full align-middle transition-all ltr:text-left rtl:text-right">
+            <Dialog.Panel
+              ref={panelRef}
+              tabIndex={-1}
+              className="min-w-content relative inline-block max-w-full align-middle transition-all focus:outline-none ltr:text-left rtl:text-right"
+            >
               <button
                 onClick={onClose}
                 aria-label="Close panel"
-                ref={cancelButtonRef}
                 className={cn(
                   'absolute top-4 z-[60] inline-block outline-none focus:outline-none ltr:right-4 rtl:left-4 lg:hidden',
                   searchModal || approveModal ? 'hidden' : '',

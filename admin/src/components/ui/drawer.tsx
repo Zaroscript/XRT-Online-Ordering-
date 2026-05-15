@@ -12,6 +12,26 @@ import { fadeInOut } from '@/utils/motion/fade-in-out';
 import { useRouter } from 'next/router';
 import { Dialog } from '@headlessui/react';
 
+// Allow touch-move events that originate inside a scrollable child element.
+// Without this, body-scroll-lock prevents ALL touch scrolling inside the drawer on iOS.
+function isScrollable(el: Element): boolean {
+  const style = window.getComputedStyle(el);
+  const overflowY = style.overflowY;
+  return (
+    (overflowY === 'scroll' || overflowY === 'auto') &&
+    el.scrollHeight > el.clientHeight
+  );
+}
+
+function allowTouchMove(el: EventTarget | null): boolean {
+  let node = el as Element | null;
+  while (node && node !== document.body) {
+    if (isScrollable(node)) return true;
+    node = node.parentElement;
+  }
+  return false;
+}
+
 interface SidebarProps {
   children: any;
   open: boolean;
@@ -34,7 +54,8 @@ const Drawer: FC<SidebarProps> = ({
   useEffect(() => {
     if (ref.current) {
       if (open) {
-        disableBodyScroll(ref.current);
+        // allowTouchMove lets inner scrollable panels (sidebar menu) still scroll on iOS/Android.
+        disableBodyScroll(ref.current, { allowTouchMove });
       } else {
         enableBodyScroll(ref.current);
       }
@@ -55,7 +76,7 @@ const Drawer: FC<SidebarProps> = ({
             animate="to"
             exit="from"
             variants={variant === 'right' ? fadeInRight() : fadeInLeft()}
-            className="fixed inset-0 z-50 h-full overflow-hidden"
+            className="fixed inset-0 z-50 h-full overflow-hidden" // overflow-hidden here is intentional — inner panels handle their own scroll
             dir={dir}
           >
             <div className="absolute inset-0 overflow-hidden">

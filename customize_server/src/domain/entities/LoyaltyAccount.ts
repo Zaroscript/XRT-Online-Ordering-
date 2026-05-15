@@ -8,7 +8,10 @@ export interface LoyaltyAccount {
     name: string;
     email: string;
     phoneNumber: string;
+    last_order_at?: Date | string | null;
+    last_activity?: Date | string | null;
   };
+  last_activity?: Date | string | null;
   created_at: Date;
   updated_at: Date;
 }

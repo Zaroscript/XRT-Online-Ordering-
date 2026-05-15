@@ -27,7 +27,8 @@ const DrawerWrapper: React.FunctionComponent<DrawerWrapperProps> = ({
         </div>
       )}
       {/* End of header part */}
-      <div className="h-full pt-16 lg:-mx-2">
+      {/* overflow-y-auto + touch-scroll style ensures iOS momentum scrolling works as native fallback */}
+      <div className="h-full pt-16 lg:-mx-2 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
         <Scrollbar className="h-full w-full">{children}</Scrollbar>
       </div>
       {/* End of menu part */}

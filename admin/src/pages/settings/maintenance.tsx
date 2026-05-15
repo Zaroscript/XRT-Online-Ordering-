@@ -22,7 +22,7 @@ export default function SeoSettings() {
 
   return (
     <>
-      <SettingsPageHeader pageTitle="form:form-title-maintenance-settings" />
+      <SettingsPageHeader pageTitle="Store Availability" />
       <MaintenanceSettingsForm settings={settings as Settings} />
     </>
   );

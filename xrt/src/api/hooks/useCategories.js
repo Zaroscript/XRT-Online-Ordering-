@@ -8,8 +8,9 @@ export function useCategoriesQuery(options = {}) {
   const query = useQuery({
     queryKey: CATEGORIES_QUERY_KEY,
     queryFn: getCategories,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
     ...options,
   });
 

@@ -1,39 +1,43 @@
 import * as yup from 'yup';
 
-const currentDate = new Date();
-
 export const maintenanceValidationSchema = yup.object().shape({
-  maintenance: yup.object().when('isUnderMaintenance', {
-    is: (value: boolean) => value,
+  operationsSettings: yup.object().shape({
+    mode: yup
+      .string()
+      .oneOf([
+        'OPEN_NORMAL',
+        'SCHEDULED_ONLY',
+        'ORDERS_PAUSED',
+        'FULL_MAINTENANCE',
+      ])
+      .required('Mode is required'),
+    manualOverride: yup.boolean().required(),
+    overrideUntil: yup
+      .mixed()
+      .nullable()
+      .test('override-until', 'Override end must be a valid date', (value) => {
+        if (!value) return true;
+        return !Number.isNaN(new Date(value as any).getTime());
+      }),
+    messageTitle: yup.string().max(120),
+    messageBody: yup.string().max(500),
+    showCountdown: yup.boolean().required(),
+    maintenanceTheme: yup.string().max(60),
+  }),
+  maintenance: yup.object().when('operationsSettings.mode', {
+    is: (value: string) => value === 'FULL_MAINTENANCE',
     then: () =>
       yup.object().shape({
         title: yup.string().required('Title is required'),
-        buttonTitleOne: yup.string().required('Button title one is required'),
-        buttonTitleTwo: yup.string().required('Button title two is required'),
-        newsLetterTitle: yup.string().required('News letter title is required'),
-        aboutUsTitle: yup.string().required('About us title is required'),
-        contactUsTitle: yup.string().required('Contact us title is required'),
-        aboutUsDescription: yup
-          .string()
-          .required('About us description is required'),
-        newsLetterDescription: yup
-          .string()
-          .required('News letter description is required'),
         description: yup.string().required('Description is required'),
-        start: yup
-          .date()
-          .min(
-            currentDate.toDateString(),
-            `Maintenance start date  field must be later than ${currentDate.toDateString()}`,
-          )
-          .required('Start date is required'),
-        until: yup
-          .date()
-          .required('Until date is required')
-          .min(
-            yup.ref('start'),
-            'Until date must be greater than or equal to start date',
-          ),
+        overlayColorRange: yup
+          .string()
+          .test('overlay-range', 'Overlay strength should be between 0 and 1', (v) => {
+            if (!v) return true;
+            const value = Number(v);
+            return Number.isFinite(value) && value >= 0 && value <= 1;
+          }),
       }),
+    otherwise: () => yup.object(),
   }),
 });

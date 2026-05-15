@@ -12,5 +12,9 @@
   "sticker-card-subtitle-last-30-days": "Monthly (Last 30 Days)",
   "sticker-card-subtitle-last-365-days": "Yearly (Last 365 Days)",
   "sticker-card-title-total-shops": "Total Shops",
-  "sticker-card-title-today-refunds": "Todays Refunds"
+  "sticker-card-title-today-refunds": "Todays Refunds",
+  "sticker-card-title-tips": "Daily Tips",
+  "sticker-card-title-total-orders": "Total Orders Received",
+  "sticker-card-title-completed-orders": "Completed Orders",
+  "sticker-card-title-canceled-orders": "Canceled Orders"
 }

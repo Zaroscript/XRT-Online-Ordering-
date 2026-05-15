@@ -8,6 +8,7 @@ import {
   CreateItemSizeInput,
   UpdateItemSizeInput,
 } from './client/item-size';
+import { HttpClient } from './client/http-client';
 
 export const useItemSizesQuery = (
   businessId?: string,
@@ -79,6 +80,23 @@ export const useUpdateItemSizeMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['item-sizes'] });
       queryClient.invalidateQueries({ queryKey: ['item-size', variables.id] });
       toast.success(t('common:successfully-updated'));
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || t('common:update-failed'));
+    },
+  });
+};
+
+export const useUpdateItemSizesSortOrderMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (items: { id: string; order: number }[]) =>
+      HttpClient.post(API_ENDPOINTS.ITEM_SIZES_SORT_ORDER, { items }),
+    onSuccess: () => {
+      toast.success(t('common:successfully-updated'));
+      queryClient.invalidateQueries({ queryKey: ['item-sizes'] });
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || t('common:update-failed'));

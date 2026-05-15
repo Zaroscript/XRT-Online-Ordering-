@@ -69,10 +69,18 @@ export const printerClient = {
     );
     return unwrapData<Printer>(body) ?? (body as unknown as Printer);
   },
+  /** POST body is intentionally `{}`; the API reply is `{ success, message, data }`. */
   testPrint: async (id: string) => {
     const url = API_ENDPOINTS.PRINTER_TEST_PRINT.replace(':id', id);
-    const data = await HttpClient.post<{ success: boolean }>(url, {});
-    return data;
+    return HttpClient.post<{
+      success: boolean;
+      message?: string;
+      data?: {
+        printerId: string;
+        delivery?: 'mock' | 'direct' | 'queue';
+        printJobId?: string;
+      };
+    }>(url, {});
   },
   checkConnection: async (id: string) => {
     const url = API_ENDPOINTS.PRINTER_CHECK_CONNECTION.replace(':id', id);

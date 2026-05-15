@@ -18,11 +18,15 @@ export class LoyaltyAccountRepository implements ILoyaltyAccountRepository {
 
     // If customer_id was populated
     if (doc.customer_id && typeof doc.customer_id === 'object' && doc.customer_id.name) {
+      const lastActivity = doc.customer_id.last_order_at ?? doc.customer_id.updated_at ?? null;
       entity.customer = {
         name: doc.customer_id.name,
         email: doc.customer_id.email,
         phoneNumber: doc.customer_id.phoneNumber,
+        last_order_at: doc.customer_id.last_order_at ?? null,
+        last_activity: lastActivity,
       };
+      entity.last_activity = lastActivity;
     }
 
     return entity;
@@ -63,12 +67,22 @@ export class LoyaltyAccountRepository implements ILoyaltyAccountRepository {
     if (totalsUpdate.earned) inc.total_points_earned = totalsUpdate.earned;
     if (totalsUpdate.redeemed) inc.total_points_redeemed = totalsUpdate.redeemed;
 
-    const doc = await LoyaltyAccountModel.findByIdAndUpdate(
-      id,
+    const query: any = { _id: id };
+    if (delta < 0) {
+      query.points_balance = { $gte: Math.abs(delta) };
+    }
+
+    const doc = await LoyaltyAccountModel.findOneAndUpdate(
+      query,
       { $inc: inc },
       { new: true }
     );
-    if (!doc) throw new Error('Loyalty account not found');
+    if (!doc) {
+      if (delta < 0) {
+        throw new Error('Insufficient points balance');
+      }
+      throw new Error('Loyalty account not found');
+    }
     return this.toEntity(doc);
   }
 
@@ -114,14 +128,18 @@ export class LoyaltyAccountRepository implements ILoyaltyAccountRepository {
     const data = docs.map((doc) => ({
       id: doc._id.toString(),
       customer_id: doc.customer_id.toString(),
+      phone: doc.customer.phoneNumber,
       customer: {
         name: doc.customer.name,
         email: doc.customer.email,
         phoneNumber: doc.customer.phoneNumber,
+        last_order_at: doc.customer.last_order_at ?? null,
+        last_activity: doc.customer.last_order_at ?? doc.customer.updated_at ?? null,
       },
       points_balance: doc.points_balance,
       total_points_earned: doc.total_points_earned,
       total_points_redeemed: doc.total_points_redeemed,
+      last_activity: doc.customer.last_order_at ?? doc.customer.updated_at ?? null,
       created_at: doc.created_at,
       updated_at: doc.updated_at,
     }));

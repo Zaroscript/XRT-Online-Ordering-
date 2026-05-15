@@ -11,6 +11,8 @@ import { logger } from '../../shared/utils/logger';
 import { env } from '../../shared/config/env';
 import { sendRenderedTemplatesToPrinter } from './directPrintService';
 import { recordPrinterLog } from './printerActivityLogger';
+import { Server as SocketIOServer } from 'socket.io';
+import { PrintJobNotifier } from './printJobNotifier';
 
 const DEFAULT_KITCHEN_LAYOUT: TemplateLayout = {
   header: [

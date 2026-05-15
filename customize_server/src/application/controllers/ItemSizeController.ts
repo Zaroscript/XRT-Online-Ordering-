@@ -116,15 +116,24 @@ export class ItemSizeController {
 
   updateSortOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { items } = req.body;
+    console.log('🔄 ItemSize Sort Order Update:', { 
+      hasItems: !!items, 
+      isArray: Array.isArray(items),
+      count: Array.isArray(items) ? items.length : 0 
+    });
 
     if (!items || !Array.isArray(items)) {
       throw new ValidationError('items array is required');
     }
 
-    const repo = new ItemSizeRepository();
-    await repo.updateSortOrder(items);
-
-    return sendSuccess(res, 'Item size sort order updated successfully');
+    try {
+      const repo = new ItemSizeRepository();
+      await repo.updateSortOrder(items);
+      return sendSuccess(res, 'Item size sort order updated successfully');
+    } catch (error: any) {
+      console.error('❌ Failed to update item size sort order:', error);
+      throw error;
+    }
   });
 
   exportSizes = asyncHandler(async (req: AuthRequest, res: Response) => {

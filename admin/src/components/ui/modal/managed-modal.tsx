@@ -1,6 +1,7 @@
 import Modal from '@/components/ui/modal/modal';
 import dynamic from 'next/dynamic';
 import { MODAL_VIEWS, useModalAction, useModalState } from './modal.context';
+import RoleDeleteView from '@/components/role/role-delete-view';
 
 const TestimonialDeleteView = dynamic(
   () => import('@/components/testimonials/testimonial-delete-view'),
@@ -50,11 +51,14 @@ const ClearImportHistoryView = dynamic(
 const CouponDeleteView = dynamic(
   () => import('@/components/coupon/coupon-delete-view'),
 );
-const RoleDeleteView = dynamic(
-  () => import('@/components/role/role-delete-view'),
+const PromotionDeleteView = dynamic(
+  () => import('@/components/promotion/promotion-delete-view'),
 );
 const UserDeleteView = dynamic(
   () => import('@/components/user/user-delete-view'),
+);
+const CustomerDeleteView = dynamic(
+  () => import('@/components/customer/customer-delete-view'),
 );
 
 const ProductDeleteView = dynamic(
@@ -245,6 +249,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <ItemPreviewView />;
     case 'DELETE_USER':
       return <UserDeleteView />;
+    case 'DELETE_CUSTOMER':
+      return <CustomerDeleteView />;
     case 'REFUND_ORDER':
       return <RefundModal />;
 
@@ -312,6 +318,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <DisApproveCouponView />;
     case 'DELETE_COUPON':
       return <CouponDeleteView />;
+    case 'DELETE_PROMOTION':
+      return <PromotionDeleteView />;
     case 'TRANSFER_SHOP_OWNERSHIP_VIEW':
       return <TransferShopOwnershipView />;
     case 'DELETE_OWNERSHIP_TRANSFER_REQUEST':

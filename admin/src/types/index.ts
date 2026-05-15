@@ -1,4 +1,3 @@
-import { toInteger } from 'lodash';
 import type { NextPage } from 'next';
 
 export type NextPageWithLayout<P = {}> = NextPage<P> & {
@@ -198,7 +197,7 @@ export interface PaginatorInfo<T> {
 }
 
 export interface LoginInput {
-  email: string;
+  identity: string;
   password: string;
 }
 
@@ -256,6 +255,7 @@ export interface Category {
   };
   is_active?: boolean;
   modifier_groups?: any[];
+  suggested_products?: any[];
 }
 
 export interface KitchenSection {
@@ -551,6 +551,73 @@ export interface Coupon {
   max_conversions?: number;
 }
 
+export type PromotionTemplateId =
+  | 'percent_cart'
+  | 'percent_selected_items'
+  | 'free_delivery'
+  | 'bogo'
+  | 'fixed_cart'
+  | 'free_item'
+  | 'meal_bundle'
+  | 'buy_n_get_one_free'
+  | 'percent_combo'
+  | 'linked_coupon';
+
+export interface PromotionRules {
+  percentage?: number;
+  amount?: number;
+  menu_item_ids?: string[];
+  free_quantity?: number;
+  n?: number;
+  bundle_price?: number;
+  components?: { menu_item_id: string; min_quantity: number }[];
+  group_a_ids?: string[];
+  group_b_ids?: string[];
+  discount_cheapest_percent?: number;
+  order_types?: ('pickup' | 'delivery')[];
+  /** linked_coupon — must match Coupon.code */
+  coupon_code?: string;
+}
+
+export interface Promotion {
+  id: string;
+  business_id: string;
+  template: PromotionTemplateId;
+  headline: string;
+  description?: string;
+  image_url?: string;
+  rules: PromotionRules;
+  active_from: string;
+  expire_at: string;
+  minimum_cart_amount: number;
+  max_conversions?: number | null;
+  is_active_on_website: boolean;
+  sort_order: number;
+  /** Storefront card button label */
+  cta_label?: string;
+  /** Empty = every day; otherwise subset of 0–6 (Sun–Sat) in business timezone */
+  active_weekdays?: number[];
+  orders?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PromotionInput {
+  template: PromotionTemplateId;
+  headline: string;
+  description?: string;
+  image_url?: string;
+  rules: PromotionRules;
+  active_from: string | Date;
+  expire_at: string | Date;
+  minimum_cart_amount?: number;
+  max_conversions?: number | null;
+  is_active_on_website?: boolean;
+  sort_order?: number;
+  cta_label?: string;
+  active_weekdays?: number[];
+}
+
 export interface CouponInput {
   code: string;
   type: CouponType;
@@ -796,6 +863,7 @@ export interface Product {
   digital_file?: DigitalFile;
   pivot?: OrderProductPivot;
   orders: Order[];
+  orders_count?: number;
   description?: string;
   in_stock?: boolean;
   is_digital?: boolean;
@@ -955,6 +1023,7 @@ export interface CreateCategoryInput {
   kitchen_section_id?: string;
   sort_order?: number;
   is_active?: boolean;
+  suggested_products?: string[];
 }
 
 // -> TODO: Simplify this
@@ -1158,9 +1227,16 @@ export interface LoyaltyAccount {
   points_balance: number;
   total_points_earned: number;
   total_points_redeemed: number;
+  last_activity?: string | null;
   created_at: string;
   updated_at: string;
-  customer?: User; // Populated from backend
+  customer?: {
+    name?: string;
+    email?: string;
+    phoneNumber?: string;
+    last_order_at?: string | null;
+    last_activity?: string | null;
+  };
 }
 
 export interface LoyaltyAccountPaginator {
@@ -1197,6 +1273,7 @@ export interface Conversations {
 }
 
 export interface Message extends LatestMessage {
+  user_id?: string | number;
   conversation: Conversations;
 }
 
@@ -1317,6 +1394,7 @@ export interface SettingsOptions {
   deliveryTime?: DeliveryTime[];
   logo?: Attachment;
   collapseLogo?: Attachment;
+  favicon?: Attachment;
   useEnableGateway?: boolean;
   currencyOptions?: SettingCurrencyOptions;
   guestCheckout: boolean;
@@ -1329,6 +1407,7 @@ export interface SettingsOptions {
   enableCoupons?: boolean;
   maintenance: Maintenance;
   isUnderMaintenance: boolean;
+  operationsSettings?: OperationsSettings;
   enableEmailForDigitalProduct?: boolean;
   isPromoPopUp?: boolean;
   promoPopup?: PromoPopupFormValues;
@@ -1369,6 +1448,15 @@ export interface SettingsOptions {
   externalLink?: string;
   timezone?: string;
   heroSlides?: HeroSlide[];
+  offerCards?: Array<{
+    title?: string;
+    description?: string;
+    image?: any;
+    couponCode?: string;
+    showCouponCode?: boolean;
+    promotionId?: string;
+  }>;
+  showMenuSection?: boolean;
   nmiPublicKey?: string;
   nmiPrivateKey?: string;
   authorizeNetPublicKey?: string;
@@ -1446,8 +1534,25 @@ export interface Maintenance {
   contactUsTitle?: string;
 }
 
+export type OperationsMode =
+  | 'OPEN_NORMAL'
+  | 'SCHEDULED_ONLY'
+  | 'ORDERS_PAUSED'
+  | 'FULL_MAINTENANCE';
+
+export interface OperationsSettings {
+  mode: OperationsMode;
+  manualOverride: boolean;
+  overrideUntil: string | null;
+  messageTitle: string;
+  messageBody: string;
+  showCountdown: boolean;
+  maintenanceTheme: string;
+  updatedAt?: string;
+}
+
 export interface MaintenanceFormValues {
-  isUnderMaintenance: boolean;
+  operationsSettings: OperationsSettings;
   maintenance: Maintenance;
 }
 
@@ -1475,6 +1580,8 @@ export interface SettingsOptionsInput {
   maximumQuestionLimit?: number;
   deliveryTime?: DeliveryTimeInput[];
   logo?: AttachmentInput;
+  collapseLogo?: AttachmentInput;
+  favicon?: AttachmentInput;
   seo?: SeoSettingsInput;
   google?: GoogleSettingsInput;
   facebook?: FacebookSettingsInput;
@@ -1535,6 +1642,10 @@ export interface SettingsOptionsInput {
   authorizeNetEnvironment?: 'sandbox' | 'production';
   primary_color?: string;
   secondary_color?: string;
+  operationsSettings?: OperationsSettings;
+  heroSlides?: HeroSlide[];
+  offerCards?: SettingsOptions['offerCards'];
+  showMenuSection?: boolean;
 }
 
 export interface DeliveryTime {
@@ -1942,6 +2053,10 @@ export interface CouponQueryOptions extends QueryOptions {
   code: string;
   shop_id: string;
 }
+export interface PromotionQueryOptions extends QueryOptions {
+  headline?: string;
+  template?: string;
+}
 export interface StoreNoticeQueryOptions extends QueryOptions {
   notice: string;
   shops: string;
@@ -2030,6 +2145,7 @@ export interface Customer {
   email: string;
   phoneNumber: string;
   business_id: string;
+  loyaltyPoints?: number;
   rewards: number;
   isActive: boolean;
   last_order_at: string | null;
@@ -2048,7 +2164,6 @@ export interface Customer {
     country: string;
     isDefault: boolean;
   }>;
-  loyaltyTier?: string;
   totalOrders?: number;
   totalSpent?: number;
   notes?: string;
@@ -2074,6 +2189,11 @@ export interface OrderPaginator extends PaginatorInfo<Order> {}
 export interface NotifyLogsPaginator extends PaginatorInfo<NotifyLogs> {}
 
 export interface CouponPaginator extends PaginatorInfo<Coupon> {}
+
+export interface PromotionPaginator extends PaginatorInfo<Promotion> {
+  website_active_count?: number;
+  website_active_max?: number;
+}
 
 export interface StoreNoticePaginator extends PaginatorInfo<StoreNotice> {}
 

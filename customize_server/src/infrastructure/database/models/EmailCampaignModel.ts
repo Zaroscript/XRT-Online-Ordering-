@@ -31,6 +31,15 @@ const EmailCampaignSchema = new Schema<EmailCampaignDocument>(
     recipient_count: { type: Number, default: 0 },
     sent_at: { type: String, default: null },
     error_message: { type: String, default: null },
+    // SendGrid event tracking
+    open_count:        { type: Number, default: 0 },
+    click_count:       { type: Number, default: 0 },
+    bounce_count:      { type: Number, default: 0 },
+    unsubscribe_count: { type: Number, default: 0 },
+    spam_count:        { type: Number, default: 0 },
+    // Unique open/click (deduped by email address)
+    unique_opens:      { type: Number, default: 0 },
+    unique_clicks:     { type: Number, default: 0 },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

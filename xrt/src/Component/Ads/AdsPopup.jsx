@@ -17,10 +17,11 @@ const AdsPopup = () => {
     // For now, adhering to session storage request
     const hasSeen = sessionStorage.getItem('hasSeenAdsPopup');
     if (!hasSeen) {
+      const delaySec = Number(settings.popupDelay ?? settings.popUpDelay ?? 0);
       const timer = setTimeout(() => {
         setIsOpen(true);
         sessionStorage.setItem('hasSeenAdsPopup', 'true');
-      }, (settings.popupDelay || 0) * 1000);
+      }, delaySec * 1000);
       
       return () => clearTimeout(timer);
     }

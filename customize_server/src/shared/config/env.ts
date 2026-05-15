@@ -3,6 +3,12 @@ import path from 'path';
 
 dotenv.config({ path: path.join(__dirname, '../../../.env') });
 
+const toBoolean = (value: string | undefined, fallback: boolean): boolean => {
+  if (typeof value === 'undefined') return fallback;
+  const normalized = value.trim().toLowerCase();
+  return ['1', 'true', 'yes', 'on'].includes(normalized);
+};
+
 export const env = {
   // Server
   PORT: process.env.PORT || 3001,
@@ -55,6 +61,8 @@ export const env = {
   EMAIL_FROM: process.env.EMAIL_FROM || '',
   EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || '',
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || '',
+  /** Signing key from SendGrid → Settings → Mail Settings → Event Webhook → Signing Key */
+  SENDGRID_WEBHOOK_KEY: process.env.SENDGRID_WEBHOOK_KEY || '',
 
   // Twilio SMS
   TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID || '',
@@ -79,6 +87,19 @@ export const env = {
     String(process.env.PRINT_DELIVERY || 'queue').trim().toLowerCase() === 'direct'
       ? 'direct'
       : 'queue',
+
+  // Maintenance
+  CUSTOMER_DEDUPE_JOB_ENABLED: toBoolean(
+    process.env.CUSTOMER_DEDUPE_JOB_ENABLED,
+    process.env.NODE_ENV !== 'production',
+  ),
+  CUSTOMER_DEDUPE_JOB_INTERVAL_MINUTES: Number(
+    process.env.CUSTOMER_DEDUPE_JOB_INTERVAL_MINUTES || 720,
+  ),
+  CUSTOMER_DEDUPE_JOB_RUN_ON_START: toBoolean(
+    process.env.CUSTOMER_DEDUPE_JOB_RUN_ON_START,
+    true,
+  ),
 } as const;
 
 // Validate required environment variables

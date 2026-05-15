@@ -2,7 +2,7 @@ import Pagination from '@/components/ui/pagination';
 import { Table } from '@/components/ui/table';
 import { useTranslation } from 'next-i18next';
 import { useIsRTL } from '@/utils/locals';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import TitleWithSort from '@/components/ui/title-with-sort';
 import {
   ModifierGroup,
@@ -50,10 +50,7 @@ import {
 } from '@dnd-kit/sortable';
 import { SortableRow } from '@/components/ui/sortable-row';
 import { SortableList } from '@/components/ui/sortable-list';
-import { useMutation } from '@tanstack/react-query';
-import { API_ENDPOINTS } from '@/data/client/api-endpoints';
-import { HttpClient } from '@/data/client/http-client';
-import { toast } from 'react-toastify';
+import { useUpdateModifierGroupsSortOrderMutation } from '@/data/modifier-group';
 
 export type IProps = {
   groups: ModifierGroup[] | undefined | null;
@@ -105,6 +102,8 @@ const ModifierGroupList = ({
     column: null,
   });
 
+  const { mutate: updateSortOrder, isPending: isUpdatingSortOrder } = useUpdateModifierGroupsSortOrderMutation();
+
   // DnD Sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -117,27 +116,15 @@ const ModifierGroupList = ({
     }),
   );
 
-  // Sorting Mutation
-  const updateSortOrder = useMutation({
-    mutationFn: async (newItems: { id: string; order: number }[]) => {
-      return HttpClient.post(API_ENDPOINTS.MODIFIER_GROUPS + '/sort-order', {
-        items: newItems,
-      });
-    },
-    onSuccess: () => {
-      toast.success(t('common:successfully-updated'));
-    },
-    onError: (error) => {
-      toast.error(t('common:update-failed'));
-    },
-  });
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over?.id) {
+    if (active && over && active.id !== over.id) {
       setItemsList((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over?.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        if (oldIndex === -1 || newIndex === -1) return items;
+        
         const newItems = arrayMove(items, oldIndex, newIndex);
 
         const pageSize = paginatorInfo?.perPage || 10;
@@ -149,9 +136,12 @@ const ModifierGroupList = ({
           order: startOrder + index,
         }));
 
-        updateSortOrder.mutate(payload);
+        updateSortOrder(payload);
 
-        return newItems;
+        return newItems.map((item, index) => ({
+          ...item,
+          sort_order: startOrder + index,
+        }));
       });
     }
   };
@@ -187,10 +177,6 @@ const ModifierGroupList = ({
   }
 
   // Show empty state
-  // Using itemsList to check for empty state now, but initially it might be empty before effect runs?
-  // itemsList is initialized to [] but effect sets it.
-  // Should fallback to groups if itemsList is empty possibly?
-  // Or just rely on props being passed.
   if (!groups || groups.length === 0) {
     return (
       <div className="flex flex-col items-center py-12 bg-white rounded-lg shadow">
@@ -391,8 +377,11 @@ const ModifierGroupList = ({
                 order: startOrder + index,
               }));
 
-              updateSortOrder.mutate(payload);
-              return newItems;
+              updateSortOrder(payload);
+              return newItems.map((item, index) => ({
+                ...item,
+                sort_order: startOrder + index,
+              }));
             });
           }}
           renderItem={(group, dragHandleProps) => (
@@ -512,7 +501,7 @@ const ModifierGroupList = ({
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block mb-6 overflow-hidden rounded-lg shadow">
+      <div className={`hidden md:block mb-6 overflow-hidden rounded-lg shadow ${isUpdatingSortOrder ? 'opacity-50 pointer-events-none' : ''}`}>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}

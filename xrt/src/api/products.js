@@ -119,6 +119,21 @@ function adaptProducts(data) {
       is_signature: item.is_signature,
       description: item.description || "No description available.",
       sort_order: item.sort_order ?? 999,
+      suggested_products: (item.suggested_products || []).map((p) => {
+        const pImageRaw = p.image;
+        const pImageStr =
+          typeof pImageRaw === "string"
+            ? pImageRaw?.trim()
+            : pImageRaw && typeof pImageRaw === "object"
+              ? (pImageRaw.original || pImageRaw.thumbnail || "").trim()
+              : "";
+        return {
+          id: p.id || p._id,
+          name: p.name,
+          base_price: p.base_price,
+          image: pImageStr ? resolveImageUrl(pImageStr) || pImageStr : "https://placehold.co/400x400?text=No+Image",
+        };
+      }),
     };
   });
 }

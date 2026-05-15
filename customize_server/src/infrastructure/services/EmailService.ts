@@ -10,6 +10,8 @@ export interface BulkEmailOptions {
   html: string;
   fromName?: string;
   fromEmail?: string;
+  /** When provided, SendGrid will echo this in every webhook event as custom_args.campaign_id */
+  campaignId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -110,13 +112,18 @@ export class EmailService implements IEmailService {
     }
 
     for (const chunk of chunks) {
-      const msg = {
+      const msg: any = {
         to: chunk.map((email) => ({ email })),
         from: { email: fromEmail, name: fromName },
         subject: options.subject,
         html: options.html,
         isMultiple: true,
       };
+
+      // Embed campaign_id so SendGrid echoes it back in every event webhook
+      if (options.campaignId) {
+        msg.customArgs = { campaign_id: options.campaignId };
+      }
 
       try {
         await sendgrid.send(msg as any);

@@ -21,7 +21,7 @@ export function hexToRgb(hex: string): string | null {
 export function adjustColorBrightness(hex: string, amount: number): string {
   hex = hex.replace(/^#/, '');
   if (hex.length === 3) hex = hex.split('').map(char => char + char).join('');
-  
+
   let r = parseInt(hex.substring(0, 2), 16);
   let g = parseInt(hex.substring(2, 4), 16);
   let b = parseInt(hex.substring(4, 6), 16);
@@ -38,7 +38,7 @@ export function getContrastColor(hexColor: string): 'white' | 'black' {
   if (!hexColor) return 'black';
   const cleanHex = hexColor.replace('#', '');
   if (cleanHex.length !== 6 && cleanHex.length !== 3) return 'black';
-  
+
   let r, g, b;
   if (cleanHex.length === 3) {
     r = parseInt(cleanHex[0] + cleanHex[0], 16);
@@ -49,15 +49,21 @@ export function getContrastColor(hexColor: string): 'white' | 'black' {
     g = parseInt(cleanHex.substring(2, 4), 16);
     b = parseInt(cleanHex.substring(4, 6), 16);
   }
-  
+
   const yiq = (r * 299 + g * 587 + b * 114) / 1000;
   return yiq >= 128 ? 'black' : 'white';
 }
 
 export const DEFAULT_PRIMARY_COLOR = '#5C9963';
 export const DEFAULT_SECONDARY_COLOR = '#2F3E30';
+export const ADMIN_THEME_CACHE_KEY = 'xrt_admin_theme_colors_v1';
 
 const HEX_COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+export interface AdminThemeColors {
+  primary_color: string;
+  secondary_color: string;
+}
 
 export function normalizeThemeColor(
   value: string | undefined | null,
@@ -104,6 +110,7 @@ export function buildAdminBrandTheme(
   const primary = normalizeThemeColor(primaryInput, DEFAULT_PRIMARY_COLOR);
   const secondary = normalizeThemeColor(secondaryInput, DEFAULT_SECONDARY_COLOR);
   const primaryHover = mixHexColors(primary, secondary, 0.22);
+  const secondaryHover = mixHexColors(secondary, '#000000', 0.1);
   const accent300 = mixHexColors(primary, '#ffffff', 0.68);
   const accent400 = mixHexColors(primary, '#ffffff', 0.4);
   const accent500 = primary;
@@ -113,9 +120,12 @@ export function buildAdminBrandTheme(
   return {
     primary,
     secondary,
+    primaryContrast: getContrastColor(primary),
+    secondaryContrast: getContrastColor(secondary),
     primaryRgb: hexToRgb(primary) || hexToRgb(DEFAULT_PRIMARY_COLOR) || '',
     secondaryRgb: hexToRgb(secondary) || hexToRgb(DEFAULT_SECONDARY_COLOR) || '',
     primaryHover,
+    secondaryHover,
     primaryHoverRgb:
       hexToRgb(primaryHover) || hexToRgb(mixHexColors(DEFAULT_PRIMARY_COLOR, DEFAULT_SECONDARY_COLOR, 0.22)) || '',
     accent300Rgb: hexToRgb(accent300) || '',
@@ -134,6 +144,12 @@ export function applyAdminBrandTheme(options?: {
     return;
   }
 
+  // Only apply theme if colors are explicitly provided in options
+  // This prevents overriding the CSS-defined brand colors with defaults
+  if (!options?.primary_color && !options?.secondary_color) {
+    return;
+  }
+
   const root = document.documentElement;
   const theme = buildAdminBrandTheme(
     options?.primary_color,
@@ -141,8 +157,15 @@ export function applyAdminBrandTheme(options?: {
   );
 
   root.style.setProperty('--color-primary', theme.primaryRgb);
+  root.style.setProperty('--color-primary-hex', theme.primary);
+  root.style.setProperty('--color-primary-contrast', theme.primaryContrast);
   root.style.setProperty('--color-primary-hover', theme.primaryHoverRgb);
+
   root.style.setProperty('--color-secondary', theme.secondaryRgb);
+  root.style.setProperty('--color-secondary-hex', theme.secondary);
+  root.style.setProperty('--color-secondary-contrast', theme.secondaryContrast);
+  root.style.setProperty('--color-secondary-hover', theme.secondaryHover);
+
   root.style.setProperty('--color-accent', theme.primaryRgb);
   root.style.setProperty('--color-accent-hover', theme.primaryHoverRgb);
   root.style.setProperty('--color-accent-300', theme.accent300Rgb);
@@ -150,4 +173,60 @@ export function applyAdminBrandTheme(options?: {
   root.style.setProperty('--color-accent-500', theme.accent500Rgb);
   root.style.setProperty('--color-accent-600', theme.accent600Rgb);
   root.style.setProperty('--color-accent-700', theme.accent700Rgb);
+}
+
+export function readCachedAdminThemeColors(): AdminThemeColors | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(ADMIN_THEME_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<AdminThemeColors>;
+
+    const primary = normalizeThemeColor(parsed.primary_color, '');
+    const secondary = normalizeThemeColor(parsed.secondary_color, '');
+
+    if (!primary || !secondary) {
+      return null;
+    }
+
+    return {
+      primary_color: primary,
+      secondary_color: secondary,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveCachedAdminThemeColors(options?: {
+  primary_color?: string | null;
+  secondary_color?: string | null;
+} | null): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const primary = normalizeThemeColor(options?.primary_color, '');
+  const secondary = normalizeThemeColor(options?.secondary_color, '');
+  if (!primary || !secondary) {
+    return;
+  }
+
+  const payload: AdminThemeColors = {
+    primary_color: primary,
+    secondary_color: secondary,
+  };
+
+  window.localStorage.setItem(ADMIN_THEME_CACHE_KEY, JSON.stringify(payload));
+}
+
+export function applyCachedAdminThemeColors(): boolean {
+  const cached = readCachedAdminThemeColors();
+  if (!cached) return false;
+
+  applyAdminBrandTheme(cached);
+  return true;
 }

@@ -29,7 +29,7 @@ export class UpdatePasswordUseCase {
     }
 
     // Check current password
-    const isCurrentPasswordValid = await userDoc.comparePassword(data.currentPassword);
+    const isCurrentPasswordValid = await userDoc.comparePassword(data.oldPassword);
     if (!isCurrentPasswordValid) {
       throw new UnauthorizedError('Your current password is wrong');
     }

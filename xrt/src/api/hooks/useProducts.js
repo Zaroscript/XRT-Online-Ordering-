@@ -8,8 +8,9 @@ export function useProductsQuery(options = {}) {
   const query = useQuery({
     queryKey: PRODUCTS_QUERY_KEY,
     queryFn: getProducts,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
     ...options,
   });
 

@@ -1,6 +1,7 @@
 import React from 'react';
 
 export type MODAL_VIEWS =
+  | 'DELETE_CUSTOMER'
   | 'DELETE_PRODUCT'
   | 'DELETE_ADDRESS'
   | 'DELETE_TYPE'
@@ -67,7 +68,8 @@ export type MODAL_VIEWS =
   | 'DELETE_KITCHEN_SECTION'
   | 'DELETE_PRINTER'
   | 'VIEW_DETAILS'
-  | 'CAMPAIGN_DETAILS_VIEW';
+  | 'CAMPAIGN_DETAILS_VIEW'
+  | 'DELETE_PROMOTION';
 
 interface State {
   view?: MODAL_VIEWS;

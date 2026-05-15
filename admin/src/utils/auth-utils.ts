@@ -116,6 +116,31 @@ export function hasPermission(
   );
 }
 
+export function hasAccessControl(
+  _allowedValues: string[] | undefined | null,
+  _userRole: string | null | undefined,
+  _userPermissions: string[] | undefined | null,
+): boolean {
+  if (
+    !_allowedValues ||
+    !Array.isArray(_allowedValues) ||
+    _allowedValues.length === 0
+  ) {
+    return true;
+  }
+
+  const looksLikePermissionList = _allowedValues.some((value) =>
+    value.includes(':'),
+  );
+
+  if (looksLikePermissionList) {
+    if (_userRole === SUPER_ADMIN) return true;
+    return hasPermission(_allowedValues, _userPermissions);
+  }
+
+  return hasAccess(_allowedValues, _userRole);
+}
+
 export function isAuthenticated(_cookies: any) {
   // Handle both old format (separate token/permissions cookies) and new format (AUTH_CRED cookie)
   if (_cookies.token && _cookies.permissions) {

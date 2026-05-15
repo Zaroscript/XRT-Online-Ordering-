@@ -12,11 +12,23 @@ export interface PermissionDefinition {
     isSystem?: boolean;
 }
 
+function dedupePermissionDefinitions(
+    definitions: PermissionDefinition[]
+): PermissionDefinition[] {
+    const map = new Map<string, PermissionDefinition>();
+    for (const def of definitions) {
+        if (!map.has(def.key)) {
+            map.set(def.key, def);
+        }
+    }
+    return Array.from(map.values());
+}
+
 /**
  * All permission definitions for the system
  * These are automatically synced to the database on startup
  */
-export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
+const RAW_PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     // ============================================================
     // USERS MODULE
     // ============================================================
@@ -270,84 +282,6 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     },
 
     // ============================================================
-    // BUSINESS MODULE
-    // ============================================================
-    {
-        key: 'business:read',
-        module: 'business',
-        action: 'read',
-        description: 'View business information',
-    },
-    {
-        key: 'business:update',
-        module: 'business',
-        action: 'update',
-        description: 'Update business information',
-    },
-
-    // ============================================================
-    // WITHDRAWALS MODULE
-    // ============================================================
-    {
-        key: 'withdraws:read',
-        module: 'withdraws',
-        action: 'read',
-        description: 'View withdrawal requests',
-    },
-    {
-        key: 'withdraws:create',
-        module: 'withdraws',
-        action: 'create',
-        description: 'Create withdrawal requests',
-    },
-    {
-        key: 'withdraws:update',
-        module: 'withdraws',
-        action: 'update',
-        description: 'Update withdrawal requests',
-    },
-    {
-        key: 'withdraws:delete',
-        module: 'withdraws',
-        action: 'delete',
-        description: 'Delete withdrawal requests',
-    },
-
-    // ============================================================
-    // CONTENT MODULE
-    // ============================================================
-    {
-        key: 'content:read',
-        module: 'content',
-        action: 'read',
-        description: 'View content',
-    },
-    {
-        key: 'content:create',
-        module: 'content',
-        action: 'create',
-        description: 'Create new content',
-    },
-    {
-        key: 'content:update',
-        module: 'content',
-        action: 'update',
-        description: 'Update content',
-    },
-    {
-        key: 'content:delete',
-        module: 'content',
-        action: 'delete',
-        description: 'Delete content',
-    },
-    {
-        key: 'content:publish',
-        module: 'content',
-        action: 'publish',
-        description: 'Publish content',
-    },
-
-    // ============================================================
     // SYSTEM MODULE (Super Admin Only)
     // ============================================================
     {
@@ -416,7 +350,108 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
         action: 'analytics',
         description: 'View analytics and reports',
     },
+
+    // ============================================================
+    // ORDERS MODULE
+    // ============================================================
+    { key: 'orders:read', module: 'orders', action: 'read', description: 'View orders list and details' },
+    { key: 'orders:create', module: 'orders', action: 'create', description: 'Create orders' },
+    { key: 'orders:update', module: 'orders', action: 'update', description: 'Update order status and order data' },
+    { key: 'orders:delete', module: 'orders', action: 'delete', description: 'Delete orders' },
+    { key: 'orders:reprint', module: 'orders', action: 'reprint', description: 'Trigger order reprint' },
+    { key: 'orders:refund', module: 'orders', action: 'refund', description: 'Process order refunds and voids' },
+
+    // ============================================================
+    // PRINTERS MODULE
+    // ============================================================
+    { key: 'printers:read', module: 'printers', action: 'read', description: 'View printers list and details' },
+    { key: 'printers:create', module: 'printers', action: 'create', description: 'Create printers' },
+    { key: 'printers:update', module: 'printers', action: 'update', description: 'Update printers' },
+    { key: 'printers:delete', module: 'printers', action: 'delete', description: 'Delete printers' },
+    { key: 'printers:scan', module: 'printers', action: 'scan', description: 'Scan and discover printers' },
+    { key: 'printers:test', module: 'printers', action: 'test', description: 'Run printer test print and connection checks' },
+
+    // ============================================================
+    // PRINT TEMPLATES MODULE
+    // ============================================================
+    { key: 'print_templates:read', module: 'print_templates', action: 'read', description: 'View print templates' },
+    { key: 'print_templates:create', module: 'print_templates', action: 'create', description: 'Create print templates' },
+    { key: 'print_templates:update', module: 'print_templates', action: 'update', description: 'Update print templates' },
+    { key: 'print_templates:delete', module: 'print_templates', action: 'delete', description: 'Delete print templates' },
+
+    // ============================================================
+    // KITCHEN SECTIONS MODULE
+    // ============================================================
+    { key: 'kitchen_sections:read', module: 'kitchen_sections', action: 'read', description: 'View kitchen sections' },
+    { key: 'kitchen_sections:create', module: 'kitchen_sections', action: 'create', description: 'Create kitchen sections' },
+    { key: 'kitchen_sections:update', module: 'kitchen_sections', action: 'update', description: 'Update kitchen sections' },
+    { key: 'kitchen_sections:delete', module: 'kitchen_sections', action: 'delete', description: 'Delete kitchen sections' },
+
+    // ============================================================
+    // COUPONS MODULE
+    // ============================================================
+    { key: 'coupons:read', module: 'coupons', action: 'read', description: 'View coupons' },
+    { key: 'coupons:create', module: 'coupons', action: 'create', description: 'Create coupons' },
+    { key: 'coupons:update', module: 'coupons', action: 'update', description: 'Update coupons' },
+    { key: 'coupons:delete', module: 'coupons', action: 'delete', description: 'Delete coupons' },
+    { key: 'coupons:approve', module: 'coupons', action: 'approve', description: 'Approve or disapprove coupons' },
+
+    // ============================================================
+    // SETTINGS-ADJACENT MODULES
+    // ============================================================
+    { key: 'taxes:read', module: 'taxes', action: 'read', description: 'View tax rules' },
+    { key: 'taxes:create', module: 'taxes', action: 'create', description: 'Create tax rules' },
+    { key: 'taxes:update', module: 'taxes', action: 'update', description: 'Update tax rules' },
+    { key: 'taxes:delete', module: 'taxes', action: 'delete', description: 'Delete tax rules' },
+    { key: 'prices:read', module: 'prices', action: 'read', description: 'View price updates and history' },
+    { key: 'prices:update', module: 'prices', action: 'update', description: 'Apply and rollback price updates' },
+
+    // ============================================================
+    // MARKETING MODULES
+    // ============================================================
+    { key: 'emails:read', module: 'emails', action: 'read', description: 'View email campaigns' },
+    { key: 'emails:create', module: 'emails', action: 'create', description: 'Create email campaigns' },
+    { key: 'emails:update', module: 'emails', action: 'update', description: 'Update and resend email campaigns' },
+    { key: 'emails:delete', module: 'emails', action: 'delete', description: 'Delete email campaigns' },
+    { key: 'sms:read', module: 'sms', action: 'read', description: 'View SMS campaigns' },
+    { key: 'sms:create', module: 'sms', action: 'create', description: 'Create SMS campaigns' },
+    { key: 'sms:update', module: 'sms', action: 'update', description: 'Update and resend SMS campaigns' },
+    { key: 'sms:delete', module: 'sms', action: 'delete', description: 'Delete SMS campaigns' },
+
+    // ============================================================
+    // LOYALTY MODULE
+    // ============================================================
+    { key: 'loyalty:read', module: 'loyalty', action: 'read', description: 'View loyalty settings and members' },
+    { key: 'loyalty:update', module: 'loyalty', action: 'update', description: 'Update loyalty settings' },
+
+    // ============================================================
+    // ANALYTICS MODULE
+    // ============================================================
+    { key: 'analytics:read', module: 'analytics', action: 'read', description: 'View analytics dashboards and reports' },
+
+    // ============================================================
+    // IMPORT / EXPORT MODULE
+    // ============================================================
+    { key: 'imports:read', module: 'imports', action: 'read', description: 'View import sessions and validation' },
+    { key: 'imports:create', module: 'imports', action: 'create', description: 'Create and confirm imports' },
+    { key: 'imports:rollback', module: 'imports', action: 'rollback', description: 'Rollback import sessions' },
+    { key: 'exports:read', module: 'exports', action: 'read', description: 'Export menu and settings data' },
+
+    // ============================================================
+    // DASHBOARD SECTIONS (UI visibility control)
+    // ============================================================
+    { key: 'dashboard:view', module: 'dashboard', action: 'view', description: 'Access dashboard home page' },
+    { key: 'dashboard:orders_section', module: 'dashboard', action: 'orders_section', description: 'View Orders section in dashboard navigation' },
+    { key: 'dashboard:menu_section', module: 'dashboard', action: 'menu_section', description: 'View Menu Management section in dashboard navigation' },
+    { key: 'dashboard:printing_section', module: 'dashboard', action: 'printing_section', description: 'View Printing section in dashboard navigation' },
+    { key: 'dashboard:users_section', module: 'dashboard', action: 'users_section', description: 'View User Control section in dashboard navigation' },
+    { key: 'dashboard:promotional_section', module: 'dashboard', action: 'promotional_section', description: 'View Promotional section in dashboard navigation' },
+    { key: 'dashboard:marketing_section', module: 'dashboard', action: 'marketing_section', description: 'View Marketing section in dashboard navigation' },
+    { key: 'dashboard:settings_section', module: 'dashboard', action: 'settings_section', description: 'View Site Management section in dashboard navigation' },
 ];
+
+export const PERMISSION_DEFINITIONS: PermissionDefinition[] =
+    dedupePermissionDefinitions(RAW_PERMISSION_DEFINITIONS);
 
 /**
  * Convert permission definitions to CreatePermissionDTO format

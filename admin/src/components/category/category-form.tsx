@@ -10,7 +10,6 @@ import ValidationError from '@/components/ui/form-validation-error';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Category, ItemProps } from '@/types';
 import { Routes } from '@/config/routes';
-import { Config } from '@/config';
 import { useTranslation } from 'next-i18next';
 import FileInput from '@/components/ui/file-input';
 import SelectInput from '@/components/ui/select-input';
@@ -28,16 +27,18 @@ import StickyFooterPanel from '@/components/ui/sticky-footer-panel';
 import { CategoryDetailSuggestion } from '@/components/category/category-ai-prompt';
 import SwitchInput from '@/components/ui/switch-input';
 import { useKitchenSectionsQuery } from '@/data/kitchen-section';
+import { useItemsQuery } from '@/data/item';
 
 type FormValues = {
   name: string;
   details?: string;
   image?: any;
   icon?: any;
-  kitchen_section_id: any;
+  kitchen_section_id?: any;
   sort_order: number;
   is_active?: boolean;
   modifier_groups?: any;
+  suggested_products?: any;
   apply_modifier_groups_to_items?: boolean;
 };
 
@@ -50,6 +51,7 @@ const defaultValues = {
   sort_order: 0,
   is_active: true,
   modifier_groups: [],
+  suggested_products: [],
   apply_modifier_groups_to_items: false,
 };
 
@@ -63,41 +65,12 @@ export default function CreateOrUpdateCategoriesForm({
   const router = useRouter();
   const { t } = useTranslation(['common', 'form']);
 
-  const isNewTranslation = router?.query?.action === 'translate';
-
-  // Helper for text fallback
-  const getFallback = useCallback(
-    (key: string, accessKey: string, fallback: string) => {
-      const val = t(accessKey);
-      return val === key || val === accessKey ? fallback : val;
-    },
-    [t],
-  );
-
-  /*
-  const kitchenSectionOptions: { label: string; value: string }[] = useMemo(
-    () => [
-      {
-        label: getFallback(
-          'kitchen-section-appetizers',
-          'common:kitchen-section-appetizers',
-          'Appetizers',
-        ),
-        value: 'KS_001',
-      },
-      // ...
-    ],
-    [t],
-  );
-  */
-
   const { locale } = router;
 
   const { data: kitchenSectionsData, isLoading: loadingKitchenSections } =
     useKitchenSectionsQuery();
 
   const kitchenSectionOptions = useMemo(() => {
-    // The API response is likely { success: true, data: [...] }
     const sections =
       (kitchenSectionsData as any)?.data || kitchenSectionsData || [];
     return (Array.isArray(sections) ? sections : []).map((section: any) => ({
@@ -116,6 +89,10 @@ export default function CreateOrUpdateCategoriesForm({
       limit: 1000,
       language: locale!,
     });
+
+  const { items: allProducts, loading: loadingProducts } = useItemsQuery({
+    limit: 1000,
+  });
 
   const {
     register,
@@ -160,19 +137,24 @@ export default function CreateOrUpdateCategoriesForm({
               }
             : initialValues.kitchen_section_id
               ? {
-                  // Fallback if we only have ID but no populated data (shouldn't happen with recent fix, but safe)
                   label: initialValues.kitchen_section_id,
                   value: initialValues.kitchen_section_id,
                 }
               : null,
           modifier_groups: initialValues.modifier_groups?.map((bg: any) => ({
-            label: bg.modifier_group_id?.name || bg.modifier_group_id, // Handle populated vs string ID if needed, though usually populated in detailed view
+            label: bg.modifier_group_id?.name || bg.modifier_group_id,
             value: {
               modifier_group_id:
                 bg.modifier_group_id?._id || bg.modifier_group_id,
               display_order: bg.display_order,
             },
           })),
+          suggested_products: initialValues.suggested_products?.map(
+            (p: any) => ({
+              label: p.name || p.id || p,
+              value: p.id || p,
+            }),
+          ),
         }
       : defaultValues,
     resolver: yupResolver(categoryValidationSchema),
@@ -201,7 +183,7 @@ export default function CreateOrUpdateCategoriesForm({
                 id: 1,
                 thumbnail: initialValues.icon,
                 original: initialValues.icon,
-                file_name: (initialValues.icon as any).split('/').pop(),
+                file_name: initialValues.icon.split('/').pop(),
               },
             ]
           : [initialValues.icon]
@@ -227,12 +209,15 @@ export default function CreateOrUpdateCategoriesForm({
           },
         };
       }),
+      suggested_products: initialValues.suggested_products?.map((p: any) => ({
+        label: p.name || p.id || p,
+        value: p.id || p,
+      })),
     };
   }, [initialValues, kitchenSectionOptions, modifierGroups]);
 
   const previousValuesRef = useRef<string | null>(null);
 
-  // Reset form when formattedValues changes (using deep comparison check)
   useEffect(() => {
     if (formattedValues) {
       const stringifiedValues = JSON.stringify(formattedValues);
@@ -247,12 +232,12 @@ export default function CreateOrUpdateCategoriesForm({
 
   const generateName = watch('name');
   const selectedModifierGroups = watch('modifier_groups');
+  const selectedSuggestedProducts = watch('suggested_products');
 
   const categoryDetailSuggestionLists = useMemo(() => {
     return CategoryDetailSuggestion({ name: generateName ?? '' });
   }, [generateName]);
 
-  // Create modifier group options - filter out already selected ones to prevent duplicate selection
   const availableModifierGroupOptions = useMemo(() => {
     const selectedIds = (selectedModifierGroups || []).map(
       (mg: any) => mg?.value?.modifier_group_id || mg?.modifier_group_id,
@@ -261,15 +246,29 @@ export default function CreateOrUpdateCategoriesForm({
       modifierGroups
         ?.filter((group) => !selectedIds.includes(group.id))
         .map((group) => ({
-          label: group.display_name || group.name, // Use display_name if available, fallback to name
+          label: group.display_name || group.name,
           value: {
             modifier_group_id: group.id,
-            modifier_group_name: group.name, // Use name for system use
+            modifier_group_name: group.name,
             display_order: 0,
           },
         })) || []
     );
   }, [modifierGroups, selectedModifierGroups]);
+
+  const availableProductOptions = useMemo(() => {
+    const selectedIds = (selectedSuggestedProducts || []).map(
+      (p: any) => p?.value || p,
+    );
+    return (
+      allProducts
+        ?.filter((product) => !selectedIds.includes(product.id))
+        .map((product) => ({
+          label: product.name,
+          value: product.id,
+        })) || []
+    );
+  }, [allProducts, selectedSuggestedProducts]);
 
   const handleGenerateDescription = useCallback(() => {
     openModal('GENERATE_DESCRIPTION', {
@@ -279,7 +278,7 @@ export default function CreateOrUpdateCategoriesForm({
       key: 'details',
       suggestion: categoryDetailSuggestionLists as ItemProps[],
     });
-  }, [generateName]);
+  }, [generateName, categoryDetailSuggestionLists, control, setValue, openModal]);
 
   const { mutate: createCategory, isPending: creating } =
     useCreateCategoryMutation();
@@ -301,11 +300,12 @@ export default function CreateOrUpdateCategoriesForm({
         modifier_group_id: mg.value.modifier_group_id,
         display_order: mg.value.display_order || 0,
       })),
+      suggested_products: values.suggested_products?.map(
+        (p: any) => p.value || p,
+      ),
       apply_modifier_groups_to_items: !!values.apply_modifier_groups_to_items,
     };
 
-    // Extract File objects if they exist in the values (returned as array from FileInput)
-    // If the Uploader already successfully uploaded to /attachments, it will be an object with id/thumbnail/original
     const imageValue = Array.isArray(values.image)
       ? values.image[0]
       : values.image;
@@ -320,7 +320,6 @@ export default function CreateOrUpdateCategoriesForm({
       icon: iconFile,
     };
 
-    // If it's already uploaded (has id/thumbnail), pass the URL and ID in the body
     if (!imageFile && imageValue?.original) {
       payload.image = imageValue.original;
       payload.image_public_id = imageValue.id;
@@ -335,16 +334,8 @@ export default function CreateOrUpdateCategoriesForm({
         Array.isArray(iconValue) &&
         iconValue.length === 0)
     ) {
-      // Icon was explicitly removed
       payload.delete_icon = true;
     }
-
-    // If we are updating and haven't provided a new file, we don't want to send the "existing" image object
-    // as it would be serialized to string incorrectly.
-    // However, if we want to preserve the existing image, we just don't send anything for 'image' in FormData.
-    // The backend won't update it if it's not provided in req.files and not in req.body.
-
-    // usage of 'delete_icon' flag
 
     if (
       !initialValues ||
@@ -363,7 +354,6 @@ export default function CreateOrUpdateCategoriesForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      {/* Media: Image + Icon — side-by-side on larger screens */}
       <div className="pb-8 my-5 border-b border-dashed border-border-base sm:my-8">
         <div className="mb-5">
           <h3 className="text-base font-semibold text-heading mb-1">
@@ -447,11 +437,7 @@ export default function CreateOrUpdateCategoriesForm({
 
           <div className="mb-5">
             <Label>
-              {getFallback(
-                'input-label-kitchen-section',
-                'form:input-label-kitchen-section',
-                'Kitchen Section',
-              )}
+              {t('form:input-label-kitchen-section') || 'Kitchen Section'}
             </Label>
             <SelectInput
               name="kitchen_section_id"
@@ -481,7 +467,7 @@ export default function CreateOrUpdateCategoriesForm({
             />
           </div>
 
-          <div className="mb-5">
+          <div className="mb-5 border-t border-dashed border-border-200 pt-5">
             <Label>{t('form:input-label-modifier-groups')}</Label>
             <SelectInput
               name="modifier_groups"
@@ -498,6 +484,20 @@ export default function CreateOrUpdateCategoriesForm({
               control={control as any}
               label={t('form:input-label-apply-modifier-groups-to-items')}
             />
+          </div>
+
+          <div className="mb-5 border-t border-dashed border-border-200 pt-5">
+            <Label>{t('form:input-label-suggested-products') || 'Suggested Products'}</Label>
+            <SelectInput
+              name="suggested_products"
+              control={control as any}
+              options={availableProductOptions}
+              isMulti
+              isLoading={loadingProducts}
+            />
+            <p className="mt-2 text-xs text-body">
+              {t('form:category-suggested-products-helper-text') || 'Select products to suggest when viewing items from this category.'}
+            </p>
           </div>
         </Card>
       </div>

@@ -2,22 +2,24 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import { requireAuth } from '../middlewares/auth';
 import { requirePermission } from '../middlewares/authorize';
+import { authRateLimitMiddleware } from '../middlewares';
 
 const router = Router();
 const authController = new AuthController();
 
 // Public routes
-router.post('/register', authController.register);
-router.post('/login', authController.login);
-router.post('/refresh-token', authController.refreshToken);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/verify-reset-token', authController.verifyResetToken);
-router.post('/reset-password', authController.resetPassword);
+router.post('/register', authRateLimitMiddleware, authController.register);
+router.post('/login', authRateLimitMiddleware, authController.login);
+router.post('/refresh-token', authRateLimitMiddleware, authController.refreshToken);
+router.post('/forgot-password', authRateLimitMiddleware, authController.forgotPassword);
+router.post('/verify-reset-token', authRateLimitMiddleware, authController.verifyResetToken);
+router.post('/reset-password', authRateLimitMiddleware, authController.resetPassword);
 
 // Protected routes
 router.use(requireAuth);
 
 router.get('/me', authController.getMe);
+router.patch('/profile', authController.updateUser); // Reuse updateUser but for self
 router.patch('/update-password', authController.updatePassword);
 router.post('/logout', authController.logout);
 

@@ -85,6 +85,7 @@ export class CategoryController {
       icon_public_id,
       language,
       modifier_groups,
+      suggested_products,
     } = req.body;
     const business_id = req.user?.business_id || req.body.business_id || 'default';
 
@@ -103,6 +104,17 @@ export class CategoryController {
       }
     }
 
+    // Parse suggested_products if it's a string
+    let parsedSuggestedProducts = undefined;
+    if (suggested_products !== undefined) {
+      try {
+        parsedSuggestedProducts =
+          typeof suggested_products === 'string' ? JSON.parse(suggested_products) : suggested_products;
+      } catch (error) {
+        throw new ValidationError('Invalid suggested_products format. Expected JSON array.');
+      }
+    }
+
     const normalizedKitchenSectionId = await this.normalizeKitchenSectionId(kitchen_section_id);
 
     try {
@@ -118,6 +130,7 @@ export class CategoryController {
         icon_public_id,
         language,
         modifier_groups: parsedModifierGroups,
+        suggested_products: parsedSuggestedProducts,
         apply_modifier_groups_to_items:
           req.body.apply_modifier_groups_to_items === 'true' ||
           req.body.apply_modifier_groups_to_items === true,
@@ -176,6 +189,7 @@ export class CategoryController {
       icon_public_id,
       language,
       modifier_groups,
+      suggested_products,
       delete_icon, // Extract flag
     } = req.body;
 
@@ -196,8 +210,26 @@ export class CategoryController {
       }
     }
 
+    // Parse suggested_products if it's a string
+    let parsedSuggestedProducts = undefined;
+    if (suggested_products !== undefined) {
+      try {
+        parsedSuggestedProducts =
+          typeof suggested_products === 'string' ? JSON.parse(suggested_products) : suggested_products;
+        console.log('📦 Parsed suggested_products:', parsedSuggestedProducts);
+      } catch (error) {
+        console.error('❌ Error parsing suggested_products:', error);
+        throw new ValidationError('Invalid suggested_products format. Expected JSON array.');
+      }
+    }
+
     const normalizedKitchenSectionId = await this.normalizeKitchenSectionId(kitchen_section_id, {
       allowNullOnEmpty: true,
+    });
+
+    console.log('📝 Updating category with payload:', {
+      name,
+      suggested_products: parsedSuggestedProducts,
     });
 
     const category = await this.updateCategoryUseCase.execute(
@@ -217,6 +249,7 @@ export class CategoryController {
         icon_public_id,
         language,
         modifier_groups: parsedModifierGroups,
+        suggested_products: parsedSuggestedProducts,
         apply_modifier_groups_to_items:
           req.body.apply_modifier_groups_to_items === 'true' ||
           req.body.apply_modifier_groups_to_items === true,
@@ -264,15 +297,24 @@ export class CategoryController {
 
   updateSortOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { items } = req.body;
+    console.log('🔄 Category Sort Order Update:', { 
+      hasItems: !!items, 
+      isArray: Array.isArray(items),
+      count: Array.isArray(items) ? items.length : 0 
+    });
 
     if (!items || !Array.isArray(items)) {
       throw new ValidationError('items array is required');
     }
 
-    const repo = new CategoryRepository();
-    await repo.updateSortOrder(items);
-
-    return sendSuccess(res, 'Category sort order updated successfully');
+    try {
+      const repo = new CategoryRepository();
+      await repo.updateSortOrder(items);
+      return sendSuccess(res, 'Category sort order updated successfully');
+    } catch (error: any) {
+      console.error('❌ Failed to update category sort order:', error);
+      throw error;
+    }
   });
 
   exportCategories = asyncHandler(async (req: AuthRequest, res: Response) => {
