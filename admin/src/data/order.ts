@@ -386,6 +386,13 @@ export const useDownloadInvoiceMutation = (
   });
 };
 
+// export function useReprintOrderMutation() {
+//   return useMutation({
+//     mutationFn: ({ id, printerId }: { id: string; printerId?: string }) =>
+//       orderClient.reprint(id, printerId),
+//   });
+// }
+
 export function useOrderSeen() {
   const queryClient = useQueryClient();
   const { t } = useTranslation('common');

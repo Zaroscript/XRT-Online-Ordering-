@@ -10,6 +10,7 @@ import Loader from '@/components/ui/loader/loader';
 import {
   useDownloadInvoiceMutation,
   useOrderQuery,
+  useReprintOrderMutation,
   useUpdateOrderMutation,
 } from '@/data/order';
 import { useTranslation } from 'next-i18next';
@@ -17,6 +18,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { useIsRTL } from '@/utils/locals';
+import { toast } from 'react-toastify';
 
 type FormValues = {
   order_status?: string;
@@ -29,6 +31,7 @@ export default function OrderDetailsPage() {
   const orderId = query.orderId as string;
 
   const { mutate: updateOrder, isPending: updating } = useUpdateOrderMutation();
+  const { mutate: reprintOrder, isPending: reprinting } = useReprintOrderMutation();
 
   const {
     order,
@@ -64,6 +67,17 @@ export default function OrderDetailsPage() {
     });
   };
 
+  function handleReprint() {
+    if (!order?.id) return;
+    reprintOrder(
+      { id: order.id },
+      {
+        onSuccess: () => toast.success('Reprint sent to printer'),
+        onError: (e: any) => toast.error(e?.message ?? 'Reprint failed'),
+      },
+    );
+  }
+
   async function handleDownloadInvoice() {
     const { data } = await refetch();
     if (data) {
@@ -83,6 +97,8 @@ export default function OrderDetailsPage() {
       <OrderHeader
         order={order}
         onDownloadInvoice={handleDownloadInvoice}
+        onReprint={handleReprint}
+        reprinting={reprinting}
         loading={loading}
       />
 

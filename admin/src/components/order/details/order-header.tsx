@@ -1,6 +1,7 @@
 import { useTranslation } from 'next-i18next';
 import Button from '@/components/ui/button';
 import { DownloadIcon } from '@/components/icons/download-icon';
+import { PrinterIcon } from '@/components/icons/printer-icon';
 import StatusColor from '@/components/order/status-color';
 import Badge from '@/components/ui/badge/badge';
 import { useModalAction } from '@/components/ui/modal/modal.context';
@@ -15,12 +16,16 @@ import { formatOrderTrackingLabel } from '@/utils/order-tracking';
 interface OrderHeaderProps {
   order: any;
   onDownloadInvoice: () => void;
+  onReprint?: () => void;
+  reprinting?: boolean;
   loading?: boolean;
 }
 
 export default function OrderHeader({
   order,
   onDownloadInvoice,
+  onReprint,
+  reprinting,
   loading,
 }: OrderHeaderProps) {
   const { t } = useTranslation('common');
@@ -96,6 +101,18 @@ export default function OrderHeader({
             className="!text-red-500 hover:!bg-red-50 border-red-500 hover:border-red-500 w-full sm:w-auto"
           >
             {refundButtonLabel}
+          </Button>
+        )}
+        {onReprint && (
+          <Button
+            onClick={onReprint}
+            loading={reprinting}
+            variant="outline"
+            className="w-full sm:w-auto"
+            title="Reprint order ticket on thermal printer"
+          >
+            <PrinterIcon className="h-4 w-4 me-2" />
+            Reprint
           </Button>
         )}
         <Button

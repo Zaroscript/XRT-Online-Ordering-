@@ -4,7 +4,8 @@ import { PrintTemplateRepository } from '../../infrastructure/repositories/Print
 import { PrintJobRepository } from '../../infrastructure/repositories/PrintJobRepository';
 import { groupOrderItemsByKitchenSection } from '../../shared/utils/kitchenSectionGrouping';
 import { buildTemplateDataFromOrder, renderTemplate } from './templateEngine';
-import { OrderPrintStatus } from '../../domain/entities/Order';
+import { Order, OrderItem, OrderPrintStatus } from '../../domain/entities/Order';
+import { Printer } from '../../domain/entities/Printer';
 import { TemplateLayout } from '../../domain/entities/PrintTemplate';
 import { logger } from '../../shared/utils/logger';
 import { env } from '../../shared/config/env';
@@ -27,31 +28,138 @@ const orderRepository = new OrderRepository();
 const printerRepository = new PrinterRepository();
 const printTemplateRepository = new PrintTemplateRepository();
 const printJobRepository = new PrintJobRepository();
-let printJobNotifier: PrintJobNotifier | null = null;
 
-export function setPrintJobNotifier(io: SocketIOServer): void {
-  printJobNotifier = new PrintJobNotifier(io);
+/** Build base64 ESC/POS buffers for a printer using its assigned templates (or default layout). */
+async function renderForPrinter(
+  printer: Printer,
+  order: Order,
+  itemsFilter: OrderItem[]
+): Promise<{ templateId: string; renderedContent: string; autoCut: boolean }[]> {
+  const templateIds =
+    printer.assigned_template_ids && printer.assigned_template_ids.length > 0
+      ? printer.assigned_template_ids
+      : [null];
+
+  const rendered = [];
+  for (const templateId of templateIds) {
+    const template = templateId ? await printTemplateRepository.findById(templateId) : null;
+    const layout = template?.layout ?? DEFAULT_KITCHEN_LAYOUT;
+    const paperWidth = template?.paper_width ?? '80mm';
+    const autoCut = template?.autoCut ?? true;
+    const data = buildTemplateDataFromOrder(order, { itemsFilter });
+    const escPosString = renderTemplate(layout, data, { paperWidth });
+    const buffer = Buffer.from(escPosString, 'utf8');
+    rendered.push({
+      templateId: templateId || 'DEFAULT',
+      renderedContent: buffer.toString('base64'),
+      autoCut,
+    });
+  }
+  return rendered;
 }
 
-/** Socket push for queued jobs (browser Web Serial agent or future workers). */
-export function notifyQueuedPrintJob(
-  restaurantId: string,
-  job: {
-    id: string;
-    renderedTemplates: Array<{ renderedContent: string }>;
-    printerInterface: string;
+/** Dispatch rendered templates to one printer (direct or queue). Updates order print_status. */
+async function dispatchToPrinter(
+  printer: Printer,
+  order: Order,
+  renderedTemplates: { templateId: string; renderedContent: string; autoCut: boolean }[]
+): Promise<void> {
+  if (renderedTemplates.length === 0) return;
+
+  if (env.PRINT_MODE === 'mock') {
+    logger.info(
+      `[PrintRouting][MOCK] Order ${order.order_number} → ${printer.name} (${renderedTemplates.length} template(s))`
+    );
+    await orderRepository.updatePrintStatus(order.id, printer.id, 'sent');
+    void recordPrinterLog({
+      printer_id: printer.id,
+      printer_name: printer.name,
+      event_type: 'order_mock_print',
+      level: 'info',
+      message: `Mock print simulated for order ${order.order_number}`,
+      order_id: order.id,
+      order_number: order.order_number,
+      metadata: { templates: renderedTemplates.length },
+    });
+    return;
   }
-): void {
-  if (!restaurantId || !printJobNotifier) return;
-  printJobNotifier.notify(restaurantId, job);
+
+  if (env.PRINT_DELIVERY === 'direct') {
+    try {
+      await sendRenderedTemplatesToPrinter(printer, renderedTemplates);
+      await orderRepository.updatePrintStatus(order.id, printer.id, 'sent');
+      logger.info(
+        `[PrintRouting][DIRECT] Order ${order.order_number} printed on ${printer.name} (${renderedTemplates.length} template(s))`
+      );
+      void recordPrinterLog({
+        printer_id: printer.id,
+        printer_name: printer.name,
+        event_type: 'order_direct_print',
+        level: 'success',
+        message: `Direct print succeeded for order ${order.order_number}`,
+        order_id: order.id,
+        order_number: order.order_number,
+        metadata: { templates: renderedTemplates.length },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error(
+        `[PrintRouting][DIRECT] Order ${order.order_number} print FAILED on ${printer.name}: ${msg}`
+      );
+      await orderRepository.updatePrintStatus(order.id, printer.id, 'failed', msg);
+      void recordPrinterLog({
+        printer_id: printer.id,
+        printer_name: printer.name,
+        event_type: 'order_direct_failed',
+        level: 'error',
+        message: `Direct print failed for order ${order.order_number}`,
+        order_id: order.id,
+        order_number: order.order_number,
+        error: msg,
+        metadata: { templates: renderedTemplates.length },
+      });
+    }
+    return;
+  }
+
+  // Queue mode
+  const job = await printJobRepository.create({
+    orderId: order.id,
+    printerId: printer.id,
+    maxRetries: printer.maxRetries ?? 3,
+    renderedTemplates,
+  });
+  await orderRepository.updatePrintStatus(order.id, printer.id, 'sent');
+  logger.info(
+    `[PrintRouting][QUEUE] Order ${order.order_number} queued for ${printer.name} (${renderedTemplates.length} template(s))`
+  );
+  void recordPrinterLog({
+    printer_id: printer.id,
+    printer_name: printer.name,
+    event_type: 'order_queued',
+    level: 'info',
+    message: `Print job queued for order ${order.order_number}`,
+    order_id: order.id,
+    order_number: order.order_number,
+    print_job_id: job.id,
+    metadata: { templates: renderedTemplates.length },
+  });
 }
 
 /**
- * Route an order to all active printers for each kitchen section.
- * Groups items by section, finds printers per section, renders template,
- * In queue mode: stores PrintJobs for a worker to claim.
- * In direct mode (PRINT_DELIVERY=direct): prints immediately from the API server.
- * Uses order.print_status to avoid duplicate PrintJob assignments.
+ * Route an order to all active printers.
+ *
+ * Two printer types are handled:
+ *
+ * 1. CASHIER printers (kitchen_sections = []):
+ *    Receive the FULL order — all items across all sections, including modifiers.
+ *    Use this for the receipt printer at the counter.
+ *
+ * 2. KITCHEN printers (kitchen_sections = ['Grill', 'Bar', ...]):
+ *    Receive only the items belonging to their section(s).
+ *    Use this for kitchen display/ticket printers.
+ *
+ * Duplicate prevention: order.print_status tracks which printers already received a job.
  */
 export async function routeOrderToPrinters(orderId: string): Promise<void> {
   if (!orderId) {
@@ -65,142 +173,55 @@ export async function routeOrderToPrinters(orderId: string): Promise<void> {
       return;
     }
 
-    const sections = groupOrderItemsByKitchenSection(order);
+    // Fetch all active printers once
+    const allPrinters = await printerRepository.findAll({ active: true });
+    if (allPrinters.length === 0) {
+      logger.warn(`[PrintRouting] No active printers configured — order ${order.order_number} will not print`);
+      return;
+    }
+
     const printedPrinterIds = new Set(
       (order.print_status || [])
         .filter((ps: OrderPrintStatus) => ps.status === 'sent')
         .map((ps: OrderPrintStatus) => ps.printer_id)
     );
 
+    // ── Pass 1: Cashier printers (no sections = full order receipt) ──────────
+    const cashierPrinters = allPrinters.filter(
+      (p) => !p.kitchen_sections || p.kitchen_sections.length === 0
+    );
+
+    for (const printer of cashierPrinters) {
+      if (printedPrinterIds.has(printer.id)) continue;
+      const rendered = await renderForPrinter(printer, order, order.items);
+      await dispatchToPrinter(printer, order, rendered);
+      printedPrinterIds.add(printer.id);
+    }
+
+    // ── Pass 2: Kitchen printers (section-specific items only) ───────────────
+    const sections = groupOrderItemsByKitchenSection(order);
     for (const { sectionName, items } of sections) {
       if (items.length === 0) continue;
 
-      const printers = await printerRepository.findAll({
-        active: true,
-        kitchen_section: sectionName,
-      });
+      const kitchenPrinters = allPrinters.filter(
+        (p) =>
+          p.kitchen_sections &&
+          p.kitchen_sections.length > 0 &&
+          p.kitchen_sections.includes(sectionName)
+      );
 
-      for (const printer of printers) {
+      if (kitchenPrinters.length === 0) {
+        logger.warn(
+          `[PrintRouting] No kitchen printer configured for section "${sectionName}" — ${items.length} item(s) skipped`
+        );
+        continue;
+      }
+
+      for (const printer of kitchenPrinters) {
         if (printedPrinterIds.has(printer.id)) continue;
-
-        const templateIds =
-          printer.assigned_template_ids && printer.assigned_template_ids.length > 0
-            ? printer.assigned_template_ids
-            : [null];
-
-        const renderedTemplates = [];
-
-        for (const templateId of templateIds) {
-          const template = templateId ? await printTemplateRepository.findById(templateId) : null;
-          const layout = template?.layout ?? DEFAULT_KITCHEN_LAYOUT;
-          const paperWidth = template?.paper_width ?? '80mm';
-          const autoCut = template?.autoCut ?? true;
-          const data = buildTemplateDataFromOrder(order, { itemsFilter: items });
-          const escPosString = renderTemplate(layout, data, { paperWidth });
-          const buffer = Buffer.from(escPosString, 'utf8');
-
-          renderedTemplates.push({
-            templateId: templateId || 'DEFAULT',
-            renderedContent: buffer.toString('base64'),
-            autoCut,
-          });
-        }
-
-        let routedOk = false;
-
-        if (renderedTemplates.length > 0) {
-          if (env.PRINT_MODE === 'mock') {
-            logger.info(
-              `[PrintRouting][MOCK MODE] Order ${order.order_number} simulated print to ${printer.name} (${printer.id}) with ${renderedTemplates.length} templates`
-            );
-            await orderRepository.updatePrintStatus(orderId, printer.id, 'sent');
-            routedOk = true;
-            void recordPrinterLog({
-              printer_id: printer.id,
-              printer_name: printer.name,
-              event_type: 'order_mock_print',
-              level: 'info',
-              message: `Mock print simulated for order ${order.order_number}`,
-              order_id: order.id,
-              order_number: order.order_number,
-              metadata: { templates: renderedTemplates.length },
-            });
-          } else if (env.PRINT_DELIVERY === 'direct') {
-            try {
-              await sendRenderedTemplatesToPrinter(printer, renderedTemplates);
-              await orderRepository.updatePrintStatus(orderId, printer.id, 'sent');
-              routedOk = true;
-              logger.info(
-                `[PrintRouting][DIRECT] Order ${order.order_number} printed on ${printer.name} (${printer.id}), ${renderedTemplates.length} template(s)`
-              );
-              void recordPrinterLog({
-                printer_id: printer.id,
-                printer_name: printer.name,
-                event_type: 'order_direct_print',
-                level: 'success',
-                message: `Direct print succeeded for order ${order.order_number}`,
-                order_id: order.id,
-                order_number: order.order_number,
-                metadata: { templates: renderedTemplates.length },
-              });
-            } catch (err) {
-              const msg = err instanceof Error ? err.message : String(err);
-              logger.error(
-                `[PrintRouting][DIRECT] Order ${order.order_number} print failed on ${printer.name} (${printer.id}): ${msg}`,
-                err
-              );
-              await orderRepository.updatePrintStatus(orderId, printer.id, 'failed', msg);
-              void recordPrinterLog({
-                printer_id: printer.id,
-                printer_name: printer.name,
-                event_type: 'order_direct_failed',
-                level: 'error',
-                message: `Direct print failed for order ${order.order_number}`,
-                order_id: order.id,
-                order_number: order.order_number,
-                error: msg,
-                metadata: { templates: renderedTemplates.length },
-              });
-            }
-          } else {
-            const savedJob = await printJobRepository.create({
-              orderId: order.id,
-              printerId: printer.id,
-              maxRetries: printer.maxRetries ?? 3,
-              renderedTemplates,
-            });
-            const restaurantId = order.business_id;
-            if (printJobNotifier) {
-              printJobNotifier.notify(restaurantId, {
-                id: savedJob.id,
-                renderedTemplates: savedJob.renderedTemplates,
-                printerInterface: printer.interface,
-              });
-            }
-
-            await orderRepository.updatePrintStatus(orderId, printer.id, 'sent');
-            routedOk = true;
-
-            logger.info(
-              `[PrintRouting] Order ${order.order_number} queued for printer ${printer.name} (${printer.id}) with ${renderedTemplates.length} templates`
-            );
-            void recordPrinterLog({
-              printer_id: printer.id,
-              printer_name: printer.name,
-              event_type: 'order_queued',
-              level: 'info',
-              message: `Print job queued for order ${order.order_number}`,
-              order_id: order.id,
-              order_number: order.order_number,
-              print_job_id: savedJob.id,
-              metadata: { templates: renderedTemplates.length },
-            });
-          }
-        }
-
-        if (renderedTemplates.length === 0 || routedOk) {
-          printedPrinterIds.add(printer.id);
-        }
+        const rendered = await renderForPrinter(printer, order, items);
+        await dispatchToPrinter(printer, order, rendered);
+        printedPrinterIds.add(printer.id);
       }
     }
   } catch (err) {

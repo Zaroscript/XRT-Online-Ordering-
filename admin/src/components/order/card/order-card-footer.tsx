@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 import { DatePicker } from 'rsuite';
 import 'rsuite/dist/rsuite-no-reset.min.css';
 import dayjs from 'dayjs';
+import PrintOrderButton from '@/components/order/print-order-button';
 
 interface OrderCardFooterProps {
   order: Order;
@@ -427,6 +428,8 @@ export const OrderCardFooter = ({
           <span className="text-xl text-accent">{total}</span>
         </div>
       </div>
+
+      <PrintOrderButton orderId={String(order.id)} />
 
       {renderAction()}
     </div>

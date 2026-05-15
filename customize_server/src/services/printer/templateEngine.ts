@@ -23,7 +23,7 @@ const CHAR_WIDTH_80MM = 48;
 const ESC = '\x1b';
 const ESC_INIT = ESC + '@';
 const GS = '\x1d';
-const CUT_FULL = GS + 'V\x00';
+const CUT_FULL = GS + 'V\x41\x00'; // GS V A — partial cut, compatible with TM-L90
 
 /**
  * Renders a dynamic template layout into an ESC/POS-compatible string.
@@ -63,7 +63,7 @@ export function renderTemplate(
   processBlocks(templateLayout.footer);
 
   const body = lines.join('\n');
-  return ESC_INIT + '\n' + body + '\n' + CUT_FULL;
+  return ESC_INIT + body + '\n' + CUT_FULL;
 }
 
 /**
