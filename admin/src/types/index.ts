@@ -1430,6 +1430,7 @@ export interface SettingsOptions {
     auto_accept_order_types?: string[];
     auto_accept_ready_time_pickup?: number;
     auto_accept_ready_time_delivery?: number;
+    auto_accept_after_minutes?: number;
   };
   operating_hours?: {
     auto_close?: boolean;
@@ -1616,6 +1617,7 @@ export interface SettingsOptionsInput {
     auto_accept_order_types?: string[];
     auto_accept_ready_time_pickup?: number;
     auto_accept_ready_time_delivery?: number;
+    auto_accept_after_minutes?: number;
   };
   operating_hours?: {
     auto_close?: boolean;

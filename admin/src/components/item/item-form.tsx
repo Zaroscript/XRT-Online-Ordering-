@@ -7,7 +7,7 @@ import { CreateItemInput, UpdateItemInput, ItemSizeConfig } from '@/types';
 import { useTranslation } from 'next-i18next';
 import { useShopQuery } from '@/data/shop';
 import Alert from '@/components/ui/alert';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getErrorMessage } from '@/utils/form-error';
 import { useCreateItemMutation, useUpdateItemMutation } from '@/data/item';
 import { useMeQuery } from '@/data/user';
@@ -352,15 +352,39 @@ export default function CreateOrUpdateItemForm({
     }
   }, [modifierGroups, allModifiersList, isInitialized, initialValues?.id]);
 
+  const previousCategoryRef = useRef<string | null>(null);
+
   // Auto-populate modifier groups from the selected category's configuration
   useEffect(() => {
-    if (!isInitialized || !selectedCategory || !modifierGroupsFiltered.length) return;
+    if (!isInitialized || !modifierGroupsFiltered.length) return;
 
     // Get the full category object — selectedCategory may be just an ID or a full object
-    const categoryId =
-      typeof selectedCategory === 'object'
-        ? selectedCategory?.id || selectedCategory?._id
-        : selectedCategory;
+    const categoryId = selectedCategory
+      ? (typeof selectedCategory === 'object' ? selectedCategory?.id || selectedCategory?._id : selectedCategory)
+      : null;
+
+    if (!categoryId) return;
+
+    const initialCatId = initialValues?.category 
+      ? (typeof initialValues.category === 'object' ? initialValues.category?.id || (initialValues.category as any)?._id : initialValues.category)
+      : null;
+
+    // Track category changes to avoid overwriting user edits unless the category actually changed
+    if (previousCategoryRef.current === null) {
+      previousCategoryRef.current = categoryId;
+      // If we are editing an existing item, and we just loaded, do not overwrite 
+      // unless current groups are empty
+      if (initialValues && initialCatId === categoryId) {
+        const currentGroups = getValues('modifier_assignment.modifier_groups') || [];
+        if (currentGroups.length > 0) return;
+      }
+    } else if (previousCategoryRef.current === categoryId) {
+      // Category hasn't changed since last evaluation
+      return;
+    } else {
+      // Category HAS changed
+      previousCategoryRef.current = categoryId;
+    }
 
     const fullCategory = categories?.find(
       (c: any) => c.id === categoryId || c._id === categoryId,
@@ -382,8 +406,6 @@ export default function CreateOrUpdateItemForm({
       },
     ).filter(Boolean);
 
-    if (categoryGroupIds.length === 0) return;
-
     // Map IDs to full group objects from the loaded modifier groups
     const groupsToSet = categoryGroupIds
       .map((id: string) =>
@@ -393,22 +415,12 @@ export default function CreateOrUpdateItemForm({
       )
       .filter(Boolean);
 
-    if (groupsToSet.length === 0) return;
-
-    const currentGroups = getValues('modifier_assignment.modifier_groups') || [];
-
-    // For a new item: always sync from category.
-    // For an existing item: only fill in if no groups are already assigned.
-    if (!initialValues) {
-      setValue('modifier_assignment.modifier_groups', groupsToSet, {
-        shouldValidate: false,
-      });
-    } else if (currentGroups.length === 0) {
-      setValue('modifier_assignment.modifier_groups', groupsToSet, {
-        shouldValidate: false,
-      });
-    }
-  }, [selectedCategory, modifierGroupsFiltered, categories, isInitialized]);
+    // Overwrite the modifiers for this item with the category's defaults.
+    // If the category has NO modifiers, this will set [] and clear the field correctly.
+    setValue('modifier_assignment.modifier_groups', groupsToSet, {
+      shouldValidate: false,
+    });
+  }, [selectedCategory, modifierGroupsFiltered, categories, isInitialized, initialValues, getValues, setValue]);
 
   // Form submission
   const onSubmit = async (values: any) => {

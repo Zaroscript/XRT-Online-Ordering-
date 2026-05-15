@@ -26,6 +26,7 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import SelectInput from '@/components/ui/select-input';
 import { CURRENCY } from '@/data/currencies';
 import { CURRENCY_FORMATS } from '@/data/currency-formats';
+import { timezones } from '@/data/timezones';
 
 const DAYS = [
   'Monday',
@@ -75,6 +76,7 @@ type ShopFormValues = {
     auto_accept_order_types?: any;
     auto_accept_ready_time_pickup?: number;
     auto_accept_ready_time_delivery?: number;
+    auto_accept_after_minutes?: number;
   };
   delivery?: {
     enabled?: boolean;
@@ -154,7 +156,7 @@ export default function SettingsForm({ settings }: IProps) {
       siteTitle: options?.siteTitle ?? '',
       siteSubtitle: options?.siteSubtitle ?? '',
       minimumOrderAmount: options?.minimumOrderAmount ?? 0,
-      timezone: options?.timezone ?? 'America/New_York',
+      timezone: options?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'America/New_York',
       currency: options?.currency ?? 'USD',
       currencyOptions: {
         formation: options?.currencyOptions?.formation ?? 'en-US',
@@ -187,6 +189,7 @@ export default function SettingsForm({ settings }: IProps) {
         ) ?? [],
         auto_accept_ready_time_pickup: options?.orders?.auto_accept_ready_time_pickup ?? 0,
         auto_accept_ready_time_delivery: options?.orders?.auto_accept_ready_time_delivery ?? 0,
+        auto_accept_after_minutes: options?.orders?.auto_accept_after_minutes ?? 0,
       },
       delivery: {
         enabled: options?.delivery?.enabled ?? false,
@@ -317,6 +320,7 @@ export default function SettingsForm({ settings }: IProps) {
           ),
           auto_accept_ready_time_pickup: Number(values?.orders?.auto_accept_ready_time_pickup ?? 0),
           auto_accept_ready_time_delivery: Number(values?.orders?.auto_accept_ready_time_delivery ?? 0),
+          auto_accept_after_minutes: Number(values?.orders?.auto_accept_after_minutes ?? 0),
         },
         footer_text: options?.footer_text,
         copyrightText: options?.copyrightText,
@@ -743,6 +747,14 @@ export default function SettingsForm({ settings }: IProps) {
                   type="number"
                   variant="outline"
                   error={t(errors.orders?.auto_accept_ready_time_delivery?.message!)}
+                />
+                <Input
+                  label={t('form:input-label-auto-accept-after')}
+                  toolTipText={t('form:input-helper-auto-accept-after')}
+                  {...register('orders.auto_accept_after_minutes')}
+                  type="number"
+                  variant="outline"
+                  error={t(errors.orders?.auto_accept_after_minutes?.message!)}
                 />
               </div>
             )}

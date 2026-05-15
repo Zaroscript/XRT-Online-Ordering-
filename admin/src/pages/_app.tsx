@@ -20,6 +20,14 @@ import {
   saveCachedAdminThemeColors,
 } from '@/utils/theme-utils';
 import dynamic from 'next/dynamic';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+// Extend dayjs globally once at module load so all dayjs() calls across the
+// dashboard can use the store's configured IANA timezone via dayjs.tz.setDefault().
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const ReactQueryDevtools = dynamic(
   () =>
@@ -78,12 +86,18 @@ const AppSettings: React.FC<{ children?: React.ReactNode }> = (props) => {
       const cached = readCachedAdminThemeColors();
       if (cached) {
         applyAdminBrandTheme(cached);
-        return;
       }
 
       if (settings?.options) {
         applyAdminBrandTheme(settings.options as any);
         saveCachedAdminThemeColors(settings.options as any);
+
+        // Apply the store's configured timezone so all dayjs() calls in the
+        // admin dashboard display dates in the correct local business timezone.
+        const tz = (settings.options as any).timezone;
+        if (tz) {
+          dayjs.tz.setDefault(tz);
+        }
       }
       return;
     }
@@ -153,7 +167,8 @@ const CustomApp = ({ Component, pageProps }: AppPropsWithLayout) => {
               if (failureCount > 2) return false;
               return true;
             },
-            refetchOnWindowFocus: false,
+            refetchOnWindowFocus: true,
+            refetchInterval: 30000,
           },
         },
       }),

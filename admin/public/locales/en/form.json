@@ -1217,6 +1217,8 @@
   "input-helper-pickup-ready-time": "Standard time required to prepare a pickup order",
   "input-label-delivery-ready-time": "Default Delivery Ready Time (minutes)",
   "input-helper-delivery-ready-time": "Standard time required to prepare a delivery order",
+  "input-label-auto-accept-after": "Auto Accept After (Min)",
+  "input-helper-auto-accept-after": "Wait time in minutes before an order is auto-accepted. Set to 0 to accept immediately",
   "text-sample-output": "Sample Output",
   "text-open": "Open",
   "text-close": "Close",

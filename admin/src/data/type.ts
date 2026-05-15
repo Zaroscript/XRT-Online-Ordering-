@@ -103,7 +103,7 @@ export const useTypeQuery = ({ slug, language }: GetParams) => {
       } as any);
     },
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -128,7 +128,7 @@ export const useTypesQuery = (options?: Partial<TypeQueryOptions>) => {
     ] as any),
     placeholderData: (previousData) => previousData,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 
   return {

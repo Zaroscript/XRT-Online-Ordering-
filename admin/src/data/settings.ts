@@ -97,7 +97,7 @@ export const useSettingsQuery = ({ language }: { language: string }) => {
     queryKey: [API_ENDPOINTS.SETTINGS, { language }],
     queryFn: () => settingsClient.all({ language }),
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     enabled: !!token,
   });
 
@@ -118,7 +118,7 @@ export const useSeoSettingsQuery = (options?: { locale?: string; enabled?: boole
     queryKey: [API_ENDPOINTS.SETTINGS_SEO, { locale: options?.locale ?? 'en' }],
     queryFn: () => settingsClient.getSeo({ locale: options?.locale ?? 'en' }),
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     enabled: options?.enabled ?? true,
   });
 };
@@ -128,7 +128,7 @@ export const useSeoHealthScoreQuery = (options?: { locale?: string; enabled?: bo
     queryKey: [API_ENDPOINTS.SETTINGS_SEO_HEALTH, { locale: options?.locale ?? 'en' }],
     queryFn: () => settingsClient.getSeoHealth({ locale: options?.locale ?? 'en' }),
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     enabled: options?.enabled ?? true,
   });
 };

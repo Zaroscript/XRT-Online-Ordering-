@@ -947,6 +947,8 @@
     "input-helper-pickup-ready-time": "الوقت القياسي المطلوب لتجهيز طلب الاستلام",
     "input-label-delivery-ready-time": "وقت التجهيز الافتراضي للتوصيل (بالدقائق)",
     "input-helper-delivery-ready-time": "الوقت القياسي المطلوب لتجهيز طلب التوصيل",
+    "input-label-auto-accept-after": "قبول تلقائي بعد (دقائق)",
+    "input-helper-auto-accept-after": "وقت الانتظار بالدقائق قبل القبول التلقائي للطلب. اضبطه على 0 للقبول فوراً.",
     "text-sample-output": "عينة الناتج",
     "text-open": "فتح",
     "text-close": "إغلاق",

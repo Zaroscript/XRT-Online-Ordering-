@@ -32,7 +32,7 @@ export const useMeQuery = () => {
     queryKey: [API_ENDPOINTS.ME],
     queryFn: userClient.me,
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     refetchOnMount: false,
     refetchOnReconnect: false,
     staleTime: Infinity,

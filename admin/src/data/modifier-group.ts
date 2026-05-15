@@ -160,7 +160,7 @@ export const useModifierGroupQuery = ({
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
     retry: 2,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 
   const group = ((data as any)?.data || data) as ModifierGroup | undefined;
