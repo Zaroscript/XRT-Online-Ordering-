@@ -23,7 +23,14 @@ const CHAR_WIDTH_80MM = 48;
 const ESC = '\x1b';
 const ESC_INIT = ESC + '@';
 const GS = '\x1d';
-const CUT_FULL = GS + 'V\x41\x00'; // GS V A — partial cut, compatible with TM-L90
+const CUT_FULL = GS + 'V\x41\x00'; // GS V A 0 — partial cut, TM-L90 compatible
+
+/**
+ * Feed n lines forward using ESC d n.
+ * Ensures the last printed line clears the cutter head (~4-5 lines above print head).
+ * We use 6 lines as a safe margin for the TM-L90.
+ */
+const FEED_BEFORE_CUT = ESC + '\x64\x06'; // ESC d 6
 
 /**
  * Renders a dynamic template layout into an ESC/POS-compatible string.
@@ -63,7 +70,9 @@ export function renderTemplate(
   processBlocks(templateLayout.footer);
 
   const body = lines.join('\n');
-  return ESC_INIT + body + '\n' + CUT_FULL;
+  // ESC d 6 feeds 6 blank lines to push last content past the cutter head,
+  // then GS V A fires the cut. Without this the bottom ~5 lines stay trapped.
+  return ESC_INIT + body + '\n' + FEED_BEFORE_CUT + CUT_FULL;
 }
 
 /**

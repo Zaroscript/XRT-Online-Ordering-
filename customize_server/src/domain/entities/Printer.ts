@@ -1,4 +1,4 @@
-export type PrinterConnectionType = 'lan' | 'wifi' | 'bluetooth' | 'network' | 'usb';
+export type PrinterConnectionType = 'lan' | 'wifi' | 'bluetooth' | 'network' | 'usb' | 'printnode';
 
 export interface Printer {
   id: string;
@@ -13,6 +13,8 @@ export interface Printer {
   assigned_template_ids: string[];
   /** Kitchen section names this printer serves (multiple sections allowed) */
   kitchen_sections: string[];
+  /** PrintNode integer printer ID — only used when connection_type === 'printnode' */
+  printnode_printer_id?: number | null;
   active: boolean;
   autoPrint: boolean;
   maxRetries: number;
@@ -31,6 +33,7 @@ export interface CreatePrinterDTO {
   usbPort?: string;
   assigned_template_ids?: string[];
   kitchen_sections?: string[];
+  printnode_printer_id?: number | null;
   active?: boolean;
   autoPrint?: boolean;
   maxRetries?: number;
@@ -45,6 +48,7 @@ export interface UpdatePrinterDTO {
   usbPort?: string;
   assigned_template_ids?: string[];
   kitchen_sections?: string[];
+  printnode_printer_id?: number | null;
   active?: boolean;
   autoPrint?: boolean;
   maxRetries?: number;

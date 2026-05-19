@@ -2,6 +2,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { printerClient, Printer } from './client/printer';
 import { API_ENDPOINTS } from './client/api-endpoints';
 
+export const useListPrintNodePrintersQuery = (enabled: boolean) => {
+  return useQuery({
+    queryKey: [API_ENDPOINTS.PRINTER_PRINTNODE_PRINTERS],
+    queryFn: () => printerClient.listPrintNodePrinters(),
+    enabled,
+    staleTime: 60_000,
+  });
+};
+
 export const usePrinterDiscoverSerialQuery = (enabled: boolean) => {
   return useQuery({
     queryKey: [API_ENDPOINTS.PRINTERS, 'discover-serial'],

@@ -13,6 +13,8 @@ router.get('/scan', requireAuth, requirePermission('printers:scan'), printerCont
 router.get('/scan-lan', requireAuth, requirePermission('printers:scan'), printerController.scanLAN);
 router.get('/scan-bluetooth', requireAuth, requirePermission('printers:scan'), printerController.scanBluetooth);
 router.get('/discover-serial', requireAuth, requirePermission('printers:scan'), printerController.discoverSerial);
+router.get('/printnode-printers', requireAuth, requirePermission('printers:read'), printerController.listPrintNodePrinters);
+router.get('/printnode-status', requireAuth, requirePermission('printers:read'), printerController.checkPrintNodeStatus);
 router.get('/:id/logs', requireAuth, requirePermission('printers:read'), printerLogController.listByPrinterId);
 router.get('/:id', requireAuth, requirePermission('printers:read'), printerController.getById);
 router.post('/', requireAuth, requirePermission('printers:create'), printerController.create);

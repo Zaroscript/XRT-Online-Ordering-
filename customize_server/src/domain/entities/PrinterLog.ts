@@ -6,10 +6,14 @@ export type PrinterLogEventType =
   | 'order_direct_failed'
   | 'order_queued'
   | 'order_mock_print'
+  | 'order_printnode_print'
+  | 'order_printnode_failed'
   | 'test_direct_print'
   | 'test_direct_failed'
   | 'test_queued'
   | 'test_mock_print'
+  | 'test_printnode_print'
+  | 'test_printnode_failed'
   | 'connection_check';
 
 export interface PrinterLog {

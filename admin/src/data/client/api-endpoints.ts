@@ -101,6 +101,8 @@ export const API_ENDPOINTS = {
   PRINTER_SCAN_LAN: 'printers/scan-lan',
   PRINTER_SCAN_BLUETOOTH: 'printers/scan-bluetooth',
   PRINTER_DISCOVER_SERIAL: 'printers/discover-serial',
+  PRINTER_PRINTNODE_PRINTERS: 'printers/printnode-printers',
+  PRINTER_PRINTNODE_STATUS: 'printers/printnode-status',
   PRINTER_DETAIL: 'printers/:id',
   PRINTER_CHECK_CONNECTION: 'printers/:id/check-connection',
   PRINTER_TEST_PRINT: 'printers/:id/test-print',
