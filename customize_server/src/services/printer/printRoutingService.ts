@@ -11,6 +11,7 @@ import { logger } from '../../shared/utils/logger';
 import { env } from '../../shared/config/env';
 import { sendRenderedTemplatesToPrinter } from './directPrintService';
 import { recordPrinterLog } from './printerActivityLogger';
+import { submitPrintNodeJob } from './printNodeService';
 import { Server as SocketIOServer } from 'socket.io';
 import { PrintJobNotifier } from './printJobNotifier';
 
@@ -71,6 +72,79 @@ async function dispatchToPrinter(
   renderedTemplates: { templateId: string; renderedContent: string; autoCut: boolean }[]
 ): Promise<void> {
   if (renderedTemplates.length === 0) return;
+
+  // ── PrintNode mode ────────────────────────────────────────────────────────
+  if (printer.connection_type === 'printnode') {
+    if (!printer.printnode_printer_id) {
+      logger.error(
+        `[PrintRouting][PRINTNODE] Printer "${printer.name}" has no printnode_printer_id configured.`
+      );
+      await orderRepository.updatePrintStatus(order.id, printer.id, 'failed', 'Missing printnode_printer_id');
+      return;
+    }
+
+    // Combine all rendered templates into a single ESC/POS buffer.
+    // Each template ends with a CUT command (GS V A \x00 = 0x1d 0x56 0x41 0x00).
+    // Strip that 4-byte sequence from all templates EXCEPT the last so paper
+    // doesn't cut mid-receipt when multiple templates are assigned to one printer.
+    const CUT_SEQ = Buffer.from([0x1d, 0x56, 0x41, 0x00]);
+
+    const buffers = renderedTemplates.map((rt, idx) => {
+      const buf = Buffer.from(rt.renderedContent, 'base64');
+      const isLast = idx === renderedTemplates.length - 1;
+      if (isLast) return buf;
+
+      // Strip trailing CUT if present
+      if (
+        buf.length >= CUT_SEQ.length &&
+        buf.slice(buf.length - CUT_SEQ.length).equals(CUT_SEQ)
+      ) {
+        return buf.slice(0, buf.length - CUT_SEQ.length);
+      }
+      return buf;
+    });
+
+    const combinedBuffer = Buffer.concat(buffers);
+    const combinedBase64 = combinedBuffer.toString('base64');
+
+    try {
+      const jobId = await submitPrintNodeJob({
+        printNodePrinterId: printer.printnode_printer_id,
+        title: `Order #${order.order_number} — ${printer.name}`,
+        contentBase64: combinedBase64,
+      });
+      await orderRepository.updatePrintStatus(order.id, printer.id, 'sent');
+      logger.info(
+        `[PrintRouting][PRINTNODE] Order ${order.order_number} → ${printer.name} (PrintNode jobId=${jobId})`
+      );
+      void recordPrinterLog({
+        printer_id: printer.id,
+        printer_name: printer.name,
+        event_type: 'order_printnode_print',
+        level: 'success',
+        message: `PrintNode job submitted for order ${order.order_number}`,
+        order_id: order.id,
+        order_number: order.order_number,
+        metadata: { printNodeJobId: jobId, templates: renderedTemplates.length },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error(`[PrintRouting][PRINTNODE] Order ${order.order_number} FAILED on ${printer.name}: ${msg}`);
+      await orderRepository.updatePrintStatus(order.id, printer.id, 'failed', msg);
+      void recordPrinterLog({
+        printer_id: printer.id,
+        printer_name: printer.name,
+        event_type: 'order_printnode_failed',
+        level: 'error',
+        message: `PrintNode job failed for order ${order.order_number}`,
+        order_id: order.id,
+        order_number: order.order_number,
+        error: msg,
+        metadata: { templates: renderedTemplates.length },
+      });
+    }
+    return;
+  }
 
   if (env.PRINT_MODE === 'mock') {
     logger.info(
@@ -241,5 +315,18 @@ export async function routeOrderToPrinters(orderId: string): Promise<void> {
     }
   } catch (err) {
     logger.error(`[PrintRouting] routeOrderToPrinters failed for order ${orderId}:`, err);
+  }
+}
+
+/**
+ * Notify a queued print job via Socket.io.
+ * Exported so PrinterController.testPrint can use it directly.
+ */
+export function notifyQueuedPrintJob(
+  restaurantId: string,
+  job: { id: string; renderedTemplates: Array<{ renderedContent: string }>; printerInterface: string }
+): void {
+  if (printJobNotifier) {
+    printJobNotifier.notify(restaurantId, job);
   }
 }

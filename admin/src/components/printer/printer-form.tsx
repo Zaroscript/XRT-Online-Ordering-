@@ -16,6 +16,7 @@ import {
   useUpdatePrinterMutation,
   useScanWiFiMutation,
   useScanLANMutation,
+  useListPrintNodePrintersQuery,
 } from '@/data/printer';
 import { useTemplatesQuery } from '@/data/template';
 import { useKitchenSectionsQuery } from '@/data/kitchen-section';
@@ -26,8 +27,9 @@ import PrintAgentStatus from '@/components/printer/PrintAgentStatus';
 
 type FormValues = {
   name: string;
-  connection_type: 'lan' | 'wifi' | 'bluetooth';
+  connection_type: 'lan' | 'wifi' | 'bluetooth' | 'printnode';
   interface: string;
+  printnode_printer_id: string;
   assigned_templates: any[];
   kitchen_sections_list: any[];
   active: boolean;
@@ -45,21 +47,30 @@ function looksLikeSerialPort(iface: string): boolean {
 
 const schema = yup.object().shape({
   name: yup.string().required('Name is required'),
-  connection_type: yup.string().oneOf(['lan', 'wifi', 'bluetooth']).required(),
+  connection_type: yup.string().oneOf(['lan', 'wifi', 'bluetooth', 'printnode']).required(),
   interface: yup
     .string()
-    .required('Interface is required')
-    .test(
-      'lan-wifi-not-serial',
-      'LAN/Wi‑Fi expects a network address (e.g. 192.168.1.50 or 192.168.1.50:9100). For local USB printing choose "Bluetooth / USB Printer (This Device)".',
-      function (value) {
-        const type = this.parent.connection_type as string;
-        if (type === 'lan' || type === 'wifi') {
-          if (looksLikeSerialPort(value || '')) return false;
-        }
-        return true;
-      },
-    ),
+    .when('connection_type', {
+      is: (val: string) => val !== 'printnode',
+      then: (s) =>
+        s.test(
+          'lan-wifi-not-serial',
+          'LAN/Wi‑Fi expects a network address (e.g. 192.168.1.50). For USB choose Bluetooth.',
+          function (value) {
+            const type = this.parent.connection_type as string;
+            if (type === 'lan' || type === 'wifi') {
+              if (looksLikeSerialPort(value || '')) return false;
+            }
+            return true;
+          },
+        ),
+      otherwise: (s) => s.optional(),
+    }),
+  printnode_printer_id: yup.string().when('connection_type', {
+    is: 'printnode',
+    then: (s) => s.required('PrintNode Printer ID is required'),
+    otherwise: (s) => s.optional(),
+  }),
   assigned_templates: yup.array().nullable(),
   kitchen_sections_list: yup.array().nullable(),
   active: yup.boolean(),
@@ -119,8 +130,11 @@ export default function PrinterForm({ initialValues }: Props) {
   } = useForm<FormValues>({
     defaultValues: {
       name: initialValues?.name ?? '',
-      connection_type: initialValues?.connection_type ?? 'lan',
+      connection_type: (initialValues?.connection_type ?? 'lan') as FormValues['connection_type'],
       interface: initialValues?.interface ?? '',
+      printnode_printer_id: initialValues?.printnode_printer_id
+        ? String(initialValues.printnode_printer_id)
+        : '',
       assigned_templates: initialValues?.assigned_template_ids
         ? initialValues.assigned_template_ids.map(
             (id) => templates.find((x) => x.id === id) || { id, name: id },
@@ -131,10 +145,7 @@ export default function PrinterForm({ initialValues }: Props) {
             (name) =>
               (kitchenSections as { id?: string; name: string }[]).find(
                 (s) => s.name === name,
-              ) || {
-                id: name,
-                name,
-              },
+              ) || { id: name, name },
           )
         : [],
       active: initialValues?.active ?? true,
@@ -144,6 +155,11 @@ export default function PrinterForm({ initialValues }: Props) {
 
   const connectionType = useWatch({ control, name: 'connection_type' });
   const selectedInterface = useWatch({ control, name: 'interface' });
+
+  // ── PrintNode printer list (fetched on demand) ─────────────────────────────
+  const [fetchPrintNode, setFetchPrintNode] = useState(false);
+  const { data: printNodePrinters = [], isFetching: fetchingPrintNode } =
+    useListPrintNodePrintersQuery(fetchPrintNode);
 
   const { mutate: scanWiFi, isPending: scanningWiFi } = useScanWiFiMutation();
   const { mutate: scanLAN, isPending: scanningLAN } = useScanLANMutation();
@@ -218,14 +234,20 @@ export default function PrinterForm({ initialValues }: Props) {
       ? values.assigned_templates.map((x: any) => x.id)
       : [];
 
-    const payload = {
+    const payload: any = {
       name: values.name,
       connection_type: values.connection_type,
-      interface: values.interface,
+      interface: values.connection_type === 'printnode' ? '' : values.interface,
       assigned_template_ids,
       kitchen_sections,
       active: values.active,
     };
+
+    if (values.connection_type === 'printnode') {
+      payload.printnode_printer_id = values.printnode_printer_id
+        ? Number(values.printnode_printer_id)
+        : null;
+    }
 
     if (initialValues?.id) {
       updatePrinter(
@@ -274,9 +296,69 @@ export default function PrinterForm({ initialValues }: Props) {
               <option value="lan">LAN</option>
               <option value="wifi">WiFi</option>
               <option value="bluetooth">Bluetooth / USB Printer (This Device)</option>
+              <option value="printnode">PrintNode (Cloud Relay)</option>
             </select>
           </div>
-          {connectionType !== 'bluetooth' ? (
+          {connectionType === 'printnode' ? (
+            <div className="space-y-3 rounded-md border border-dashed border-accent/40 bg-accent/5 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-heading">PrintNode Printer ID</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="small"
+                  loading={fetchingPrintNode}
+                  disabled={fetchingPrintNode || isLoading}
+                  onClick={() => setFetchPrintNode(true)}
+                >
+                  {fetchPrintNode ? 'Refresh' : 'Fetch from PrintNode'}
+                </Button>
+              </div>
+              <Input
+                label="Printer ID (integer from PrintNode dashboard)"
+                type="number"
+                {...register('printnode_printer_id')}
+                error={(errors as any).printnode_printer_id?.message}
+                variant="outline"
+                disabled={isLoading}
+                placeholder="e.g. 38562"
+              />
+              {fetchPrintNode && printNodePrinters.length > 0 && (
+                <div className="mt-2">
+                  <Label>Click a printer to auto-fill the ID</Label>
+                  <div className="mt-1 divide-y divide-gray-100 rounded border border-gray-200 bg-white">
+                    {printNodePrinters.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() =>
+                          setValue('printnode_printer_id', String(p.id), { shouldValidate: true })
+                        }
+                        className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent/5 transition-colors"
+                      >
+                        <span className="font-medium text-heading">{p.name}</span>
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={`inline-block h-2 w-2 rounded-full ${
+                              p.state === 'online' ? 'bg-green-500' : 'bg-gray-300'
+                            }`}
+                          />
+                          <span className="text-xs text-body">
+                            ID: {p.id} · {p.computer?.name}
+                          </span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {fetchPrintNode && !fetchingPrintNode && printNodePrinters.length === 0 && (
+                <p className="text-xs text-red-600">
+                  No printers found. Make sure the PrintNode client is running on your macOS device and PRINTNODE_API_KEY is set in the server .env.
+                </p>
+              )}
+            </div>
+          ) : connectionType !== 'bluetooth' ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
               <div className="min-w-0 flex-1">
                 <Input

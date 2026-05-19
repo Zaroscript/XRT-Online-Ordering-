@@ -9,8 +9,9 @@ export interface DiscoveredSerialPort {
 export interface Printer {
   id: string;
   name: string;
-  connection_type: 'lan' | 'wifi' | 'bluetooth';
+  connection_type: 'lan' | 'wifi' | 'bluetooth' | 'printnode';
   interface: string;
+  printnode_printer_id?: number | null;
   assigned_template_ids: string[];
   kitchen_sections: string[];
   active: boolean;
@@ -18,6 +19,14 @@ export interface Printer {
   last_printed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface PrintNodePrinter {
+  id: number;
+  name: string;
+  description: string;
+  state: string;
+  computer: { id: number; name: string };
 }
 
 export interface PrinterListResponse {
@@ -77,10 +86,18 @@ export const printerClient = {
       message?: string;
       data?: {
         printerId: string;
-        delivery?: 'mock' | 'direct' | 'queue';
+        delivery?: 'mock' | 'direct' | 'queue' | 'printnode';
+        printNodeJobId?: number;
         printJobId?: string;
       };
     }>(url, {});
+  },
+  /** GET /printers/printnode-printers — returns all printers on the PrintNode account */
+  listPrintNodePrinters: async (): Promise<PrintNodePrinter[]> => {
+    const body = await HttpClient.get<{ success: boolean; data?: PrintNodePrinter[] }>(
+      API_ENDPOINTS.PRINTER_PRINTNODE_PRINTERS,
+    );
+    return unwrapData<PrintNodePrinter[]>(body) ?? [];
   },
   checkConnection: async (id: string) => {
     const url = API_ENDPOINTS.PRINTER_CHECK_CONNECTION.replace(':id', id);

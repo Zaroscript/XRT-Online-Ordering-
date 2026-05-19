@@ -15,13 +15,18 @@ const PrinterSchema = new Schema<PrinterDocument>(
     },
     connection_type: {
       type: String,
-      enum: ['lan', 'wifi', 'bluetooth', 'network', 'usb'],
+      enum: ['lan', 'wifi', 'bluetooth', 'network', 'usb', 'printnode'],
       required: true,
     },
     interface: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
+      default: '',
+    },
+    printnode_printer_id: {
+      type: Number,
+      default: null,
     },
     assigned_template_ids: {
       type: [Schema.Types.ObjectId],

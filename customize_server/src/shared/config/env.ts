@@ -80,13 +80,19 @@ export const env = {
   // Printing Architecture
   PRINT_MODE: (process.env.PRINT_MODE || 'production') as 'production' | 'mock',
   /**
-   * queue — write PrintJob to MongoDB for a worker/agent to claim (legacy).
-   * direct — print immediately from this Node process (no local agent; API host must reach printer).
+   * queue      — write PrintJob to MongoDB for a worker/agent to claim (legacy).
+   * direct     — print immediately from this Node process (no local agent; API host must reach printer).
+   * printnode  — send ESC/POS bytes to PrintNode cloud API; delivered to macOS client daemon.
    */
-  PRINT_DELIVERY:
-    String(process.env.PRINT_DELIVERY || 'queue').trim().toLowerCase() === 'direct'
-      ? 'direct'
-      : 'queue',
+  PRINT_DELIVERY: (() => {
+    const val = String(process.env.PRINT_DELIVERY || 'queue').trim().toLowerCase();
+    if (val === 'direct') return 'direct' as const;
+    if (val === 'printnode') return 'printnode' as const;
+    return 'queue' as const;
+  })(),
+
+  // PrintNode
+  PRINTNODE_API_KEY: (process.env.PRINTNODE_API_KEY || '').trim(),
 
   // Maintenance
   CUSTOMER_DEDUPE_JOB_ENABLED: toBoolean(

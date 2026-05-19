@@ -19,6 +19,7 @@ export class PrinterRepository implements IPrinterRepository {
         ? doc.assigned_template_ids.map((id) => id?.toString() || '')
         : [],
       kitchen_sections: doc.kitchen_sections || [],
+      printnode_printer_id: (doc as any).printnode_printer_id ?? null,
       active: doc.active,
       autoPrint: (doc as any).autoPrint ?? false,
       maxRetries: (doc as any).maxRetries ?? 3,

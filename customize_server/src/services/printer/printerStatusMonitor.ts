@@ -3,6 +3,8 @@ import { Server as SocketIOServer } from 'socket.io';
 import { PrinterRepository } from '../../infrastructure/repositories/PrinterRepository';
 import { Printer } from '../../domain/entities/Printer';
 import { logger } from '../../shared/utils/logger';
+import { env } from '../../shared/config/env';
+import { listPrintNodePrinters, PrintNodePrinter } from './printNodeService';
 
 const DEFAULT_INTERVAL_MS = 3_000;
 // Shorter than the print timeout — status checks just need a TCP handshake
@@ -57,10 +59,40 @@ function parseHostPort(printer: Printer): { host: string; port: number } | null 
 }
 
 /**
+ * Cache the PrintNode printer list for 60s to avoid hitting the API on every 3s poll cycle.
+ */
+let printNodeCache: { printers: PrintNodePrinter[]; fetchedAt: number } | null = null;
+
+async function getPrintNodePrintersCached(): Promise<PrintNodePrinter[]> {
+  const now = Date.now();
+  if (printNodeCache && now - printNodeCache.fetchedAt < 60_000) {
+    return printNodeCache.printers;
+  }
+  try {
+    const printers = await listPrintNodePrinters();
+    printNodeCache = { printers, fetchedAt: now };
+    return printers;
+  } catch {
+    return printNodeCache?.printers ?? [];
+  }
+}
+
+/**
  * Check connection for a single printer.
- * Uses a direct TCP ping for LAN/WiFi printers (fast, non-blocking).
+ * - LAN/WiFi: direct TCP ping
+ * - PrintNode: resolved via cached PrintNode API list
+ * - Bluetooth/serial: skip, return 'unknown'
  */
 async function checkPrinter(printer: Printer): Promise<string> {
+  // PrintNode: resolve via cloud API
+  if (printer.connection_type === 'printnode') {
+    if (!printer.printnode_printer_id || !env.PRINTNODE_API_KEY) return 'unknown';
+    const list = await getPrintNodePrintersCached();
+    const found = list.find((p) => p.id === printer.printnode_printer_id);
+    if (!found) return 'disconnected';
+    return found.state === 'online' ? 'connected' : 'disconnected';
+  }
+
   const addr = parseHostPort(printer);
   if (!addr) {
     // Non-TCP printer (Bluetooth/serial): skip active probing, mark as unknown
